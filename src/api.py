@@ -12,7 +12,6 @@ from src.static import ALBUMID_MAP
 
 
 async def get_album_list() -> list:
-    album_raw_list: Array = []
     album_list = []
     url = "https://i.mi.com/gallery/user/album/list"
     params = {
@@ -63,7 +62,7 @@ async def get_media_list(
         "startDate": start_date,
         "endDate": end_date,
         "pageNum": pageNum,
-        "pageSize": 50,
+        "pageSize": Configer.get("pageSize"),
     }
     response = await Manager().download_client.get(
         "https://i.mi.com/gallery/user/galleries", params=params
@@ -124,7 +123,7 @@ async def download_and_save_media(media: Media):
                 download_path + "/" + Album.get(Album.id == media.album_id).name + "/"
             )
         else:
-            download_path = download_path + "/" + str(media.album.id) + "/"
+            download_path = download_path + "/" + str(media.album_id) + "/"
         os.makedirs(download_path, exist_ok=True)
         with open(download_path + media.filename, "wb") as f:
             f.write(resp3.content)
