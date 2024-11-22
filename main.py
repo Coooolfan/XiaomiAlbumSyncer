@@ -3,8 +3,6 @@ from datetime import datetime
 import asyncio
 import json
 import os
-import sys
-from turtle import down
 from InquirerPy.validator import PathValidator
 
 from tqdm import tqdm
@@ -17,6 +15,9 @@ from src.static import ALBUMID_MAP
 from peewee import IntegrityError
 from src.model.database import db
 from InquirerPy import inquirer
+import nest_asyncio
+
+nest_asyncio.apply()
 
 
 async def get_album_list() -> list:
@@ -100,32 +101,39 @@ async def get_medias(
 
 
 async def download_media(media: Media):
-    if "image" not in media.mime_type:
-        print(f"文件{media.filename}不是图片,跳过下载")
-        return
-    resp1 = await Manager().download_client.get(
-        "https://i.mi.com/gallery/storage",
-        params={
-            "id": media.id,
-            "ts": int(datetime.now().timestamp() * 1000),
-        },
-    )
-    url1 = resp1.json().get("data").get("url")
-    resp2 = await Manager().download_client.get(url1)
-    # 取出字符串()中的内容
-    resp2_json = json.loads(re.search(r"\((.*?)\)", resp2.text).group(1))
-    file_download_meta = resp2_json.get("meta")
-    file_download_url = resp2_json.get("url")
-    form_data = {
-        "meta": file_download_meta,
-    }
-    # 下载文件,保存到本地
-    resp3 = await Manager().download_client.post(file_download_url, data=form_data)
-
-    os.makedirs("media", exist_ok=True)
-    with open("media/" + media.filename, "wb") as f:
-        f.write(resp3.content)
-    print(f"文件{"media/" + media.filename}下载完成")
+    try:
+        if "image" not in media.mime_type:
+            # print(f"文件{media.filename}不是图片,跳过下载")
+            return
+        resp1 = await Manager().download_client.get(
+            "https://i.mi.com/gallery/storage",
+            params={
+                "id": media.id,
+                "ts": int(datetime.now().timestamp() * 1000),
+            },
+        )
+        url1 = resp1.json().get("data").get("url")
+        resp2 = await Manager().download_client.get(url1)
+        # 取出字符串()中的内容
+        resp2_json = json.loads(re.search(r"\((.*?)\)", resp2.text).group(1))
+        file_download_meta = resp2_json.get("meta")
+        file_download_url = resp2_json.get("url")
+        form_data = {
+            "meta": file_download_meta,
+        }
+        # 下载文件,保存到本地
+        resp3 = await Manager().download_client.post(file_download_url, data=form_data)
+        download_path = Configer.get("downloadPath")
+        if(Configer.get("dirName")=="name"):
+            download_path = download_path + "/" + Album.get(Album.id == media.album_id).name + "/"
+        else:
+            download_path = download_path + "/" + str(media.album.id) + "/"
+        os.makedirs(download_path, exist_ok=True)
+        with open(download_path + media.filename, "wb") as f:
+            f.write(resp3.content)
+        # print(f"文件{"media/" + media.filename}下载完成")
+    except Exception as e:
+        print(f"文件{media.filename}下载失败,原因:{e}")
 
 
 def stealCookie() -> str:
@@ -143,19 +151,23 @@ def stealCookie() -> str:
 
 
 def save_album_db(album_list: list):
-    for album in album_list:
-        # 存在更新、不存在保存
-        if Album.get_or_none(Album.id == album.id):
-            Album.update(
-                media_count=album.media_count,
-                name=album.name,
-            ).where(Album.id == album.id).execute()
-        else:
-            Album.create(
-                id=album.id,
-                media_count=album.media_count,
-                name=album.name,
-            )
+    with db.atomic():  # 使用事务
+        for album in album_list:
+            if Album.get_or_none(Album.id == album.id):
+                Album.update(
+                    media_count=album.media_count,
+                    name=album.name,
+                ).where(Album.id == album.id).execute()
+            else:
+                try:
+                    Album.create(
+                        id=album.id,
+                        media_count=album.media_count,
+                        name=album.name,
+                    )
+                except IntegrityError:
+                    # 如果记录已存在，则忽略错误
+                    pass
 
 
 def save_media_db(media_list: list):
@@ -190,18 +202,20 @@ async def get_all_media_from_album(album_id: int):
         pageNum += 1
     return medias
 
+
 def update_cookie():
     cookie = input("请输入cookie:\n")
     Configer.set("cookie", cookie)
     print("更新cookie成功！")
 
+
 def modify_config():
-    
+
     config_item = inquirer.select(
         message="可编辑配置项",
         choices=["下载路径", "相册文件夹命名方式"],
     ).execute()
-    
+
     if config_item == "下载路径":
         home_path = os.getcwd()  # 获取当前工作目录
         download_path = inquirer.filepath(
@@ -216,27 +230,63 @@ def modify_config():
             message="选择相册文件夹命名方式",
             choices=["相册名", "相册ID"],
         ).execute()
-        if(folder_name == "相册名"):
+        if folder_name == "相册名":
             folder_name = "name"
         else:
             folder_name = "id"
         Configer.set("dirName", folder_name)
-        
-def main():
+
+
+async def update_album_list():
+    album_list = await get_album_list()
+    save_album_db(album_list)
+    print("更新相册列表成功！")
+
+
+async def download_single_album():
+    album_list = Album.select().execute()
+    album_name_list = [album.name for album in album_list]
+    album_name = inquirer.select(
+        message="选择要下载的相册",
+        choices=album_name_list,
+    ).execute()
+    album = Album.get(Album.name == album_name)
+    medias = await get_all_media_from_album(album.id)
+    save_media_db(medias)
+    print("---------------------------------")
+    print("开始下载...")
+    print("共计", len(medias), "个文件")
+    print("---------------------------------")
+    # 计时
+    start_time = datetime.now()
+    # await asyncio.gather(*[download_media(media) for media in tqdm(medias, desc="下载进度")])
+    for media in tqdm(medias, desc="下载进度", unit="file"):
+        # if(media.id!="21324470078541952"):
+        #     continue
+        await download_media(media)
+    end_time = datetime.now()
+    print("---------------------------------")
+    print("下载完成！")
+    print("耗时：", end_time - start_time)
+    print("---------------------------------")
+
+    
+
+async def main():
     while True:
         task = inquirer.select(
             message="欢迎回来，准备干些什么捏",
             choices=["更新cookie", "修改配置", "更新相册列表", "下载单个相册", "退出"],
         ).execute()
-        
+
         if task == "更新cookie":
             update_cookie()
         elif task == "修改配置":
             modify_config()
         elif task == "更新相册列表":
-            print("开始更新相册列表...")
+            await update_album_list()
         elif task == "下载单个相册":
-            print("开始下载单个相册...")
+            await download_single_album()
         elif task == "退出":
             return
     # medias =await get_all_media_from_album(12656130040726944)
@@ -256,4 +306,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

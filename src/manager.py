@@ -24,15 +24,17 @@ class Manager:
 
             # 定义请求拦截器
             async def on_request(request: Request):
-                print(f"请求 URL: {request.url}")
+                pass
+                # print(f"请求 URL: {request.url}")
                 # print(f"请求头: {request.headers}")
-                print(f"请求体: {request.content}")
+                # print(f"请求体: {request.content}")
 
             # 定义响应拦截器
             async def on_response(response: Response):
-                print(f"响应状态码: {response.status_code}")
-                print(f"响应头: {response.headers}")
-                print(f"响应体: {response.cookies}")
+                pass
+                # print(f"响应状态码: {response.status_code}")
+                # print(f"响应头: {response.headers}")
+                # print(f"响应体: {response.cookies}")
 
             self.download_client = AsyncClient(
                 headers=self.blank_headers,
