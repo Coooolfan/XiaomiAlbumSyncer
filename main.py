@@ -101,9 +101,15 @@ async def get_medias(
 
 
 async def download_media(media: Media):
+    # 传入的 media 对象是从网络获取的，需要检索数据库获取完整的 media 对象
+    # 主要是 downloaded 值需要从数据库获取
+    media = Media.get(Media.id == media.id)
     try:
         if "image" not in media.mime_type:
             # print(f"文件{media.filename}不是图片,跳过下载")
+            return
+        if media.downloaded:
+            # print(f"文件{media.filename}已下载,跳过下载")
             return
         resp1 = await Manager().download_client.get(
             "https://i.mi.com/gallery/storage",
@@ -131,6 +137,8 @@ async def download_media(media: Media):
         os.makedirs(download_path, exist_ok=True)
         with open(download_path + media.filename, "wb") as f:
             f.write(resp3.content)
+        media.downloaded = True
+        media.save()
         # print(f"文件{"media/" + media.filename}下载完成")
     except Exception as e:
         print(f"文件{media.filename}下载失败,原因:{e}")
@@ -259,7 +267,7 @@ async def download_single_album():
     print("---------------------------------")
     # 计时
     start_time = datetime.now()
-    # await asyncio.gather(*[download_media(media) for media in tqdm(medias, desc="下载进度")])
+    # 对下载速度应该没什么需求吧，就不用异步了
     for media in tqdm(medias, desc="下载进度", unit="file"):
         # if(media.id!="21324470078541952"):
         #     continue
