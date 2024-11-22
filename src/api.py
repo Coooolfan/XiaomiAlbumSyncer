@@ -1,13 +1,12 @@
-from ctypes import Array
-from datetime import datetime
 import json
 import os
+import re
+from datetime import datetime
 
 from src.configer import Configer
 from src.manager import Manager
 from src.model.Album import Album
 from src.model.Media import Media
-import re
 from src.static import ALBUMID_MAP
 
 

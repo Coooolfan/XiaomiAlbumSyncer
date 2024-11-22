@@ -5,18 +5,14 @@ import nest_asyncio
 from InquirerPy import inquirer
 
 from src.configer import Configer
-from src.task import (
-    modify_config,
-    update_album_list,
-    update_cookie,
-    config_selected_album, download_selected_album, empty_download_record, select_and_download_single_album,
-)
+from src.task import (modify_config, update_album_list, update_cookie, config_selected_album, download_selected_album,
+                      empty_download_record, select_and_download_single_album)
 
 nest_asyncio.apply()
 
 
 async def main():
-    Configer.set("endDate",datetime.now().strftime("%Y%m%d"))
+    Configer.set("endDate", datetime.now().strftime("%Y%m%d"))
     while True:
         task = inquirer.select(
             message="欢迎回来，准备干些什么捏",

@@ -1,7 +1,6 @@
-from peewee import Model, IntegerField, CharField, SqliteDatabase, BooleanField
-from src.model.db import db
+from peewee import Model, IntegerField, CharField, BooleanField
 
-db = SqliteDatabase("sql.db")
+from src.model.db import db
 
 
 class Media(Model):
