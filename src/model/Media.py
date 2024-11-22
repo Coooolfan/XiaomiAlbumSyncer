@@ -1,19 +1,20 @@
-class Media:
-    def __init__(self, filename, mime_type, sha1, id):
+from peewee import Model, IntegerField, CharField, SqliteDatabase,BooleanField
+from .database import db
 
-        self.id = id
-        self.filename = filename
-        self.mime_type = mime_type
-        self.sha1 = sha1
+class Media(Model):
+    id = IntegerField(primary_key=True)
+    album_id = IntegerField()
+    filename = CharField()
+    mime_type = CharField()
+    media_type = CharField()
+    sha1 = CharField()
+    downloaded = BooleanField(default=False)
 
-    def __str__(self):
-        return f"照片文件名:{self.filename};照片ID:{self.id}"
 
-    def __repr__(self):
-        return f"照片文件名:{self.filename};照片ID:{self.id}"
-
-    def __eq__(self, other):
-        return self.sha1 == other.sha1
-
-    def __hash__(self):
-        return self.sha1
+    class Meta:
+        database = db
+        
+if(__name__=="__main__"):
+    db.connect()
+    db.create_tables([Media])
+    db.close()

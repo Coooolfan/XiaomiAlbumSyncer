@@ -1,25 +1,16 @@
-from src.static import ALBUMID_MAP
+from xmlrpc.client import Boolean
+from peewee import Model, IntegerField, CharField,SqliteDatabase,BooleanField
+from .database import db
 
-
-class Album:
-    def __init__(self, media_cout, id, name):
-
-        self.id = id
-        self.media_cout = media_cout
-
-        if int(id) in ALBUMID_MAP.keys():
-            self.name = ALBUMID_MAP.get(int(id))
-        else:
-            self.name = name
-
-    def __str__(self):
-        return f"相册名称:{self.name};照片数量:{self.media_cout}"
-
-    def __repr__(self):
-        return f"相册名称:{self.name},照片数量:{self.media_cout}"
-
-    def __eq__(self, other):
-        return self.id == other.id
-
-    def __hash__(self):
-        return hash(self.id)
+class Album(Model):
+    id = IntegerField(primary_key=True)
+    media_count = IntegerField(default=0)
+    name = CharField()
+    
+    class Meta:
+        database = db
+        
+if(__name__=="__main__"):
+    db.connect()
+    db.create_tables([Album])
+    db.close()
