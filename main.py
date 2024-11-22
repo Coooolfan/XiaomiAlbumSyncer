@@ -4,6 +4,7 @@ from datetime import datetime
 import nest_asyncio
 from InquirerPy import inquirer
 
+from src.api import refresh_cookie
 from src.configer import Configer
 from src.task import (modify_config, update_album_list, update_cookie, config_selected_album, download_selected_album,
                       empty_download_record, select_and_download_single_album)
@@ -16,12 +17,15 @@ async def main():
     while True:
         task = inquirer.select(
             message="欢迎回来，准备干些什么捏",
-            choices=["更新cookie", "更新相册列表", "选择要下载的相册", "下载已选择的相册", "修改配置", "下载单个相册",
+            choices=["设置cookie", "更新cookie", "更新相册列表", "选择要下载的相册", "下载已选择的相册", "修改配置",
+                     "下载单个相册",
                      "清空下载记录", "退出"],
         ).execute()
 
-        if task == "更新cookie":
+        if task == "设置cookie":
             update_cookie()
+        elif task == "更新cookie":
+            await refresh_cookie()
         elif task == "更新相册列表":
             await update_album_list()
         elif task == "选择要下载的相册":

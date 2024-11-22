@@ -49,10 +49,10 @@ async def get_album_list() -> list:
 
 
 async def get_media_list(
-    album_id: int,
-    pageNum: int,
-    start_date: str,
-    end_date: str,
+        album_id: int,
+        pageNum: int,
+        start_date: str,
+        end_date: str,
 ) -> list:
     medias = []
     params = {
@@ -119,7 +119,7 @@ async def download_and_save_media(media: Media):
         download_path = Configer.get("downloadPath")
         if Configer.get("dirName") == "name":
             download_path = (
-                download_path + "/" + Album.get(Album.id == media.album_id).name + "/"
+                    download_path + "/" + Album.get(Album.id == media.album_id).name + "/"
             )
         else:
             download_path = download_path + "/" + str(media.album_id) + "/"
@@ -131,3 +131,11 @@ async def download_and_save_media(media: Media):
         # print(f"文件{"media/" + media.filename}下载完成")
     except Exception as e:
         print(f"文件{media.filename}下载失败,原因:{e}")
+
+
+async def refresh_cookie():
+    resp = await Manager().download_client.get("https://i.mi.com/status/lite/setting?type=AutoRenewal&inactiveTime=10")
+    print(resp.text)
+    print(Manager().download_client.cookies)
+    if resp.status_code != 200:
+        raise Exception("Cookie刷新失败，请手动重置Cookie后重试")
