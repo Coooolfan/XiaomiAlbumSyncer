@@ -43,7 +43,7 @@ class BrowserCookie:
             cookies = browser(domains=domains)
             return "; ".join(f"{i["name"]}={i["value"]}" for i in cookies)
         except RuntimeError as e:
-            if (e.__str__().__contains__("as admin")): 
+            if e.__str__().__contains__("as admin"):
                 print("获取Cookie失败! 请以管理员身份运行程序！")
             else:
                 print("获取Cookie失败！\n", e)

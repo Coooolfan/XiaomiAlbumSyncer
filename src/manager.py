@@ -2,6 +2,7 @@ from httpx import AsyncClient, Request, Response
 from threading import Lock
 from src.configer import Configer
 
+
 class Manager:
     _instance = None
     _lock = Lock()
