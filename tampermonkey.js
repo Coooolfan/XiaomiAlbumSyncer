@@ -33,7 +33,7 @@
         const jsonEscapedCookies = JSON.stringify(cookies)
             .replace(/'/g, "\'")
             .replace(/"/g, '\"') // 转义引号
-            .slice(2, -2);
+            .slice(2, -1);
         alert(`Cookies: ${jsonEscapedCookies}`);
         console.log(`Cookies: ${jsonEscapedCookies}`);
         GM_setClipboard(jsonEscapedCookies); // 复制到剪贴板
