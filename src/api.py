@@ -137,5 +137,5 @@ async def refresh_cookie():
     resp = await Manager().download_client.get("https://i.mi.com/status/lite/setting?type=AutoRenewal&inactiveTime=10")
     ok = resp.json().get("result") == "ok"
     if (not ok) or (resp.status_code != 200):
-        raise Exception("Cookie刷新失败，请手动重置Cookie后重试")
+        raise Exception("Cookie刷新失败，请重新“设置Cookie”后重试")
     print("Cookie刷新成功")

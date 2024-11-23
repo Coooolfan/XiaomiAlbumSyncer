@@ -21,7 +21,7 @@ class Manager:
             self.initialized = True
             self.blank_headers = {
                 "User-Agent": Configer.get("userAgent"),
-                "Cookie": Configer.get("cookie"),
+                # "Cookie": Configer.get("cookie"),
             }
             self.timeout = 10.0  # 默认超时时间
 

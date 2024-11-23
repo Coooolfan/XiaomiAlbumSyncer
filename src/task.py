@@ -9,6 +9,7 @@ from src.model.database import save_album_db, save_media_db
 from src.api import download_and_save_media, get_album_list, get_media_list
 from src.api import refresh_cookie as refresh_cookie_api
 from src.configer import Configer
+from src.PersistentCookies import PersistentCookies
 from src.model.Album import Album
 from src.manager import Manager
 from InquirerPy import inquirer
@@ -68,8 +69,9 @@ def config_selected_album():
 
 
 def set_cookie():
-    cookie = input("请输入cookie:\n")
-    Configer.set("cookie", cookie)
+    cookie_input = input("请输入cookie:\n")
+    PersistentCookies.parse_cookie_string(cookie_input, Manager().download_client.cookies)
+    # Configer.set("cookie", cookie)
     print("更新cookie成功！")
 
 
