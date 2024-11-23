@@ -1,11 +1,13 @@
 from httpx import AsyncClient, Request, Response
 from threading import Lock
 from src.configer import Configer
-
+from src.PersistentCookies import PersistentCookies
+import atexit
 
 class Manager:
     _instance = None
     _lock = Lock()
+    COOKIE_FILE = "cookies.json"  # 定义保存文件路径
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
@@ -38,7 +40,6 @@ class Manager:
                 # print(f"响应体: {response.cookies}")
 
             self.download_client = AsyncClient(
-                headers=self.blank_headers,
                 timeout=self.timeout,
                 verify=False,
                 follow_redirects=True,
@@ -46,4 +47,11 @@ class Manager:
                     "request": [on_request],
                     "response": [on_response],
                 },
+            )
+            # 加载本地 Cookie
+            PersistentCookies.load_from_file(self.download_client.cookies, self.COOKIE_FILE)
+
+            # 应用退出时保存 Cookie
+            atexit.register(
+                PersistentCookies.save_to_file, self.download_client.cookies, self.COOKIE_FILE
             )

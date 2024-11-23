@@ -135,7 +135,7 @@ async def download_and_save_media(media: Media):
 
 async def refresh_cookie():
     resp = await Manager().download_client.get("https://i.mi.com/status/lite/setting?type=AutoRenewal&inactiveTime=10")
-    print(resp.text)
-    print(Manager().download_client.cookies)
-    if resp.status_code != 200:
+    ok = resp.json().get("result") == "ok"
+    if (not ok) or (resp.status_code != 200):
         raise Exception("Cookie刷新失败，请手动重置Cookie后重试")
+    print("Cookie刷新成功")

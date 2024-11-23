@@ -7,8 +7,10 @@ from tqdm import tqdm
 from src.model.Media import Media
 from src.model.database import save_album_db, save_media_db
 from src.api import download_and_save_media, get_album_list, get_media_list
+from src.api import refresh_cookie as refresh_cookie_api
 from src.configer import Configer
 from src.model.Album import Album
+from src.manager import Manager
 from InquirerPy import inquirer
 import nest_asyncio
 
@@ -65,10 +67,14 @@ def config_selected_album():
     print("已选", len(album_selected_list), "个相册")
 
 
-def update_cookie():
+def set_cookie():
     cookie = input("请输入cookie:\n")
     Configer.set("cookie", cookie)
     print("更新cookie成功！")
+
+
+async def refresh_cookie():
+    await refresh_cookie_api()
 
 
 def modify_config():
@@ -148,3 +154,6 @@ async def select_and_download_single_album():
 async def empty_download_record():
     # 覆写所有Media的downloaded字段
     Media.update(downloaded=False).execute()
+
+async def exit_syncer():
+    await Manager().download_client.aclose()

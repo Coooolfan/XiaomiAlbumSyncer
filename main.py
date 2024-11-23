@@ -4,10 +4,9 @@ from datetime import datetime
 import nest_asyncio
 from InquirerPy import inquirer
 
-from src.api import refresh_cookie
 from src.configer import Configer
-from src.task import (modify_config, update_album_list, update_cookie, config_selected_album, download_selected_album,
-                      empty_download_record, select_and_download_single_album)
+from src.task import (modify_config, update_album_list, set_cookie, config_selected_album, download_selected_album,
+                      empty_download_record, select_and_download_single_album, exit_syncer, refresh_cookie)
 
 nest_asyncio.apply()
 
@@ -23,7 +22,7 @@ async def main():
         ).execute()
 
         if task == "设置cookie":
-            update_cookie()
+            set_cookie()
         elif task == "更新cookie":
             await refresh_cookie()
         elif task == "更新相册列表":
@@ -47,6 +46,7 @@ async def main():
             if check:
                 await empty_download_record()
         elif task == "退出":
+            await exit_syncer()
             return
 
 
