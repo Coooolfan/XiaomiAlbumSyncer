@@ -2,6 +2,8 @@
 
 此项目旨在提供一个Python程序，用于将小米云服务中的相册照片单向同步到本地。
 
+![screenshot](static/screenshot.jpg)
+
 # 使用方法
 
 TODO……
