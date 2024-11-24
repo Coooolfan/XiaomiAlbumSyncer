@@ -1,5 +1,6 @@
 import json
 import os
+import asyncio
 import re
 from datetime import datetime
 
@@ -9,8 +10,12 @@ from src.model.Album import Album
 from src.model.Media import Media
 from src.static import ALBUMID_MAP
 
+last_cookie_refresh_time = None
+lock = asyncio.Lock()
+
 
 async def get_album_list() -> list:
+    await check_and_refresh_cookie()
     album_list = []
     url = "https://i.mi.com/gallery/user/album/list"
     params = {
@@ -54,6 +59,7 @@ async def get_media_list(
         start_date: str,
         end_date: str,
 ) -> list:
+    await check_and_refresh_cookie()
     medias = []
     params = {
         "ts": int(datetime.now().timestamp() * 1000),
@@ -90,6 +96,7 @@ async def get_media_list(
 async def download_and_save_media(media: Media):
     # 传入的 media 对象是从网络获取的，需要检索数据库获取完整的 media 对象
     # 主要是 downloaded 值需要从数据库获取
+    await check_and_refresh_cookie()
     media = Media.get(Media.id == media.id)
     try:
         if "image" not in media.mime_type:
@@ -132,6 +139,12 @@ async def download_and_save_media(media: Media):
     except Exception as e:
         print(f"文件{media.filename}下载失败,原因:{e}")
 
+async def check_and_refresh_cookie():
+    global last_cookie_refresh_time
+    async with lock:
+        if last_cookie_refresh_time is None or (datetime.now() - last_cookie_refresh_time).total_seconds() > 180:
+            await refresh_cookie()
+            last_cookie_refresh_time = datetime.now()
 
 async def refresh_cookie():
     resp = await Manager().download_client.get("https://i.mi.com/status/lite/setting?type=AutoRenewal&inactiveTime=10")
@@ -139,3 +152,5 @@ async def refresh_cookie():
     if (not ok) or (resp.status_code != 200):
         raise Exception("Cookie刷新失败，请重新“设置Cookie”后重试")
     print("Cookie刷新成功")
+    global last_cookie_refresh_time
+    last_cookie_refresh_time = datetime.now()
