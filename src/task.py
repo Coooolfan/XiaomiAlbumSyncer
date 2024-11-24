@@ -68,9 +68,10 @@ def config_selected_album():
     print("已选", len(album_selected_list), "个相册")
 
 
-def set_cookie():
-    cookie_input = input("请输入cookie:\n")
-    PersistentCookies.parse_cookie_string(cookie_input, Manager().download_client.cookies)
+def set_cookie(cookie: str = None):
+    if cookie is None:
+        cookie = input("请输入cookie:\n")
+    PersistentCookies.parse_cookie_string(cookie, Manager().download_client.cookies)
     # Configer.set("cookie", cookie)
     print("更新cookie成功！")
 
