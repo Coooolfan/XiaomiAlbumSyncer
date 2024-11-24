@@ -5,7 +5,7 @@ from InquirerPy.validator import PathValidator
 from tqdm import tqdm
 
 from src.model.Media import Media
-from src.model.database import save_album_db, save_media_db
+from src.model.database import init_db, save_album_db, save_media_db
 from src.api import download_and_save_media, get_album_list, get_media_list
 from src.api import refresh_cookie as refresh_cookie_api
 from src.configer import Configer
@@ -157,6 +157,10 @@ async def select_and_download_single_album():
 async def empty_download_record():
     # 覆写所有Media的downloaded字段
     Media.update(downloaded=False).execute()
+
+def init_syncer():
+    Configer.set("endDate", datetime.now().strftime("%Y%m%d"))
+    init_db()
 
 async def exit_syncer():
     await Manager().download_client.aclose()

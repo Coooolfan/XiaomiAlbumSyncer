@@ -41,3 +41,13 @@ def save_album_db(album_list: list):
                 except IntegrityError:
                     # 如果记录已存在，则忽略错误
                     pass
+
+
+def init_db():
+    try:
+        db.connect()
+        db.create_tables([Media, Album], safe=True)  # safe=True 确保表不存在时才创建
+    except Exception as e:
+        print(f"创建数据库表时出错: {e}")
+    finally:
+        db.close()

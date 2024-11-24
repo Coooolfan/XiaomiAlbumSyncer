@@ -52,7 +52,7 @@ class PersistentCookies:
                         domain=cookie["domain"],
                         path=cookie["path"],
                     )
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, FileNotFoundError):
             print(f"Cookie 文件 {file_path} 解析失败。程序将以空 Cookie 启动。\n如果您在“设置cookie”命令过程中看到了此提示，请无视\n否则，请执行“设置cookie”命令以重新设置 Cookie。")
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write("[]")

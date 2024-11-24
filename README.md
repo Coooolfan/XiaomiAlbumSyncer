@@ -32,3 +32,9 @@ pip install -r requirements.txt
 4. 刷新页面。
 5. 在开发者工具中找到`i.mi.com`的请求，复制`Request Headers`中的`Cookie`字段值。
 6. 粘贴到`config.json`中的`cookie`字段。
+
+## 编译
+    
+```bash
+    pyinstaller --onefile --add-data "requirements.txt;." main.py
+```
