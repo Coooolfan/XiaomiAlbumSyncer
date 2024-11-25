@@ -142,5 +142,6 @@ pip install -r requirements.txt
 ## 编译
     
 ```bash
+pip install pyinstaller
 pyinstaller --onefile --add-data "requirements.txt;." main.py
 ```
