@@ -3,6 +3,7 @@ import os
 import asyncio
 import re
 from datetime import datetime
+import traceback
 
 from src.configer import Configer
 from src.manager import Manager
@@ -137,7 +138,8 @@ async def download_and_save_media(media: Media):
         media.save()
         # print(f"文件{"media/" + media.filename}下载完成")
     except Exception as e:
-        print(f"文件{media.filename}下载失败,原因:{e}")
+        print(f"文件{media.filename}下载失败,原因:{e}\n ")
+        traceback.print_exc()
 
 async def check_and_refresh_cookie():
     global last_cookie_refresh_time
