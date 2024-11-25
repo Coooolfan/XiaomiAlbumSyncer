@@ -4,13 +4,13 @@ from InquirerPy.validator import PathValidator
 
 from tqdm import tqdm
 
-from src.model.Media import Media
+from src.model.media import Media
 from src.model.database import init_db, save_album_db, save_media_db
 from src.api import download_and_save_media, get_album_list, get_media_list
 from src.api import refresh_cookie as refresh_cookie_api
 from src.configer import Configer
 from src.PersistentCookies import PersistentCookies
-from src.model.Album import Album
+from src.model.album import Album
 from src.manager import Manager
 from InquirerPy import inquirer
 import nest_asyncio

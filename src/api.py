@@ -6,8 +6,8 @@ from datetime import datetime
 
 from src.configer import Configer
 from src.manager import Manager
-from src.model.Album import Album
-from src.model.Media import Media
+from src.model.album import Album
+from src.model.media import Media
 from src.static import ALBUMID_MAP
 
 last_cookie_refresh_time = None

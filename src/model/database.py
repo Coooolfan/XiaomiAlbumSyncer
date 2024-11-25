@@ -1,7 +1,7 @@
 from sqlite3 import IntegrityError
 from src.model.db import db
-from src.model.Album import Album
-from src.model.Media import Media
+from src.model.album import Album
+from src.model.media import Media
 
 
 def save_media_db(media_list: list):
