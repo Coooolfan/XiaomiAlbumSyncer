@@ -143,5 +143,10 @@ pip install -r requirements.txt
     
 ```bash
 pip install pyinstaller
+
+# For Windows
 pyinstaller --onefile --add-data "requirements.txt;." main.py
+
+# For Linux
+pyinstaller --onefile --add-data "requirements.txt:." main.py
 ```
