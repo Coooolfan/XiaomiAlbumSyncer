@@ -145,6 +145,9 @@ async def download_single_album(album: Album):
 
 async def select_and_download_single_album():
     album_list = Album.select().execute()
+    if len(album_list) == 0:
+        print("请先更新相册列表！")
+        return
     album_name_list = [album.name for album in album_list]
     album_name = inquirer.select(
         message="选择要下载的相册",
