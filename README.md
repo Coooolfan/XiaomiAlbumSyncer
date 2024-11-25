@@ -45,9 +45,9 @@
 
 3. 设置Cookie
     1. 以无无参方式运行`XiaomiAlbumSyncer.exe`。
-    ```shell
-    XiaomiAlbumSyncer.exe
-    ```
+        ```shell
+        XiaomiAlbumSyncer.exe
+        ```
     2. 程序会提示您选择功能，默认选中`设置Cookie`，按下回车键。
     3. 程序会提示您输入 Cookie，将上一步中获取的 Cookie 粘贴到此处(Windows Terminal中，可以直接单击鼠标右键即可完成粘贴)，按下回车键以确定。
     4. 使用`↑`、`↓`选中`更新相册列表`，按下回车键以更新相册列表。
