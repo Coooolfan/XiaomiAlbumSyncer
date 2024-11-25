@@ -2,7 +2,8 @@ name: build_docker
 
 on:
   release:
-    types: [created] # 表示在创建新的 Release 时触发
+    types: [published]
+  workflow_dispatch: 
 
 jobs:
   build_docker:
@@ -30,5 +31,5 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${{ github.ref_name }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${{  github.event.release.tag_name }}
             ${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:latest
