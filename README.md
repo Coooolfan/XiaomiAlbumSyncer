@@ -70,20 +70,30 @@
 1. 只挂载download目录
 
     ```shell
-    docker run -it -v ~/xiaomi-album-syncer:/app/download coolfan1024/xiaomi-album-syncer:latest
+    # 创建容器
+    docker run -it --name album-syncer -v ~/xiaomi-album-syncer:/app/download coolfan1024/xiaomi-album-syncer:latest
     ```
 
-    上述命令创建了一个容器，将下载的文件保存到**用户根目录的`xiaomi-album-syncer`文件夹**中。其余下载记录等数据会保存在容器内，如果需要持久化，请使用`-v`参数挂载。
+    上述命令创建了一个容器，将下载的文件保存到**用户根目录的`xiaomi-album-syncer`文件夹**中。其余下载记录等数据会保存在容器内，移除容器会导致其他数据丢失，如需要持久化，请使用`-v`参数挂载。
+
 
 2. 挂载所有数据到本机
     
     你可以使用docker run命令运行此程序，挂载所有数据到本机，这样可以保证数据不会丢失。
 
     ```shell
-    docker run -it -v /path/to/download:/app/download -v /path/to/sql.db:/app/sql.db -v /path/to/cookies.json:/app/cookies.json -v /path/to/config.json:/app/config.json coolfan1024/xiaomi-album-syncer:latest
+    docker run -it --name album-syncer -v /path/to/download:/app/download -v /path/to/sql.db:/app/sql.db -v /path/to/cookies.json:/app/cookies.json -v /path/to/config.json:/app/config.json coolfan1024/xiaomi-album-syncer:latest
     ```
 
     上述命令创建了一个容器，将下载的文件保存到`/path/to/download`目录中，下载记录保存在`/path/to/sql.db`文件中，Cookie保存在`/path/to/cookies.json`文件中，配置保存在`/path/to/config.json`文件中。
+
+3. 从停止的容器中启动
+
+    ```shell
+    docker start -i album-syncer
+    ```
+
+    你可以使用此命令从停止的容器中启动程序，并直接进入交互式命令行界面。
 
 ## Docker-compose
 
@@ -122,8 +132,6 @@ services:
 两者对应的功能完全相同，如果需要自动化脚本，可以使用非交互式命令行界面。传参时，可以使用`--help`查看帮助。
 
 > 对于非交互式命令行界面，请注意程序只会按照Options的顺序执行第一个被用户指明的选项，后续选项将被忽略。单次运行时请确保只有一个选项被指明。
-
-> Docker run时，如果需要使用非交互式命令行界面，请在`docker run`命令中添加启动参数，如`docker run -it coolfan1024/xiaomi-album-syncer:latest python main.py -uc`。此时程序会自动执行`更新Cookie`选项。
 
 ## 功能说明
 
