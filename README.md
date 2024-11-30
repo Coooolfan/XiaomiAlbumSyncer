@@ -139,6 +139,10 @@ services:
     
     用于设置小米云Cookie，程序将使用此Cookie进行后续操作。
 
+    > 对于Linux用户：如果您需要使用`非交互式命令行界面`，在传入Cookie参数时，请使用`'`包裹Cookie，
+    >
+    > 如`python main.py -sc 'replace_your_cookie_here'`。
+
 - 刷新Cookie
 
     只刷新Cookie，不进行其他操作。在执行单项长任务时，程序会每隔3分钟自动刷新Cookie，不用担心下载超大文件夹时Cookie过期。
