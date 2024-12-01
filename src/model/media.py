@@ -11,6 +11,7 @@ class Media(Model):
     media_type = CharField()
     sha1 = CharField()
     downloaded = BooleanField(default=False)
+    date_modified = IntegerField(default=0) # 时间戳，毫秒
 
     class Meta:
         database = db
