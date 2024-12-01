@@ -5,6 +5,8 @@ import re
 from datetime import datetime
 import traceback
 
+import pyexiv2
+
 from src.configer import Configer
 from src.manager import Manager
 from src.model.album import Album
@@ -86,6 +88,7 @@ async def get_media_list(
                     mime_type=gallery.get("mimeType"),
                     media_type=gallery.get("type"),
                     sha1=gallery.get("sha1"),
+                    date_modified=gallery.get("dateModified"),
                     downloaded=False,
                 )
             )
@@ -132,10 +135,12 @@ async def download_and_save_media(media: Media):
         else:
             download_path = download_path + "/" + str(media.album_id) + "/"
         os.makedirs(download_path, exist_ok=True)
-        with open(download_path + media.filename, "wb") as f:
+        target_file_path = download_path + media.filename
+        with open(target_file_path, "wb") as f:
             f.write(resp3.content)
         media.downloaded = True
         media.save()
+        fill_exif(media, target_file_path)
         # print(f"文件{"media/" + media.filename}下载完成")
     except Exception as e:
         print(f"文件{media.filename}下载失败,原因:{e}\n ")
@@ -156,3 +161,43 @@ async def refresh_cookie():
     print("Cookie刷新成功")
     global last_cookie_refresh_time
     last_cookie_refresh_time = datetime.now()
+
+
+def fill_exif(media: Media, file_path: str):
+    if Configer.get("fillExif") == "false":
+        return
+    if media.date_modified == 0:
+        return
+    new_time_str = None
+    img = pyexiv2.Image(file_path)
+    exif_data = img.read_exif()
+
+    # 当原图的Exif值存在时，优先使用原图的数据
+    if (exif_data.get("Exif.Image.DateTime") is not None) and (new_time_str is None):
+        new_time_str = exif_data.get("Exif.Image.DateTime")
+    if (exif_data.get("Exif.Photo.DateTimeDigitized") is not None) and (
+        new_time_str is None
+    ):
+        new_time_str = exif_data.get("Exif.Photo.DateTimeDigitized")
+    if (exif_data.get("Exif.Photo.DateTimeOriginal") is not None) and (
+        new_time_str is None
+    ):
+        new_time_str = exif_data.get("Exif.Photo.DateTimeOriginal")
+    if new_time_str is None:
+        new_time_str = datetime.fromtimestamp(media.date_modified / 1000).strftime(
+            "%Y:%m:%d %H:%M:%S"
+        )
+
+    # 只填充空值
+    if exif_data.get("Exif.Image.DateTime") is None:
+        exif_data["Exif.Image.DateTime"] = new_time_str
+    if exif_data.get("Exif.Photo.DateTimeDigitized") is None:
+        exif_data["Exif.Photo.DateTimeDigitized"] = new_time_str
+    if exif_data.get("Exif.Photo.DateTimeOriginal") is None:
+        exif_data["Exif.Photo.DateTimeOriginal"] = new_time_str
+    # 只在发生编辑的时候保存
+    if new_time_str is not None:
+        img.modify_exif(exif_data)
+
+    img.close()
+

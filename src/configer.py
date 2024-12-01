@@ -1,6 +1,5 @@
 from datetime import datetime
 import json
-from math import e
 
 
 class Configer:
@@ -12,6 +11,7 @@ class Configer:
         "downloadPath": "download",
         "dirName": "name",
         "pageSize": "200",
+        "fillExif": "false"
     }
 
     @classmethod

@@ -1,8 +1,9 @@
 {
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0",
     "startDate": "19990101",
-    "endDate": "20241123",
+    "endDate": "20241201",
     "downloadPath": "download",
     "dirName": "name",
-    "pageSize": "200"
+    "pageSize": "200",
+    "fillExif": "true"
 }

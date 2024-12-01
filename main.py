@@ -1,15 +1,14 @@
 import asyncio
-from datetime import datetime
 import click
 
 import nest_asyncio
 from InquirerPy import inquirer
 
-from src.configer import Configer
 from src.task import (init_syncer, modify_config, update_album_list as task_update_album_list, set_cookie as task_set_cookie, 
                       config_selected_album, download_selected_album as task_download_selected_album,
                       empty_download_record as task_empty_download_record, select_and_download_single_album, 
                       exit_syncer, refresh_cookie as task_refresh_cookie)
+
 
 nest_asyncio.apply()
 
