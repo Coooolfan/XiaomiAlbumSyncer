@@ -15,7 +15,7 @@ class Configer:
     }
 
     @classmethod
-    def get(cls, key: str):
+    def get(cls, key: str) -> str:
         try:
             with open(cls.config_file, "r", encoding="utf-8") as f:
                 return json.load(f).get(key, "")

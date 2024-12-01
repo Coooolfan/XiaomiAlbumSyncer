@@ -177,6 +177,8 @@ async def empty_download_record():
 
 def init_syncer():
     Configer.set("endDate", datetime.now().strftime("%Y%m%d"))
+    if (Configer.get("fillExif") != "true") and (Configer.get("fillExif") != "false"):
+        Configer.set("fillExif", "false")
     init_db()
 
 
