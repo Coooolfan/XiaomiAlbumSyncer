@@ -83,7 +83,7 @@ async def refresh_cookie():
 def modify_config():
     config_item = inquirer.select(
         message="可编辑配置项",
-        choices=["下载路径", "相册文件夹命名方式"],
+        choices=["下载路径", "相册文件夹命名方式", "填充Exif"],
     ).execute()
 
     if config_item == "下载路径":
@@ -105,6 +105,19 @@ def modify_config():
         else:
             folder_name = "id"
         Configer.set("dirName", folder_name)
+    elif config_item == "填充Exif":
+        fill_exif = inquirer.select(
+            message="是否填充Exif",
+            choices=[
+                "是（程序仅会在目标文件的“数字化时间”或“原始时间”为空时，将空值填充为文件创建时间）",
+                "否",
+            ],
+        ).execute()
+        if fill_exif == "否":
+            fill_exif = "false"
+        else:
+            fill_exif = "true"
+        Configer.set("fillExif", fill_exif)
 
 
 async def update_album_list():
@@ -161,9 +174,13 @@ async def empty_download_record():
     # 覆写所有Media的downloaded字段
     Media.update(downloaded=False).execute()
 
+
 def init_syncer():
     Configer.set("endDate", datetime.now().strftime("%Y%m%d"))
+    if (Configer.get("fillExif") != "true") and (Configer.get("fillExif") != "false"):
+        Configer.set("fillExif", "false")
     init_db()
+
 
 async def exit_syncer():
     await Manager().download_client.aclose()

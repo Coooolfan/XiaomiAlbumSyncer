@@ -5,6 +5,8 @@ import re
 from datetime import datetime
 import traceback
 
+import piexif
+
 from src.configer import Configer
 from src.manager import Manager
 from src.model.album import Album
@@ -55,10 +57,10 @@ async def get_album_list() -> list:
 
 
 async def get_media_list(
-        album_id: int,
-        pageNum: int,
-        start_date: str,
-        end_date: str,
+    album_id: int,
+    pageNum: int,
+    start_date: str,
+    end_date: str,
 ) -> list:
     await check_and_refresh_cookie()
     medias = []
@@ -86,6 +88,7 @@ async def get_media_list(
                     mime_type=gallery.get("mimeType"),
                     media_type=gallery.get("type"),
                     sha1=gallery.get("sha1"),
+                    date_modified=gallery.get("dateModified"),
                     downloaded=False,
                 )
             )
@@ -127,32 +130,89 @@ async def download_and_save_media(media: Media):
         download_path = Configer.get("downloadPath")
         if Configer.get("dirName") == "name":
             download_path = (
-                    download_path + "/" + Album.get(Album.id == media.album_id).name + "/"
+                download_path + "/" + Album.get(Album.id == media.album_id).name + "/"
             )
         else:
             download_path = download_path + "/" + str(media.album_id) + "/"
         os.makedirs(download_path, exist_ok=True)
-        with open(download_path + media.filename, "wb") as f:
+        target_file_path = download_path + media.filename
+        with open(target_file_path, "wb") as f:
             f.write(resp3.content)
         media.downloaded = True
         media.save()
+        fill_exif(media, target_file_path)
         # print(f"文件{"media/" + media.filename}下载完成")
     except Exception as e:
         print(f"文件{media.filename}下载失败,原因:{e}\n ")
         traceback.print_exc()
 
+
 async def check_and_refresh_cookie():
     global last_cookie_refresh_time
     async with lock:
-        if last_cookie_refresh_time is None or (datetime.now() - last_cookie_refresh_time).total_seconds() > 180:
+        if (
+            last_cookie_refresh_time is None
+            or (datetime.now() - last_cookie_refresh_time).total_seconds() > 180
+        ):
             await refresh_cookie()
             last_cookie_refresh_time = datetime.now()
 
+
 async def refresh_cookie():
-    resp = await Manager().download_client.get("https://i.mi.com/status/lite/setting?type=AutoRenewal&inactiveTime=10")
+    resp = await Manager().download_client.get(
+        "https://i.mi.com/status/lite/setting?type=AutoRenewal&inactiveTime=10"
+    )
     ok = resp.json().get("result") == "ok"
     if (not ok) or (resp.status_code != 200):
         raise Exception("Cookie刷新失败，请重新“设置Cookie”后重试")
     print("Cookie刷新成功")
     global last_cookie_refresh_time
     last_cookie_refresh_time = datetime.now()
+
+
+def fill_exif(media: Media, file_path: str):
+    if Configer.get("fillExif") == "false":
+        return
+    if media.date_modified == 0:
+        return
+
+    try:
+        new_time_str = None
+        exif_data = piexif.load(file_path)
+        existing_DateTime = exif_data["0th"].get(piexif.ImageIFD.DateTime)
+        existing_DateTimeDigitized = exif_data["Exif"].get(
+            piexif.ExifIFD.DateTimeDigitized
+        )
+        existing_DateTimeOriginal = exif_data["Exif"].get(
+            piexif.ExifIFD.DateTimeOriginal
+        )
+        # 当原图的Exif值存在时，优先使用原图的数据
+        if (existing_DateTime is not None) and (new_time_str is None):
+            new_time_str = existing_DateTime
+        if (existing_DateTimeDigitized is not None) and (new_time_str is None):
+            new_time_str = existing_DateTimeDigitized
+        if (existing_DateTimeOriginal is not None) and (new_time_str is None):
+            new_time_str = existing_DateTimeOriginal
+        if new_time_str is None:
+            new_time_str = datetime.fromtimestamp(media.date_modified / 1000).strftime(
+                "%Y:%m:%d %H:%M:%S"
+            )
+
+        # 只填充空值
+        if existing_DateTime is None:
+            exif_data["0th"][piexif.ImageIFD.DateTime] = new_time_str
+        if existing_DateTimeDigitized is None:
+            exif_data["Exif"][piexif.ExifIFD.DateTimeDigitized] = new_time_str
+        if existing_DateTimeOriginal is None:
+            exif_data["Exif"][piexif.ExifIFD.DateTimeOriginal] = new_time_str
+
+        # 只在发生编辑的时候保存
+        if new_time_str is not None:
+            exif_bytes = piexif.dump(exif_data)
+            piexif.insert(exif_bytes, file_path)
+
+    except Exception as e:
+        print(
+            f"文件{media.filename}填充Exif失败, 原因:{e}\n这一般是由于兼容性问题导致的, 此文件的Exif信息不会被修改"
+        )
+        traceback.print_exc()

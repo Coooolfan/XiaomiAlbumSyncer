@@ -1,6 +1,5 @@
 from datetime import datetime
 import json
-from math import e
 
 
 class Configer:
@@ -12,10 +11,11 @@ class Configer:
         "downloadPath": "download",
         "dirName": "name",
         "pageSize": "200",
+        "fillExif": "false"
     }
 
     @classmethod
-    def get(cls, key: str):
+    def get(cls, key: str) -> str:
         try:
             with open(cls.config_file, "r", encoding="utf-8") as f:
                 return json.load(f).get(key, "")
