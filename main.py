@@ -5,6 +5,7 @@ import nest_asyncio
 from InquirerPy import inquirer
 
 from src.task import (
+    fill_all_exif,
     init_syncer,
     modify_config,
     update_album_list as task_update_album_list,
@@ -36,6 +37,7 @@ async def icli():
                 "修改配置",
                 "下载单个相册",
                 "清空下载记录",
+                "填充Exif信息",
                 "退出",
             ],
         ).execute()
@@ -66,6 +68,13 @@ async def icli():
             ).execute()
             if check:
                 await task_empty_download_record()
+        elif task == "填充Exif信息":
+            check = inquirer.confirm(
+                message="确认填充Exif信息吗？\n此操作将会从数据库读取所有下载记录并填充Exif信息（只填充、不覆写）",
+                default=False,
+            ).execute()
+            if check:
+                fill_all_exif()
         elif task == "退出":
             await exit_syncer()
             return

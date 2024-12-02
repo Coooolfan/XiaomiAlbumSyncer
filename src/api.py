@@ -213,6 +213,5 @@ def fill_exif(media: Media, file_path: str):
 
     except Exception as e:
         print(
-            f"文件{media.filename}填充Exif失败, 原因:{e}\n这一般是由于兼容性问题导致的, 此文件的Exif信息不会被修改"
+            f"文件{media.filename}填充Exif失败, 原因:{e}\n这一般是由于兼容性问题导致的, 如果目标文件存在, 此文件的Exif信息不会被修改, 否则什么都不会发生"
         )
-        traceback.print_exc()

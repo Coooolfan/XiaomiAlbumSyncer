@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from src.model.media import Media
 from src.model.database import init_db, save_album_db, save_media_db
-from src.api import download_and_save_media, get_album_list, get_media_list
+from src.api import download_and_save_media, fill_exif, get_album_list, get_media_list
 from src.api import refresh_cookie as refresh_cookie_api
 from src.configer import Configer
 from src.PersistentCookies import PersistentCookies
@@ -180,6 +180,22 @@ def init_syncer():
     if (Configer.get("fillExif") != "true") and (Configer.get("fillExif") != "false"):
         Configer.set("fillExif", "false")
     init_db()
+
+
+def fill_all_exif():
+    medias = Media.select().execute()
+    print("开始填充Exif信息...")
+    for media in tqdm(medias, desc="填充Exif信息..."):
+        download_path = Configer.get("downloadPath")
+        if Configer.get("dirName") == "name":
+            download_path = (
+                download_path + "/" + Album.get(Album.id == media.album_id).name + "/"
+            )
+        else:
+            download_path = download_path + "/" + str(media.album_id) + "/"
+        os.makedirs(download_path, exist_ok=True)
+        target_file_path = download_path + media.filename
+        fill_exif(media, target_file_path)
 
 
 async def exit_syncer():
