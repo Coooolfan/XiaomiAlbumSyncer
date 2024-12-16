@@ -142,7 +142,9 @@ async def download_and_save_media(media: Media):
             f.write(resp3.content)
         media.downloaded = True
         media.save()
-        fill_exif(media, target_file_path)
+        # 检查文件类型是否允许填充Exif信息（此由piexif限制）
+        if any(ext in media.mime_type for ext in ["jpeg", "jpg", "tif", "tiff"]):
+            fill_exif(media, target_file_path)
         # print(f"文件{"media/" + media.filename}下载完成")
     except Exception as e:
         print(f"文件{media.filename}下载失败,原因:{e}\n ")
