@@ -103,9 +103,11 @@ async def download_and_save_media(media: Media):
     await check_and_refresh_cookie()
     media = Media.get(Media.id == media.id)
     try:
-        if "image" not in media.mime_type:
-            # print(f"文件{media.filename}不是图片,跳过下载")
-            return
+        if "video" in media.mime_type:
+            if Configer.get("downloadVideo") == "false":
+                print(f"文件{media.filename}为视频, 未开启下载视频选项, 跳过下载")
+                return
+            
         if media.downloaded:
             # print(f"文件{media.filename}已下载,跳过下载")
             return

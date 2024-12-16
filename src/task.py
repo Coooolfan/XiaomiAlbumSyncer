@@ -83,7 +83,7 @@ async def refresh_cookie():
 def modify_config():
     config_item = inquirer.select(
         message="可编辑配置项",
-        choices=["下载路径", "相册文件夹命名方式", "填充Exif"],
+        choices=["下载路径", "相册文件夹命名方式", "填充Exif", "是否下载视频"],
     ).execute()
 
     if config_item == "下载路径":
@@ -118,6 +118,20 @@ def modify_config():
         else:
             fill_exif = "true"
         Configer.set("fillExif", fill_exif)
+    elif config_item == "是否下载视频":
+        download_video = inquirer.select(
+            default="否（默认）",
+            message="是否下载视频, 默认不下载",
+            choices=[
+                "是",
+                "否（默认）",
+            ],
+        ).execute()
+        if download_video == "是":
+            download_video = "true"
+        else:
+            download_video = "false"
+        Configer.set("downloadVideo", download_video)
 
 
 async def update_album_list():

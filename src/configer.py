@@ -11,7 +11,8 @@ class Configer:
         "downloadPath": "download",
         "dirName": "name",
         "pageSize": "200",
-        "fillExif": "false"
+        "fillExif": "false",
+        "downloadVideo": "false"
     }
 
     @classmethod
