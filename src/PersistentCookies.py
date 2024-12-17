@@ -9,6 +9,7 @@ class PersistentCookies:
         :param cookie_string: 用户输入的 Cookie 字符串。
         :param client_cookies: httpx.Cookies 对象。
         """
+        client_cookies.clear()
         cookie_pairs = cookie_string.split(";")
         for pair in cookie_pairs:
             if "=" in pair:
