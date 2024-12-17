@@ -104,7 +104,7 @@ async def download_and_save_media(media: Media):
     media = Media.get(Media.id == media.id)
     try:
         if "video" in media.mime_type:
-            if Configer.get("downloadVideo") == "false":
+            if Configer.get("downloadVideo") != "true":
                 print(f"文件{media.filename}为视频, 未开启下载视频选项, 跳过下载")
                 return
             
