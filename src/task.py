@@ -46,6 +46,20 @@ async def get_all_media_from_album(album_id: int):
         pageNum += 1
     return medias
 
+async def get_undownloaded_media_from_album(album_id: int):
+    medias = []
+    pageNum = 0
+    while True:
+        print("获取此相册第", pageNum, "页媒体文件...")
+        media_list = await get_media_list(
+            album_id, pageNum, Configer.get("startDate"), Configer.get("endDate")
+        )
+        if len(media_list) == 0:
+            break
+        medias.extend(media_list)
+        pageNum += 1
+    return [media for media in medias if not media.downloaded]
+
 
 def config_selected_album():
     album_list = Album.select().execute()
@@ -153,10 +167,10 @@ async def download_selected_album():
 async def download_single_album(album: Album):
     print("---------------------------------")
     print("更新相册", album.name, "...")
-    medias = await get_all_media_from_album(album.id)
+    medias = await get_undownloaded_media_from_album(album.id)
     save_media_db(medias)
     print("开始下载相册", album.name, "...")
-    print("共计", len(medias), "个文件")
+    print("准备下载", len(medias), "个文件")
     print("---------------------------------")
     # 计时
     start_time = datetime.now()
