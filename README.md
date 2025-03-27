@@ -27,21 +27,23 @@
 
     1. 安装[油猴脚本](https://www.tampermonkey.net/)。
     2. 安装`小米云Cookie获取脚本`：本仓库根目录`tampermonkey.js`文件
-        1. 在浏览器扩展槽中找到油猴脚本图标，单击右键，选择`添加新脚本`。
-        2. 将`tampermonkey.js`文件中的内容复制到新建的脚本页面中。
-        3. 单击编辑框左上角的`文件`-`保存`以保存脚本。
-    3. 登录[小米云服务](https://i.mi.com/)。
-    4. 点击左下角的`Show and Copy Cookie`按钮。
+        1. 在浏览器扩展槽中找到油猴脚本图标，单击右键，选择`添加新脚本`
+        2. 将`tampermonkey.js`文件中的内容复制到新建的脚本页面中
+        3. 单击编辑框左上角的`文件`-`保存`以保存脚本
+    3. 登录[小米云服务](https://i.mi.com/)
+    4. **[访问一次相册页面](https://i.mi.com/gallery/h5#/)**
+    5. 点击左下角的`Show and Copy Cookie`按钮。
     ![copycookiebutton](static/copycookiebutton.jpg)
-    5. 单击弹出的窗口中的`确定`按钮后，Cookie 会被复制到剪切板
+    6. 单击弹出的窗口中的`确定`按钮后，Cookie 会被复制到剪切板
 
     **手动获取**
 
-    1. 登录[小米云](https://i.mi.com/)。
-    2. 打开浏览器的开发者工具（F12）。
-    3. 在开发者工具中切换到`Network`选项卡。
-    4. 刷新页面。
-    5. 在开发者工具中找到`i.mi.com`的请求，复制`Request Headers`中的`Cookie`字段值。
+    1. 登录[小米云服务](https://i.mi.com/)
+    2. **[访问一次相册页面](https://i.mi.com/gallery/h5#/)**
+    3. 打开浏览器的开发者工具（F12）
+    4. 在开发者工具中切换到`Network`选项卡
+    5. 刷新页面
+    6. 在开发者工具中找到`i.mi.com`的请求，复制`Request Headers`中的`Cookie`字段值
 
 3. 设置Cookie
     1. 以无无参方式运行`XiaomiAlbumSyncer.exe`。
