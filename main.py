@@ -1,6 +1,8 @@
 import asyncio
 import click
 
+import os
+import sys
 import nest_asyncio
 from InquirerPy import inquirer
 
@@ -97,6 +99,17 @@ def cli(set_cookie, update_cookie, update_albums, download_albums, clear_downloa
     在非交互模式下，程序只会执行下述Options选项中第一个被识别到的命令（以下述Options为序），其余命令会被忽略
     或者不传入任何参数，进入交互模式
     """
+
+    # 判断是否为打包后的 exe 文件
+    if getattr(sys, 'frozen', False):
+    # 如果是打包后的 exe 文件，获取其所在目录
+        application_path = os.path.dirname(sys.executable)
+    else:
+    # 如果是普通脚本，获取脚本所在目录
+        application_path = os.path.dirname(os.path.abspath(__file__))
+    # 切换当前工作目录
+    os.chdir(application_path)
+
     init_syncer()
     if set_cookie:
         task_set_cookie(cookie=set_cookie)
