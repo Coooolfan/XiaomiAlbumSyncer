@@ -215,17 +215,21 @@ services:
 
 # Development
 
-## 安装依赖
+## 安装uv
+
+参阅<https://docs.astral.sh/uv/getting-started/installation/>
+
+## 运行
+
+安装完`uv`后无需手动创建虚拟环境，直接运行`uv run`即可
 
 ```bash
-pip install -r requirements.txt
+uv run main.py
 ```
 
-## 编译
+## 编译（待验证）
     
 ```bash
-pip install pyinstaller
-
 # For Windows
 pyinstaller --onefile --add-data "requirements.txt;." main.py
 
