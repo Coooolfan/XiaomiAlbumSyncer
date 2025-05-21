@@ -7,10 +7,12 @@ from peewee import IntegerField
 
 
 
-def save_media_db(media_list: list):
+def save_media_db(media_list: list) -> list:
     with db.atomic():  # 使用事务
+        undownloaded_media_list = []
         for media in media_list:
-            if Media.get_or_none(Media.id == media.id):
+            unupdated_media = Media.get_or_none(Media.id == media.id)
+            if unupdated_media is not None:
                 Media.update(
                     filename=media.filename,
                     mime_type=media.mime_type,
@@ -33,6 +35,10 @@ def save_media_db(media_list: list):
                 except IntegrityError:
                     # 如果记录已存在，则忽略错误
                     pass
+            if unupdated_media is not None and unupdated_media.downloaded == False:
+                undownloaded_media_list.append(unupdated_media)
+
+    return undownloaded_media_list
 
 
 def save_album_db(album_list: list):

@@ -46,21 +46,6 @@ async def get_all_media_from_album(album_id: int):
         pageNum += 1
     return medias
 
-async def get_undownloaded_media_from_album(album_id: int):
-    medias = []
-    pageNum = 0
-    while True:
-        print("获取此相册第", pageNum, "页媒体文件...")
-        media_list = await get_media_list(
-            album_id, pageNum, Configer.get("startDate"), Configer.get("endDate")
-        )
-        if len(media_list) == 0:
-            break
-        medias.extend(media_list)
-        pageNum += 1
-    return [media for media in medias if not media.downloaded]
-
-
 def config_selected_album():
     album_list = Album.select().execute()
     if len(album_list) == 0:
@@ -167,15 +152,15 @@ async def download_selected_album():
 async def download_single_album(album: Album):
     print("---------------------------------")
     print("更新相册", album.name, "...")
-    medias = await get_undownloaded_media_from_album(album.id)
-    save_media_db(medias)
+    all_medias = await get_all_media_from_album(album.id)
+    undownloaded_medias = save_media_db(all_medias)
     print("开始下载相册", album.name, "...")
-    print("准备下载", len(medias), "个文件")
+    print("准备下载", len(undownloaded_medias), "个文件")
     print("---------------------------------")
     # 计时
     start_time = datetime.now()
     # 对下载速度应该没什么需求吧，就不用异步了
-    for media in tqdm(medias, desc="下载进度", unit="file"):
+    for media in tqdm(undownloaded_medias, desc="下载进度", unit="file"):
         await download_and_save_media(media)
     end_time = datetime.now()
     print("---------------------------------")
