@@ -182,6 +182,7 @@ def fill_exif(media: Media, file_path: str):
 
     try:
         new_time_str = None
+        need_fill = False
         exif_data = piexif.load(file_path)
         existing_DateTime = exif_data["0th"].get(piexif.ImageIFD.DateTime)
         existing_DateTimeDigitized = exif_data["Exif"].get(
@@ -205,15 +206,19 @@ def fill_exif(media: Media, file_path: str):
         # 只填充空值
         if existing_DateTime is None:
             exif_data["0th"][piexif.ImageIFD.DateTime] = new_time_str
+            need_fill = True
         if existing_DateTimeDigitized is None:
             exif_data["Exif"][piexif.ExifIFD.DateTimeDigitized] = new_time_str
+            need_fill = True
         if existing_DateTimeOriginal is None:
             exif_data["Exif"][piexif.ExifIFD.DateTimeOriginal] = new_time_str
-
+            need_fill = True
+            
         # 只在发生编辑的时候保存
-        if new_time_str is not None:
+        if need_fill:
             exif_bytes = piexif.dump(exif_data)
             piexif.insert(exif_bytes, file_path)
+            print(f"文件{media.filename}填充Exif成功")
 
     except Exception as e:
         print(
