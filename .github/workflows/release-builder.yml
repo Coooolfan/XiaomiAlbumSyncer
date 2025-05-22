@@ -6,18 +6,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build Executable
+  build-windows-macos:
+    name: Build Windows & macOS Executables
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          # Linux x86_64
-          - os: ubuntu-latest
-            output_name: XiaomiAlbumSyncer-linux-x86_64
-            separator: ":"
-            ext: ""
-
           # Windows x86_64
           - os: windows-latest
             output_name: XiaomiAlbumSyncer-windows-x86_64
@@ -44,6 +38,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
+          # 使用与pyproject.toml中指定的相同Python版本
           python-version: "3.12"
           cache: "pip"
           architecture: ${{ matrix.arch || 'x64' }}
@@ -56,7 +51,19 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
+          # 纯命令行应用，移除--windowed选项
           pyinstaller --onefile --add-data "requirements.txt${{ matrix.separator }}." --add-data "static${{ matrix.separator }}static" main.py --name "${{ matrix.output_name }}"
+
+      # 设置权限
+      - name: Set executable permissions
+        if: runner.os != 'Windows'
+        run: |
+          chmod +x dist/${{ matrix.output_name }}
+
+          # 在macOS上显示二进制文件信息，帮助诊断
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            otool -L dist/${{ matrix.output_name }} || true
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -65,7 +72,36 @@ jobs:
           path: dist/${{ matrix.output_name }}${{ matrix.ext }}
           retention-days: 5
 
-  build-linux-arm64:
+  build-linux-x86_64:
+    name: Build Linux x86_64
+    runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux2014_x86_64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build with PyInstaller
+        run: |
+          # 使用manylinux预装的Python 3.12
+          /opt/python/cp312-cp312/bin/pip install --upgrade pip
+          /opt/python/cp312-cp312/bin/pip install -r requirements.txt
+          /opt/python/cp312-cp312/bin/pip install pyinstaller
+          /opt/python/cp312-cp312/bin/pyinstaller --onefile --add-data "requirements.txt:." --add-data "static:static" main.py --name "XiaomiAlbumSyncer-linux-x86_64"
+
+          # 设置可执行权限
+          chmod +x dist/XiaomiAlbumSyncer-linux-x86_64
+
+          # 查看库依赖情况
+          ldd dist/XiaomiAlbumSyncer-linux-x86_64 || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: XiaomiAlbumSyncer-linux-x86_64
+          path: dist/XiaomiAlbumSyncer-linux-x86_64
+          retention-days: 5
+
+  build-linux-aarch64:
     name: Build Linux ARM64
     runs-on: ubuntu-latest
     steps:
@@ -82,22 +118,27 @@ jobs:
 
       - name: Build Linux ARM64 executable
         run: |
-          docker run --platform linux/arm64 --rm -v $(pwd):/app -w /app arm64v8/python:3.12 /bin/bash -c "
-            pip install -r requirements.txt &&
-            pip install pyinstaller &&
-            pyinstaller --onefile --add-data 'requirements.txt:.' --add-data 'static:static' main.py --name XiaomiAlbumSyncer-linux-arm64
+          docker run --platform linux/arm64 --rm -v $(pwd):/app -w /app quay.io/pypa/manylinux2014_aarch64 /bin/bash -c "
+            # 使用manylinux预装的Python 3.12
+            /opt/python/cp312-cp312/bin/pip install --upgrade pip
+            /opt/python/cp312-cp312/bin/pip install -r requirements.txt
+            /opt/python/cp312-cp312/bin/pip install pyinstaller
+            /opt/python/cp312-cp312/bin/pyinstaller --onefile --add-data 'requirements.txt:.' --add-data 'static:static' main.py --name XiaomiAlbumSyncer-linux-aarch64
+            
+            # 赋予可执行权限
+            chmod +x dist/XiaomiAlbumSyncer-linux-aarch64
           "
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: XiaomiAlbumSyncer-linux-arm64
-          path: dist/XiaomiAlbumSyncer-linux-arm64
+          name: XiaomiAlbumSyncer-linux-aarch64
+          path: dist/XiaomiAlbumSyncer-linux-aarch64
           retention-days: 5
 
   upload_to_release:
     name: Upload to Release
-    needs: [build, build-linux-arm64]
+    needs: [build-windows-macos, build-linux-x86_64, build-linux-aarch64]
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
