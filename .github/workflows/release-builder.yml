@@ -75,24 +75,36 @@ jobs:
   build-linux-x86_64:
     name: Build Linux x86_64
     runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build with PyInstaller
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build with Docker
         run: |
-          # 使用manylinux预装的Python 3.12
-          /opt/python/cp312-cp312/bin/pip install --upgrade pip
-          /opt/python/cp312-cp312/bin/pip install -r requirements.txt
-          /opt/python/cp312-cp312/bin/pip install pyinstaller
-          /opt/python/cp312-cp312/bin/pyinstaller --onefile --add-data "requirements.txt:." --add-data "static:static" main.py --name "XiaomiAlbumSyncer-linux-x86_64"
+          # 创建一个 Dockerfile 来构建应用
+          cat > Dockerfile.build << EOF
+          FROM quay.io/pypa/manylinux2014_x86_64
+          WORKDIR /app
+          COPY . /app/
+          RUN /opt/python/cp312-cp312/bin/pip install --upgrade pip && \
+              /opt/python/cp312-cp312/bin/pip install -r requirements.txt && \
+              /opt/python/cp312-cp312/bin/pip install pyinstaller && \
+              /opt/python/cp312-cp312/bin/pyinstaller --onefile --add-data "requirements.txt:." --add-data "static:static" main.py --name "XiaomiAlbumSyncer-linux-x86_64" && \
+              chmod +x dist/XiaomiAlbumSyncer-linux-x86_64
+          CMD ["ldd", "dist/XiaomiAlbumSyncer-linux-x86_64"]
+          EOF
 
-          # 设置可执行权限
-          chmod +x dist/XiaomiAlbumSyncer-linux-x86_64
+          # 构建镜像
+          docker build -t xiaomialbumsyncer-build -f Dockerfile.build .
 
-          # 查看库依赖情况
-          ldd dist/XiaomiAlbumSyncer-linux-x86_64 || true
+          # 创建目录以存储构建结果
+          mkdir -p dist
+
+          # 从容器中复制构建结果
+          docker run --rm -v $(pwd)/dist:/output xiaomialbumsyncer-build sh -c "cp /app/dist/XiaomiAlbumSyncer-linux-x86_64 /output/"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -116,18 +128,34 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Linux ARM64 executable
+      - name: Build with Docker
         run: |
-          docker run --platform linux/arm64 --rm -v $(pwd):/app -w /app quay.io/pypa/manylinux2014_aarch64 /bin/bash -c "
-            # 使用manylinux预装的Python 3.12
-            /opt/python/cp312-cp312/bin/pip install --upgrade pip
-            /opt/python/cp312-cp312/bin/pip install -r requirements.txt
-            /opt/python/cp312-cp312/bin/pip install pyinstaller
-            /opt/python/cp312-cp312/bin/pyinstaller --onefile --add-data 'requirements.txt:.' --add-data 'static:static' main.py --name XiaomiAlbumSyncer-linux-aarch64
-            
-            # 赋予可执行权限
-            chmod +x dist/XiaomiAlbumSyncer-linux-aarch64
-          "
+          # 创建一个 Dockerfile 来构建 ARM64 应用
+          cat > Dockerfile.arm64 << EOF
+          FROM quay.io/pypa/manylinux2014_aarch64
+          WORKDIR /app
+          COPY . /app/
+          RUN /opt/python/cp312-cp312/bin/pip install --upgrade pip && \
+              /opt/python/cp312-cp312/bin/pip install -r requirements.txt && \
+              /opt/python/cp312-cp312/bin/pip install pyinstaller && \
+              /opt/python/cp312-cp312/bin/pyinstaller --onefile --add-data "requirements.txt:." --add-data "static:static" main.py --name "XiaomiAlbumSyncer-linux-aarch64" && \
+              chmod +x dist/XiaomiAlbumSyncer-linux-aarch64
+          EOF
+
+          # 构建镜像
+          docker buildx build --platform linux/arm64 -t xiaomialbumsyncer-arm64-build -f Dockerfile.arm64 --output type=local,dest=./build-output .
+
+          # 创建目录以存储构建结果
+          mkdir -p dist
+
+          # 检查构建输出并移动到正确位置
+          find ./build-output -name "XiaomiAlbumSyncer-linux-aarch64" -exec cp {} dist/ \;
+
+          # 如果上面的方法失败，可以尝试下面的方法
+          if [ ! -f dist/XiaomiAlbumSyncer-linux-aarch64 ]; then
+            ls -la ./build-output
+            find ./build-output -type f -name "XiaomiAlbumSyncer-linux-aarch64*" -exec cp {} dist/XiaomiAlbumSyncer-linux-aarch64 \;
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
