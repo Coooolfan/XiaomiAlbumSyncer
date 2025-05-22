@@ -20,7 +20,7 @@ jobs:
 
           # Windows x86_64
           - os: windows-latest
-            output_name: XiaomiAlbumSyncer-windows
+            output_name: XiaomiAlbumSyncer-windows-x86_64
             separator: ";"
             ext: ".exe"
 
@@ -44,7 +44,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.x"
+          python-version: "3.12"
           cache: "pip"
           architecture: ${{ matrix.arch || 'x64' }}
 
@@ -82,7 +82,7 @@ jobs:
 
       - name: Build Linux ARM64 executable
         run: |
-          docker run --platform linux/arm64 --rm -v $(pwd):/app -w /app arm64v8/python:3.9 /bin/bash -c "
+          docker run --platform linux/arm64 --rm -v $(pwd):/app -w /app arm64v8/python:3.12 /bin/bash -c "
             pip install -r requirements.txt &&
             pip install pyinstaller &&
             pyinstaller --onefile --add-data 'requirements.txt:.' --add-data 'static:static' main.py --name XiaomiAlbumSyncer-linux-arm64
