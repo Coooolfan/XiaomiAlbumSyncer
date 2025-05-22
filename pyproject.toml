@@ -3,7 +3,7 @@ name = "xiaomialbumsyncer"
 version = "0.1.0"
 description = "单向同步小米云服务中的相册照片到本地"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "==3.12.9"
 dependencies = [
     "httpx==0.27.2",
     "inquirerpy==0.3.4",

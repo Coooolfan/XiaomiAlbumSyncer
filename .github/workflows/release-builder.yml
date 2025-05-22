@@ -1,0 +1,115 @@
+name: Release Builder
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Executable
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          # Linux x86_64
+          - os: ubuntu-latest
+            output_name: XiaomiAlbumSyncer-linux-x86_64
+            separator: ":"
+            ext: ""
+
+          # Windows x86_64
+          - os: windows-latest
+            output_name: XiaomiAlbumSyncer-windows
+            separator: ";"
+            ext: ".exe"
+
+          # macOS x86_64
+          - os: macos-latest
+            output_name: XiaomiAlbumSyncer-macos-x86_64
+            separator: ":"
+            ext: ""
+
+          # macOS ARM64 (M1/M2)
+          - os: macos-latest
+            output_name: XiaomiAlbumSyncer-macos-arm64
+            separator: ":"
+            ext: ""
+            arch: "arm64"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+          cache: "pip"
+          architecture: ${{ matrix.arch || 'x64' }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller --onefile --add-data "requirements.txt${{ matrix.separator }}." --add-data "static${{ matrix.separator }}static" main.py --name "${{ matrix.output_name }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.output_name }}
+          path: dist/${{ matrix.output_name }}${{ matrix.ext }}
+
+  build-linux-arm64:
+    name: Build Linux ARM64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Linux ARM64 executable
+        run: |
+          docker run --platform linux/arm64 --rm -v $(pwd):/app -w /app arm64v8/python:3.9 /bin/bash -c "
+            pip install -r requirements.txt &&
+            pip install pyinstaller &&
+            pyinstaller --onefile --add-data 'requirements.txt:.' --add-data 'static:static' main.py --name XiaomiAlbumSyncer-linux-arm64
+          "
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: XiaomiAlbumSyncer-linux-arm64
+          path: dist/XiaomiAlbumSyncer-linux-arm64
+
+  upload_to_release:
+    name: Upload to Release
+    needs: [build, build-linux-arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: ./artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R ./artifacts
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'release'
+        with:
+          files: |
+            ./artifacts/**/*
+          token: ${{ secrets.GITHUB_TOKEN }}
