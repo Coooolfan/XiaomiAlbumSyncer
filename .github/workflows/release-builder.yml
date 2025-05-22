@@ -59,10 +59,11 @@ jobs:
           pyinstaller --onefile --add-data "requirements.txt${{ matrix.separator }}." --add-data "static${{ matrix.separator }}static" main.py --name "${{ matrix.output_name }}"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.output_name }}
           path: dist/${{ matrix.output_name }}${{ matrix.ext }}
+          retention-days: 5
 
   build-linux-arm64:
     name: Build Linux ARM64
@@ -88,10 +89,11 @@ jobs:
           "
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: XiaomiAlbumSyncer-linux-arm64
           path: dist/XiaomiAlbumSyncer-linux-arm64
+          retention-days: 5
 
   upload_to_release:
     name: Upload to Release
@@ -99,9 +101,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: ./artifacts
+          merge-multiple: true
 
       - name: Display structure of downloaded files
         run: ls -R ./artifacts
