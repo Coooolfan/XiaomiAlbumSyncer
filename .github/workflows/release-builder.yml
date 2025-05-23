@@ -1,4 +1,4 @@
-name: Release Builder
+name: Build Executable
 
 on:
   release:
@@ -6,42 +6,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows-macos:
-    name: Build Windows & macOS Executables
+  build:
+    name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          # Windows x86_64
-          - os: windows-latest
-            output_name: XiaomiAlbumSyncer-windows-x86_64
-            separator: ";"
-            ext: ".exe"
-
-          # macOS x86_64
-          - os: macos-latest
-            output_name: XiaomiAlbumSyncer-macos-x86_64
-            separator: ":"
-            ext: ""
-
-          # macOS ARM64 (M1/M2)
-          - os: macos-latest
-            output_name: XiaomiAlbumSyncer-macos-arm64
-            separator: ":"
-            ext: ""
-            arch: "arm64"
+          - os: windows-2022
+            arch: x64
+          - os: windows-11-arm
+            arch: arm64
+          - os: ubuntu-22.04
+            arch: x64
+          - os: ubuntu-22.04-arm
+            arch: arm64
+          - os: macos-13
+            arch: x64
+          - os: macos-14
+            arch: arm64
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set Python
+        uses: actions/setup-python@v5
         with:
-          # 使用与pyproject.toml中指定的相同Python版本
-          python-version: "3.12"
-          cache: "pip"
-          architecture: ${{ matrix.arch || 'x64' }}
+          python-version: 3.12
 
       - name: Install dependencies
         run: |
@@ -49,139 +40,21 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build with PyInstaller
-        run: |
-          # 纯命令行应用，移除--windowed选项
-          pyinstaller --onefile --add-data "requirements.txt${{ matrix.separator }}." --add-data "static${{ matrix.separator }}static" main.py --name "${{ matrix.output_name }}"
-
-      # 设置权限
-      - name: Set executable permissions
+      - name: Build for Unix-like systems
         if: runner.os != 'Windows'
         run: |
-          chmod +x dist/${{ matrix.output_name }}
+          pyinstaller --onefile --add-data "requirements.txt:." main.py
+          chmod +x dist/main
+          cp dist/main dist/XiaomiAlbumSyncer-v${{ github.event.release.tag_name }}-${{ matrix.os }}-${{ matrix.arch }}
 
-          # 在macOS上显示二进制文件信息，帮助诊断
-          if [[ "${{ runner.os }}" == "macOS" ]]; then
-            otool -L dist/${{ matrix.output_name }} || true
-          fi
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.output_name }}
-          path: dist/${{ matrix.output_name }}${{ matrix.ext }}
-          retention-days: 5
-
-  build-linux-x86_64:
-    name: Build Linux x86_64
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build with Docker
+      - name: Build for Windows
+        if: runner.os == 'Windows'
         run: |
-          # 创建一个 Dockerfile 来构建应用
-          cat > Dockerfile.build << EOF
-          FROM quay.io/pypa/manylinux2014_x86_64
-          WORKDIR /app
-          COPY . /app/
-          RUN /opt/python/cp312-cp312/bin/pip install --upgrade pip && \
-              /opt/python/cp312-cp312/bin/pip install -r requirements.txt && \
-              /opt/python/cp312-cp312/bin/pip install pyinstaller && \
-              /opt/python/cp312-cp312/bin/pyinstaller --onefile --add-data "requirements.txt:." --add-data "static:static" main.py --name "XiaomiAlbumSyncer-linux-x86_64" && \
-              chmod +x dist/XiaomiAlbumSyncer-linux-x86_64
-          CMD ["ldd", "dist/XiaomiAlbumSyncer-linux-x86_64"]
-          EOF
-
-          # 构建镜像
-          docker build -t xiaomialbumsyncer-build -f Dockerfile.build .
-
-          # 创建目录以存储构建结果
-          mkdir -p dist
-
-          # 从容器中复制构建结果
-          docker run --rm -v $(pwd)/dist:/output xiaomialbumsyncer-build sh -c "cp /app/dist/XiaomiAlbumSyncer-linux-x86_64 /output/"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: XiaomiAlbumSyncer-linux-x86_64
-          path: dist/XiaomiAlbumSyncer-linux-x86_64
-          retention-days: 5
-
-  build-linux-aarch64:
-    name: Build Linux ARM64
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build with Docker
-        run: |
-          # 创建一个 Dockerfile 来构建 ARM64 应用
-          cat > Dockerfile.arm64 << EOF
-          FROM quay.io/pypa/manylinux2014_aarch64
-          WORKDIR /app
-          COPY . /app/
-          RUN /opt/python/cp312-cp312/bin/pip install --upgrade pip && \
-              /opt/python/cp312-cp312/bin/pip install -r requirements.txt && \
-              /opt/python/cp312-cp312/bin/pip install pyinstaller && \
-              /opt/python/cp312-cp312/bin/pyinstaller --onefile --add-data "requirements.txt:." --add-data "static:static" main.py --name "XiaomiAlbumSyncer-linux-aarch64" && \
-              chmod +x dist/XiaomiAlbumSyncer-linux-aarch64
-          EOF
-
-          # 构建镜像
-          docker buildx build --platform linux/arm64 -t xiaomialbumsyncer-arm64-build -f Dockerfile.arm64 --output type=local,dest=./build-output .
-
-          # 创建目录以存储构建结果
-          mkdir -p dist
-
-          # 检查构建输出并移动到正确位置
-          find ./build-output -name "XiaomiAlbumSyncer-linux-aarch64" -exec cp {} dist/ \;
-
-          # 如果上面的方法失败，可以尝试下面的方法
-          if [ ! -f dist/XiaomiAlbumSyncer-linux-aarch64 ]; then
-            ls -la ./build-output
-            find ./build-output -type f -name "XiaomiAlbumSyncer-linux-aarch64*" -exec cp {} dist/XiaomiAlbumSyncer-linux-aarch64 \;
-          fi
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: XiaomiAlbumSyncer-linux-aarch64
-          path: dist/XiaomiAlbumSyncer-linux-aarch64
-          retention-days: 5
-
-  upload_to_release:
-    name: Upload to Release
-    needs: [build-windows-macos, build-linux-x86_64, build-linux-aarch64]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./artifacts
-          merge-multiple: true
-
-      - name: Display structure of downloaded files
-        run: ls -R ./artifacts
+          pyinstaller --onefile --add-data "requirements.txt;." main.py
+          cp dist/main.exe dist/XiaomiAlbumSyncer-v${{ github.event.release.tag_name }}-${{ matrix.os }}-${{ matrix.arch }}.exe
 
       - name: Upload to release
-        uses: softprops/action-gh-release@v1
-        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./artifacts/**/*
-          token: ${{ secrets.GITHUB_TOKEN }}
+            ./dist/XiaomiAlbumSyncer-v${{ github.event.release.tag_name }}-${{ matrix.os }}-${{ matrix.arch }}*
