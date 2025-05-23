@@ -4,6 +4,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "版本号 (手动触发时使用)"
+        required: false
+        default: "dev"
 
 jobs:
   build:
@@ -29,6 +34,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set version
+        id: set_version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          fi
+        shell: bash
+
       - name: Set Python
         uses: actions/setup-python@v5
         with:
@@ -45,16 +60,25 @@ jobs:
         run: |
           pyinstaller --onefile --add-data "requirements.txt:." main.py
           chmod +x dist/main
-          cp dist/main dist/XiaomiAlbumSyncer-v${{ github.event.release.tag_name }}-${{ matrix.os }}-${{ matrix.arch }}
+          cp dist/main dist/XiaomiAlbumSyncer-v${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.arch }}
 
       - name: Build for Windows
         if: runner.os == 'Windows'
         run: |
           pyinstaller --onefile --add-data "requirements.txt;." main.py
-          cp dist/main.exe dist/XiaomiAlbumSyncer-v${{ github.event.release.tag_name }}-${{ matrix.os }}-${{ matrix.arch }}.exe
+          cp dist/main.exe dist/XiaomiAlbumSyncer-v${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.arch }}.exe
+
+      - name: Upload as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: XiaomiAlbumSyncer-v${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            ./dist/XiaomiAlbumSyncer-v${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.arch }}*
+          retention-days: 7
 
       - name: Upload to release
+        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./dist/XiaomiAlbumSyncer-v${{ github.event.release.tag_name }}-${{ matrix.os }}-${{ matrix.arch }}*
+            ./dist/XiaomiAlbumSyncer-v${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.arch }}*
