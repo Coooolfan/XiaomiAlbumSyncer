@@ -10,6 +10,9 @@ on:
         required: false
         default: "dev"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build on ${{ matrix.os }}
