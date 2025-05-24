@@ -82,7 +82,7 @@ async def refresh_cookie():
 def modify_config():
     config_item = inquirer.select(
         message="可编辑配置项",
-        choices=["下载路径", "相册文件夹命名方式", "填充Exif", "是否下载视频"],
+        choices=["下载路径", "相册文件夹命名方式", "是否填充照片Exif", "是否下载视频", "是否填充视频Exif"],
     ).execute()
 
     if config_item == "下载路径":
@@ -104,11 +104,11 @@ def modify_config():
         else:
             folder_name = "id"
         Configer.set("dirName", folder_name)
-    elif config_item == "填充Exif":
+    elif config_item == "是否填充照片Exif":
         fill_exif = inquirer.select(
-            message="是否填充Exif",
+            message="是否填充照片Exif",
             choices=[
-                "是（程序仅会在目标文件的“数字化时间”或“原始时间”为空时，将空值填充为文件创建时间）",
+                "是（程序仅会在目标文件与时间相关的标签为空时，将空值填充为文件上传到小米云服务的时间。对于视频文件，确保已于config.json中配置exiftool路径）",
                 "否",
             ],
         ).execute()
@@ -131,6 +131,17 @@ def modify_config():
         else:
             download_video = "false"
         Configer.set("downloadVideo", download_video)
+    elif config_item == "是否填充视频Exif":
+        fill_video_exif = inquirer.select(
+            message="是否填充视频Exif",
+            choices=["是", "否（默认）"],
+        ).execute() 
+        if fill_video_exif == "是":
+            fill_video_exif = "true"
+            print("填充视频Exif 功能依赖exiftool，程序默认使用`exiftool`作为exiftool路径，请确保exiftool已安装且在环境变量中。或者在config.json中配置exiftool路径")
+        else:
+            fill_video_exif = "false"
+        Configer.set("fillVideoExif", fill_video_exif)
 
 
 async def update_album_list():
@@ -189,9 +200,7 @@ async def empty_download_record():
 
 
 def init_syncer():
-    Configer.set("endDate", datetime.now().strftime("%Y%m%d"))
-    if (Configer.get("fillExif") != "true") and (Configer.get("fillExif") != "false"):
-        Configer.set("fillExif", "false")
+    Configer.init_config()
     init_db()
 
 

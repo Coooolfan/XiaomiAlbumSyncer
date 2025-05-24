@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import os
 
 
 class Configer:
@@ -12,7 +13,9 @@ class Configer:
         "dirName": "name",
         "pageSize": "200",
         "fillExif": "false",
-        "downloadVideo": "false"
+        "downloadVideo": "false",
+        "fillVideoExif": "false",
+        "exiftoolPath": "exiftool"
     }
 
     @classmethod
@@ -47,3 +50,18 @@ class Configer:
             data[key] = value
             with open(cls.config_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
+
+    @classmethod
+    def init_config(cls):
+        if not os.path.exists(cls.config_file):
+            with open(cls.config_file, "w", encoding="utf-8") as f:
+                json.dump(cls.default_config, f, ensure_ascii=False, indent=4)
+        else:
+            with open(cls.config_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for key, value in cls.default_config.items():
+                    if key not in data:
+                        data[key] = value
+                with open(cls.config_file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=4)
+        cls.set("endDate", datetime.now().strftime("%Y%m%d"))

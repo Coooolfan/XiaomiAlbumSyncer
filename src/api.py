@@ -5,8 +5,7 @@ import re
 from datetime import datetime
 import traceback
 
-import piexif
-
+from src.exiftool import fill_exif
 from src.configer import Configer
 from src.manager import Manager
 from src.model.album import Album
@@ -142,9 +141,7 @@ async def download_and_save_media(media: Media):
             f.write(resp3.content)
         media.downloaded = True
         media.save()
-        # 检查文件类型是否允许填充Exif信息（此由piexif限制）
-        if any(ext in media.mime_type for ext in ["jpeg", "jpg", "tif", "tiff"]):
-            fill_exif(media, target_file_path)
+        fill_exif(media, target_file_path)
         # print(f"文件{"media/" + media.filename}下载完成")
     except Exception as e:
         print(f"文件{media.filename}下载失败,原因:{e}\n ")
@@ -172,55 +169,3 @@ async def refresh_cookie():
     print("Cookie刷新成功")
     global last_cookie_refresh_time
     last_cookie_refresh_time = datetime.now()
-
-
-def fill_exif(media: Media, file_path: str):
-    if Configer.get("fillExif") == "false":
-        return
-    if media.date_modified == 0:
-        return
-
-    try:
-        new_time_str = None
-        need_fill = False
-        exif_data = piexif.load(file_path)
-        existing_DateTime = exif_data["0th"].get(piexif.ImageIFD.DateTime)
-        existing_DateTimeDigitized = exif_data["Exif"].get(
-            piexif.ExifIFD.DateTimeDigitized
-        )
-        existing_DateTimeOriginal = exif_data["Exif"].get(
-            piexif.ExifIFD.DateTimeOriginal
-        )
-        # 当原图的Exif值存在时，优先使用原图的数据
-        if (existing_DateTime is not None) and (new_time_str is None):
-            new_time_str = existing_DateTime
-        if (existing_DateTimeDigitized is not None) and (new_time_str is None):
-            new_time_str = existing_DateTimeDigitized
-        if (existing_DateTimeOriginal is not None) and (new_time_str is None):
-            new_time_str = existing_DateTimeOriginal
-        if new_time_str is None:
-            new_time_str = datetime.fromtimestamp(media.date_modified / 1000).strftime(
-                "%Y:%m:%d %H:%M:%S"
-            )
-
-        # 只填充空值
-        if existing_DateTime is None:
-            exif_data["0th"][piexif.ImageIFD.DateTime] = new_time_str
-            need_fill = True
-        if existing_DateTimeDigitized is None:
-            exif_data["Exif"][piexif.ExifIFD.DateTimeDigitized] = new_time_str
-            need_fill = True
-        if existing_DateTimeOriginal is None:
-            exif_data["Exif"][piexif.ExifIFD.DateTimeOriginal] = new_time_str
-            need_fill = True
-            
-        # 只在发生编辑的时候保存
-        if need_fill:
-            exif_bytes = piexif.dump(exif_data)
-            piexif.insert(exif_bytes, file_path)
-            print(f"文件{media.filename}填充Exif成功")
-
-    except Exception as e:
-        print(
-            f"文件{media.filename}填充Exif失败, 原因:{e}\n这一般是由于兼容性问题导致的, 如果目标文件存在, 此文件的Exif信息不会被修改, 否则什么都不会发生"
-        )
