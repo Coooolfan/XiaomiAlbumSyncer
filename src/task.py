@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 import os
 from InquirerPy.validator import PathValidator
@@ -37,9 +38,16 @@ async def get_all_media_from_album(album_id: int):
     pageNum = 0
     while True:
         print("获取此相册第", pageNum, "页媒体文件...")
-        media_list = await get_media_list(
-            album_id, pageNum, Configer.get("startDate"), Configer.get("endDate")
-        )
+        try:
+            media_list = await get_media_list(
+                album_id, pageNum, Configer.get("startDate"), Configer.get("endDate")
+            )
+        except Exception as e:
+            print(f"获取媒体列表失败: {e}，500ms后重试")
+            await asyncio.sleep(0.5)
+            media_list = await get_media_list(
+                album_id, pageNum, Configer.get("startDate"), Configer.get("endDate")
+            )
         if len(media_list) == 0:
             break
         medias.extend(media_list)
