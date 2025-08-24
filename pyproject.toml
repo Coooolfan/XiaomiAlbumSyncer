@@ -13,7 +13,8 @@ dependencies = [
     "tqdm==4.67.0",
     "click==8.1.7",
     "piexif==1.1.3",
-    "peewee-migrate==1.13.0"
+    "peewee-migrate==1.13.0",
+    "micloud"
 ]
 
 [build-system]
