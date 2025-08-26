@@ -1,0 +1,12 @@
+server.port: 8080
+
+solon.app:
+  name: 'demo-app'
+  group: 'demo'
+
+solon.logging:
+  appender:
+    console:
+      level: INFO
+    file:
+      level: INFO
