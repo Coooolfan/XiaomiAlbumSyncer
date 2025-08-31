@@ -34,16 +34,20 @@ class Jimmer {
     }
 
     @Bean
-    fun sql(dataSource: DataSource): KSqlClient = newKSqlClient {
-        log.info("初始化Jimmer")
-        setDialect(SQLiteDialect())
-        setConnectionManager(ConnectionManager.simpleConnectionManager(dataSource))
-        setDatabaseNamingStrategy(DefaultDatabaseNamingStrategy.LOWER_CASE)
-        setExecutor(Executor.log())
-        setSqlFormatter(SqlFormatter.PRETTY)
-        setDatabaseValidationMode(
-            DatabaseValidationMode.ERROR
-        )
+    fun sql(dataSource: DataSource): KSqlClient {
+        val kSqlClient = newKSqlClient {
+            log.info("初始化Jimmer")
+            setDialect(SQLiteDialect())
+            setConnectionManager(ConnectionManager.simpleConnectionManager(dataSource))
+            setDatabaseNamingStrategy(DefaultDatabaseNamingStrategy.LOWER_CASE)
+            setExecutor(Executor.log())
+            setSqlFormatter(SqlFormatter.PRETTY)
+            setDatabaseValidationMode(
+                DatabaseValidationMode.ERROR
+            )
+        }
+        kSqlClient.validateDatabase()
+        return kSqlClient
     }
 
     private fun determineDbPath(): Path {
