@@ -12,9 +12,4 @@ class DemoController {
     fun hello(@Param(defaultValue = "world") name: String?): String {
         return String.format("Hello %s!", name)
     }
-
-    @Mapping("/hello2")
-    fun hello2(@Param(defaultValue = "world") name: String?): ModelAndView {
-        return ModelAndView("hello2.ftl").put("name", name)
-    }
 }

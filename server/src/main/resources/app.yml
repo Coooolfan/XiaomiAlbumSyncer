@@ -10,3 +10,17 @@ solon.logging:
       level: INFO
     file:
       level: INFO
+
+jimmer:
+  language: kotlin
+  client:
+    openapi:
+      path: /openapi.yml
+      ui-path: /openapi.html
+      properties:
+        info:
+          title: My Web Service
+          description: |
+            Restore the DTO explosion that was 
+            eliminated by server-side developers
+          version: 1.0

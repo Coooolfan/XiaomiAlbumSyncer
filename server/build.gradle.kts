@@ -15,16 +15,27 @@ group = "com.coooolfan"
 version = "1.0"
 description = "Demo project for Solon"
 
+val jimmerVersion = "0.9.106"
 
 dependencies {
     implementation(platform("org.noear:solon-parent:3.5.0"))
-    
     implementation("org.noear:solon-web")
-    implementation("org.noear:solon-view-freemarker")
     implementation("org.noear:solon-logging-logback")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
+    implementation("cn.dev33:sa-token-solon-plugin:1.44.0")
 
-    compileOnly("org.projectlombok:lombok")
+    implementation("org.flywaydb:flyway-core:11.11.2")
+
+    implementation("org.babyfish.jimmer:jimmer-client:$jimmerVersion")
+    implementation("org.babyfish.jimmer:jimmer-core:${jimmerVersion}")
+    implementation("org.babyfish.jimmer:jimmer-core-kotlin:${jimmerVersion}")
+    implementation("org.babyfish.jimmer:jimmer-sql:${jimmerVersion}")
+    implementation("org.babyfish.jimmer:jimmer-sql-kotlin:${jimmerVersion}")
+
+    implementation("com.zaxxer:HikariCP:7.0.2")
+
+    runtimeOnly("org.xerial:sqlite-jdbc:3.50.3.0")
+
     testImplementation("org.noear:solon-test")
 }
 
@@ -42,7 +53,7 @@ tasks.withType<Jar> {
             set("Main-Class", "com.coooolfan.xiaomialbumsyncer.AppKt")
         }
     }
-    
+
     dependsOn(configurations.runtimeClasspath)
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -51,4 +62,12 @@ tasks.withType<Jar> {
     })
 
     from(sourceSets.main.get().output)
+}
+
+// avoid sqlite warnings
+tasks.withType<JavaExec> {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+tasks.withType<Test> {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
