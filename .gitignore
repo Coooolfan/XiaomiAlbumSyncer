@@ -1,5 +1,7 @@
 .DS_Store
 .db
+.db-shm
+.db-wal
 
 /web/node_modules
 /web/dist
