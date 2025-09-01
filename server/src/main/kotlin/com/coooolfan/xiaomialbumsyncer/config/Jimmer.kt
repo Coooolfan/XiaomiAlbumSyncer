@@ -1,17 +1,14 @@
 package com.coooolfan.xiaomialbumsyncer.config
 
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
 import org.babyfish.jimmer.sql.dialect.SQLiteDialect
+import org.babyfish.jimmer.sql.exception.DatabaseValidationException
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.newKSqlClient
 import org.babyfish.jimmer.sql.runtime.*
-import org.noear.solon.annotation.Bean
+import org.flywaydb.core.Flyway
 import org.noear.solon.annotation.Configuration
+import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import javax.sql.DataSource
 
 
@@ -20,23 +17,11 @@ class Jimmer {
 
     private val log = LoggerFactory.getLogger(Jimmer::class.java)
 
-    @Bean
-    fun defaultDataSource(): DataSource {
-        val dbPath = determineDbPath()
-        Files.createDirectories(dbPath.parent)
-        val config = HikariConfig()
-        config.jdbcUrl = buildSQLiteUrl(dbPath)
-        config.driverClassName = "org.sqlite.JDBC"
-        config.maximumPoolSize = 1 // SQLite通常不需要太多连接
-        config.connectionTestQuery = "SELECT 1"
-        config.poolName = "SQLitePool"
-        return HikariDataSource(config)
-    }
-
-    @Bean
-    fun sql(dataSource: DataSource): KSqlClient {
+    @Managed
+    fun sql(dataSource: DataSource, flyway: Flyway): KSqlClient {
+        // flyway 的注入仅用于确保在初始化 KSqlClient 之前执行 Flyway 迁移
         val kSqlClient = newKSqlClient {
-            log.info("初始化Jimmer")
+            log.info("初始化 Jimmer kSqlClient 并校验表结构")
             setDialect(SQLiteDialect())
             setConnectionManager(ConnectionManager.simpleConnectionManager(dataSource))
             setDatabaseNamingStrategy(DefaultDatabaseNamingStrategy.LOWER_CASE)
@@ -46,22 +31,15 @@ class Jimmer {
                 DatabaseValidationMode.ERROR
             )
         }
-        kSqlClient.validateDatabase()
+        try {
+            kSqlClient.validateDatabase()
+        } catch (e: DatabaseValidationException) {
+            log.error("数据库校验失败: " + e.message)
+            log.info("1. 如果您正处于开发环境，请确保已执行最新的迁移脚本，并根据报错信息手动调整数据库或Flyway迁移文件。")
+            log.info("2. 如果您正处于生产环境，请前往Github仓库提交issue寻求帮助。此报错不应该出现在生产环境。")
+            throw RuntimeException("数据库校验失败", e)
+        }
         return kSqlClient
     }
 
-    private fun determineDbPath(): Path {
-        val dbPath = "./xiaomialbumsyncer.db"
-
-        return Paths.get(dbPath)
-    }
-
-    private fun buildSQLiteUrl(dbPath: Path): String {
-        return "jdbc:sqlite:${dbPath.toAbsolutePath()}" +
-                "?journal_mode=WAL" +           // WAL模式，更好的并发性能
-                "&synchronous=NORMAL" +         // 平衡性能和安全性
-                "&cache_size=10000" +           // 缓存大小
-                "&temp_store=memory" +          // 临时表存储在内存
-                "&mmap_size=268435456"          // 内存映射大小(256MB)
-    }
 }

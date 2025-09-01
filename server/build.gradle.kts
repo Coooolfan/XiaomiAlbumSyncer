@@ -2,7 +2,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     java
-    kotlin("jvm") version "2.1.0"
+    application
+    kotlin("jvm") version "2.2.10"
+    id("com.google.devtools.ksp") version "2.2.10-2.0.2"
+    id("org.graalvm.buildtools.native") version "0.11.0"
+
 }
 
 repositories {
@@ -18,7 +22,7 @@ description = "Demo project for Solon"
 val jimmerVersion = "0.9.106"
 
 dependencies {
-    implementation(platform("org.noear:solon-parent:3.5.0"))
+    implementation(platform("org.noear:solon-parent:3.5.1"))
     implementation("org.noear:solon-web")
     implementation("org.noear:solon-logging-logback")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
@@ -31,10 +35,14 @@ dependencies {
     implementation("org.babyfish.jimmer:jimmer-core-kotlin:${jimmerVersion}")
     implementation("org.babyfish.jimmer:jimmer-sql:${jimmerVersion}")
     implementation("org.babyfish.jimmer:jimmer-sql-kotlin:${jimmerVersion}")
+    ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
 
     implementation("com.zaxxer:HikariCP:7.0.2")
 
     runtimeOnly("org.xerial:sqlite-jdbc:3.50.3.0")
+
+    implementation("org.noear:solon.aot")
+    annotationProcessor("org.noear:solon.aot")
 
     testImplementation("org.noear:solon-test")
 }
@@ -62,6 +70,16 @@ tasks.withType<Jar> {
     })
 
     from(sourceSets.main.get().output)
+}
+
+kotlin {
+    sourceSets.main {
+        kotlin.srcDir("build/generated/ksp/main/kotlin")
+    }
+}
+
+application {
+    mainClass.set("com.coooolfan.xiaomialbumsyncer.App")
 }
 
 // avoid sqlite warnings

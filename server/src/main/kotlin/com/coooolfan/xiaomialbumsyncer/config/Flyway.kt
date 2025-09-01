@@ -2,8 +2,8 @@ package com.coooolfan.xiaomialbumsyncer.config
 
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.MigrationInfoService
-import org.noear.solon.annotation.Bean
 import org.noear.solon.annotation.Configuration
+import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
@@ -13,8 +13,8 @@ class DatabaseMigration {
 
     private val log = LoggerFactory.getLogger(DatabaseMigration::class.java)
 
-    @Bean
-    fun migrate(dataSource: DataSource) {
+    @Managed
+    fun migrate(dataSource: DataSource): Flyway {
         // 创建Flyway实例
         val flyway: Flyway = Flyway.configure()
             .dataSource(dataSource)
@@ -34,6 +34,7 @@ class DatabaseMigration {
             // 执行迁移
             val migrationsExecuted: Int = flyway.migrate().migrationsExecuted
             log.info("成功执行了 $migrationsExecuted 个迁移")
+            return flyway
         } catch (e: Exception) {
             log.error("数据库迁移失败: " + e.message)
             throw RuntimeException("数据库迁移失败", e)
