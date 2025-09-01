@@ -1,0 +1,56 @@
+package com.coooolfan.xiaomialbumsyncer.service
+
+import cn.dev33.satoken.stp.StpUtil
+import com.coooolfan.xiaomialbumsyncer.controller.CreateConfigRequest
+import com.coooolfan.xiaomialbumsyncer.controller.LoginRequest
+import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
+import com.coooolfan.xiaomialbumsyncer.model.id
+import com.coooolfan.xiaomialbumsyncer.model.password
+import org.babyfish.jimmer.sql.ast.mutation.SaveMode
+import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.babyfish.jimmer.sql.kt.ast.expression.eq
+import org.noear.solon.annotation.Managed
+import java.security.MessageDigest
+
+@Managed
+class SystemConfigService(private val sql: KSqlClient) {
+    fun isInit(): Boolean {
+        return sql.executeQuery(SystemConfig::class) {
+            selectCount()
+        }[0] > 0
+    }
+
+    fun createConfig(create: CreateConfigRequest) {
+        if (isInit()) throw IllegalStateException("System is already initialized")
+
+        sql.saveCommand(SystemConfig {
+            id = 0
+            password = hashPwd(create.password)
+            passToken = "-"
+        }, SaveMode.INSERT_ONLY).execute()
+    }
+
+    fun login(login: LoginRequest) {
+        if (isInit()) throw IllegalStateException("System is already initialized")
+
+        val lng = sql.executeQuery(SystemConfig::class) {
+            where(table.id eq 0)
+            where(table.password eq hashPwd(login.password))
+            selectCount()
+        }[0]
+
+        if (lng != 1.toLong()) throw IllegalStateException("Auth failed")
+
+        StpUtil.login(0)
+
+    }
+
+    private fun hashPwd(password: String): String {
+        val unHashed = "djshfpiuwEGfiugeiugfpiugpiuiuf$password"
+        val digest = MessageDigest.getInstance("SHA3-384")
+        val hashBytes = digest.digest(unHashed.toByteArray(Charsets.UTF_8))
+        return hashBytes.joinToString("") {
+            "%02x".format(it.toInt() and 0xFF)
+        }
+    }
+}

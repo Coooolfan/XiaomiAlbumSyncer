@@ -1,8 +1,10 @@
 package com.coooolfan.xiaomialbumsyncer
 
+import org.babyfish.jimmer.client.EnableImplicitApi
 import org.noear.solon.Solon
 import org.noear.solon.annotation.SolonMain
 
+@EnableImplicitApi
 @SolonMain
 class App {
     companion object {
