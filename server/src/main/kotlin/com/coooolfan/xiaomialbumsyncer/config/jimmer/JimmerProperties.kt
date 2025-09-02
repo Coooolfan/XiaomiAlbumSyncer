@@ -7,7 +7,7 @@ import org.noear.solon.annotation.Managed
 @Managed
 class JimmerProperties {
 
-    val client = Client("/api", null, null)
+    val client = Client(null, null, null)
 
     val ts = Client.TypeScript("/ts-api.ts", "Api", 4, false, null, false)
 
