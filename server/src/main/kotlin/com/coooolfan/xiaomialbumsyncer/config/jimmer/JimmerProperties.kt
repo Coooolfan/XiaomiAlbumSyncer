@@ -9,7 +9,7 @@ class JimmerProperties {
 
     val client = Client(null, null, null)
 
-    val ts = Client.TypeScript("/ts-api.ts", "Api", 4, false, null, false)
+    val ts = Client.TypeScript("/api/openapi.zip", "Api", 0, false, null, false)
 
     val errTanslater = ErrorTranslator(null, null, null, null)
 

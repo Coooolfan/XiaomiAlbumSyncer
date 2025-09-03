@@ -5,6 +5,7 @@ import org.babyfish.jimmer.client.runtime.Metadata
 import org.babyfish.jimmer.client.runtime.Operation
 import org.babyfish.jimmer.client.runtime.VirtualType
 import org.noear.solon.annotation.*
+import org.noear.solon.core.Constants.PARM_UNDEFINED_VALUE
 import org.noear.solon.core.handle.UploadedFile
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Method
@@ -75,7 +76,7 @@ class Metadata {
 
         override fun requestParam(javaParameter: Parameter?): String? {
             javaParameter?.annotations?.forEach { annotation ->
-                if (annotation is Param) return annotation.value
+                if (annotation is Param) return javaParameter.name
             }
             return null
         }
@@ -96,7 +97,7 @@ class Metadata {
 
         override fun defaultValue(javaParameter: Parameter?): String? {
             javaParameter?.annotations?.forEach { annotation ->
-                if (annotation is Param) return annotation.defaultValue
+                if (annotation is Param) return if (annotation.defaultValue == PARM_UNDEFINED_VALUE) null else annotation.defaultValue
             }
             return null
         }

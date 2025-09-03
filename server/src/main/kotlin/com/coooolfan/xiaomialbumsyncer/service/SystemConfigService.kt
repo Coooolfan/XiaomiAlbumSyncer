@@ -31,7 +31,7 @@ class SystemConfigService(private val sql: KSqlClient) {
     }
 
     fun login(login: LoginRequest) {
-        if (isInit()) throw IllegalStateException("System is already initialized")
+        if (!isInit()) throw IllegalStateException("System is not initialized")
 
         val lng = sql.executeQuery(SystemConfig::class) {
             where(table.id eq 0)
