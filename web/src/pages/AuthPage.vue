@@ -91,9 +91,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-100 flex items-center justify-center p-4"
-  >
+  <div class="min-h-screen flex items-center justify-center p-4 relative z-10">
     <transition
       enter-active-class="transition ease-out duration-500"
       enter-from-class="opacity-0 translate-y-4 scale-[0.98]"

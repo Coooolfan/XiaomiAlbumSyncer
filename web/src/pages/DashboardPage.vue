@@ -1,10 +1,46 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, inject, computed, onMounted } from 'vue'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import { api } from '../ApiInstance'
 
 const loggingOut = ref(false)
+
+const BG_KEY = 'app:bgMode'
+type BgMode = 'lightRays' | 'silk'
+
+const backgroundMode = inject<any>('backgroundMode', null)
+const toggleBackground = inject<() => void>('toggleBackground', null)
+const setBackgroundMode = inject<(mode: BgMode) => void>('setBackgroundMode', null)
+
+const bgModeLocal = ref<BgMode>('lightRays')
+
+onMounted(() => {
+  const saved = localStorage.getItem(BG_KEY) as BgMode | null
+  if (saved === 'silk' || saved === 'lightRays') {
+    bgModeLocal.value = saved
+    if (setBackgroundMode) setBackgroundMode(saved)
+  } else {
+    localStorage.setItem(BG_KEY, bgModeLocal.value)
+    if (setBackgroundMode) setBackgroundMode(bgModeLocal.value)
+  }
+})
+
+const bgLabel = computed(() => (bgModeLocal.value === 'silk' ? '背景：丝绸' : '背景：光束'))
+
+function onToggleBg() {
+  if (toggleBackground) {
+    toggleBackground()
+    if (backgroundMode && 'value' in backgroundMode) {
+      bgModeLocal.value = backgroundMode.value
+    } else {
+      bgModeLocal.value = bgModeLocal.value === 'lightRays' ? 'silk' : 'lightRays'
+    }
+  } else {
+    bgModeLocal.value = bgModeLocal.value === 'lightRays' ? 'silk' : 'lightRays'
+  }
+  localStorage.setItem(BG_KEY, bgModeLocal.value)
+}
 
 async function logout() {
   loggingOut.value = true
@@ -20,9 +56,9 @@ async function logout() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-white to-slate-50">
+  <div class="min-h-screen">
     <!-- Topbar -->
-    <header class="sticky top-0 z-10 backdrop-blur bg-white/70 border-b border-slate-200/60">
+    <header class="sticky top-0 z-10 backdrop-blur-3xl bg-white/70 border-b border-slate-200/60">
       <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <div
@@ -48,11 +84,6 @@ async function logout() {
 
     <!-- Content -->
     <main class="max-w-6xl mx-auto px-4 py-8">
-      <div class="mb-6">
-        <h1 class="text-2xl sm:text-3xl font-semibold text-slate-800">仪表盘</h1>
-        <p class="text-slate-500 mt-1">欢迎回来！在这里快速查看系统状态并进入你的工作流。</p>
-      </div>
-
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         <!-- 快速开始 -->
         <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60">
@@ -112,34 +143,16 @@ async function logout() {
           </template>
         </Card>
 
-        <!-- 最近活动（占位动画） -->
+        <!-- 外观 -->
         <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60">
-          <template #title>最近活动</template>
+          <template #title>外观</template>
           <template #content>
-            <ul class="space-y-3">
-              <li class="flex items-center gap-3">
-                <div class="h-2 w-2 rounded-full bg-slate-300 animate-pulse"></div>
-                <div class="flex-1 h-3 rounded bg-slate-100 animate-pulse"></div>
-              </li>
-              <li class="flex items-center gap-3">
-                <div
-                  class="h-2 w-2 rounded-full bg-slate-300 animate-pulse [animation-delay:120ms]"
-                ></div>
-                <div
-                  class="flex-1 h-3 rounded bg-slate-100 animate-pulse [animation-delay:120ms]"
-                ></div>
-              </li>
-              <li class="flex items-center gap-3">
-                <div
-                  class="h-2 w-2 rounded-full bg-slate-300 animate-pulse [animation-delay:240ms]"
-                ></div>
-                <div
-                  class="flex-1 h-3 rounded bg-slate-100 animate-pulse [animation-delay:240ms]"
-                ></div>
-              </li>
-            </ul>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-slate-600">背景</span>
+              <Button :label="bgLabel" class="!py-2.5 !px-4" @click="onToggleBg" />
+            </div>
             <p class="text-xs text-slate-400 mt-3">
-              注：该区域为演示占位。接入真实数据后展示最近同步与下载事件。
+              在 LightRays 与 Silk 之间切换，偏好将被本地保存。
             </p>
           </template>
         </Card>
