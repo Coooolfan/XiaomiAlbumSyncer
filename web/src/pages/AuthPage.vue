@@ -10,7 +10,7 @@ import { api } from '../ApiInstance'
 const router = useRouter()
 
 const checkingInit = ref(true)
-const isInit = ref(true) // 服务端是否已初始化（已设置密码）
+const isInit = ref(true) // 服务端是否已初始化
 const password = ref('')
 const confirmPassword = ref('')
 const submitting = ref(false)
@@ -18,21 +18,6 @@ const errorMsg = ref<string | null>(null)
 
 const modeTitle = computed(() => (isInit.value ? '登录' : '初始化 / 注册'))
 const submitLabel = computed(() => (isInit.value ? '登录' : '设置密码并进入'))
-
-async function extractErrorMessage(e: unknown): Promise<string> {
-  try {
-    const anyErr = e as any
-    if (anyErr && typeof anyErr.then === 'function') {
-      const data = await anyErr
-      return data?.message || JSON.stringify(data) || '请求失败'
-    }
-    if (typeof anyErr === 'string') return anyErr
-    if (anyErr?.message) return anyErr.message
-    return '请求失败'
-  } catch {
-    return '请求失败'
-  }
-}
 
 async function checkInit() {
   checkingInit.value = true
@@ -43,7 +28,7 @@ async function checkInit() {
   } catch (e) {
     // 后端未准备好或接口异常时，默认为未初始化，允许用户设置密码
     isInit.value = false
-    errorMsg.value = await extractErrorMessage(e)
+    errorMsg.value = e instanceof Error ? e.message : String(e)
   } finally {
     checkingInit.value = false
   }
@@ -79,7 +64,7 @@ async function handleSubmit() {
     router.replace('/dashboard')
   } catch (e) {
     console.error('Auth error:', e)
-    errorMsg.value = await extractErrorMessage(e)
+    errorMsg.value = e instanceof Error ? e.message : String(e)
   } finally {
     submitting.value = false
   }
@@ -202,7 +187,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* PrimeVue Password 的输入框在 v4 中通过 input-class 传入，但依然补充宽度适配 */
 :deep(.p-password) {
   width: 100%;
 }

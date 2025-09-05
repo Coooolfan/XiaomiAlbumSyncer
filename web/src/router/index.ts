@@ -11,8 +11,23 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/dashboard',
     name: 'dashboard',
-    component: () => import('../pages/DashboardPage.vue'),
-    meta: { requiresAuth: true, title: 'Dashboard' },
+    component: () => import('../layout/DashboardLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      { path: '', redirect: '/dashboard/setting' },
+      {
+        path: 'setting',
+        name: 'dashboard-setting',
+        component: () => import('../pages/DashboardSettingPage.vue'),
+        meta: { requiresAuth: true, title: '设置' },
+      },
+      {
+        path: 'schedule',
+        name: 'dashboard-schedule',
+        component: () => import('../pages/DashboardSchedulePage.vue'),
+        meta: { requiresAuth: true, title: '计划' },
+      },
+    ],
   },
   {
     path: '/:pathMatch(.*)*',
