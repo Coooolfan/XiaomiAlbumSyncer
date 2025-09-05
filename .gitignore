@@ -10,4 +10,8 @@
 /server/.idea
 /server/.kotlin
 /server/build
-/server/logs
+/server/logs/server/.gradle/
+*.db-*
+.cunzhi-memory/
+web/.yarn/
+logs/
