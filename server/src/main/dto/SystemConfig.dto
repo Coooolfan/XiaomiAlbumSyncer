@@ -1,0 +1,11 @@
+export com.coooolfan.xiaomialbumsyncer.model.SystemConfig
+
+input SystemConfigInit {
+    password
+}
+
+input SystemConfigUpdate {
+    passToken
+
+    userId
+}

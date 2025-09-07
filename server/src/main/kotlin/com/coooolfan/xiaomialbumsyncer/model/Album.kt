@@ -4,16 +4,18 @@ import org.babyfish.jimmer.sql.Entity
 import org.babyfish.jimmer.sql.GeneratedValue
 import org.babyfish.jimmer.sql.GenerationType
 import org.babyfish.jimmer.sql.Id
+import org.babyfish.jimmer.sql.Key
 
 @Entity
-interface SystemConfig {
+interface Album {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long
 
-    val password: String
+    val name: String
 
-    val passToken: String
+    @Key
+    val cloudId: String
 
-    val userId: String
+    val assetCount: Int
 }

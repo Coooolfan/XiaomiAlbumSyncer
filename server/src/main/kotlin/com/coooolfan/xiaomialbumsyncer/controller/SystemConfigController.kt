@@ -1,5 +1,8 @@
 package com.coooolfan.xiaomialbumsyncer.controller
 
+import cn.dev33.satoken.annotation.SaCheckLogin
+import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
+import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate
 import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
 import org.babyfish.jimmer.client.meta.Api
 import org.noear.solon.annotation.Body
@@ -19,14 +22,17 @@ class SystemConfigController(private val service: SystemConfigService) {
 
     @Api
     @Mapping(method = [MethodType.POST])
-    fun createConfig(@Body create: CreateConfigRequest) {
+    fun createConfig(@Body create: SystemConfigInit) {
         return service.createConfig(create)
     }
-}
 
-data class CreateConfigRequest(
-    val password: String
-)
+    @Api
+    @Mapping("/pass-token", method = [MethodType.POST])
+    @SaCheckLogin
+    fun updatePassToken(@Body update: SystemConfigUpdate) {
+        return service.updateConfig(update.toEntity())
+    }
+}
 
 data class IsInitResponse(
     val isInit: Boolean

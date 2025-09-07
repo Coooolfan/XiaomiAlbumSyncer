@@ -27,6 +27,9 @@ dependencies {
     implementation("org.noear:solon-logging-logback")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
     implementation("cn.dev33:sa-token-solon-plugin:1.44.0")
+    implementation("org.noear:solon-serialization-jackson:3.5.1")
+    implementation("com.squareup.okhttp3:okhttp:5.1.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
 
     implementation("org.flywaydb:flyway-core:11.11.2")
 

@@ -3,6 +3,7 @@ import { RouterView } from 'vue-router'
 import { provide, ref, onMounted, watch } from 'vue'
 import Silk from '@/components/background/Silk.vue'
 import LightRays from '@/components/background/LightRays.vue'
+import Toast from 'primevue/toast'
 
 type BgMode = 'lightRays' | 'silk'
 const BG_KEY = 'app:bgMode'
@@ -52,7 +53,7 @@ provide('setBackgroundMode', setBackgroundMode)
       v-else
       rays-origin="top-left"
       rays-color="#f2f2f2"
-      :rays-speed="1"
+      :rays-speed="0.8"
       :light-spread="0.8"
       :ray-length="1.2"
       :follow-mouse="true"
@@ -62,6 +63,7 @@ provide('setBackgroundMode', setBackgroundMode)
       class-name="custom-rays"
     />
   </div>
+  <Toast position="bottom-right" />
   <div class="min-h-screen text-slate-800">
     <RouterView />
   </div>

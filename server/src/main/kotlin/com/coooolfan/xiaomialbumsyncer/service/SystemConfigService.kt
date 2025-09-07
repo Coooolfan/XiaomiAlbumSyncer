@@ -1,9 +1,9 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
 import cn.dev33.satoken.stp.StpUtil
-import com.coooolfan.xiaomialbumsyncer.controller.CreateConfigRequest
 import com.coooolfan.xiaomialbumsyncer.controller.LoginRequest
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
+import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.model.password
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
@@ -20,13 +20,14 @@ class SystemConfigService(private val sql: KSqlClient) {
         }[0] > 0
     }
 
-    fun createConfig(create: CreateConfigRequest) {
+    fun createConfig(create: SystemConfigInit) {
         if (isInit()) throw IllegalStateException("System is already initialized")
 
         sql.saveCommand(SystemConfig {
             id = 0
             password = hashPwd(create.password)
             passToken = "-"
+            userId = "-"
         }, SaveMode.INSERT_ONLY).execute()
     }
 
@@ -52,5 +53,11 @@ class SystemConfigService(private val sql: KSqlClient) {
         return hashBytes.joinToString("") {
             "%02x".format(it.toInt() and 0xFF)
         }
+    }
+
+    fun updateConfig(update: SystemConfig) {
+        sql.saveCommand(SystemConfig(update) {
+            id = 0
+        }, SaveMode.UPDATE_ONLY).execute()
     }
 }
