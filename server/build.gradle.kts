@@ -23,7 +23,9 @@ val jimmerVersion = "0.9.106"
 
 dependencies {
     implementation(platform("org.noear:solon-parent:3.5.1"))
-    implementation("org.noear:solon-web")
+    implementation("org.noear:solon-web"){
+        exclude(group = "org.noear" , module = "solon-serialization-snack3")
+    }
     implementation("org.noear:solon-logging-logback")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
     implementation("cn.dev33:sa-token-solon-plugin:1.44.0")

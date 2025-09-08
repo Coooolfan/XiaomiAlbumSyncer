@@ -36,12 +36,5 @@ class SystemConfigController(private val service: SystemConfigService) {
 }
 
 data class IsInitResponse(
-    val isInit: Boolean,
-    val testString: String = "rawString",
-    val testAblum: Album = Album {
-        id = -1L
-        name = "testAlbumName"
-        assetCount = 123
-        cloudId = "testCloudId"
-    }
+    val isInit: Boolean
 )
