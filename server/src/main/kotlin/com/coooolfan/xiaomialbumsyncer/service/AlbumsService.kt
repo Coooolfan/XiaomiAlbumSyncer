@@ -13,4 +13,8 @@ class AlbumsService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         sql.saveEntitiesCommand(fetchAlbumList, SaveMode.UPSERT).execute()
         return fetchAlbumList
     }
+
+    fun getAllAlbums(): List<Album> {
+        return sql.executeQuery(Album::class) { select(table) }
+    }
 }

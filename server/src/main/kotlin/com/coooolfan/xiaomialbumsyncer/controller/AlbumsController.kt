@@ -20,4 +20,11 @@ class AlbumsController(private val service: AlbumsService) {
     fun refreshAlbumn(): List<Album> {
         return service.refreshAlbums()
     }
+
+    @Api
+    @Mapping(method = [MethodType.GET])
+    @SaCheckLogin
+    fun listAlbums(): List<Album> {
+        return service.getAllAlbums()
+    }
 }

@@ -22,6 +22,7 @@ class TokenManager(private val sql: KSqlClient) {
     private val log = org.slf4j.LoggerFactory.getLogger(TokenManager::class.java)
 
     private var serviceToken: String? = null
+    private var userId: Long? = null
     private var lastFreshedTime: Instant? = null
 
     fun getServiceToken(): String {
@@ -34,8 +35,20 @@ class TokenManager(private val sql: KSqlClient) {
             }.firstOrNull() ?: throw IllegalStateException("System is not initialized")
 
             serviceToken = genServiceToken(config._1, config._2)
+            userId = config._2.toLong()
         }
         return serviceToken!!
+    }
+
+    fun getUserId(): Long {
+        if (userId == null) {
+            val config = sql.executeQuery(SystemConfig::class) {
+                where(table.id eq 0)
+                select(table.userId)
+            }.firstOrNull() ?: throw IllegalStateException("System is not initialized")
+            userId = config.toLong()
+        }
+        return userId!!
     }
 
     private fun genServiceToken(passToken: String, userId: String): String {
