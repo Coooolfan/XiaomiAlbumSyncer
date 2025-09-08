@@ -1,6 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.controller
 
 import cn.dev33.satoken.annotation.SaCheckLogin
+import com.coooolfan.xiaomialbumsyncer.model.Album
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate
 import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
@@ -36,5 +37,11 @@ class SystemConfigController(private val service: SystemConfigService) {
 
 data class IsInitResponse(
     val isInit: Boolean,
-    val testString:String = "rawString"
+    val testString: String = "rawString",
+    val testAblum: Album = Album {
+        id = -1L
+        name = "testAlbumName"
+        assetCount = 123
+        cloudId = "testCloudId"
+    }
 )
