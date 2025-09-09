@@ -24,7 +24,7 @@ async function checkInit() {
   errorMsg.value = null
   try {
     const resp = await api.systemConfigController.isInit()
-    isInit.value = !!resp.isInit
+    isInit.value = !!resp.init
   } catch (e) {
     // 后端未准备好或接口异常时，默认为未初始化，允许用户设置密码
     isInit.value = false
@@ -61,7 +61,7 @@ async function handleSubmit() {
     }
 
     // 成功后跳转 Dashboard
-    router.replace('/dashboard')
+    router.replace('/dashboard/schedule')
   } catch (e) {
     console.error('Auth error:', e)
     errorMsg.value = e instanceof Error ? e.message : String(e)
@@ -154,7 +154,7 @@ onMounted(() => {
               @click="handleSubmit"
             />
 
-            <Divider align="center">
+            <Divider>
               <span class="text-xs text-slate-400">或</span>
             </Divider>
 

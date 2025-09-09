@@ -38,7 +38,7 @@ async function logout() {
   <div class="min-h-screen">
     <!-- Topbar -->
     <header class="sticky top-0 z-10 backdrop-blur-3xl bg-white/70 border-b border-slate-200/60">
-      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-2">
             <div
@@ -73,7 +73,7 @@ async function logout() {
     </header>
 
     <!-- Content -->
-    <main class="max-w-6xl mx-auto px-4 py-8">
+    <main class="max-w-7xl mx-auto px-4 py-8">
       <router-view />
     </main>
   </div>

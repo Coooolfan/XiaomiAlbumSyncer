@@ -7,6 +7,7 @@ import org.noear.solon.annotation.Inject
 import org.noear.solon.serialization.jackson.JacksonActionExecutor
 import org.noear.solon.serialization.jackson.JacksonRenderFactory
 import org.slf4j.LoggerFactory
+import java.time.Instant
 
 @Configuration
 class JimmerJacksonConfig {
@@ -18,5 +19,6 @@ class JimmerJacksonConfig {
         log.info("注册适用于 Jimmer 实体的 Jackson module...")
         factory.config().registerModule(ImmutableModule())
         executor.config().registerModule(ImmutableModule())
+        factory.addConvertor(Instant::class.java, { it.toString() })
     }
 }

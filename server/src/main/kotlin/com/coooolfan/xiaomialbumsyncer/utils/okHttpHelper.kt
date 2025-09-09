@@ -7,8 +7,9 @@ const val UA =
     """Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"""
 
 fun Request.Builder.ua() = this.header("User-Agent", UA)
-fun Request.Builder.serviceToken(serviceToken: String) =
-    this.header("Cookie", withCookie("serviceToken" to serviceToken))
+
+fun Request.Builder.authHeader(authPair: Pair<String, String>) =
+    this.header("Cookie", withCookie("userId" to authPair.first, "serviceToken" to authPair.second))
 
 fun withCookie(vararg pairs: Pair<String, String?>): String {
     return pairs.joinToString(" ") { (k, v) -> "$k=${v ?: ""};" }
@@ -20,5 +21,6 @@ fun client(): OkHttpClient = OkHttpClient().newBuilder()
     .build()
 
 fun throwIfNotSuccess(respCode: Int) {
-    if (respCode / 100 != 2) throw IllegalStateException("Request failed with HTTP code $respCode")
+    val i = respCode / 100
+    if (i != 2 && i != 3) throw IllegalStateException("Request failed with HTTP code $respCode")
 }

@@ -1,3 +1,3 @@
 export interface IsInitResponse {
-    readonly isInit: boolean;
+    readonly init: boolean;
 }

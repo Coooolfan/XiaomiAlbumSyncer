@@ -10,11 +10,10 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/dashboard',
-    name: 'dashboard',
     component: () => import('../layout/DashboardLayout.vue'),
     meta: { requiresAuth: true },
     children: [
-      { path: '', redirect: '/dashboard/setting' },
+      { path: '', name: 'dashboard', redirect: { name: 'dashboard-setting' } },
       {
         path: 'setting',
         name: 'dashboard-setting',

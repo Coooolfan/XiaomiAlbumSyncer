@@ -9,7 +9,7 @@ import org.noear.solon.annotation.Managed
 @Managed
 class AlbumsService(private val sql: KSqlClient, private val api: XiaoMiApi) {
     fun refreshAlbums(): List<Album> {
-        val fetchAlbumList = api.fetchAlbumList()
+        val fetchAlbumList = api.fetchAllAlbums()
         sql.saveEntitiesCommand(fetchAlbumList, SaveMode.UPSERT).execute()
         return fetchAlbumList
     }

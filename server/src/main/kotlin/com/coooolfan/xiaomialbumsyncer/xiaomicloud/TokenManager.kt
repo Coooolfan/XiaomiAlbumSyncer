@@ -6,6 +6,7 @@ import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.model.passToken
 import com.coooolfan.xiaomialbumsyncer.model.userId
 import com.coooolfan.xiaomialbumsyncer.utils.client
+import com.coooolfan.xiaomialbumsyncer.utils.throwIfNotSuccess
 import com.coooolfan.xiaomialbumsyncer.utils.ua
 import com.coooolfan.xiaomialbumsyncer.utils.withCookie
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -35,6 +36,7 @@ class TokenManager(private val sql: KSqlClient) {
             }.firstOrNull() ?: throw IllegalStateException("System is not initialized")
 
             serviceToken = genServiceToken(config._1, config._2)
+            lastFreshedTime = Instant.now()
             userId = config._2.toLong()
         }
         return serviceToken!!
@@ -51,6 +53,10 @@ class TokenManager(private val sql: KSqlClient) {
         return userId!!
     }
 
+    fun getAuthPair(): Pair<String, String> {
+        return getUserId().toString() to getServiceToken()
+    }
+
     private fun genServiceToken(passToken: String, userId: String): String {
 
         val deviceId = "wb_" + UUID.randomUUID().toString()
@@ -62,6 +68,7 @@ class TokenManager(private val sql: KSqlClient) {
             .header("Cookie", withCookie("userId" to userId, "deviceId" to deviceId, "passToken" to passToken)).get()
             .build()
         val preLoginRes = client().newCall(preLoginReq).execute()
+        throwIfNotSuccess(preLoginRes.code)
         val preLoginBodyString = preLoginRes.body.string()
         val loginUrl = jacksonObjectMapper()
             .readTree(preLoginBodyString)
@@ -73,6 +80,7 @@ class TokenManager(private val sql: KSqlClient) {
             .header("Cookie", withCookie("userId" to userId, "deviceId" to deviceId, "passToken" to passToken)).get()
             .build()
         val loginRes = client().newCall(loginReq).execute()
+        throwIfNotSuccess(loginRes.code)
         val location = loginRes.header("Location")
 
         if (location == null) {
@@ -85,6 +93,7 @@ class TokenManager(private val sql: KSqlClient) {
             .header("Cookie", withCookie("userId" to userId, "deviceId" to deviceId, "passToken" to passToken)).get()
             .build()
         val tokenRes = client().newCall(tokenReq).execute()
+        throwIfNotSuccess(tokenRes.code)
         val setCookies = tokenRes.headers("Set-Cookie")
 
         log.info("cookiesSize: ${setCookies.size}")

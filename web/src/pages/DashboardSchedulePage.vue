@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import {onMounted, ref} from 'vue'
 import Card from 'primevue/card'
 import ContributionHeatmap from '@/components/ContributionHeatmap.vue'
+import AlbumCard from '@/components/AlbumCard.vue'
+import {api} from '@/ApiInstance'
+import type {Dynamic_Album} from '@/__generated/model/dynamic'
 
 type DataPoint = { timeStamp: number; count: number }
 
@@ -10,6 +13,7 @@ const weekStartNum = ref(1)
 const rangeDaysNum = ref(365)
 const endDateStr = ref(formatDateInput(new Date()))
 const dataPoints = ref<DataPoint[]>([])
+const albums = ref<ReadonlyArray<Dynamic_Album>>([])
 const tip = ref('')
 let tipHideTimer: number | undefined
 function onDayClick(payload: {
@@ -54,8 +58,17 @@ function refresh() {
   generateRandomData()
 }
 
+async function fetchAlbums() {
+  try {
+    albums.value = await api.albumsController.listAlbums()
+  } catch (err) {
+    console.error('获取相册列表失败', err)
+  }
+}
+
 onMounted(() => {
   generateRandomData()
+  fetchAlbums()
 })
 
 const weekOptions = [
@@ -92,7 +105,7 @@ const weekOptions = [
       </template>
     </Card>
 
-    <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60">
+    <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
       <template #title>计划 · 热力图演示</template>
       <template #content>
         <div
@@ -151,6 +164,35 @@ const weekOptions = [
             >
               随机刷新数据
             </button>
+          </div>
+        </div>
+      </template>
+    </Card>
+
+    <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
+      <template #title>
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-medium text-slate-500">相册</label>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 rounded-md bg-slate-800 px-2 py-1 text-xs font-medium text-white hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600"
+            @click="fetchAlbums"
+          >
+            刷新相册
+          </button>
+        </div></template
+      >
+      <template #content>
+        <div class="space-y-2">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            <AlbumCard
+              v-for="a in albums"
+              :key="a.id ?? a.cloudId ?? a.name"
+              :name="a.name"
+              :asset-count="a.assetCount"
+              :last-update-time="a.lastUpdateTime"
+            />
+            <div v-if="!albums || albums.length === 0" class="text-xs text-slate-500">暂无相册</div>
           </div>
         </div>
       </template>

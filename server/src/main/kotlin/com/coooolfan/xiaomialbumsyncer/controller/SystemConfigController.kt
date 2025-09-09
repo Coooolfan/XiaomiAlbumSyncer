@@ -36,5 +36,5 @@ class SystemConfigController(private val service: SystemConfigService) {
 }
 
 data class IsInitResponse(
-    val isInit: Boolean
+    val init: Boolean
 )
