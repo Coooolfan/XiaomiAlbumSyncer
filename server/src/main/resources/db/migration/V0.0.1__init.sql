@@ -8,9 +8,21 @@ create table system_config
 
 create table album
 (
-    id               INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    cloud_id         TEXT    NOT NULL UNIQUE,
+    id               INTEGER NOT NULL PRIMARY KEY,
     name             TEXT    NOT NULL,
     asset_count      INTEGER NOT NULL,
     last_update_time INTEGER NOT NULL
+);
+
+create table asset
+(
+    id               INTEGER NOT NULL PRIMARY KEY,
+    file_name        TEXT    NOT NULL,
+    type             TEXT    NOT NULL,
+    date_taken        INTEGER NOT NULL,
+    album_id         INTEGER NOT NULL,
+    sha1             TEXT    NOT NULL,
+    mime_type        TEXT    NOT NULL,
+    title            TEXT    NOT NULL,
+    FOREIGN KEY (album_id) REFERENCES album(id)
 );

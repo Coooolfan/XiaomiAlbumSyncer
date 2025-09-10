@@ -3436,6 +3436,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"primeicons@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "primeicons@npm:7.0.0"
+  checksum: 10c0/a7f6344d6db49e785d2040b35f8cae761d15bb8f8ee70ade8981d45438245414e913fe7235921122aade2b0a11a032c98b44dc527be2da11aa791ff145099c06
+  languageName: node
+  linkType: hard
+
 "primevue@npm:^4.3.7":
   version: 4.3.7
   resolution: "primevue@npm:4.3.7"
@@ -4279,6 +4286,7 @@ __metadata:
     ogl: "npm:^1.0.11"
     pinia: "npm:^3.0.3"
     prettier: "npm:3.6.2"
+    primeicons: "npm:^7.0.0"
     primevue: "npm:^4.3.7"
     tailwindcss: "npm:^4.1.12"
     temp-dir: "npm:^3.0.0"

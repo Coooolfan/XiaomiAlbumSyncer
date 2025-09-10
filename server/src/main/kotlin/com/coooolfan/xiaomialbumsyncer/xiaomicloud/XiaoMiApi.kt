@@ -45,7 +45,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 else if (albumId == 2L) albumName = "屏幕截图"
 
                 allAlbums.add(Album {
-                    cloudId = albumId.toString()
+                    id = albumId
                     name = albumName ?: albumJson.get("name").asText()
                     assetCount = albumJson.get("mediaCount").asInt()
                     lastUpdateTime = Instant.ofEpochMilli(albumJson.get("lastUpdateTime").asLong())

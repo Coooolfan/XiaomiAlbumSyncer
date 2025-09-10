@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import {onMounted, ref} from 'vue'
+import { onMounted, ref } from 'vue'
 import Card from 'primevue/card'
 import ContributionHeatmap from '@/components/ContributionHeatmap.vue'
 import AlbumCard from '@/components/AlbumCard.vue'
-import {api} from '@/ApiInstance'
-import type {Dynamic_Album} from '@/__generated/model/dynamic'
+import { api } from '@/ApiInstance'
+import type { Dynamic_Album } from '@/__generated/model/dynamic'
+import Panel from 'primevue/panel'
+import Button from 'primevue/button'
 
 type DataPoint = { timeStamp: number; count: number }
 
@@ -169,34 +171,24 @@ const weekOptions = [
       </template>
     </Card>
 
-    <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
-      <template #title>
-        <div class="flex items-center justify-between">
-          <label class="block text-xs font-medium text-slate-500">相册</label>
-          <button
-            type="button"
-            class="inline-flex items-center gap-1 rounded-md bg-slate-800 px-2 py-1 text-xs font-medium text-white hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600"
-            @click="fetchAlbums"
-          >
-            刷新相册
-          </button>
-        </div></template
-      >
-      <template #content>
-        <div class="space-y-2">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            <AlbumCard
-              v-for="a in albums"
-              :key="a.id ?? a.cloudId ?? a.name"
-              :name="a.name"
-              :asset-count="a.assetCount"
-              :last-update-time="a.lastUpdateTime"
-            />
-            <div v-if="!albums || albums.length === 0" class="text-xs text-slate-500">暂无相册</div>
-          </div>
-        </div>
+    <Panel header="相册" toggleable>
+      <template #icons>
+        <Button icon="pi pi-cog" severity="secondary" rounded text @click="fetchAlbums" />
       </template>
-    </Card>
+
+      <div class="space-y-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <AlbumCard
+            v-for="a in albums"
+            :key="a.id"
+            :name="a.name"
+            :asset-count="a.assetCount"
+            :last-update-time="a.lastUpdateTime"
+          />
+          <div v-if="!albums || albums.length === 0" class="text-xs text-slate-500">暂无相册</div>
+        </div>
+      </div>
+    </Panel>
   </div>
 </template>
 
