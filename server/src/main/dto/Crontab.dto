@@ -1,0 +1,16 @@
+export com.coooolfan.xiaomialbumsyncer.model.Crontab
+
+input CrontabInput {
+
+    name
+
+    description
+
+    enabled
+
+    expression
+
+    timeZone
+
+    id(albums) as albumIds
+}

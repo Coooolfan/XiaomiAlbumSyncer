@@ -10,4 +10,5 @@ export interface Dynamic_Asset {
     readonly sha1?: string;
     readonly mimeType?: string;
     readonly title?: string;
+    readonly size?: number;
 }

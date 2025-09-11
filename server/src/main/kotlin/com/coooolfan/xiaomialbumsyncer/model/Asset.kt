@@ -24,4 +24,6 @@ interface Asset {
     val mimeType: String
 
     val title: String
+
+    val size: Long
 }

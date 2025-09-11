@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import Card from 'primevue/card'
 import ContributionHeatmap from '@/components/ContributionHeatmap.vue'
 import AlbumCard from '@/components/AlbumCard.vue'
@@ -7,6 +7,18 @@ import { api } from '@/ApiInstance'
 import type { Dynamic_Album } from '@/__generated/model/dynamic'
 import Panel from 'primevue/panel'
 import Button from 'primevue/button'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Dialog from 'primevue/dialog'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
+import InputSwitch from 'primevue/inputswitch'
+import Dropdown from 'primevue/dropdown'
+import MultiSelect from 'primevue/multiselect'
+import Chip from 'primevue/chip'
+import { useToast } from 'primevue/usetoast'
+import type { CrontabInput } from '@/__generated/model/static'
+import type { CrontabDto } from '@/__generated/model/dto'
 
 type DataPoint = { timeStamp: number; count: number }
 
@@ -18,6 +30,48 @@ const dataPoints = ref<DataPoint[]>([])
 const albums = ref<ReadonlyArray<Dynamic_Album>>([])
 const tip = ref('')
 let tipHideTimer: number | undefined
+
+// Toast
+const toast = useToast()
+
+// ==== 计划任务：类型与状态 ====
+type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
+
+const crontabs = ref<ReadonlyArray<Crontab>>([])
+const loadingCrons = ref(false)
+const showCronDialog = ref(false)
+const isEditing = ref(false)
+const editingId = ref<number | null>(null)
+const saving = ref(false)
+const updatingRow = ref<number | null>(null)
+const showDeleteId = ref<number | null>(null)
+const showDeleteVisible = ref(false)
+const deleting = ref(false)
+
+const defaultTz = (() => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  } catch {
+    return 'UTC'
+  }
+})()
+
+const cronForm = ref<CrontabInput>({
+  name: '',
+  description: '',
+  enabled: true,
+  expression: '',
+  timeZone: defaultTz,
+  albumIds: [],
+})
+
+const formErrors = ref<Record<string, string>>({})
+const timeZones = ref<string[]>([])
+const albumOptions = computed(() =>
+  (albums.value || [])
+    .filter((a) => a.id !== undefined)
+    .map((a) => ({ label: a.name ?? `ID ${a.id}`, value: a.id as number })),
+)
 function onDayClick(payload: {
   date: Date
   dateStr: string
@@ -68,9 +122,159 @@ async function fetchAlbums() {
   }
 }
 
+// ==== 计划任务：逻辑 ====
+function buildTimeZones() {
+  const fallbackTimeZones = [
+    'UTC',
+    'Asia/Shanghai',
+    'Asia/Tokyo',
+    'Europe/Berlin',
+    'America/New_York',
+  ]
+
+  try {
+    const intl = Intl as unknown as { supportedValuesOf?: (key: 'timeZone') => string[] }
+    const list = intl.supportedValuesOf?.('timeZone')
+    timeZones.value = list && list.length > 0 ? list : fallbackTimeZones
+  } catch {
+    timeZones.value = fallbackTimeZones
+  }
+}
+
+async function fetchCrontabs() {
+  loadingCrons.value = true
+  try {
+    crontabs.value = await api.crontabController.listCrontabs()
+  } catch (err) {
+    console.error('获取计划任务失败', err)
+    toast.add({
+      severity: 'error',
+      summary: '获取失败',
+      detail: '无法获取计划任务列表',
+      life: 2000,
+    })
+  } finally {
+    loadingCrons.value = false
+  }
+}
+
+function openCreateCron() {
+  isEditing.value = false
+  editingId.value = null
+  cronForm.value = {
+    name: '',
+    description: '',
+    enabled: true,
+    expression: '',
+    timeZone: defaultTz,
+    albumIds: [],
+  }
+  formErrors.value = {}
+  showCronDialog.value = true
+}
+
+function openEditCron(item: Crontab) {
+  isEditing.value = true
+  editingId.value = item.id
+  cronForm.value = {
+    name: item.name,
+    description: item.description,
+    enabled: item.enabled,
+    expression: item.expression,
+    timeZone: item.timeZone,
+    albumIds: [...item.albumIds],
+  }
+  formErrors.value = {}
+  showCronDialog.value = true
+}
+
+function validateCronForm(): boolean {
+  const errors: Record<string, string> = {}
+  if (!cronForm.value.name || cronForm.value.name.trim() === '') errors.name = '必填'
+  if (!cronForm.value.expression || cronForm.value.expression.trim() === '')
+    errors.expression = '必填'
+  if (!cronForm.value.timeZone || cronForm.value.timeZone.trim() === '') errors.timeZone = '必选'
+  formErrors.value = errors
+  return Object.keys(errors).length === 0
+}
+
+async function submitCron() {
+  if (!validateCronForm()) return
+  saving.value = true
+  try {
+    if (isEditing.value && editingId.value !== null) {
+      await api.crontabController.updateCrontab({
+        crontabId: editingId.value,
+        body: cronForm.value,
+      })
+      toast.add({ severity: 'success', summary: '已更新', life: 1600 })
+    } else {
+      await api.crontabController.createCrontab({ body: cronForm.value })
+      toast.add({ severity: 'success', summary: '已创建', life: 1600 })
+    }
+    showCronDialog.value = false
+    await fetchCrontabs()
+  } catch (err) {
+    console.error('保存计划任务失败', err)
+    toast.add({ severity: 'error', summary: '保存失败', detail: '请稍后重试', life: 2200 })
+  } finally {
+    saving.value = false
+  }
+}
+
+async function toggleEnabled(row: Crontab) {
+  updatingRow.value = row.id
+  try {
+    await api.crontabController.updateCrontab({
+      crontabId: row.id,
+      body: {
+        name: row.name,
+        description: row.description,
+        enabled: !row.enabled,
+        expression: row.expression,
+        timeZone: row.timeZone,
+        albumIds: row.albumIds,
+      },
+    })
+    crontabs.value = crontabs.value.map((c) =>
+      c.id === row.id ? { ...c, enabled: !row.enabled } : c,
+    )
+    toast.add({ severity: 'success', summary: '已更新', life: 1600 })
+  } catch (err) {
+    console.error('更新启用状态失败', err)
+    toast.add({ severity: 'error', summary: '更新失败', life: 1800 })
+  } finally {
+    updatingRow.value = null
+  }
+}
+
+function requestDelete(row: Crontab) {
+  showDeleteId.value = row.id
+  showDeleteVisible.value = true
+}
+
+async function confirmDelete() {
+  if (showDeleteId.value === null) return
+  deleting.value = true
+  try {
+    await api.crontabController.deleteCrontab({ crontabId: showDeleteId.value })
+    toast.add({ severity: 'success', summary: '已删除', life: 1500 })
+    showDeleteId.value = null
+    showDeleteVisible.value = false
+    await fetchCrontabs()
+  } catch (err) {
+    console.error('删除计划任务失败', err)
+    toast.add({ severity: 'error', summary: '删除失败', life: 1800 })
+  } finally {
+    deleting.value = false
+  }
+}
+
 onMounted(() => {
   generateRandomData()
   fetchAlbums()
+  fetchCrontabs()
+  buildTimeZones()
 })
 
 const weekOptions = [
@@ -107,8 +311,68 @@ const weekOptions = [
       </template>
     </Card>
 
+    <Card header="计划任务" class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
+      <template #title>
+        <div class="flex items-center justify-between">
+          <div class="font-medium text-slate-600">计划任务</div>
+          <div class="flex items-center gap-2">
+            <Button icon="pi pi-refresh" severity="secondary" rounded text @click="fetchCrontabs" />
+            <Button icon="pi pi-plus" severity="success" rounded text @click="openCreateCron" />
+          </div>
+        </div>
+      </template>
+
+      <template #content>
+        <div class="space-y-3">
+          <DataTable :value="crontabs" :loading="loadingCrons" dataKey="id" class="text-sm">
+            <Column field="name" header="名称"></Column>
+            <Column header="相册">
+              <template #body="{ data }">
+                <Chip
+                  v-for="id in data.albumIds"
+                  :key="id"
+                  :label="albumOptions.find((o) => o.value === id)?.label || id"
+                  class="text-xs mr-2"
+                />
+              </template>
+            </Column>
+            <Column field="expression" header="Cron表达式"></Column>
+            <Column field="timeZone" header="时区"></Column>
+            <Column header="启用">
+              <template #body="{ data }">
+                <InputSwitch
+                  :modelValue="data.enabled"
+                  :disabled="updatingRow === data.id"
+                  @update:modelValue="() => toggleEnabled(data)"
+                />
+              </template>
+            </Column>
+            <Column header="操作" style="width: 160px">
+              <template #body="{ data }">
+                <div class="flex items-center gap-2">
+                  <Button size="small" icon="pi pi-info" @click="openEditCron(data)" />
+
+                  <Button size="small" icon="pi pi-pencil" @click="openEditCron(data)" />
+
+                  <Button
+                    size="small"
+                    icon="pi pi-trash"
+                    severity="danger"
+                    @click="requestDelete(data)"
+                  />
+                </div>
+              </template>
+            </Column>
+            <template #empty>
+              <div class="text-xs text-slate-500 py-6">暂无计划任务</div>
+            </template>
+          </DataTable>
+        </div></template
+      >
+    </Card>
+
     <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
-      <template #title>计划 · 热力图演示</template>
+      <template #title>热力图数据 Mock 演示</template>
       <template #content>
         <div
           class="space-y-4 p-4 rounded-lg bg-white/60 dark:bg-slate-900/30 ring-1 ring-slate-200/60"
@@ -189,6 +453,108 @@ const weekOptions = [
         </div>
       </div>
     </Panel>
+
+    <!-- 创建/编辑 计划任务 -->
+    <Dialog
+      v-model:visible="showCronDialog"
+      modal
+      :header="isEditing ? '编辑计划任务' : '创建计划任务'"
+      class="w-full sm:w-[520px]"
+    >
+      <div class="space-y-4">
+        <div class="space-y-2">
+          <label class="block text-xs font-medium text-slate-500">名称</label>
+          <InputText v-model="cronForm.name" placeholder="例如：每日同步" class="w-full" />
+          <div v-if="formErrors.name" class="text-xs text-red-500">{{ formErrors.name }}</div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-medium text-slate-500">描述</label>
+          <Textarea
+            v-model="cronForm.description"
+            rows="2"
+            autoResize
+            placeholder="可选"
+            class="w-full"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="block text-xs font-medium text-slate-500">Cron 表达式</label>
+            <InputText v-model="cronForm.expression" placeholder="0 0 * * *" class="w-full" />
+            <div v-if="formErrors.expression" class="text-xs text-red-500">
+              {{ formErrors.expression }}
+            </div>
+            <div class="text-[10px] text-slate-400">支持标准 5/6 字段 Cron。例：0 0 * * *</div>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-xs font-medium text-slate-500">时区</label>
+            <Dropdown
+              v-model="cronForm.timeZone"
+              :options="timeZones"
+              placeholder="Asia/Shanghai"
+              filter
+              class="w-full"
+            />
+            <div v-if="formErrors.timeZone" class="text-xs text-red-500">
+              {{ formErrors.timeZone }}
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-medium text-slate-500">关联相册</label>
+          <MultiSelect
+            v-model="cronForm.albumIds"
+            :options="albumOptions"
+            display="chip"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="选择相册"
+            class="w-full"
+            filter
+          />
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+          <div class="flex items-center gap-2 text-xs text-slate-600">
+            <InputSwitch v-model="cronForm.enabled" />
+            <span>启用</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <Button label="取消" severity="secondary" text @click="showCronDialog = false" />
+            <Button :label="isEditing ? '保存' : '创建'" :loading="saving" @click="submitCron" />
+          </div>
+        </div>
+      </div>
+    </Dialog>
+
+    <!-- 删除确认 -->
+    <Dialog
+      v-model:visible="showDeleteVisible"
+      modal
+      header="删除计划任务"
+      class="w-full sm:w-[420px]"
+    >
+      <div class="text-sm text-slate-700">确定要删除该计划任务吗？该操作不可恢复。</div>
+      <template #footer>
+        <div class="flex items-center justify-end gap-2 w-full">
+          <Button
+            label="取消"
+            severity="secondary"
+            text
+            @click="
+              () => {
+                showDeleteId = null
+                showDeleteVisible = false
+              }
+            "
+          />
+          <Button label="删除" severity="danger" :loading="deleting" @click="confirmDelete" />
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>
 

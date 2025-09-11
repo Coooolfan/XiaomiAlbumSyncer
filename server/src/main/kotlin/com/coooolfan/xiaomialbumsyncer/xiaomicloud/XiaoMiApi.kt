@@ -37,6 +37,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             val responseTree = jacksonObjectMapper().readTree(resBodyString)
             val albumArrayJson = responseTree.at("/data/albums")
 
+            log.info("解析第 ${pageNum + 1} 页相册数据，此页共 ${albumArrayJson.size()} 个相册")
             // 处理当前页数据
             for (albumJson in albumArrayJson) {
                 val albumId = albumJson.get("albumId").asLong()
@@ -61,15 +62,15 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         return allAlbums.toList() // 返回不可变列表
     }
 
-    fun fetchAssetsByAlbumId(albumId: Long): List<Asset> {
+    fun fetchAssetsByAlbumId(album: Album): List<Asset> {
         val allAssets = mutableListOf<Asset>()
         var pageNum = 0
         var hasMorePages = true
-        val pageSize = 10
+        val pageSize = 200
 
         while (hasMorePages) {
             val req = Request.Builder()
-                .url("https://i.mi.com/gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=$albumId")
+                .url("https://i.mi.com/gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.id}")
                 .ua()
                 .authHeader(tokenManager.getAuthPair())
                 .get()
@@ -81,6 +82,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             val responseTree = jacksonObjectMapper().readTree(resBodyString)
             val assetArrayJson = responseTree.at("/data/galleries")
 
+            log.info("解析相册 ${album.name} ID=${album.id} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
             // 处理当前页数据
             for (assetJson in assetArrayJson) {
                 allAssets.add(Asset {
@@ -88,10 +90,11 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                     fileName = assetJson.get("fileName").asText()
                     type = AssetType.valueOf(assetJson.get("type").asText().uppercase())
                     dateTaken = Instant.ofEpochMilli(assetJson.get("dateTaken").asLong())
-                    this.albumId = albumId
+                    albumId = album.id
                     sha1 = assetJson.get("sha1").asText()
                     mimeType = assetJson.get("mimeType").asText()
                     title = assetJson.get("title").asText()
+                    size = assetJson.get("size").asLong()
                 })
             }
 
