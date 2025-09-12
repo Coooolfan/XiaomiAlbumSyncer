@@ -32,6 +32,7 @@ dependencies {
     implementation("org.noear:solon-serialization-jackson:3.5.1")
     implementation("com.squareup.okhttp3:okhttp:5.1.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
+    implementation("org.noear:solon-scheduling-simple")
 
     implementation("org.flywaydb:flyway-core:11.11.2")
 
@@ -43,7 +44,6 @@ dependencies {
     ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
 
     implementation("com.zaxxer:HikariCP:7.0.2")
-
     runtimeOnly("org.xerial:sqlite-jdbc:3.50.3.0")
 
     implementation("org.noear:solon.aot")
