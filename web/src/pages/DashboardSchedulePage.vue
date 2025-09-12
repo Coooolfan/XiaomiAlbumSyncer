@@ -371,7 +371,7 @@ const weekOptions = [
       >
     </Card>
 
-    <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
+    <!-- <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
       <template #title>热力图数据 Mock 演示</template>
       <template #content>
         <div
@@ -433,7 +433,7 @@ const weekOptions = [
           </div>
         </div>
       </template>
-    </Card>
+    </Card> -->
 
     <Panel header="相册" toggleable>
       <template #icons>

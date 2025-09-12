@@ -45,4 +45,24 @@ create table crontab_album_mapping
     PRIMARY KEY (crontab_id, album_id),
     FOREIGN KEY (crontab_id) REFERENCES crontab (id),
     FOREIGN KEY (album_id) REFERENCES album (id)
-)
+);
+
+create table crontab_history
+(
+    id         INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    crontab_id INTEGER NOT NULL,
+    start_time INTEGER NOT NULL,
+    end_time   INTEGER,
+    FOREIGN KEY (crontab_id) REFERENCES crontab (id)
+);
+
+create table crontab_history_detail
+(
+    id                 INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    crontab_history_id INTEGER NOT NULL,
+    asset_id           INTEGER NOT NULL,
+    start_time         TEXT    NOT NULL,
+    file_path          TEXT    NOT NULL,
+    FOREIGN KEY (crontab_history_id) REFERENCES crontab_history (id),
+    FOREIGN KEY (asset_id) REFERENCES asset (id)
+);
