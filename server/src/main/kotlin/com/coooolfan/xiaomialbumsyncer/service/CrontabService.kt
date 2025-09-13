@@ -3,7 +3,7 @@ package com.coooolfan.xiaomialbumsyncer.service
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabInput
 import com.coooolfan.xiaomialbumsyncer.model.id
-import com.coooolfan.xiaomialbumsyncer.schedule.TaskScheduler
+import com.coooolfan.xiaomialbumsyncer.config.TaskScheduler
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient

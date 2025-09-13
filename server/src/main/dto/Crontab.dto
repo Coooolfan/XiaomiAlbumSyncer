@@ -8,9 +8,7 @@ input CrontabInput {
 
     enabled
 
-    expression
-
-    timeZone
+    config
 
     id(albums) as albumIds
 }

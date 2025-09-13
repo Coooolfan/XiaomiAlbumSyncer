@@ -32,8 +32,7 @@ create table crontab
 (
     id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name        TEXT    NOT NULL,
-    expression  TEXT    NOT NULL,
-    time_zone   TEXT    NOT NULL,
+    config      TEXT    NOT NULL,
     description TEXT    NOT NULL,
     enabled     INTEGER NOT NULL
 );
@@ -61,7 +60,7 @@ create table crontab_history_detail
     id                 INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     crontab_history_id INTEGER NOT NULL,
     asset_id           INTEGER NOT NULL,
-    start_time         TEXT    NOT NULL,
+    download_time      TEXT    NOT NULL,
     file_path          TEXT    NOT NULL,
     FOREIGN KEY (crontab_history_id) REFERENCES crontab_history (id),
     FOREIGN KEY (asset_id) REFERENCES asset (id)

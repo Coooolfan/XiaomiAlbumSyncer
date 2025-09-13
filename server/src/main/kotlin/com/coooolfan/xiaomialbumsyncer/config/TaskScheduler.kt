@@ -1,6 +1,8 @@
-package com.coooolfan.xiaomialbumsyncer.schedule
+package com.coooolfan.xiaomialbumsyncer.config
 
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
+import com.coooolfan.xiaomialbumsyncer.model.fetchBy
+import com.coooolfan.xiaomialbumsyncer.utils.TaskActuators
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.noear.solon.annotation.Init
 import org.noear.solon.annotation.Managed
@@ -10,7 +12,11 @@ import org.slf4j.LoggerFactory
 import java.text.ParseException
 
 @Managed
-class TaskScheduler(private val jobManager: IJobManager, private val sql: KSqlClient) {
+class TaskScheduler(
+    private val jobManager: IJobManager,
+    private val sql: KSqlClient,
+    private val actuators: TaskActuators
+) {
 
     private val log = LoggerFactory.getLogger(this.javaClass)
 
@@ -22,7 +28,10 @@ class TaskScheduler(private val jobManager: IJobManager, private val sql: KSqlCl
     @Init
     fun initJobs() {
         val crontabs = sql.executeQuery(Crontab::class) {
-            select(table)
+            select(table.fetchBy {
+                allScalarFields()
+                albumIds()
+            })
         }
         val registeredJobs = mutableListOf<Crontab>()
 
@@ -31,9 +40,10 @@ class TaskScheduler(private val jobManager: IJobManager, private val sql: KSqlCl
         for (crontab in crontabs)
             try {
                 jobManager.jobAdd(
-                    "${crontab.id}:${crontab.name}", Scheduled(cron = crontab.expression, zone = crontab.timeZone)
+                    "${crontab.id}:${crontab.name}",
+                    Scheduled(cron = crontab.config.expression, zone = crontab.config.timeZone)
                 ) {
-                    doWork(crontab)
+                    actuators.doWork(crontab)
                 }
                 registeredJobs.add(crontab)
             } catch (e: IllegalArgumentException) {
@@ -50,8 +60,4 @@ class TaskScheduler(private val jobManager: IJobManager, private val sql: KSqlCl
 
     }
 
-    fun doWork(crontab: Crontab) {
-        log.info("执行定时任务[mock]: $crontab")
-
-    }
 }

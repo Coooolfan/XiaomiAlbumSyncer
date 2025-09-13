@@ -61,8 +61,14 @@ const cronForm = ref<CrontabInput>({
   name: '',
   description: '',
   enabled: true,
-  expression: '',
-  timeZone: defaultTz,
+  config: {
+    expression: '',
+    timeZone: defaultTz,
+    targetPath: '',
+    downloadImages: true,
+    downloadVideos: false,
+    rewriteExifTime: false,
+  },
   albumIds: [],
 })
 
@@ -177,8 +183,14 @@ function openCreateCron() {
     name: '',
     description: '',
     enabled: true,
-    expression: '',
-    timeZone: defaultTz,
+    config: {
+      expression: '',
+      timeZone: defaultTz,
+      targetPath: '',
+      downloadImages: true,
+      downloadVideos: false,
+      rewriteExifTime: false,
+    },
     albumIds: [],
   }
   formErrors.value = {}
@@ -192,8 +204,14 @@ function openEditCron(item: Crontab) {
     name: item.name,
     description: item.description,
     enabled: item.enabled,
-    expression: item.expression,
-    timeZone: item.timeZone,
+    config: {
+      expression: item.config.expression,
+      timeZone: item.config.timeZone,
+      targetPath: item.config.targetPath,
+      downloadImages: item.config.downloadImages,
+      downloadVideos: item.config.downloadVideos,
+      rewriteExifTime: item.config.rewriteExifTime,
+    },
     albumIds: [...item.albumIds],
   }
   formErrors.value = {}
@@ -203,9 +221,10 @@ function openEditCron(item: Crontab) {
 function validateCronForm(): boolean {
   const errors: Record<string, string> = {}
   if (!cronForm.value.name || cronForm.value.name.trim() === '') errors.name = '必填'
-  if (!cronForm.value.expression || cronForm.value.expression.trim() === '')
+  if (!cronForm.value.config.expression || cronForm.value.config.expression.trim() === '')
     errors.expression = '必填'
-  if (!cronForm.value.timeZone || cronForm.value.timeZone.trim() === '') errors.timeZone = '必选'
+  if (!cronForm.value.config.timeZone || cronForm.value.config.timeZone.trim() === '') errors.timeZone = '必选'
+  if (!cronForm.value.config.targetPath || cronForm.value.config.targetPath.trim() === '') errors.targetPath = '必填'
   formErrors.value = errors
   return Object.keys(errors).length === 0
 }
@@ -243,8 +262,7 @@ async function toggleEnabled(row: Crontab) {
         name: row.name,
         description: row.description,
         enabled: !row.enabled,
-        expression: row.expression,
-        timeZone: row.timeZone,
+        config: row.config,
         albumIds: row.albumIds,
       },
     })
@@ -357,8 +375,21 @@ const albumsRefreshModel = ref([
                 />
               </template>
             </Column>
-            <Column field="expression" header="Cron表达式"></Column>
-            <Column field="timeZone" header="时区"></Column>
+            <Column header="Cron表达式">
+              <template #body="{ data }">
+                {{ data.config?.expression }}
+              </template>
+            </Column>
+            <Column header="时区">
+              <template #body="{ data }">
+                {{ data.config?.timeZone }}
+              </template>
+            </Column>
+            <Column header="保存路径">
+              <template #body="{ data }">
+                {{ data.config?.targetPath || '-' }}
+              </template>
+            </Column>
             <Column header="启用">
               <template #body="{ data }">
                 <InputSwitch
@@ -503,7 +534,7 @@ const albumsRefreshModel = ref([
         <div class="grid grid-cols-2 gap-4">
           <div class="space-y-2">
             <label class="block text-xs font-medium text-slate-500">Cron 表达式</label>
-            <InputText v-model="cronForm.expression" placeholder="0 0 23 * * ?" class="w-full" />
+            <InputText v-model="cronForm.config.expression" placeholder="0 0 23 * * ?" class="w-full" />
             <div v-if="formErrors.expression" class="text-xs text-red-500">
               {{ formErrors.expression }}
             </div>
@@ -512,7 +543,7 @@ const albumsRefreshModel = ref([
           <div class="space-y-2">
             <label class="block text-xs font-medium text-slate-500">时区</label>
             <Dropdown
-              v-model="cronForm.timeZone"
+              v-model="cronForm.config.timeZone"
               :options="timeZones"
               placeholder="Asia/Shanghai"
               filter
@@ -521,6 +552,27 @@ const albumsRefreshModel = ref([
             <div v-if="formErrors.timeZone" class="text-xs text-red-500">
               {{ formErrors.timeZone }}
             </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-medium text-slate-500">保存路径</label>
+          <InputText v-model="cronForm.config.targetPath" placeholder="例如：/Volumes/Photos/Xiaomi" class="w-full" />
+          <div v-if="formErrors.targetPath" class="text-xs text-red-500">{{ formErrors.targetPath }}</div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+          <div class="flex items-center gap-2 text-xs text-slate-600">
+            <InputSwitch v-model="cronForm.config.downloadImages" />
+            <span>下载照片</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-slate-600">
+            <InputSwitch v-model="cronForm.config.downloadVideos" />
+            <span>下载视频</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-slate-600">
+            <InputSwitch v-model="cronForm.config.rewriteExifTime" />
+            <span>重写 EXIF 时间</span>
           </div>
         </div>
 

@@ -3,6 +3,7 @@ package com.coooolfan.xiaomialbumsyncer.model
 import org.babyfish.jimmer.sql.Entity
 import org.babyfish.jimmer.sql.Id
 import org.babyfish.jimmer.sql.ManyToOne
+import org.babyfish.jimmer.sql.OneToMany
 import java.time.Instant
 
 @Entity
@@ -26,4 +27,7 @@ interface Asset {
     val title: String
 
     val size: Long
+
+    @OneToMany(mappedBy = "asset")
+    val downloadHistories: List<CrontabHistoryDetail>
 }

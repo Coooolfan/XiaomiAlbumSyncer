@@ -16,7 +16,7 @@ interface CrontabHistoryDetail {
     @ManyToOne
     val crontabHistory: CrontabHistory
 
-    val startTime: Instant
+    val downloadTime: Instant
 
     @ManyToOne
     val asset: Asset

@@ -11,6 +11,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import okhttp3.Request
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
+import java.nio.file.Path
 import java.time.Instant
 
 @Managed
@@ -104,6 +105,12 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         }
 
         return allAssets.toList() // 返回不可变列表
+    }
+
+    fun downloadAsset(asset: Asset): Path {
+        log.info("[TODO] Mock 下载资源: $asset")
+        // TODO: 实现实际下载逻辑
+        return Path.of("/tmp", asset.fileName)
     }
 }
 

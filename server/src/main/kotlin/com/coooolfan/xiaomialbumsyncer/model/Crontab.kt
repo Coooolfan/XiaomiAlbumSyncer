@@ -15,11 +15,7 @@ interface Crontab {
 
     val enabled: Boolean
 
-    // cron 表达式
-    // eg: "0 0 * * *" 每天午夜
-    val expression: String
-
-    val timeZone: String
+    val config: CrontabConfig
 
     @ManyToMany
     val albums: List<Album>
