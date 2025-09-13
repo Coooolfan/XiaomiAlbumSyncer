@@ -5,6 +5,7 @@ import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.AssetType
 import com.coooolfan.xiaomialbumsyncer.utils.authHeader
 import com.coooolfan.xiaomialbumsyncer.utils.client
+import com.coooolfan.xiaomialbumsyncer.utils.saveToFile
 import com.coooolfan.xiaomialbumsyncer.utils.throwIfNotSuccess
 import com.coooolfan.xiaomialbumsyncer.utils.ua
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -111,6 +112,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
     }
 
     fun downloadAsset(asset: Asset, targetPath: Path): Path {
+        // 这里的 resp 还是需要 close 一下，因为后面的 saveToFile 可能会阻塞很久，okhttp3 会报 warning
         // 1. 获取 OSS URL
         val fetchOssUrlReq = Request.Builder()
             .url("https://i.mi.com/gallery/storage?ts=${System.currentTimeMillis()}&id=${asset.id}")
@@ -121,6 +123,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         val fetchOssUrlResp = client().newCall(fetchOssUrlReq).execute()
         throwIfNotSuccess(fetchOssUrlResp.code)
         val fetchOssUrlBodyString = fetchOssUrlResp.body.string()
+        fetchOssUrlResp.close()
         val fetchOssUrlJson = jacksonObjectMapper().readTree(fetchOssUrlBodyString)
         val ossUrl = fetchOssUrlJson.at("/data/url").asText()
 
@@ -129,6 +132,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         val fetchSignedUrlResp = client().newCall(fetchSignedUrlReq).execute()
         throwIfNotSuccess(fetchSignedUrlResp.code)
         val fetchSignedUrlBodyString = fetchSignedUrlResp.body.string()
+        fetchSignedUrlResp.close()
         val fetchSignedUrlJson =
             jacksonObjectMapper().readTree(fetchSignedUrlBodyString.substringAfter('(').substringBefore(')'))
 
@@ -139,18 +143,12 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             .add("meta", downloadMeta)
             .build()
         val downloadReq = Request.Builder().url(downloadUrl).ua().post(formBody).build()
-        client().newCall(downloadReq).execute().use { response ->
-            if (!response.isSuccessful) {
-                throw IOException("请求失败: ${response.code}")
-            }
+        val downloadResp = client().newCall(downloadReq).execute()
+        throwIfNotSuccess(downloadResp.code)
 
-            val responseBody = response.body
-            val targetFile = File(targetPath.toString())
-            targetFile.parentFile?.mkdirs()
-            responseBody.let { body ->
-                targetFile.writeBytes(body.bytes())
-            }
-        }
+        // 4. 保存文件
+        downloadResp.body.saveToFile(targetPath)
+
         return targetPath
     }
 }
