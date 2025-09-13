@@ -1,6 +1,5 @@
 package com.coooolfan.xiaomialbumsyncer.controller
 
-import cn.dev33.satoken.annotation.SaCheckLogin
 import cn.dev33.satoken.stp.StpUtil
 import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
 import org.babyfish.jimmer.client.meta.Api
@@ -20,7 +19,6 @@ class TokenController(private val service: SystemConfigService) {
     }
 
     @Api
-    @SaCheckLogin
     @Mapping("", method = [MethodType.DELETE])
     fun logout() {
         StpUtil.logout()

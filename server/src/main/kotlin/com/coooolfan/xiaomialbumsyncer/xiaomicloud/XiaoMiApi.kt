@@ -8,9 +8,12 @@ import com.coooolfan.xiaomialbumsyncer.utils.client
 import com.coooolfan.xiaomialbumsyncer.utils.throwIfNotSuccess
 import com.coooolfan.xiaomialbumsyncer.utils.ua
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import okhttp3.FormBody
 import okhttp3.Request
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
+import java.io.File
+import java.io.IOException
 import java.nio.file.Path
 import java.time.Instant
 
@@ -107,10 +110,48 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         return allAssets.toList() // 返回不可变列表
     }
 
-    fun downloadAsset(asset: Asset): Path {
-        log.info("[TODO] Mock 下载资源: $asset")
-        // TODO: 实现实际下载逻辑
-        return Path.of("/tmp", asset.fileName)
+    fun downloadAsset(asset: Asset, targetPath: Path): Path {
+        // 1. 获取 OSS URL
+        val fetchOssUrlReq = Request.Builder()
+            .url("https://i.mi.com/gallery/storage?ts=${System.currentTimeMillis()}&id=${asset.id}")
+            .ua()
+            .authHeader(tokenManager.getAuthPair())
+            .get()
+            .build()
+        val fetchOssUrlResp = client().newCall(fetchOssUrlReq).execute()
+        throwIfNotSuccess(fetchOssUrlResp.code)
+        val fetchOssUrlBodyString = fetchOssUrlResp.body.string()
+        val fetchOssUrlJson = jacksonObjectMapper().readTree(fetchOssUrlBodyString)
+        val ossUrl = fetchOssUrlJson.at("/data/url").asText()
+
+        // 2. 请求签名直链
+        val fetchSignedUrlReq = Request.Builder().url(ossUrl).ua().get().build()
+        val fetchSignedUrlResp = client().newCall(fetchSignedUrlReq).execute()
+        throwIfNotSuccess(fetchSignedUrlResp.code)
+        val fetchSignedUrlBodyString = fetchSignedUrlResp.body.string()
+        val fetchSignedUrlJson =
+            jacksonObjectMapper().readTree(fetchSignedUrlBodyString.substringAfter('(').substringBefore(')'))
+
+        // 3. 下载文件
+        val downloadUrl = fetchSignedUrlJson.get("url").asText()
+        val downloadMeta = fetchSignedUrlJson.get("meta").asText()
+        val formBody = FormBody.Builder()
+            .add("meta", downloadMeta)
+            .build()
+        val downloadReq = Request.Builder().url(downloadUrl).ua().post(formBody).build()
+        client().newCall(downloadReq).execute().use { response ->
+            if (!response.isSuccessful) {
+                throw IOException("请求失败: ${response.code}")
+            }
+
+            val responseBody = response.body
+            val targetFile = File(targetPath.toString())
+            targetFile.parentFile?.mkdirs()
+            responseBody.let { body ->
+                targetFile.writeBytes(body.bytes())
+            }
+        }
+        return targetPath
     }
 }
 

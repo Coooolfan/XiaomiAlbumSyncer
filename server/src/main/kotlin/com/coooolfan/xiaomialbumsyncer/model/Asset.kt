@@ -26,6 +26,7 @@ interface Asset {
 
     val title: String
 
+    // 文件大小，单位：字节
     val size: Long
 
     @OneToMany(mappedBy = "asset")

@@ -5,11 +5,13 @@ import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
+import org.babyfish.jimmer.sql.kt.ast.expression.ne
 import org.babyfish.jimmer.sql.kt.ast.expression.notExists
 import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import kotlin.io.path.Path
 
 @Managed
 class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
@@ -49,7 +51,12 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
                     }
                 )
             )
-            select(table)
+            if (!crontab.config.downloadImages) where(table.type ne AssetType.IMAGE)
+            if (!crontab.config.downloadVideos) where(table.type ne AssetType.VIDEO)
+            select(table.fetchBy {
+                allScalarFields()
+                album { name() }
+            })
         }
 
         log.info("共发现 ${needDownloadAssets.size} 个需要下载的文件")
@@ -58,7 +65,7 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         // 5. 更新 CrontabHistory 记录的状态
         needDownloadAssets.forEach {
             try {
-                val path = api.downloadAsset(it)
+                val path = api.downloadAsset(it, Path(crontab.config.targetPath, it.album.name, it.fileName))
                 sql.saveCommand(CrontabHistoryDetail {
                     crontabHistoryId = crontab.id
                     downloadTime = Instant.now()
