@@ -3,7 +3,6 @@ import { RouterView } from 'vue-router'
 import { provide, ref, onMounted, watch } from 'vue'
 import Silk from '@/components/background/Silk.vue'
 import LightRays from '@/components/background/LightRays.vue'
-import Toast from 'primevue/toast'
 
 type BgMode = 'lightRays' | 'silk'
 const BG_KEY = 'app:bgMode'

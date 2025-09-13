@@ -19,6 +19,7 @@ import Chip from 'primevue/chip'
 import { useToast } from 'primevue/usetoast'
 import type { CrontabInput } from '@/__generated/model/static'
 import type { CrontabDto } from '@/__generated/model/dto'
+import SplitButton from 'primevue/splitbutton';
 
 type DataPoint = { timeStamp: number; count: number }
 
@@ -119,6 +120,17 @@ async function fetchAlbums() {
     albums.value = await api.albumsController.listAlbums()
   } catch (err) {
     console.error('获取相册列表失败', err)
+  }
+}
+
+async function fetchLatestAlbums() {
+  try {
+    toast.add({ severity: 'info', summary: '正在从远程更新相册列表',detail:"请暂时不要离开此页面，同步正在进行", life: 5000 })
+    albums.value = await api.albumsController.refreshAlbumn()
+    toast.add({ severity: 'success', summary: '已更新', life: 1600 })
+  } catch (err) {
+    toast.add({ severity: 'error', summary: '更新失败', detail: err instanceof Error ? err.message : String(err), life: 2200 })
+    console.error('获取最新相册列表失败', err)
   }
 }
 
@@ -286,6 +298,15 @@ const weekOptions = [
   { value: 5, label: '周五' },
   { value: 6, label: '周六' },
 ]
+
+const albumsRefreshModel = ref([
+  {
+    label: '从远程更新整个相册列表',
+    icon: 'pi pi-cloud-download',
+    command: fetchLatestAlbums,
+  },
+])
+
 </script>
 
 <template>
@@ -437,7 +458,7 @@ const weekOptions = [
 
     <Panel header="相册" toggleable>
       <template #icons>
-        <Button icon="pi pi-cog" severity="secondary" rounded text @click="fetchAlbums" />
+        <SplitButton icon="pi pi-refresh" severity="secondary" outlined rounded @click="fetchAlbums" :model="albumsRefreshModel"/>
       </template>
 
       <div class="space-y-2">
@@ -482,11 +503,11 @@ const weekOptions = [
         <div class="grid grid-cols-2 gap-4">
           <div class="space-y-2">
             <label class="block text-xs font-medium text-slate-500">Cron 表达式</label>
-            <InputText v-model="cronForm.expression" placeholder="0 0 * * *" class="w-full" />
+            <InputText v-model="cronForm.expression" placeholder="0 0 23 * * ?" class="w-full" />
             <div v-if="formErrors.expression" class="text-xs text-red-500">
               {{ formErrors.expression }}
             </div>
-            <div class="text-[10px] text-slate-400">支持标准 5/6 字段 Cron。例：0 0 * * *</div>
+            <div class="text-[10px] text-slate-400">支持标准 6/7 字段 Cron。例：0 0 23 * * ?</div>
           </div>
           <div class="space-y-2">
             <label class="block text-xs font-medium text-slate-500">时区</label>
