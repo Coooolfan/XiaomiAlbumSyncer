@@ -11,6 +11,8 @@ import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.time.ZoneId
+import java.util.TimeZone
 import kotlin.io.path.Path
 
 @Managed
@@ -33,6 +35,9 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
             where(table.id valueIn crontab.albumIds)
             select(table)
         }
+
+        val systemConfig =
+            sql.findById(SystemConfig::class, 0) ?: throw IllegalStateException("System is not initialized")
 
         albums.forEach {
             val assets = api.fetchAssetsByAlbumId(it)
@@ -82,7 +87,18 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }
 
         // 5.1 可选：批量修改图片 EXIF 时间
-        if (crontab.config.rewriteExifTime) assetPathMap.forEach { rewriteExifTime(it.key, it.value) }
+        if (crontab.config.rewriteExifTime) assetPathMap.forEach {
+            val rewriteZone = TimeZone.getTimeZone(ZoneId.of(crontab.config.rewriteExifTimeZone))
+
+            rewriteExifTime(
+                it.key,
+                it.value,
+                ExifRewriteConfig(
+                    Path(systemConfig.exitToolPath),
+                    rewriteZone
+                )
+            )
+        }
 
         // 6. 写入 CrontabHistoryDetails 记录
         sql.executeUpdate(CrontabHistory::class) {

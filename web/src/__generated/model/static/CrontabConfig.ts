@@ -5,4 +5,5 @@ export interface CrontabConfig {
     readonly downloadImages: boolean;
     readonly downloadVideos: boolean;
     readonly rewriteExifTime: boolean;
+    readonly rewriteExifTimeZone?: string | undefined;
 }

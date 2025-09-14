@@ -70,6 +70,7 @@ const cronForm = ref<CrontabInput>({
     downloadImages: true,
     downloadVideos: false,
     rewriteExifTime: false,
+    rewriteExifTimeZone: defaultTz,
   },
   albumIds: [],
 })
@@ -192,6 +193,7 @@ function openCreateCron() {
       downloadImages: true,
       downloadVideos: false,
       rewriteExifTime: false,
+      rewriteExifTimeZone: undefined,
     },
     albumIds: [],
   }
@@ -213,6 +215,7 @@ function openEditCron(item: Crontab) {
       downloadImages: item.config.downloadImages,
       downloadVideos: item.config.downloadVideos,
       rewriteExifTime: item.config.rewriteExifTime,
+      rewriteExifTimeZone: item.config.rewriteExifTimeZone ?? item.config.timeZone,
     },
     albumIds: [...item.albumIds],
   }
@@ -564,6 +567,18 @@ const albumsRefreshModel = ref([
             <InputSwitch v-model="cronForm.config.rewriteExifTime" />
             <span>重写 EXIF 时间</span>
           </div>
+        </div>
+
+        <div v-if="cronForm.config.rewriteExifTime" class="space-y-2">
+          <label class="block text-xs font-medium text-slate-500">EXIF 时区</label>
+          <Dropdown
+            v-model="cronForm.config.rewriteExifTimeZone"
+            :options="timeZones"
+            placeholder="选择 EXIF 写入时区（可不填）"
+            showClear
+            filter
+            class="w-full"
+          />
         </div>
 
         <div class="space-y-2">

@@ -18,5 +18,7 @@ data class CrontabConfig(
     val downloadVideos: Boolean,
 
     // 还没实现
-    val rewriteExifTime: Boolean
+    val rewriteExifTime: Boolean,
+
+    val rewriteExifTimeZone: String?
 )
