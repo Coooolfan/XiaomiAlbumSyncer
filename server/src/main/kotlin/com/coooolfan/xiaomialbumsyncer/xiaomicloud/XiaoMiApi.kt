@@ -3,18 +3,12 @@ package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 import com.coooolfan.xiaomialbumsyncer.model.Album
 import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.AssetType
-import com.coooolfan.xiaomialbumsyncer.utils.authHeader
-import com.coooolfan.xiaomialbumsyncer.utils.client
-import com.coooolfan.xiaomialbumsyncer.utils.saveToFile
-import com.coooolfan.xiaomialbumsyncer.utils.throwIfNotSuccess
-import com.coooolfan.xiaomialbumsyncer.utils.ua
+import com.coooolfan.xiaomialbumsyncer.utils.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import okhttp3.FormBody
 import okhttp3.Request
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.io.IOException
 import java.nio.file.Path
 import java.time.Instant
 
