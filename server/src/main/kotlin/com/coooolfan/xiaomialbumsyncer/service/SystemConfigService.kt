@@ -28,6 +28,7 @@ class SystemConfigService(private val sql: KSqlClient) {
             password = hashPwd(create.password)
             passToken = "-"
             userId = "-"
+            exitToolPath = "exiftool"
         }, SaveMode.INSERT_ONLY).execute()
     }
 

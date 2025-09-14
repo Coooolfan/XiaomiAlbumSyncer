@@ -61,21 +61,28 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
 
         log.info("共发现 ${needDownloadAssets.size} 个需要下载的文件")
 
+        val assetPathMap = mutableMapOf<Asset, java.nio.file.Path>()
+
         // 4. 对新增的 Asset 进行下载
         // 5. 更新 CrontabHistory 记录的状态
         needDownloadAssets.forEach {
             try {
-                val path = api.downloadAsset(it, Path(crontab.config.targetPath, it.album.name, it.fileName))
+                val targetPath = Path(crontab.config.targetPath, it.album.name, it.fileName)
+                val path = api.downloadAsset(it, targetPath)
                 sql.saveCommand(CrontabHistoryDetail {
                     crontabHistoryId = crontab.id
                     downloadTime = Instant.now()
                     filePath = path.toString()
                     assetId = it.id
                 }, SaveMode.INSERT_ONLY).execute()
+                assetPathMap[it] = path
             } catch (e: Exception) {
                 log.error("下载文件失败，跳过此文件，Asset ID: ${it.id}, 错误信息: ${e.message}")
             }
         }
+
+        // 5.1 可选：批量修改图片 EXIF 时间
+        if (crontab.config.rewriteExifTime) assetPathMap.forEach { rewriteExifTime(it.key, it.value) }
 
         // 6. 写入 CrontabHistoryDetails 记录
         sql.executeUpdate(CrontabHistory::class) {

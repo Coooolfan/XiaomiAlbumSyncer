@@ -1,9 +1,10 @@
 create table system_config
 (
-    id         INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    password   TEXT    NOT NULL,
-    pass_token TEXT    NOT NULL,
-    user_id    TEXT    NOT NULL
+    id             INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    password       TEXT    NOT NULL,
+    pass_token     TEXT    NOT NULL,
+    user_id        TEXT    NOT NULL,
+    exit_tool_path TEXT    NOT NULL
 );
 
 create table album

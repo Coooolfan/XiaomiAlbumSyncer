@@ -16,4 +16,6 @@ interface SystemConfig {
     val passToken: String
 
     val userId: String
+
+    val exitToolPath: String
 }
