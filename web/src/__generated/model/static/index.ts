@@ -3,4 +3,5 @@ export type {CrontabInput} from './CrontabInput';
 export type {IsInitResponse} from './IsInitResponse';
 export type {Result} from './Result';
 export type {SystemConfigInit} from './SystemConfigInit';
+export type {SystemConfigPassTokenUpdate} from './SystemConfigPassTokenUpdate';
 export type {SystemConfigUpdate} from './SystemConfigUpdate';

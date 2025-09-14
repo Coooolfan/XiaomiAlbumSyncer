@@ -94,7 +94,7 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
                 it.key,
                 it.value,
                 ExifRewriteConfig(
-                    Path(systemConfig.exitToolPath),
+                    Path(systemConfig.exifToolPath),
                     rewriteZone
                 )
             )

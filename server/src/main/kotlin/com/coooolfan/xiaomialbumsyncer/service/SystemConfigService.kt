@@ -4,9 +4,11 @@ import cn.dev33.satoken.stp.StpUtil
 import com.coooolfan.xiaomialbumsyncer.controller.LoginRequest
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
+import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.model.password
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
+import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
@@ -20,7 +22,7 @@ class SystemConfigService(private val sql: KSqlClient) {
         }[0] > 0
     }
 
-    fun createConfig(create: SystemConfigInit) {
+    fun initConfig(create: SystemConfigInit) {
         if (isInit()) throw IllegalStateException("System is already initialized")
 
         sql.saveCommand(SystemConfig {
@@ -28,7 +30,7 @@ class SystemConfigService(private val sql: KSqlClient) {
             password = hashPwd(create.password)
             passToken = "-"
             userId = "-"
-            exitToolPath = "exiftool"
+            exifToolPath = "exiftool"
         }, SaveMode.INSERT_ONLY).execute()
     }
 
@@ -60,5 +62,9 @@ class SystemConfigService(private val sql: KSqlClient) {
         sql.saveCommand(SystemConfig(update) {
             id = 0
         }, SaveMode.UPDATE_ONLY).execute()
+    }
+
+    fun getConfig(fetcher: Fetcher<SystemConfig>): SystemConfig {
+        return sql.findById(fetcher, 0) ?: throw IllegalStateException("System is not initialized")
     }
 }

@@ -17,5 +17,5 @@ interface SystemConfig {
 
     val userId: String
 
-    val exitToolPath: String
+    val exifToolPath: String
 }

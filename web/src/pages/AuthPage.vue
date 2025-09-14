@@ -51,7 +51,7 @@ async function handleSubmit() {
     if (!isInit.value) {
       // 初始化（注册）
       // 1. 创建配置（设置初始密码）
-      await api.systemConfigController.createConfig({ body: { password: password.value } })
+      await api.systemConfigController.initConfig({ body: { password: password.value } })
       // 2. 随后登录，便于服务端通过 Set-Cookie 设置会话
       await api.tokenController.login({ login: password.value })
     } else {

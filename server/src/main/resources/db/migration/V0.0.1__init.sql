@@ -4,7 +4,7 @@ create table system_config
     password       TEXT    NOT NULL,
     pass_token     TEXT    NOT NULL,
     user_id        TEXT    NOT NULL,
-    exit_tool_path TEXT    NOT NULL
+    exif_tool_path TEXT    NOT NULL
 );
 
 create table album

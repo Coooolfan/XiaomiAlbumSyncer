@@ -1,4 +1,3 @@
 export interface SystemConfigUpdate {
-    readonly passToken: string;
-    readonly userId: string;
+    readonly exifToolPath: string;
 }
