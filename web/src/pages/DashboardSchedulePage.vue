@@ -3,23 +3,22 @@ import { onMounted, ref, computed } from 'vue'
 import Card from 'primevue/card'
 import ContributionHeatmap from '@/components/ContributionHeatmap.vue'
 import AlbumCard from '@/components/AlbumCard.vue'
+import CrontabCard from '@/components/CrontabCard.vue'
 import { api } from '@/ApiInstance'
 import type { Dynamic_Album } from '@/__generated/model/dynamic'
 import Panel from 'primevue/panel'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import InputSwitch from 'primevue/inputswitch'
 import Dropdown from 'primevue/dropdown'
 import MultiSelect from 'primevue/multiselect'
-import Chip from 'primevue/chip'
 import { useToast } from 'primevue/usetoast'
 import type { CrontabInput } from '@/__generated/model/static'
 import type { CrontabDto } from '@/__generated/model/dto'
 import SplitButton from 'primevue/splitbutton';
+import type { Result } from '@/__generated/model/static'
 
 type DataPoint = { timeStamp: number; count: number }
 
@@ -48,6 +47,9 @@ const updatingRow = ref<number | null>(null)
 const showDeleteId = ref<number | null>(null)
 const showDeleteVisible = ref(false)
 const deleting = ref(false)
+const showExecuteId = ref<number | null>(null)
+const showExecuteVisible = ref(false)
+const executing = ref(false)
 
 const defaultTz = (() => {
   try {
@@ -283,6 +285,32 @@ function requestDelete(row: Crontab) {
   showDeleteVisible.value = true
 }
 
+function requestExecute(row: Crontab) {
+  showExecuteId.value = row.id
+  showExecuteVisible.value = true
+}
+
+async function confirmExecute() {
+  if (showExecuteId.value === null) return
+  executing.value = true
+  try {
+    const res: Result<number> = await api.crontabController.executeCrontab({ crontabId: showExecuteId.value })
+    if (res && typeof res.code === 'number' && res.code === res.SUCCEED_CODE) {
+      toast.add({ severity: 'success', summary: '已触发', detail: `执行ID: ${res.data}` , life: 1800 })
+    } else {
+      toast.add({ severity: 'warn', summary: '触发返回', detail: res?.description ?? '已发送请求', life: 2200 })
+    }
+    showExecuteId.value = null
+    showExecuteVisible.value = false
+    fetchCrontabs()
+  } catch (err) {
+    console.error('立即执行触发失败', err)
+    toast.add({ severity: 'error', summary: '触发失败', detail: err instanceof Error ? err.message : String(err), life: 2200 })
+  } finally {
+    executing.value = false
+  }
+}
+
 async function confirmDelete() {
   if (showDeleteId.value === null) return
   deleting.value = true
@@ -363,63 +391,25 @@ const albumsRefreshModel = ref([
 
       <template #content>
         <div class="space-y-3">
-          <DataTable :value="crontabs" :loading="loadingCrons" dataKey="id" class="text-sm">
-            <Column field="name" header="名称"></Column>
-            <Column header="相册">
-              <template #body="{ data }">
-                <Chip
-                  v-for="id in data.albumIds"
-                  :key="id"
-                  :label="albumOptions.find((o) => o.value === id)?.label || id"
-                  class="text-xs mr-2"
-                />
-              </template>
-            </Column>
-            <Column header="Cron表达式">
-              <template #body="{ data }">
-                {{ data.config?.expression }}
-              </template>
-            </Column>
-            <Column header="时区">
-              <template #body="{ data }">
-                {{ data.config?.timeZone }}
-              </template>
-            </Column>
-            <Column header="保存路径">
-              <template #body="{ data }">
-                {{ data.config?.targetPath || '-' }}
-              </template>
-            </Column>
-            <Column header="启用">
-              <template #body="{ data }">
-                <InputSwitch
-                  :modelValue="data.enabled"
-                  :disabled="updatingRow === data.id"
-                  @update:modelValue="() => toggleEnabled(data)"
-                />
-              </template>
-            </Column>
-            <Column header="操作" style="width: 160px">
-              <template #body="{ data }">
-                <div class="flex items-center gap-2">
-                  <Button size="small" icon="pi pi-info" @click="openEditCron(data)" />
-
-                  <Button size="small" icon="pi pi-pencil" @click="openEditCron(data)" />
-
-                  <Button
-                    size="small"
-                    icon="pi pi-trash"
-                    severity="danger"
-                    @click="requestDelete(data)"
-                  />
-                </div>
-              </template>
-            </Column>
-            <template #empty>
-              <div class="text-xs text-slate-500 py-6">暂无计划任务</div>
-            </template>
-          </DataTable>
-        </div></template
+          <div v-if="loadingCrons" class="text-xs text-slate-500 py-6">加载中...</div>
+          <div v-else>
+            <div v-if="!crontabs || crontabs.length === 0" class="text-xs text-slate-500 py-6">暂无计划任务</div>
+            <div v-else class="grid grid-cols-1 gap-3">
+              <CrontabCard
+                v-for="item in crontabs"
+                :key="item.id"
+                :crontab="item"
+                :album-options="albumOptions"
+                :busy="updatingRow === item.id"
+                @edit="openEditCron(item)"
+                @delete="requestDelete(item)"
+                @toggle="toggleEnabled(item)"
+                @execute="requestExecute(item)"
+              />
+            </div>
+          </div>
+        </div>
+      </template>
       >
     </Card>
 
@@ -625,6 +615,32 @@ const albumsRefreshModel = ref([
             "
           />
           <Button label="删除" severity="danger" :loading="deleting" @click="confirmDelete" />
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- 立即执行确认 -->
+    <Dialog
+      v-model:visible="showExecuteVisible"
+      modal
+      header="立即执行"
+      class="w-full sm:w-[420px]"
+    >
+      <div class="text-sm text-slate-700">确定要立即触发该计划任务的执行吗？该操作较为耗时，将在后台执行。</div>
+      <template #footer>
+        <div class="flex items-center justify-end gap-2 w-full">
+          <Button
+            label="取消"
+            severity="secondary"
+            text
+            @click="
+              () => {
+                showExecuteId = null
+                showExecuteVisible = false
+              }
+            "
+          />
+          <Button label="执行" severity="warning" :loading="executing" @click="confirmExecute" />
         </div>
       </template>
     </Dialog>

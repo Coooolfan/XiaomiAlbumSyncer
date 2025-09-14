@@ -1,6 +1,6 @@
 import type {Executor} from '../';
 import type {CrontabDto} from '../model/dto/';
-import type {CrontabInput} from '../model/static/';
+import type {CrontabInput, Result} from '../model/static/';
 
 export class CrontabController {
     
@@ -19,6 +19,15 @@ export class CrontabController {
         let _uri = '/api/crontab/';
         _uri += encodeURIComponent(options.crontabId);
         return (await this.executor({uri: _uri, method: 'DELETE'})) as Promise<void>;
+    }
+    
+    readonly executeCrontab: (options: CrontabControllerOptions['executeCrontab']) => Promise<
+        Result<number>
+    > = async(options) => {
+        let _uri = '/api/crontab/';
+        _uri += encodeURIComponent(options.crontabId);
+        _uri += '/executions';
+        return (await this.executor({uri: _uri, method: 'POST'})) as Promise<Result<number>>;
     }
     
     readonly listCrontabs: () => Promise<
@@ -47,6 +56,9 @@ export type CrontabControllerOptions = {
         readonly crontabId: number
     }, 
     'deleteCrontab': {
+        readonly crontabId: number
+    }, 
+    'executeCrontab': {
         readonly crontabId: number
     }
 }

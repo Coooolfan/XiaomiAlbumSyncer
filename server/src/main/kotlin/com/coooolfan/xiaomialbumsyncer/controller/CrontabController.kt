@@ -14,6 +14,7 @@ import org.noear.solon.annotation.Managed
 import org.noear.solon.annotation.Mapping
 import org.noear.solon.annotation.Path
 import org.noear.solon.core.handle.MethodType
+import org.noear.solon.core.handle.Result
 
 @Api
 @Managed
@@ -45,10 +46,21 @@ class CrontabController(private val servce: CrontabService) {
         servce.deleteCrontab(crontabId)
     }
 
+    @Api
+    @Mapping("/{crontabId}/executions", method = [MethodType.POST])
+    fun executeCrontab(@Path crontabId: Long): Result<Int> {
+        servce.executeCrontab(crontabId)
+        return Result.succeed(201)
+    }
+
     companion object {
         private val DEFAULT_CRONTAB = newFetcher(Crontab::class).by {
             allScalarFields()
             albumIds()
+            histories {
+                allScalarFields()
+                isCompleted()
+            }
         }
     }
 }

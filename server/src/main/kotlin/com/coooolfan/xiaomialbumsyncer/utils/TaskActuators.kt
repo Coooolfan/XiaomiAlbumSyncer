@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.utils
 
+import com.coooolfan.xiaomialbumsyncer.config.ThreadExecutor
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
@@ -23,10 +24,10 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         log.info("执行定时任务: ${crontab.id}:${crontab.name}")
 
         // 1. 创建 CrontabHistory 记录的状态
-        sql.saveCommand(CrontabHistory {
+        val crontabHistory = sql.saveCommand(CrontabHistory {
             crontabId = crontab.id
             startTime = Instant.now()
-        }, SaveMode.INSERT_ONLY).execute()
+        }, SaveMode.INSERT_ONLY).execute().modifiedEntity
 
         // 2. 对 crontab.albums 进行同步操作, 重新刷新这些相册的所有 Asset
         val albums = sql.executeQuery(Album::class) {
@@ -80,7 +81,7 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         // 6. 写入 CrontabHistoryDetails 记录
         sql.executeUpdate(CrontabHistory::class) {
             set(table.endTime, Instant.now())
-            where(table.id eq crontab.id)
+            where(table.id eq crontabHistory.id)
         }
         log.info("定时任务执行完毕: [${crontab.id}:${crontab.name}]，共下载 ${needDownloadAssets.size} 个文件")
 

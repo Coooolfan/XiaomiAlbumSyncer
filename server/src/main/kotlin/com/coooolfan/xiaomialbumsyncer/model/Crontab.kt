@@ -23,4 +23,7 @@ interface Crontab {
     @IdView("albums")
     val albumIds: List<Long>
 
+    @OneToMany(mappedBy = "crontab")
+    val histories: List<CrontabHistory>
+
 }

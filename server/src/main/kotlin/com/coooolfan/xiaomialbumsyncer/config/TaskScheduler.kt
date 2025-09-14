@@ -15,7 +15,8 @@ import java.text.ParseException
 class TaskScheduler(
     private val jobManager: IJobManager,
     private val sql: KSqlClient,
-    private val actuators: TaskActuators
+    private val actuators: TaskActuators,
+    private val thread: ThreadExecutor
 ) {
 
     private val log = LoggerFactory.getLogger(this.javaClass)
@@ -43,7 +44,7 @@ class TaskScheduler(
                     "${crontab.id}:${crontab.name}",
                     Scheduled(cron = crontab.config.expression, zone = crontab.config.timeZone)
                 ) {
-                    actuators.doWork(crontab)
+                    thread.taskExecutor().execute { actuators.doWork(crontab) }
                 }
                 registeredJobs.add(crontab)
             } catch (e: IllegalArgumentException) {
@@ -58,6 +59,18 @@ class TaskScheduler(
 
         log.info("载入定时任务完成，共注册 ${registeredJobs.size} 个任务")
 
+    }
+
+    /** 立即执行某个定时任务
+     * @param crontab 要执行的定时任务实体
+     * @param async 是否异步执行，默认 true。若为 false，则在当前线程中执行该任务，直到任务完成才返回
+     */
+    fun executeNow(crontab: Crontab, async: Boolean = true) {
+        if (async) {
+            thread.taskExecutor().execute { actuators.doWork(crontab) }
+        } else {
+            actuators.doWork(crontab)
+        }
     }
 
 }

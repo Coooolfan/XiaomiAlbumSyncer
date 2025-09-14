@@ -1,5 +1,5 @@
 import type {AssetType} from '../enums/';
-import type {Dynamic_Album} from './';
+import type {Dynamic_Album, Dynamic_CrontabHistoryDetail} from './';
 
 export interface Dynamic_Asset {
     readonly id?: number;
@@ -11,4 +11,5 @@ export interface Dynamic_Asset {
     readonly mimeType?: string;
     readonly title?: string;
     readonly size?: number;
+    readonly downloadHistories?: ReadonlyArray<Dynamic_CrontabHistoryDetail>;
 }

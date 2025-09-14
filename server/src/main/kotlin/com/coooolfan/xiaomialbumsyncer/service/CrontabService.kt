@@ -4,10 +4,12 @@ import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabInput
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.config.TaskScheduler
+import com.coooolfan.xiaomialbumsyncer.model.by
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
+import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.noear.solon.annotation.Managed
 
 @Managed
@@ -35,5 +37,19 @@ class CrontabService(private val sql: KSqlClient, private val taskScheduler: Tas
         val execute = sql.saveCommand(crontab, SaveMode.UPDATE_ONLY).execute(fetcher)
         taskScheduler.initJobs()
         return execute.modifiedEntity
+    }
+
+    fun executeCrontab(crontabId: Long) {
+        val crontab =
+            sql.findById(
+                newFetcher(Crontab::class).by {
+                    allScalarFields()
+                    albumIds()
+                },
+                crontabId
+            )
+                ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
+
+        taskScheduler.executeNow(crontab, true)
     }
 }
