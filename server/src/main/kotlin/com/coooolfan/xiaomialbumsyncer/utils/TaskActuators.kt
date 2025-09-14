@@ -1,6 +1,5 @@
 package com.coooolfan.xiaomialbumsyncer.utils
 
-import com.coooolfan.xiaomialbumsyncer.config.ThreadExecutor
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
