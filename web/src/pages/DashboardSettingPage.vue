@@ -93,6 +93,7 @@ async function onUpdatePassToken() {
     })
     toast.add({ severity: 'success', summary: '成功', detail: 'passToken 已更新', life: 2000 })
     passToken.value = ''
+    userId.value = ''
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e) || '更新失败'
     toast.add({ severity: 'error', summary: '错误', detail, life: 3000 })

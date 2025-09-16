@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import { provide, ref, onMounted, watch } from 'vue'
+import Toast from 'primevue/toast'
 import Silk from '@/components/background/Silk.vue'
 import LightRays from '@/components/background/LightRays.vue'
 

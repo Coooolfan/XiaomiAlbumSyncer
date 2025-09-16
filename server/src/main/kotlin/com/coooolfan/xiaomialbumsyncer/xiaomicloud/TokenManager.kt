@@ -22,26 +22,46 @@ class TokenManager(private val sql: KSqlClient) {
 
     private val log = org.slf4j.LoggerFactory.getLogger(TokenManager::class.java)
 
+    @Volatile
     private var serviceToken: String? = null
+
+    @Volatile
     private var userId: Long? = null
+
+    @Volatile
     private var lastFreshedTime: Instant? = null
-
     fun getServiceToken(): String {
-        if (serviceToken == null || lastFreshedTime == null || Instant.now()
-                .isAfter(lastFreshedTime!!.plusSeconds(12 * 3600))
-        ) {
-            val config = sql.executeQuery(SystemConfig::class) {
-                where(table.id eq 0)
-                select(table.passToken, table.userId)
-            }.firstOrNull() ?: throw IllegalStateException("System is not initialized")
+        // 第一次检查（无锁）
+        if (needRefresh()) {
 
-            serviceToken = genServiceToken(config._1, config._2)
-            lastFreshedTime = Instant.now()
-            userId = config._2.toLong()
+            // 进入同步块
+            synchronized(this) {
+                // 第二次检查（有锁）
+                if (needRefresh()) {
+
+                    log.info("Service token 已过期或不存在，重新获取中...")
+
+                    val config = sql.executeQuery(SystemConfig::class) {
+                        where(table.id eq 0)
+                        select(table.passToken, table.userId)
+                    }.firstOrNull() ?: throw IllegalStateException("System is not initialized")
+
+                    serviceToken = genServiceToken(config._1, config._2)
+                    lastFreshedTime = Instant.now()
+                    userId = config._2.toLong()
+                }
+            }
         }
         return serviceToken!!
     }
 
+    private fun needRefresh(): Boolean {
+        return serviceToken == null || lastFreshedTime == null ||
+                // serviceToken 的过期时间非常短，10 分钟强制刷新
+                Instant.now().isAfter(lastFreshedTime!!.plusSeconds(60 * 10))
+    }
+
+    @Synchronized
     fun getUserId(): Long {
         if (userId == null) {
             val config = sql.executeQuery(SystemConfig::class) {
@@ -70,6 +90,7 @@ class TokenManager(private val sql: KSqlClient) {
         val preLoginRes = client().newCall(preLoginReq).execute()
         throwIfNotSuccess(preLoginRes.code)
         val preLoginBodyString = preLoginRes.body.string()
+        preLoginRes.close()
         val loginUrl = jacksonObjectMapper()
             .readTree(preLoginBodyString)
             .at("/data/loginUrl")
@@ -82,6 +103,7 @@ class TokenManager(private val sql: KSqlClient) {
         val loginRes = client().newCall(loginReq).execute()
         throwIfNotSuccess(loginRes.code)
         val location = loginRes.header("Location")
+        loginRes.close()
 
         if (location == null) {
             log.error("loginResStatusCode: ${loginRes.code} body: ${loginRes.body.string()} headers: ${loginRes.headers}")
@@ -95,6 +117,7 @@ class TokenManager(private val sql: KSqlClient) {
         val tokenRes = client().newCall(tokenReq).execute()
         throwIfNotSuccess(tokenRes.code)
         val setCookies = tokenRes.headers("Set-Cookie")
+        tokenRes.close()
 
         log.info("cookiesSize: ${setCookies.size}")
 
