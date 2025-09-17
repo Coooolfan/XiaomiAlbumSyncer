@@ -4,6 +4,7 @@ import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Textarea from 'primevue/textarea'
 import InputText from 'primevue/inputtext'
+import Dialog from 'primevue/dialog'
 
 import { useToast } from 'primevue/usetoast'
 import { api } from '@/ApiInstance'
@@ -43,6 +44,8 @@ const passToken = ref('')
 const userId = ref('')
 const updating = ref(false)
 const toast = useToast()
+const showPassConfirmVisible = ref(false)
+const isInsecureContext = ref(false)
 
 // ===== 系统配置：exifToolPath =====
 const exifToolPath = ref('')
@@ -101,11 +104,25 @@ async function onUpdatePassToken() {
     updating.value = false
   }
 }
+
+function requestUpdatePassToken() {
+  showPassConfirmVisible.value = true
+}
+
+async function confirmUpdatePassToken() {
+  showPassConfirmVisible.value = false
+  await onUpdatePassToken()
+}
 onMounted(() => {
   // 初始化拉取系统配置
   fetchSystemConfig()
+  try {
+    // 非安全上下文提示（例如 http 或部分自签名环境）
+    isInsecureContext.value = typeof window !== 'undefined' && !window.isSecureContext
+  } catch {
+    isInsecureContext.value = false
+  }
 })
-
 </script>
 
 <template>
@@ -117,7 +134,13 @@ onMounted(() => {
       <template #title>
         <div class="flex items-center justify-between">
           <span>系统配置</span>
-          <Button icon="pi pi-refresh" severity="secondary" rounded text @click="fetchSystemConfig" />
+          <Button
+            icon="pi pi-refresh"
+            severity="secondary"
+            rounded
+            text
+            @click="fetchSystemConfig"
+          />
         </div>
       </template>
       <template #content>
@@ -129,7 +152,10 @@ onMounted(() => {
             placeholder="输入 exiftool 可执行文件路径"
             class="w-full"
           />
-          <p class="text-xs text-slate-400">如果您使用 Docker 部署此项目，请不要改动此项目。如果您使用其他方式部署此项目，请输入 exiftool 可执行文件路径。</p>
+          <p class="text-xs text-slate-400">
+            如果您使用 Docker 部署此项目，请不要改动此项目。如果您使用其他方式部署此项目，请输入
+            exiftool 可执行文件路径。
+          </p>
         </div>
       </template>
       <template #footer>
@@ -154,11 +180,52 @@ onMounted(() => {
       <template #content>
         <Textarea v-model="passToken" rows="5" placeholder="输入 passToken" class="w-full" />
         <InputText v-model="userId" rows="1" placeholder="输入 userId" class="w-full mt-2" />
+        <div
+          v-if="isInsecureContext"
+          class="mt-3 rounded-md bg-red-50 text-red-700 text-xs px-3 py-2 ring-1 ring-red-200"
+        >
+          警告：当前处于不安全上下文，提交的 passToken 将在网络上以明文传输到服务器，可能被窃取。
+          请仅在受信网络环境使用或通过 HTTPS 访问本页面。
+        </div>
       </template>
       <template #footer>
-        <Button label="更新 passToken" :loading="updating" @click="onUpdatePassToken" />
+        <Button label="更新 passToken" :loading="updating" @click="requestUpdatePassToken" />
       </template>
     </Card>
+    <!-- 更新 PassToken 确认 -->
+    <Dialog
+      v-model:visible="showPassConfirmVisible"
+      modal
+      header="更新 PassToken"
+      class="w-full sm:w-[420px]"
+    >
+      <div class="text-sm text-slate-700">
+        确定要更新 passToken 吗？
+        <span v-if="isInsecureContext" class="text-red-600 font-medium">
+          当前为不安全上下文，提交将以明文传输。
+        </span>
+      </div>
+      <template #footer>
+        <div class="flex items-center justify-end gap-2 w-full">
+          <Button
+            label="取消"
+            severity="secondary"
+            text
+            @click="
+              () => {
+                showPassConfirmVisible = false
+              }
+            "
+          />
+          <Button
+            label="确定"
+            severity="warning"
+            :loading="updating"
+            @click="confirmUpdatePassToken"
+          />
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>
 
