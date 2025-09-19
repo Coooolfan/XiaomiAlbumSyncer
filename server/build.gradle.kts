@@ -23,8 +23,8 @@ val jimmerVersion = "0.9.106"
 
 dependencies {
     implementation(platform("org.noear:solon-parent:3.5.1"))
-    implementation("org.noear:solon-web"){
-        exclude(group = "org.noear" , module = "solon-serialization-snack3")
+    implementation("org.noear:solon-web") {
+        exclude(group = "org.noear", module = "solon-serialization-snack3")
     }
     implementation("org.noear:solon-logging-logback")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
@@ -60,23 +60,6 @@ tasks.withType<KotlinCompile> {
     compilerOptions.javaParameters = true
 }
 
-tasks.withType<Jar> {
-    manifest {
-        attributes.apply {
-            set("Main-Class", "com.coooolfan.xiaomialbumsyncer.AppKt")
-        }
-    }
-
-    dependsOn(configurations.runtimeClasspath)
-
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from(configurations.runtimeClasspath.get().map {
-        if (it.isDirectory) it else zipTree(it)
-    })
-
-    from(sourceSets.main.get().output)
-}
-
 kotlin {
     sourceSets.main {
         kotlin.srcDir("build/generated/ksp/main/kotlin")
@@ -93,4 +76,10 @@ tasks.withType<JavaExec> {
 }
 tasks.withType<Test> {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+
+graalvmNative {
+    agent {
+        defaultMode.set("standard")
+    }
 }

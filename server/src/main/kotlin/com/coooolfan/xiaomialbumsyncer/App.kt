@@ -12,7 +12,7 @@ class App {
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
-            Solon.start(App::class.java, args).block()
+            Solon.start(App::class.java, args)
         }
     }
 }
