@@ -26,6 +26,7 @@ dependencies {
     implementation("org.noear:solon-web") {
         exclude(group = "org.noear", module = "solon-serialization-snack3")
     }
+    implementation("org.noear:solon-web-staticfiles")
     implementation("org.noear:solon-logging-logback")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
     implementation("cn.dev33:sa-token-solon-plugin:1.44.0")
@@ -45,9 +46,6 @@ dependencies {
 
     implementation("com.zaxxer:HikariCP:7.0.2")
     runtimeOnly("org.xerial:sqlite-jdbc:3.50.3.0")
-
-    implementation("org.noear:solon.aot")
-    annotationProcessor("org.noear:solon.aot")
 
     testImplementation("org.noear:solon-test")
 }

@@ -26,6 +26,12 @@ class SystemConfigController(private val service: SystemConfigService) {
     }
 
     @Api
+    @Mapping("/hello", method = [MethodType.GET])
+    fun hello(): String {
+        return "Hello World!\n"
+    }
+
+    @Api
     @Mapping(method = [MethodType.POST])
     fun initConfig(@Body create: SystemConfigInit) {
         return service.initConfig(create)
