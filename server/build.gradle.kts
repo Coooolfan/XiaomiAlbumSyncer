@@ -6,13 +6,11 @@ plugins {
     kotlin("jvm") version "2.2.10"
     id("com.google.devtools.ksp") version "2.2.10-2.0.2"
     id("org.graalvm.buildtools.native") version "0.11.0"
-
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 repositories {
-    mavenLocal()
     mavenCentral()
-    maven { url = uri("https://mirrors.cloud.tencent.com/nexus/repository/maven-public/") }
 }
 
 group = "com.coooolfan"
@@ -72,6 +70,7 @@ application {
 tasks.withType<JavaExec> {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
+
 tasks.withType<Test> {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
