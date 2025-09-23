@@ -12,6 +12,7 @@
 /server/.idea
 /server/.kotlin
 /server/build
+/server/target
 /server/.gradle
 /server/logs/server/.gradle/
 *.db-*
