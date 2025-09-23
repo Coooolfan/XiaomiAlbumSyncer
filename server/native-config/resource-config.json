@@ -1,0 +1,123 @@
+{
+  "resources":{
+  "includes":[{
+    "pattern":"\\QMETA-INF/jimmer/code_generation\\E"
+  }, {
+    "pattern":"\\QMETA-INF/jimmer/entities\\E"
+  }, {
+    "pattern":"\\QMETA-INF/maven/org.xerial/sqlite-jdbc/pom.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/satoken/cn.dev33.satoken.plugin.SaTokenPlugin\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/ch.qos.logback.classic.spi.Configurator\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/java.lang.System$LoggerFinder\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/java.net.spi.InetAddressResolverProvider\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/java.net.spi.URLStreamHandlerProvider\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/java.nio.channels.spi.SelectorProvider\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/java.sql.Driver\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/java.time.zone.ZoneRulesProvider\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/kotlin.reflect.jvm.internal.impl.builtins.BuiltInsLoader\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/kotlin.reflect.jvm.internal.impl.resolve.ExternalOverridabilityCondition\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/kotlin.reflect.jvm.internal.impl.util.ModuleVisibilityHelper\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/org.flywaydb.core.extensibility.Plugin\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/org.noear.solon.logging.LogIncubator\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/org.slf4j.spi.SLF4JServiceProvider\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/ch.qos.logback.solon.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/cn.dev33.satoken.solon.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/org.noear.solon.vault.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/solon-cache.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/solon-logging.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/solon.data.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/solon.net.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/solon.scheduling.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/solon.scheduling.simple.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/solon.serialization.jackson.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/solon.server.smarthttp.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/solon.sessionstate.local.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/solon.validation.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon/solon.web.staticfiles.properties\\E"
+  }, {
+    "pattern":"\\QMETA-INF/solon\\E"
+  }, {
+    "pattern":"\\QWEB-INF/static/\\E"
+  }, {
+    "pattern":"\\Qapp.properties\\E"
+  }, {
+    "pattern":"\\Qapp.yml\\E"
+  }, {
+    "pattern":"\\Qcom/coooolfan/xiaomialbumsyncer\\E"
+  }, {
+    "pattern":"\\Qdb/callback\\E"
+  }, {
+    "pattern":"\\Qdb/migration/V0.0.1__init.sql\\E"
+  }, {
+    "pattern":"\\Qdb/migration\\E"
+  }, {
+    "pattern":"\\Qlogback-solon.xml\\E"
+  }, {
+    "pattern":"\\Qlogback-test.scmo\\E"
+  }, {
+    "pattern":"\\Qlogback-test.xml\\E"
+  }, {
+    "pattern":"\\Qlogback.scmo\\E"
+  }, {
+    "pattern":"\\Qlogback.xml\\E"
+  }, {
+    "pattern":"\\Qorg/flywaydb/core/internal/version.txt\\E"
+  }, {
+    "pattern":"\\Qorg/noear/solon/core/WEB-INF/static/\\E"
+  }, {
+    "pattern":"\\Qorg/noear/solon/core/app.properties\\E"
+  }, {
+    "pattern":"\\Qorg/noear/solon/core/logback-solon.xml\\E"
+  }, {
+    "pattern":"\\Qorg/noear/solon/core/logback.xml\\E"
+  }, {
+    "pattern":"\\Qorg/sqlite/native/Mac/aarch64/libsqlitejdbc.dylib\\E"
+  }, {
+    "pattern":"\\Qsqlite-jdbc.properties\\E"
+  }, {
+    "pattern":"\\Qstatic/\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/DashboardSettingPage-BDoduQOb.js\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/DashboardSettingPage-CbU8aot_.css\\E"
+  }, {
+    "pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt72b/nfc.nrm\\E"
+  }, {
+    "pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt72b/nfkc.nrm\\E"
+  }, {
+    "pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt72b/uprops.icu\\E"
+  }, {
+    "pattern":"java.base:\\Qsun/net/idn/uidna.spp\\E"
+  }, {
+    "pattern":"java.base:\\Qsun/net/www/content-types.properties\\E"
+  }]},
+  "bundles":[]
+}

@@ -1,0 +1,703 @@
+[
+  {
+    "name": "com.zaxxer.hikari.HikariConfig",
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "com.zaxxer.hikari.util.Credentials",
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDraft$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigDraftKt",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumDraft$$$DraftImpl",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft$$$DraftImpl",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDraft",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft$$$Impl",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumDraft",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabDraft$$$Implementor",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigDraft$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumDraftKt",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraftKt",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigDraft$$$Implementor$DefaultImpls",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetDraft$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumDraft$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigDraft$$",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumDraft$$",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetDraft$$$Impl",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDraft$$$DraftImpl",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft$$",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDraft$$$Implementor$DefaultImpls",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabDraft$$$Impl",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabDraft$$$Implementor$DefaultImpls",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabDraft",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumDraft$$$Implementor$DefaultImpls",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetDraftKt",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigDraft$$$Impl",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigDraft",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabDraft$$",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDraft$$$Implementor",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDraft$$",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigDraft$$$DraftImpl",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetDraft",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumDraft$$$Implementor",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetDraft$$",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetDraft$$$DraftImpl",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabDraft$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft$$$Implementor",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumDraft$$$Impl",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigDraft$$$Implementor",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDraftKt",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabDraft$$$DraftImpl",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetDraft$$$Implementor",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft$$$Implementor$DefaultImpls",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetDraft$$$Implementor$DefaultImpls",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabDraftKt",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDraft$$$Impl",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDraft$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPassTokenUpdate$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.dto.CrontabInput$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigDraft$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetDraft$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumDraft$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabDraft$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft$Builder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigPropsKt",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetProps$SHA1$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumProps$ASSETS$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$START_TIME$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabProps",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumPropsKt",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailPropsKt",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$EXIF_TOOL_PATH$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabProps$CONFIG$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$ID$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabProps$ALBUM_IDS$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$PASS_TOKEN$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumProps$NAME$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$END_TIME$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetProps",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetProps$TITLE$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$ID$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$CRONTAB$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumProps$ASSET_COUNT$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetProps$SIZE$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$ASSET$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$DETAILS$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$CRONTAB_HISTORY$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabProps$ENABLED$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetPropsKt",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetProps$MIME_TYPE$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumProps$LAST_UPDATE_TIME$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumProps",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetProps$DOWNLOAD_HISTORIES$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$FILE_PATH$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$DOWNLOAD_TIME$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$PASSWORD$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetProps$ID$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetProps$ALBUM$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabProps$HISTORIES$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabProps$ALBUMS$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabProps$ID$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabProps$DESCRIPTION$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$ID$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryPropsKt",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetProps$TYPE$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabProps$NAME$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetProps$DATE_TAKEN$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$IS_COMPLETED$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AlbumProps$ID$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$USER_ID$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabPropsKt",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.AssetProps$FILE_NAME$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.Asset",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.Album",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.Crontab",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistory",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.coooolfan.xiaomialbumsyncer.model.SystemConfig",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  }
+]
+
