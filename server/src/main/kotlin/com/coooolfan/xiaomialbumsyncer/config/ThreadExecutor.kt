@@ -9,6 +9,6 @@ import java.util.concurrent.Executors
 class ThreadExecutor {
     @Managed
     fun taskExecutor(): Executor {
-        return Executors.newVirtualThreadPerTaskExecutor()
+        return Executors.newFixedThreadPool(4)
     }
 }
