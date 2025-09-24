@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.nio.file.Files
 
 plugins {
     java
@@ -34,7 +35,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
     implementation("org.noear:solon-scheduling-simple")
 
-    implementation("org.flywaydb:flyway-core:11.11.2")
+    implementation("org.flywaydb:flyway-core:11.13.1")
 
     implementation("org.babyfish.jimmer:jimmer-client:$jimmerVersion")
     implementation("org.babyfish.jimmer:jimmer-core:${jimmerVersion}")
@@ -57,6 +58,32 @@ tasks.withType<KotlinCompile> {
     compilerOptions.javaParameters = true
 }
 
+val generateFlywayIndex = tasks.register("generateFlywayIndex") {
+    val resourcesDir = layout.projectDirectory.dir("src/main/resources")
+    val migrationsDir = resourcesDir.dir("db/migration")
+    val indexFile = resourcesDir.file("META-INF/flyway-resources.idx")
+
+    inputs.dir(migrationsDir)
+    outputs.file(indexFile)
+
+    doLast {
+        val base = migrationsDir.asFile.toPath()
+        val indexPath = indexFile.asFile.toPath()
+        indexPath.parent?.let { Files.createDirectories(it) }
+
+        val lines = Files.walk(base)
+            .filter { Files.isRegularFile(it) }
+            .map { base.relativize(it).toString().replace('\\', '/') }
+            .map { "db/migration/$it" }
+            .sorted()
+            .toList()
+
+        Files.write(indexPath, lines)
+        println("Generated flyway index with ${lines.size} entries at $indexPath")
+    }
+}
+
+
 kotlin {
     sourceSets.main {
         kotlin.srcDir("build/generated/ksp/main/kotlin")
@@ -65,6 +92,18 @@ kotlin {
 
 application {
     mainClass.set("com.coooolfan.xiaomialbumsyncer.App")
+}
+
+tasks.named("run") {
+    dependsOn(generateFlywayIndex)
+}
+
+tasks.named("shadowJar") {
+    dependsOn(generateFlywayIndex)
+}
+
+val kspAndFlyway = tasks.register("preCompile") {
+    dependsOn("kspKotlin", generateFlywayIndex)
 }
 
 // avoid sqlite warnings

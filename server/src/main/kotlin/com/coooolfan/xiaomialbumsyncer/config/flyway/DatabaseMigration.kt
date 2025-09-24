@@ -1,4 +1,4 @@
-package com.coooolfan.xiaomialbumsyncer.config
+package com.coooolfan.xiaomialbumsyncer.config.flyway
 
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.MigrationInfoService
@@ -18,9 +18,18 @@ class DatabaseMigration {
         // 创建Flyway实例
         val flyway: Flyway = Flyway.configure()
             .dataSource(dataSource)
-            .locations("classpath:db/migration") // 迁移脚本位置
-            .baselineOnMigrate(true) // 如果数据库不为空，自动基线化
-            .validateOnMigrate(true) // 验证迁移
+            .locations("classpath:db/migration")
+            .baselineOnMigrate(true)
+            .validateOnMigrate(true)
+            // 关键：注册自定义 ResourceProvider
+            .resourceProvider(
+                IndexedResourceProvider(
+                    classLoader = Thread.currentThread().contextClassLoader,
+                    encoding = Charsets.UTF_8,
+                    indexPath = "META-INF/flyway-resources.idx",
+                    failIfIndexMissing = true // 没有索引就报错，避免遗漏
+                )
+            )
             .load()
 
         // 执行迁移
@@ -28,7 +37,7 @@ class DatabaseMigration {
             // 获取迁移信息
             val infoService: MigrationInfoService = flyway.info()
             infoService.all().forEach { info ->
-                log.info("迁移版本: ${info.version}, 描述: ${info.description}, 状态: ${info.state}")
+                log.info("发现迁移: 版本: ${info.version}, 描述: ${info.description}, 状态: ${info.state}")
             }
             log.info("开始数据库迁移...")
             // 执行迁移
