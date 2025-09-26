@@ -49,7 +49,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                     id = albumId
                     name = albumName ?: albumJson.get("name").asText()
                     assetCount = albumJson.get("mediaCount").asInt()
-                    lastUpdateTime = Instant.ofEpochMilli(albumJson.get("lastUpdateTime").asLong())
+                    lastUpdateTime = Instant.ofEpochMilli(albumJson.get("lastUpdateTime")?.asLong() ?: 0L)
                 })
             }
 
