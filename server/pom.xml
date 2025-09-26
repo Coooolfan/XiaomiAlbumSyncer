@@ -225,7 +225,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.4.0</version>
+                <version>3.6.1</version>
                 <executions>
                     <execution>
                         <id>add-source</id>
@@ -311,25 +311,21 @@
             </plugin>
 
             <!-- Native Maven Plugin (AOT 本地化编译) -->
+            <!--
             <plugin>
                 <groupId>org.graalvm.buildtools</groupId>
                 <artifactId>native-maven-plugin</artifactId>
                 <configuration>
                     <buildArgs>
                         <arg>-H:+UnlockExperimentalVMOptions</arg>
-                        <arg>
-                            -H:ReflectionConfigurationFiles=src/main/resources/META-INF/native-image/reflect-config.json
-                        </arg>
-                        <arg>-H:IncludeResources='db/migration/.*'</arg>
-                        <arg>-H:ClassInitialization=org.babyfish.jimmer:run_time</arg>
-                        <arg>-H:ClassInitialization=org.babyfish.jimmer.sql:run_time</arg>
-                        <arg>-H:ClassInitialization=com.coooolfan.xiaomialbumsyncer.model:run_time</arg>
+                        <arg>-H:+BuildReport</arg>
                         <arg>-march=native</arg>
-                        <arg>-O2</arg>
-<!--                        <arg>&#45;&#45;gc=G1</arg> only supported on Linux AMD64 and AArch64-->
+                        <arg>-enable-sbom</arg>
+                        <arg>-gc=G1</arg>
                     </buildArgs>
                 </configuration>
             </plugin>
+                    -->
         </plugins>
     </build>
 </project>

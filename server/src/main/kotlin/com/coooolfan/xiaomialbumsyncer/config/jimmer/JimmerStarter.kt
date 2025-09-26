@@ -35,8 +35,10 @@ class JimmerStarter {
             return kSqlClient
         } catch (e: DatabaseValidationException) {
             log.info("数据库校验失败: " + e.message)
-            log.info("1. 如果您正处于开发环境，请确保已执行最新的迁移脚本，并根据报错信息手动调整数据库或Flyway迁移文件。")
-            log.info("2. 如果您正处于生产环境，请前往Github仓库提交issue寻求帮助。此报错不应该出现在生产环境。")
+            log.info(
+                "1. 如果您正处于开发环境，请确保已执行最新的迁移脚本，并根据报错信息手动调整数据库或Flyway迁移文件。\n" +
+                        "2. 如果您正处于生产环境，请前往Github仓库提交issue寻求帮助。此报错不应该出现在生产环境。"
+            )
             throw e
         }
     }
