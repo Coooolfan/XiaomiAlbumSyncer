@@ -106,6 +106,10 @@ val kspAndFlyway = tasks.register("preCompile") {
     dependsOn("kspKotlin", generateFlywayIndex)
 }
 
+tasks.named("processResources") {
+    dependsOn(generateFlywayIndex)
+}
+
 // avoid sqlite warnings
 tasks.withType<JavaExec> {
     jvmArgs("--enable-native-access=ALL-UNNAMED")

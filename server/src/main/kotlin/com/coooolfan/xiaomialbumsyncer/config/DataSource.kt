@@ -3,6 +3,7 @@ package com.coooolfan.xiaomialbumsyncer.config
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.noear.solon.annotation.Configuration
+import org.noear.solon.annotation.Inject
 import org.noear.solon.annotation.Managed
 import java.nio.file.Files
 import java.nio.file.Path
@@ -12,9 +13,12 @@ import javax.sql.DataSource
 @Configuration
 class DataSource {
 
+    @Inject(value = "\${solon.app.db}")
+    lateinit var sqlite: String
+
     @Managed(index = 100)
     fun defaultDataSource(): DataSource {
-        val dbPath = determineDbPath()
+        val dbPath = Paths.get(sqlite)
         Files.createDirectories(dbPath.parent)
         val config = HikariConfig()
         config.jdbcUrl = buildSQLiteUrl(dbPath)
@@ -23,12 +27,6 @@ class DataSource {
         config.connectionTestQuery = "SELECT 1"
         config.poolName = "SQLitePool"
         return HikariDataSource(config)
-    }
-
-    private fun determineDbPath(): Path {
-        val dbPath = "./xiaomialbumsyncer.db"
-
-        return Paths.get(dbPath)
     }
 
     private fun buildSQLiteUrl(dbPath: Path): String {
