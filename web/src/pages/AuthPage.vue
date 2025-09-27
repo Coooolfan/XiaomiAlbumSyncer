@@ -56,7 +56,6 @@ async function handleSubmit() {
       await api.tokenController.login({ login: password.value })
     } else {
       // 登录
-      console.log('Logging in with password:', password.value)
       await api.tokenController.login({ login: password.value })
     }
 

@@ -30,10 +30,7 @@ export const api = new Api(async ({ uri, method, headers, body }) => {
   }
 
   if (Math.floor(response.status / 100) === 5) {
-    window.alert(
-      '服务器错误！\nuri: ' + uri + '\n请检查后端服务器状态或稍后再试。详细信息请查看控制台。',
-    )
-    console.error('服务器错误:', response.status, uri)
+    console.error('服务器错误:', response.status, uri, await response.text())
     throw new Error('服务端内部错误，请检查服务器状态或稍后再试！')
   }
 

@@ -138,7 +138,7 @@ async function fetchLatestAlbums() {
     albums.value = await api.albumsController.refreshAlbumn()
     toast.add({ severity: 'success', summary: '已更新', life: 1600 })
   } catch (err) {
-    toast.add({ severity: 'error', summary: '更新失败', detail: err instanceof Error ? err.message : String(err), life: 2200 })
+    toast.add({ severity: 'error', summary: '更新失败', detail: "请确保您已配置有效的 passToken 与 UserId。\n并确保此已完成相册服务二次验证", life: 10000 })
     console.error('获取最新相册列表失败', err)
   }
 }
