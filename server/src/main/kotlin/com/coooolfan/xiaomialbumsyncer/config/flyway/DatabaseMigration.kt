@@ -4,6 +4,8 @@ import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.MigrationInfoService
 import org.noear.solon.annotation.Configuration
 import org.noear.solon.annotation.Managed
+import org.noear.solon.core.runtime.NativeDetector.inNativeImage
+import org.noear.solon.core.runtime.NativeDetector.isAotRuntime
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
@@ -16,21 +18,29 @@ class DatabaseMigration {
     @Managed
     fun migrate(dataSource: DataSource): Flyway {
         // 创建Flyway实例
-        val flyway: Flyway = Flyway.configure()
+        val configuration = Flyway.configure()
             .dataSource(dataSource)
             .locations("classpath:db/migration")
             .baselineOnMigrate(true)
             .validateOnMigrate(true)
-            // 关键：注册自定义 ResourceProvider
-            .resourceProvider(
-                IndexedResourceProvider(
-                    classLoader = Thread.currentThread().contextClassLoader,
-                    encoding = Charsets.UTF_8,
-                    indexPath = "META-INF/flyway-resources.idx",
-                    failIfIndexMissing = true // 没有索引就报错，避免遗漏
-                )
-            )
-            .load()
+
+        val flyway =
+            if (inNativeImage() && isAotRuntime()) {
+                log.info("似乎正在 native-image 环境中运行，使用 IndexedResourceProvider 进行资源加载")
+                configuration
+                    .resourceProvider(
+                        IndexedResourceProvider(
+                            classLoader = Thread.currentThread().contextClassLoader,
+                            encoding = Charsets.UTF_8,
+                            indexPath = "META-INF/flyway-resources.idx",
+                            failIfIndexMissing = true // 没有索引就报错，避免遗漏
+                        )
+                    )
+                    .load()
+            } else {
+                configuration.load()
+            }
+
 
         // 执行迁移
         try {
