@@ -27,6 +27,7 @@ class TaskScheduler(
      * 如果某个任务的 cron 表达式无效，则该任务不会被注册，且会在日志中记录错误
      */
     @Init
+    @Synchronized
     fun initJobs() {
         val crontabs = sql.executeQuery(Crontab::class) {
             select(table.fetchBy {
@@ -36,7 +37,8 @@ class TaskScheduler(
         }
         val registeredJobs = mutableListOf<Crontab>()
 
-        jobManager.jobGetAll().keys.forEach { jobManager.jobRemove(it) }
+        // 取不可变快照，避免并发修改
+        jobManager.jobGetAll().keys.toList().forEach { jobManager.jobRemove(it) }
 
         for (crontab in crontabs)
             try {
@@ -63,7 +65,7 @@ class TaskScheduler(
 
     /** 立即执行某个定时任务
      * @param crontab 要执行的定时任务实体
-     * @param async 是否异步执行，默认 true。若为 false，则在当前线程中执行该任务，直到任务完成才返回
+     * @param async 是否异步执行，默认 true。若为 false，则在当前线程中执行该任务，阻塞，直到任务完成才返回
      */
     fun executeNow(crontab: Crontab, async: Boolean = true) {
         if (async) {
