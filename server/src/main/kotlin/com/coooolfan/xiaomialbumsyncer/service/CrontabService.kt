@@ -1,10 +1,10 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
-import com.coooolfan.xiaomialbumsyncer.model.Crontab
-import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabInput
-import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.config.TaskScheduler
+import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.by
+import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput
+import com.coooolfan.xiaomialbumsyncer.model.id
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
@@ -14,7 +14,7 @@ import org.noear.solon.annotation.Managed
 
 @Managed
 class CrontabService(private val sql: KSqlClient, private val taskScheduler: TaskScheduler) {
-    fun createCrontab(input: CrontabInput, fetcher: Fetcher<Crontab>): Crontab {
+    fun createCrontab(input: CrontabCreateInput, fetcher: Fetcher<Crontab>): Crontab {
         val execute = sql.saveCommand(input, SaveMode.INSERT_ONLY).execute(fetcher)
         taskScheduler.initJobs()
         return execute.modifiedEntity

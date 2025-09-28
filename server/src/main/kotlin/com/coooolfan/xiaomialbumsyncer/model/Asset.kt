@@ -1,8 +1,10 @@
 package com.coooolfan.xiaomialbumsyncer.model
 
+import org.babyfish.jimmer.sql.DissociateAction
 import org.babyfish.jimmer.sql.Entity
 import org.babyfish.jimmer.sql.Id
 import org.babyfish.jimmer.sql.ManyToOne
+import org.babyfish.jimmer.sql.OnDissociate
 import org.babyfish.jimmer.sql.OneToMany
 import java.time.Instant
 
@@ -17,6 +19,7 @@ interface Asset {
 
     val dateTaken: Instant
 
+    @OnDissociate(DissociateAction.DELETE)
     @ManyToOne
     val album: Album
 

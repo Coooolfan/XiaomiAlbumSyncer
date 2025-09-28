@@ -24,43 +24,54 @@ import java.nio.file.Paths
 @Mapping("/api/system-config")
 class SystemConfigController(private val service: SystemConfigService) {
 
-    @Api
-    @Mapping("/hello", method = [MethodType.GET])
-    fun hello(): String {
-        return "Hello World!\n"
-    }
-
-    @Api
-    @Mapping("/aotProcess", method = [MethodType.GET])
-    fun aotProcess() {
-
-        val classOutput = Paths.get("build/classes/java/main")
-        val generatedSources = Paths.get("build/generated/sources/solonAot/java/main")
-        val settings = Settings(
-            classOutput,
-            generatedSources,
-            "com.coooolfan",
-            "XiaomiAlbumSyncer",
-            "--initialize-at-run-time=org.xerial.sqlite,com.zaxxer.hikari,okhttp3,com.fasterxml.jackson,cn.dev33.satoken,org.flywaydb,ch.qos.logback"
-        )
-        val appArgs = arrayOf<String>()
-        val appClass = com.coooolfan.xiaomialbumsyncer.App::class.java
-
-        SolonAotProcessor(settings, appArgs, appClass).process()
-    }
-
+/**
+     * 检查系统是否已完成初始化
+     * 
+     * 此接口用于检查系统配置是否已经完成初始化设置
+     * 无需登录认证即可访问（公开接口）
+     * 
+     * @return IsInitResponse 返回初始化状态，包含布尔值表示是否已初始化
+     * 
+     * @api GET /api/system-config
+     * @permission 公开接口，无需认证
+     * @description 调用SystemConfigService.isInit()方法检查系统初始化状态
+     */
     @Api
     @Mapping(method = [MethodType.GET])
     fun isInit(): IsInitResponse {
         return IsInitResponse(service.isInit())
     }
 
+/**
+     * 初始化系统配置
+     * 
+     * 此接口用于首次设置系统的基本配置信息
+     * 无需登录认证即可访问（公开接口）
+     * 
+     * @param create 系统配置初始化参数，包含初始配置信息
+     * 
+     * @api POST /api/system-config
+     * @permission 公开接口，无需认证
+     * @description 调用SystemConfigService.initConfig()方法初始化系统配置
+     */
     @Api
     @Mapping(method = [MethodType.POST])
     fun initConfig(@Body create: SystemConfigInit) {
         return service.initConfig(create)
     }
 
+/**
+     * 更新密码令牌配置
+     * 
+     * 此接口用于更新系统的密码令牌相关配置
+     * 需要用户登录认证才能访问
+     * 
+     * @param update 密码令牌更新参数，包含新的密码令牌配置信息
+     * 
+     * @api POST /api/system-config/pass-token
+     * @permission 需要登录认证
+     * @description 调用SystemConfigService.updateConfig()方法更新密码令牌配置
+     */
     @Api
     @Mapping("/pass-token", method = [MethodType.POST])
     @SaCheckLogin
@@ -68,6 +79,18 @@ class SystemConfigController(private val service: SystemConfigService) {
         return service.updateConfig(update.toEntity())
     }
 
+/**
+     * 更新普通系统配置
+     * 
+     * 此接口用于更新系统的普通配置信息（如exif工具路径等）
+     * 需要用户登录认证才能访问
+     * 
+     * @param update 系统配置更新参数，包含新的配置信息
+     * 
+     * @api POST /api/system-config/normal
+     * @permission 需要登录认证
+     * @description 调用SystemConfigService.updateConfig()方法更新普通系统配置
+     */
     @Api
     @Mapping("/normal", method = [MethodType.POST])
     @SaCheckLogin
@@ -75,6 +98,18 @@ class SystemConfigController(private val service: SystemConfigService) {
         return service.updateConfig(update.toEntity())
     }
 
+/**
+     * 获取普通系统配置
+     * 
+     * 此接口用于获取系统的普通配置信息（如exif工具路径等）
+     * 需要用户登录认证才能访问
+     * 
+     * @return SystemConfig 返回系统的普通配置信息
+     * 
+     * @api GET /api/system-config/normal
+     * @permission 需要登录认证
+     * @description 调用SystemConfigService.getConfig()方法获取普通系统配置
+     */
     @Api
     @Mapping("/normal", method = [MethodType.GET])
     @SaCheckLogin
