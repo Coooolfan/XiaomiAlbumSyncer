@@ -53,10 +53,10 @@ async function handleSubmit() {
       // 1. 创建配置（设置初始密码）
       await api.systemConfigController.initConfig({ body: { password: password.value } })
       // 2. 随后登录，便于服务端通过 Set-Cookie 设置会话
-      await api.tokenController.login({ login: password.value })
+      await api.tokenController.login({ password: password.value })
     } else {
       // 登录
-      await api.tokenController.login({ login: password.value })
+      await api.tokenController.login({ password: password.value })
     }
 
     // 成功后跳转 Dashboard
