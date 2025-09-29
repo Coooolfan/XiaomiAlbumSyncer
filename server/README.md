@@ -2,9 +2,17 @@
 
 ## development
 
-直接使用 `./gradlew run` 启动即可，倒入 IDE 时**选中作为 Gradle 项目导入**！
+直接使用 `./gradlew run` 启动即可，倒入 IDE 时 **选中作为 Gradle 项目导入** ！
 
 ## publishing
+
+### jvm
+
+```bash
+./gradlew clean shadowJar
+```
+
+### native
 
 > 这不是最佳实践，这只是程序实现
 

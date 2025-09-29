@@ -1,0 +1,15 @@
+server/.gradle
+server/.idea
+server/.vscode
+server/build
+server/.kotlin
+server/download
+server/logs
+server/target
+server/*.db
+
+web/.yarn
+web/.pnp.*
+web/.next
+web/node_modules
+web/dist
