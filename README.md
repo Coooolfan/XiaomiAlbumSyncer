@@ -1,12 +1,112 @@
 # Xiaomi Album Syncer
 
-# Features/功能
+## Features/功能
 
 - [x] 📸 下载指定相册中的所有照片
 - [x] ⏭️ 自动跳过已下载的照片
-- [x] 🔄 自动刷新Cookie
-- [x] 💬 交互式命令行界面
-- [x] 🖥️ 非交互式命令行界面
-- [x] 📅 填充照片和视频的Exif时间信息
+- [x] 🔄 自动刷新 Cookie
+- [x] 🗂️ 支持按相册分类存储照片
+- [x] 🌍 友好的 Web UI
+- [x] 📅 填充照片和视频的 Exif 时间信息
 
-// TODO
+> [!CAUTION] 
+> 此项目已于 `0.3.0` 完成重构。新版目前仅提供 Web UI，部署方式仅提供 Docker。旧版 CLI 工具仍然可用，可前往 [0.2.1 realeses](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases/tag/0.2.1) 下载。
+
+## 部署
+
+自 0.3.0 版本起，程序会尝试兼容旧版本的数据库。在**跨多个版本升级**时，建议先浏览 Releases 页面，查看每个版本的更新内容，以及可能的数据库变更和破坏性更新。
+
+**不建议使用各种自动升级工具。**
+
+### Docker
+
+1. 拉起 docker 容器
+
+    ```bash
+    docker run -d \
+      -p 8232:8080 \ # 映射 8080 端口到宿主机
+      --name xiaomi-album-syncer \ # 容器名称
+      -v ~/xiaomi-album-syncer/download:/data \ # 挂载下载目录
+      -v ~/xiaomi-album-syncer/data.db:/app/xiaomialbumsyncer.db \ # 挂载数据库文件
+      coooolfan/xiaomi-album-syncer:latest
+    ```
+
+2. 访问 Web UI
+
+   打开浏览器，访问 `http://localhost:8232`（如果你在本地运行 Docker），或者替换为你的服务器 IP 地址和端口。
+
+### Docker Compose
+
+1. 下载`docker-compsoe.yml`文件
+    ```bash
+    mkdir -p ~/xiaomi-album-syncer
+    cd ~/xiaomi-album-syncer
+    curl -O https://raw.githubusercontent.com/Coooolfan/XiaomiAlbumSyncer/main/docker-compose.yml
+    ```
+2. 按需编辑`docker-compose.yml`文件
+
+3. 启动服务
+    ```bash
+    docker-compose up -d
+    ```
+4. 访问 Web UI
+
+  打开浏览器，访问 `http://localhost:8232`（如果你在本地运行 Docker），或者替换为你的服务器 IP 地址和端口。
+
+## 反向代理（可选）
+
+**强烈建议在任何情况下访问此服务都启用 HTTPS 。**
+
+此项目的 Web UI 与 API 仅使用了简单的 Restful API 构建，无复杂有状态长连接。
+
+## 使用
+
+### 初始化
+
+访问 `http://localhost:8232` ，输入一个强密码（此密码仅用于访问此项目，与任何外部服务或者小米无关），完成此项目的初始化。
+
+
+### 获取 PassToken 与 UserId
+
+1. 登录[小米云服务](https://i.mi.com/)
+2. **[访问一次相册页面](https://i.mi.com/gallery/h5#/)**
+3. 如果出现手机验证，勾选 `信任此设备`
+4. 点击右上角头像，点击 `我的小米账号`，进入 `我的小米账号` 页面
+5. 打开浏览器 开发者工具
+6. 选中 应用程序/Application 一栏。复制对应的两个 `passToken` 与 `userId` 字段值
+![getpassanduserid](static/copybydevtool.avif)
+即图中的 4️⃣ 和 5️⃣ 对应的黄底内容。
+
+### 设置 PassToken 与 UserId
+
+访问 `http://localhost:8232/dashboard/setting` ，设置 PassToken 与 UserId。
+
+### 获取所有相册
+
+访问 `http://localhost:8080/#/dashboard/schedule` 选择 `从远程更新整个相册列表`
+
+![fetchlastestalbums](static/fetchlastestalbums.avif)
+
+此接口为同步接口，具体时长取决于相册数量和网络情况。请耐心等待。
+
+> [!WARNING] 
+> 如果此获取数据失败，大概率是 passToken 和 userId 没有正确设置的导致的。如果已确保两个配置已经正确配置，请前往 Issues 页面发布 issue 并附上相关日志。
+
+### 创建计划任务
+
+访问 `http://localhost:8080/#/dashboard/schedule` 单击 任务计划 卡片右上角的绿色 ➕ 号。按需要填写各项配置。
+
+![democrontab](static/democrontab.avif)
+
+> [!NOTE]
+> 图中的 Cron 表达式为 `0 0 23 * * ?`，即北京时间每天 23 点执行一次。
+> 
+> 更多 Cron 表达式请参考 [Cron 表达式](https://cron.qqe2.com/)。
+
+程序会在设置的时间执行任务。任务执行时，会自动刷新选中的相册列表，并**增量地**下载相册中的所有照片和视频。
+
+### 手动触发计划任务
+
+不论任务计划是否启用。您都可以在控制台手动触发任务执行
+
+![manualtriggercrontab](static/manualtriggercrontab.avif)
