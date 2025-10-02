@@ -5,6 +5,7 @@ import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.by
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPassTokenUpdate
+import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate
 import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
 import org.babyfish.jimmer.client.FetchBy
@@ -24,14 +25,14 @@ import java.nio.file.Paths
 @Mapping("/api/system-config")
 class SystemConfigController(private val service: SystemConfigService) {
 
-/**
+    /**
      * 检查系统是否已完成初始化
-     * 
+     *
      * 此接口用于检查系统配置是否已经完成初始化设置
      * 无需登录认证即可访问（公开接口）
-     * 
+     *
      * @return IsInitResponse 返回初始化状态，包含布尔值表示是否已初始化
-     * 
+     *
      * @api GET /api/system-config
      * @permission 公开接口，无需认证
      * @description 调用SystemConfigService.isInit()方法检查系统初始化状态
@@ -42,14 +43,14 @@ class SystemConfigController(private val service: SystemConfigService) {
         return IsInitResponse(service.isInit())
     }
 
-/**
+    /**
      * 初始化系统配置
-     * 
+     *
      * 此接口用于首次设置系统的基本配置信息
      * 无需登录认证即可访问（公开接口）
-     * 
+     *
      * @param create 系统配置初始化参数，包含初始配置信息
-     * 
+     *
      * @api POST /api/system-config
      * @permission 公开接口，无需认证
      * @description 调用SystemConfigService.initConfig()方法初始化系统配置
@@ -60,14 +61,14 @@ class SystemConfigController(private val service: SystemConfigService) {
         return service.initConfig(create)
     }
 
-/**
+    /**
      * 更新密码令牌配置
-     * 
+     *
      * 此接口用于更新系统的密码令牌相关配置
      * 需要用户登录认证才能访问
-     * 
+     *
      * @param update 密码令牌更新参数，包含新的密码令牌配置信息
-     * 
+     *
      * @api POST /api/system-config/pass-token
      * @permission 需要登录认证
      * @description 调用SystemConfigService.updateConfig()方法更新密码令牌配置
@@ -79,14 +80,14 @@ class SystemConfigController(private val service: SystemConfigService) {
         return service.updateConfig(update.toEntity())
     }
 
-/**
+    /**
      * 更新普通系统配置
-     * 
+     *
      * 此接口用于更新系统的普通配置信息（如exif工具路径等）
      * 需要用户登录认证才能访问
-     * 
+     *
      * @param update 系统配置更新参数，包含新的配置信息
-     * 
+     *
      * @api POST /api/system-config/normal
      * @permission 需要登录认证
      * @description 调用SystemConfigService.updateConfig()方法更新普通系统配置
@@ -98,14 +99,14 @@ class SystemConfigController(private val service: SystemConfigService) {
         return service.updateConfig(update.toEntity())
     }
 
-/**
+    /**
      * 获取普通系统配置
-     * 
+     *
      * 此接口用于获取系统的普通配置信息（如exif工具路径等）
      * 需要用户登录认证才能访问
-     * 
+     *
      * @return SystemConfig 返回系统的普通配置信息
-     * 
+     *
      * @api GET /api/system-config/normal
      * @permission 需要登录认证
      * @description 调用SystemConfigService.getConfig()方法获取普通系统配置
@@ -115,6 +116,28 @@ class SystemConfigController(private val service: SystemConfigService) {
     @SaCheckLogin
     fun getSystemConfig(): @FetchBy("NORMAL_SYSTEM_CONFIG") SystemConfig {
         return service.getConfig(NORMAL_SYSTEM_CONFIG)
+    }
+
+
+    /**
+     * 更新用户密码
+     *
+     * 此接口用于更新系统的用户登录密码
+     * 需要用户登录认证才能访问
+     *
+     * @param update 密码更新参数，包含新的密码信息
+     *
+     * @api POST /api/system-config/password
+     * @permission 需要登录认证
+     * @description 调用SystemConfigService.updatePassword()方法更新用户密码
+     */
+    @Api
+    @Mapping("/password", method = [MethodType.POST])
+    @SaCheckLogin
+    fun updatePassword(
+        @Body update: SystemConfigPasswordUpdate
+    ) {
+        return service.updatePassword(update)
     }
 
     companion object {

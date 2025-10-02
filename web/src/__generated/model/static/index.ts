@@ -1,7 +1,9 @@
 export type {CrontabConfig} from './CrontabConfig';
-export type {CrontabInput} from './CrontabInput';
+export type {CrontabCreateInput} from './CrontabCreateInput';
+export type {CrontabUpdateInput} from './CrontabUpdateInput';
 export type {IsInitResponse} from './IsInitResponse';
 export type {Result} from './Result';
 export type {SystemConfigInit} from './SystemConfigInit';
 export type {SystemConfigPassTokenUpdate} from './SystemConfigPassTokenUpdate';
+export type {SystemConfigPasswordUpdate} from './SystemConfigPasswordUpdate';
 export type {SystemConfigUpdate} from './SystemConfigUpdate';

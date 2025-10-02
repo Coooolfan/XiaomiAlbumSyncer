@@ -1,6 +1,6 @@
 import type {Executor} from '../';
 import type {CrontabDto} from '../model/dto/';
-import type {CrontabInput, Result} from '../model/static/';
+import type {CrontabCreateInput, CrontabUpdateInput, Result} from '../model/static/';
 
 export class CrontabController {
     
@@ -105,13 +105,13 @@ export type CrontabControllerOptions = {
         /**
          * 定时任务输入参数，包含任务的配置信息
          */
-        readonly body: CrontabInput
+        readonly body: CrontabCreateInput
     }, 
     'updateCrontab': {
         /**
          * 定时任务输入参数，包含要更新的配置信息
          */
-        readonly body: CrontabInput, 
+        readonly body: CrontabUpdateInput, 
         /**
          * 定时任务ID，用于指定要更新的任务
          */

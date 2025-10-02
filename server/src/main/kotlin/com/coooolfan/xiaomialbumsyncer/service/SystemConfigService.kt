@@ -4,6 +4,7 @@ import cn.dev33.satoken.stp.StpUtil
 import com.coooolfan.xiaomialbumsyncer.controller.LoginRequest
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
+import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.model.password
@@ -49,15 +50,6 @@ class SystemConfigService(private val sql: KSqlClient) {
 
     }
 
-    private fun hashPwd(password: String): String {
-        val unHashed = "djshfpiuwEGfiugeiugfpiugpiuiuf$password"
-        val digest = MessageDigest.getInstance("SHA3-384")
-        val hashBytes = digest.digest(unHashed.toByteArray(Charsets.UTF_8))
-        return hashBytes.joinToString("") {
-            "%02x".format(it.toInt() and 0xFF)
-        }
-    }
-
     fun updateConfig(update: SystemConfig) {
         sql.saveCommand(SystemConfig(update) {
             id = 0
@@ -66,5 +58,33 @@ class SystemConfigService(private val sql: KSqlClient) {
 
     fun getConfig(fetcher: Fetcher<SystemConfig>): SystemConfig {
         return sql.findById(fetcher, 0) ?: throw IllegalStateException("System is not initialized")
+    }
+
+    fun updatePassword(update: SystemConfigPasswordUpdate) {
+        if (!isInit()) throw IllegalStateException("System is not initialized")
+
+        val lng = sql.executeQuery(SystemConfig::class) {
+            where(table.id eq 0)
+            where(table.password eq hashPwd(update.oldPassword))
+            selectCount()
+        }[0]
+
+        if (lng != 1.toLong()) throw IllegalStateException("Auth failed")
+
+        sql.saveCommand(SystemConfig {
+            id = 0
+            password = hashPwd(update.password)
+        }, SaveMode.UPDATE_ONLY).execute()
+
+    }
+
+
+    private fun hashPwd(password: String): String {
+        val unHashed = "djshfpiuwEGfiugeiugfpiugpiuiuf$password"
+        val digest = MessageDigest.getInstance("SHA3-384")
+        val hashBytes = digest.digest(unHashed.toByteArray(Charsets.UTF_8))
+        return hashBytes.joinToString("") {
+            "%02x".format(it.toInt() and 0xFF)
+        }
     }
 }

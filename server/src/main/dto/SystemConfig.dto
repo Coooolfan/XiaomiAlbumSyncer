@@ -13,3 +13,9 @@ input SystemConfigPassTokenUpdate {
 input SystemConfigUpdate {
     exifToolPath
 }
+
+input SystemConfigPasswordUpdate {
+    oldPassword:String
+
+    password
+}

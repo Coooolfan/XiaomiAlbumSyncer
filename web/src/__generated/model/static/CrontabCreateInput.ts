@@ -1,6 +1,6 @@
 import type {CrontabConfig} from './';
 
-export interface CrontabInput {
+export interface CrontabCreateInput {
     readonly name: string;
     readonly description: string;
     readonly enabled: boolean;
