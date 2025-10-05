@@ -2,12 +2,16 @@ package com.coooolfan.xiaomialbumsyncer.service
 
 import cn.dev33.satoken.stp.StpUtil
 import com.coooolfan.xiaomialbumsyncer.controller.LoginRequest
+import com.coooolfan.xiaomialbumsyncer.model.Album
+import com.coooolfan.xiaomialbumsyncer.model.Asset
+import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.model.password
+import com.coooolfan.xiaomialbumsyncer.utils.DataImporter
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
@@ -16,7 +20,7 @@ import org.noear.solon.annotation.Managed
 import java.security.MessageDigest
 
 @Managed
-class SystemConfigService(private val sql: KSqlClient) {
+class SystemConfigService(private val sql: KSqlClient, private val dataImporter: DataImporter) {
     fun isInit(): Boolean {
         return sql.executeQuery(SystemConfig::class) {
             selectCount()
@@ -70,7 +74,6 @@ class SystemConfigService(private val sql: KSqlClient) {
         }
 
         if (rows != 1) throw IllegalStateException("Auth failed")
-        
     }
 
 
@@ -81,5 +84,20 @@ class SystemConfigService(private val sql: KSqlClient) {
         return hashBytes.joinToString("") {
             "%02x".format(it.toInt() and 0xFF)
         }
+    }
+
+    fun importFromV2Db() {
+
+        // 避免新旧数据冲突与合并，只允许空库导入
+
+        val existsRows = sql.executeQuery(Album::class) { selectCount() }[0] + //
+                sql.executeQuery(Crontab::class) { selectCount() }[0] + //
+                sql.executeQuery(Asset::class) { selectCount() }[0]
+
+        if (existsRows > 0) {
+            throw IllegalStateException("Current database is not empty, import aborted")
+        }
+
+        dataImporter.exec()
     }
 }

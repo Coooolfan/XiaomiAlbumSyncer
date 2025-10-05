@@ -6,7 +6,7 @@ import org.babyfish.jimmer.sql.Serialized
 data class CrontabConfig(
 
     // cron 表达式
-    // eg: "0 0 * * *" 每天午夜
+    // eg: "0 0 * * * ?" 每天午夜
     val expression: String,
 
     val timeZone: String,
@@ -17,7 +17,6 @@ data class CrontabConfig(
 
     val downloadVideos: Boolean,
 
-    // 还没实现
     val rewriteExifTime: Boolean,
 
     val rewriteExifTimeZone: String?

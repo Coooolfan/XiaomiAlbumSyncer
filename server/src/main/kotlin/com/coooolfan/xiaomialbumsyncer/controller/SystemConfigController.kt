@@ -140,6 +140,23 @@ class SystemConfigController(private val service: SystemConfigService) {
         return service.updatePassword(update)
     }
 
+    /**
+     * 从旧版本数据库导入数据
+     *
+     * 此接口用于从旧版本的数据库中导入数据到当前系统
+     * 需要用户登录认证才能访问
+     *
+     * @api POST /api/system-config/import-from-v2
+     * @permission 需要登录认证
+     * @description 调用SystemConfigService.importFromV2Db()方法执行数据导入操作
+     */
+    @Api
+    @Mapping("/import-from-v2", method = [MethodType.POST])
+    @SaCheckLogin
+    fun importFromV2Db(){
+        return service.importFromV2Db()
+    }
+
     companion object {
         private val NORMAL_SYSTEM_CONFIG = newFetcher(SystemConfig::class).by {
             exifToolPath()

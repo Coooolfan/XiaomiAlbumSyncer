@@ -29,12 +29,13 @@ class DataSource {
         return HikariDataSource(config)
     }
 
-    private fun buildSQLiteUrl(dbPath: Path): String {
-        return "jdbc:sqlite:${dbPath.toAbsolutePath()}" +
-                "?journal_mode=WAL" +           // WAL模式，更好的并发性能
-                "&synchronous=NORMAL" +         // 平衡性能和安全性
-                "&cache_size=10000" +           // 缓存大小
-                "&temp_store=memory" +          // 临时表存储在内存
-                "&mmap_size=268435456"          // 内存映射大小(256MB)
-    }
+}
+
+fun buildSQLiteUrl(dbPath: Path): String {
+    return "jdbc:sqlite:${dbPath.toAbsolutePath()}" +
+            "?journal_mode=WAL" +           // WAL模式，更好的并发性能
+            "&synchronous=NORMAL" +         // 平衡性能和安全性
+            "&cache_size=10000" +           // 缓存大小
+            "&temp_store=memory" +          // 临时表存储在内存
+            "&mmap_size=268435456"          // 内存映射大小(256MB)
 }
