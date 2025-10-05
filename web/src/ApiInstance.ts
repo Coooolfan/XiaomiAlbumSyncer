@@ -30,8 +30,9 @@ export const api = new Api(async ({ uri, method, headers, body }) => {
   }
 
   if (Math.floor(response.status / 100) === 5) {
-    console.error('服务器错误:', response.status, uri, await response.text())
-    throw new Error('服务端内部错误，请检查服务器状态或稍后再试！')
+    const text = await response.text()
+    console.error('服务器错误:', response.status, uri, text)
+    throw new Error('请求失败：' + text)
   }
 
   if (Math.floor(response.status / 100) !== 2) {

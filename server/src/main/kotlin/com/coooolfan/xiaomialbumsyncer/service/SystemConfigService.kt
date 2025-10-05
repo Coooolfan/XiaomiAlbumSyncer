@@ -63,19 +63,14 @@ class SystemConfigService(private val sql: KSqlClient) {
     fun updatePassword(update: SystemConfigPasswordUpdate) {
         if (!isInit()) throw IllegalStateException("System is not initialized")
 
-        val lng = sql.executeQuery(SystemConfig::class) {
+        val rows = sql.executeUpdate(SystemConfig::class) {
+            set(table.password, hashPwd(update.password))
             where(table.id eq 0)
             where(table.password eq hashPwd(update.oldPassword))
-            selectCount()
-        }[0]
+        }
 
-        if (lng != 1.toLong()) throw IllegalStateException("Auth failed")
-
-        sql.saveCommand(SystemConfig {
-            id = 0
-            password = hashPwd(update.password)
-        }, SaveMode.UPDATE_ONLY).execute()
-
+        if (rows != 1) throw IllegalStateException("Auth failed")
+        
     }
 
 
