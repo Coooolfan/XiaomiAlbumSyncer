@@ -29,6 +29,20 @@ export class SystemConfigController {
     }
     
     /**
+     * 从旧版本数据库导入数据
+     * 
+     * 此接口用于从旧版本的数据库中导入数据到当前系统
+     * 需要用户登录认证才能访问
+     * 
+     */
+    readonly importFromV2Db: () => Promise<
+        void
+    > = async() => {
+        let _uri = '/api/system-config/import-from-v2';
+        return (await this.executor({uri: _uri, method: 'POST'})) as Promise<void>;
+    }
+    
+    /**
      * 初始化系统配置
      * 
      * 此接口用于首次设置系统的基本配置信息
@@ -143,5 +157,6 @@ export type SystemConfigControllerOptions = {
          * 
          */
         readonly body: SystemConfigPasswordUpdate
-    }
+    }, 
+    'importFromV2Db': {}
 }

@@ -20,6 +20,10 @@ ARG TAG_VERSION=latest
 
 COPY server/ .
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
 # 从前端构建阶段复制构建结果到后端静态资源目录
 COPY --from=web-build-stage /app/dist /app/src/main/resources/static
 
@@ -29,6 +33,11 @@ RUN ./gradlew clean shadowJar --no-daemon
 ### 生产阶段 ###
 FROM ibm-semeru-runtimes:open-24-jre-noble
 WORKDIR /app
+
+# 安装 ExifTool
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates libimage-exiftool-perl && \
+    rm -rf /var/lib/apt/lists/*
 
 # 从构建阶段复制构建结果
 COPY --from=backend-build-stage /app/build/libs/*.jar app.jar

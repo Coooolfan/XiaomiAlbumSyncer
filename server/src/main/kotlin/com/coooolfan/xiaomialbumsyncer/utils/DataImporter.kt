@@ -57,9 +57,10 @@ class DataImporter(private val sql: KSqlClient, private val ds: DataSource) {
 
         // 资产
         val assets = mutableListOf<Asset>()
+        val downloadedAssets = mutableListOf<Long>()
         val assetsResultSet = oldDsStatement.executeQuery("SELECT * FROM media")
         while (assetsResultSet.next()) {
-            assets.add(Asset {
+            val asset = Asset {
                 id = assetsResultSet.getLong("id")
                 fileName = assetsResultSet.getString("filename")
                 type = AssetType.valueOf(assetsResultSet.getString("media_type").uppercase(getDefault()))
@@ -69,7 +70,12 @@ class DataImporter(private val sql: KSqlClient, private val ds: DataSource) {
                 mimeType = assetsResultSet.getString("mime_type")
                 title = assetsResultSet.getString("filename").substringBeforeLast('.')
                 size = 0L
-            })
+            }
+            assets.add(asset)
+
+            if (assetsResultSet.getBoolean("downloaded"))
+                downloadedAssets.add(asset.id)
+
         }
         sql.saveEntitiesCommand(assets, SaveMode.INSERT_ONLY).execute()
 
@@ -99,23 +105,19 @@ class DataImporter(private val sql: KSqlClient, private val ds: DataSource) {
 
         // 下载历史
         val historyDetails = mutableListOf<CrontabHistoryDetail>()
-        // TODO)) ResultSet is TYPE_FORWARD_ONLY
-        assetsResultSet.first()
-        while (assetsResultSet.next()) {
-            if (!assetsResultSet.getBoolean("downloaded"))
-                continue
-
-            val detail = CrontabHistoryDetail {
-                this.crontabHistoryId = crontabHistoryId
-                downloadTime = Instant.now()
-                assetId = assetsResultSet.getLong("id")
-                filePath = assetsResultSet.getString("./unknown")
-            }
-            historyDetails.add(detail)
+        downloadedAssets.forEach {
+            historyDetails.add(
+                CrontabHistoryDetail {
+                    this.crontabHistoryId = crontabHistoryId
+                    this.assetId = it
+                    filePath = "./unknown"
+                    downloadTime = Instant.now()
+                }
+            )
         }
         sql.saveEntitiesCommand(historyDetails, SaveMode.INSERT_ONLY).execute()
 
-        sql.executeUpdate(CrontabHistory::class){
+        sql.executeUpdate(CrontabHistory::class) {
             set(table.endTime, Instant.now())
             where(table.id eq crontabHistoryId)
         }

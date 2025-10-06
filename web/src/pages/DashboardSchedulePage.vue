@@ -15,10 +15,9 @@ import InputSwitch from 'primevue/inputswitch'
 import Dropdown from 'primevue/dropdown'
 import MultiSelect from 'primevue/multiselect'
 import { useToast } from 'primevue/usetoast'
-import type { CrontabInput } from '@/__generated/model/static'
 import type { CrontabDto } from '@/__generated/model/dto'
 import SplitButton from 'primevue/splitbutton';
-import type { Result } from '@/__generated/model/static'
+import type { CrontabCreateInput, Result } from '@/__generated/model/static'
 
 type DataPoint = { timeStamp: number; count: number }
 
@@ -59,7 +58,7 @@ const defaultTz = (() => {
   }
 })()
 
-const cronForm = ref<CrontabInput>({
+const cronForm = ref<CrontabCreateInput>({
   name: '',
   description: '',
   enabled: true,
