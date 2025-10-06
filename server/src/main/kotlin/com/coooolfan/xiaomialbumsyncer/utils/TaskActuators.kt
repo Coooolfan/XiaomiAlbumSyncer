@@ -82,7 +82,8 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
                 }, SaveMode.INSERT_ONLY).execute()
                 assetPathMap[it] = path
             } catch (e: Exception) {
-                log.error("下载文件失败，跳过此文件，Asset ID: ${it.id}, 错误信息: ${e.message}")
+                log.error("下载文件失败，跳过此文件，Asset ID: ${it.id}")
+                e.printStackTrace()
             }
         }
 
