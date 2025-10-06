@@ -87,18 +87,24 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }
 
         // 5.1 可选：批量修改图片 EXIF 时间
-        if (crontab.config.rewriteExifTime) assetPathMap.forEach {
-            val rewriteZone = TimeZone.getTimeZone(ZoneId.of(crontab.config.rewriteExifTimeZone))
+        if (crontab.config.rewriteExifTime)
+            assetPathMap.forEach {
+                val rewriteZone = TimeZone.getTimeZone(ZoneId.of(crontab.config.rewriteExifTimeZone))
 
-            rewriteExifTime(
-                it.key,
-                it.value,
-                ExifRewriteConfig(
-                    Path(systemConfig.exifToolPath),
-                    rewriteZone
-                )
-            )
-        }
+                try {
+                    rewriteExifTime(
+                        it.key,
+                        it.value,
+                        ExifRewriteConfig(
+                            Path(systemConfig.exifToolPath),
+                            rewriteZone
+                        )
+                    )
+                } catch (e: Exception) {
+                    log.error("修改文件 EXIF 时间失败，跳过此文件，Asset ID: ${it.key.id}")
+                    e.printStackTrace()
+                }
+            }
 
         // 6. 写入 CrontabHistoryDetails 记录
         sql.executeUpdate(CrontabHistory::class) {

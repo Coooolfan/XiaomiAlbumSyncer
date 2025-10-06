@@ -61,7 +61,8 @@ const recentHistories = computed(() => {
           <InputSwitch :modelValue="crontab.enabled" :disabled="busy" @update:modelValue="() => emit('toggle')" class="mr-2 sm:mr-4" />
           <Button icon="pi pi-play" size="small" severity="warning" class="mr-1" @click="emit('execute')" />
           <Button icon="pi pi-pencil" size="small" @click="emit('edit')" />
-          <Button icon="pi pi-trash" size="small" severity="danger" @click="emit('delete')" />
+          <!-- TODO 级联删除还有点问题 -->
+          <!-- <Button icon="pi pi-trash" size="small" severity="danger" @click="emit('delete')" /> -->
         </div>
       </div>
     </template>

@@ -7,6 +7,7 @@ import org.babyfish.jimmer.sql.kt.newKSqlClient
 import org.babyfish.jimmer.sql.runtime.*
 import org.flywaydb.core.Flyway
 import org.noear.solon.annotation.Configuration
+import org.noear.solon.annotation.Inject
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
@@ -17,6 +18,9 @@ class JimmerStarter {
 
     private val log = LoggerFactory.getLogger(JimmerStarter::class.java)
 
+    @Inject(value = $$"${solon.app.jimmer-log}")
+    lateinit var jimmerLog: String
+
     @Managed
     fun sql(dataSource: DataSource, flyway: Flyway): KSqlClient {
         // flyway 的注入仅用于确保在初始化 KSqlClient 之前执行 Flyway 迁移
@@ -26,7 +30,7 @@ class JimmerStarter {
                 setDialect(SQLiteDialect())
                 setConnectionManager(ConnectionManager.simpleConnectionManager(dataSource))
                 setDatabaseNamingStrategy(DefaultDatabaseNamingStrategy.LOWER_CASE)
-                setExecutor(Executor.log())
+                if (jimmerLog.toBoolean()) setExecutor(Executor.log())
                 setSqlFormatter(SqlFormatter.PRETTY)
                 setDatabaseValidationMode(
                     DatabaseValidationMode.ERROR

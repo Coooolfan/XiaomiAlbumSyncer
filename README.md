@@ -5,12 +5,16 @@
 - [x] 📸 下载指定相册中的所有照片
 - [x] ⏭️ 自动跳过已下载的照片
 - [x] 🔄 自动刷新 Cookie
+- [x] ⏰ 支持定时任务
+- [x] 📥 支持增量下载
 - [x] 🗂️ 支持按相册分类存储照片
 - [x] 🌍 友好的 Web UI
 - [x] 📅 填充照片和视频的 Exif 时间信息
 
 > [!CAUTION] 
-> 此项目已于 `0.3.0` 完成重构。新版目前仅提供 Web UI，部署方式仅提供 Docker。旧版 CLI 工具仍然可用，可前往 [0.2.1 realeses](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases/tag/0.2.1) 下载。
+> 此项目已于 `0.3.0` 完成重构。新版目前仅提供 Web UI，部署方式仅提供 Docker。旧版 CLI 工具仍然可用，可前往 [0.2.1 releases](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases/tag/0.2.1) 下载。
+>
+> 如需从旧版迁移数据，请参考 [从 v2 迁移](#从v2迁移) 一节。
 
 ## 部署
 
@@ -26,8 +30,8 @@
     docker run -d \
       -p 8232:8080 \ # 映射 8080 端口到宿主机
       --name xiaomi-album-syncer \ # 容器名称
-      -v ~/xiaomi-album-syncer/download:/data \ # 挂载下载目录
-      -v ~/xiaomi-album-syncer/data.db:/app/xiaomialbumsyncer.db \ # 挂载数据库文件
+      -v ~/xiaomi-album-syncer/download:/app/download \ # 挂载下载目录
+      -v ~/xiaomi-album-syncer/db:/app/db \ # 挂载数据库文件目录
       coooolfan/xiaomi-album-syncer:latest
     ```
 
@@ -96,7 +100,7 @@
 
 访问 `http://localhost:8080/#/dashboard/schedule` 单击 任务计划 卡片右上角的绿色 ➕ 号。按需要填写各项配置。
 
-![democrontab](static/democrontab.avif)
+![democrontab](./static/democrontab.avif)
 
 > [!NOTE]
 > 图中的 Cron 表达式为 `0 0 23 * * ?`，即北京时间每天 23 点执行一次。
@@ -110,3 +114,50 @@
 不论任务计划是否启用。您都可以在控制台手动触发任务执行
 
 ![manualtriggercrontab](static/manualtriggercrontab.avif)
+
+## 从 v2 迁移
+
+<div id="从v2迁移"></div>
+
+xiaomi-album-syncer 是一个有状态的应用，不论是 v2 还是 v3+ 版本，都使用 SQLite 作为数据库。为避免迁移后导致重复下载，v3+ 版本提供了从 v2 版本迁移数据的功能。在使用此功能前，确保：
+
+- 你已经正确备份了 v2 版本的数据库文件
+- v3 版本的实例已经正确运行过一次，并完成密码初始化
+- v3 版本的实例没有任何相册和照片数据（确保只进行过密码初始化，passToken 和 userId 是否提交过不影响）
+
+### 创建 v3 实例并挂载旧数据库
+
+```bash
+docker run 
+  -p 8232:8080 
+  --name xiaomi-album-syncer
+  -v ~/xiaomi-album-syncer/download:/app/download 
+  -v ~/xiaomi-album-syncer/db:/app/db 
+  -v ./old.db:/app/old.db 
+  coooolfan/xiaomi-album-syncer:latest
+```
+
+观察此 docker 命令，不难发现主要区别在于多了一个 `-v ./old.db:/app/old.db` 的挂载。`./old.db` 是你 v2 版本的数据库文件路径。
+
+### 触发迁移
+
+访问 `http://localhost:8283/#/dashboard/setting` ，在页面底部找到 `从 V2 导入数据` 栏，单击 `导入` 按钮，等待导入完成。
+
+**如果遇到错误，请前往 Issues 页面发布 issue 并附上相关 docker 日志。**
+
+返回 schedule 页面，可以看到已经导入了所有相册和下载记录。
+
+### 卸载旧数据库（可选）
+
+迁移完成后，你可以选择卸载旧数据库文件。
+
+```bash
+docker run 
+  -p 8232:8080 
+  --name xiaomi-album-syncer
+  -v ~/xiaomi-album-syncer/download:/app/download 
+  -v ~/xiaomi-album-syncer/db:/app/db 
+  coooolfan/xiaomi-album-syncer:latest
+```
+
+容器本身不存储任何状态和数据，删除重启容器不影响任何数据。

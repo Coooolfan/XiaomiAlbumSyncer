@@ -1,34 +1,31 @@
 package com.coooolfan.xiaomialbumsyncer.utils
 
 import com.coooolfan.xiaomialbumsyncer.config.buildSQLiteUrl
-import com.coooolfan.xiaomialbumsyncer.model.Album
-import com.coooolfan.xiaomialbumsyncer.model.Asset
-import com.coooolfan.xiaomialbumsyncer.model.AssetType
-import com.coooolfan.xiaomialbumsyncer.model.Crontab
-import com.coooolfan.xiaomialbumsyncer.model.CrontabConfig
-import com.coooolfan.xiaomialbumsyncer.model.CrontabHistory
-import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
-import com.coooolfan.xiaomialbumsyncer.model.endTime
-import com.coooolfan.xiaomialbumsyncer.model.id
+import com.coooolfan.xiaomialbumsyncer.model.*
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
+import org.slf4j.LoggerFactory
 import java.nio.file.Paths
 import java.time.Instant
-import java.util.Locale
 import java.util.Locale.getDefault
 import javax.sql.DataSource
 
 @Managed
-class DataImporter(private val sql: KSqlClient, private val ds: DataSource) {
+class DataImporter(private val sql: KSqlClient) {
+
+    private val log = LoggerFactory.getLogger(DataImporter::class.java)
 
     private val oldDsUrl = "./old.db"
 
     fun exec() {
         val oldDsConfig = HikariConfig()
+
+        log.info("开始导入旧版本数据，旧版本数据库jdbcUrl：${buildSQLiteUrl(Paths.get(oldDsUrl))}")
+
         oldDsConfig.jdbcUrl = buildSQLiteUrl(Paths.get(oldDsUrl))
         oldDsConfig.driverClassName = "org.sqlite.JDBC"
         oldDsConfig.maximumPoolSize = 1

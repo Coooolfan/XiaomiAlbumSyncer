@@ -13,7 +13,7 @@ import javax.sql.DataSource
 @Configuration
 class DataSource {
 
-    @Inject(value = "\${solon.app.db}")
+    @Inject(value = $$"${solon.app.db}")
     lateinit var sqlite: String
 
     @Managed(index = 100)
