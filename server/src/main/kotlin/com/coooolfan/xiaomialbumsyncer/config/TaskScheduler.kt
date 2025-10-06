@@ -1,9 +1,11 @@
 package com.coooolfan.xiaomialbumsyncer.config
 
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
+import com.coooolfan.xiaomialbumsyncer.model.enabled
 import com.coooolfan.xiaomialbumsyncer.model.fetchBy
 import com.coooolfan.xiaomialbumsyncer.utils.TaskActuators
 import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Init
 import org.noear.solon.annotation.Managed
 import org.noear.solon.scheduling.annotation.Scheduled
@@ -30,6 +32,7 @@ class TaskScheduler(
     @Synchronized
     fun initJobs() {
         val crontabs = sql.executeQuery(Crontab::class) {
+            where(table.enabled eq true)
             select(table.fetchBy {
                 allScalarFields()
                 albumIds()
