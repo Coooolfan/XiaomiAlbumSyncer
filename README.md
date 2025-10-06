@@ -28,11 +28,11 @@
 
     ```bash
     docker run -d \
-      -p 8232:8080 \ # 映射 8080 端口到宿主机
-      --name xiaomi-album-syncer \ # 容器名称
-      -v ~/xiaomi-album-syncer/download:/app/download \ # 挂载下载目录
-      -v ~/xiaomi-album-syncer/db:/app/db \ # 挂载数据库文件目录
-      coooolfan/xiaomi-album-syncer:latest
+      -p 8232:8080 \
+      --name xiaomi-album-syncer \
+      -v ~/xiaomi-album-syncer/download:/app/download \
+      -v ~/xiaomi-album-syncer/db:/app/db \
+      coolfan1024/xiaomi-album-syncer:latest
     ```
 
 2. 访问 Web UI
@@ -51,7 +51,7 @@
 
 3. 启动服务
     ```bash
-    docker-compose up -d
+    docker compose up -d
     ```
 4. 访问 Web UI
 
@@ -115,26 +115,26 @@
 
 ![manualtriggercrontab](static/manualtriggercrontab.avif)
 
-## 从 v2 迁移
-
 <div id="从v2迁移"></div>
+
+## 从 v2 迁移
 
 xiaomi-album-syncer 是一个有状态的应用，不论是 v2 还是 v3+ 版本，都使用 SQLite 作为数据库。为避免迁移后导致重复下载，v3+ 版本提供了从 v2 版本迁移数据的功能。在使用此功能前，确保：
 
 - 你已经正确备份了 v2 版本的数据库文件
 - v3 版本的实例已经正确运行过一次，并完成密码初始化
-- v3 版本的实例没有任何相册和照片数据（确保只进行过密码初始化，passToken 和 userId 是否提交过不影响）
+- v3 版本的实例没有任何相册和照片数据（确保只进行过密码初始化，passToken 和 userId 提交过不影响）
 
 ### 创建 v3 实例并挂载旧数据库
 
 ```bash
-docker run 
-  -p 8232:8080 
-  --name xiaomi-album-syncer
-  -v ~/xiaomi-album-syncer/download:/app/download 
-  -v ~/xiaomi-album-syncer/db:/app/db 
-  -v ./old.db:/app/old.db 
-  coooolfan/xiaomi-album-syncer:latest
+docker run \
+  --name xiaomi-album-syncer \
+  -p 8232:8080 \
+  -v ~/xiaomi-album-syncer/download:/app/download \
+  -v ~/xiaomi-album-syncer/db:/app/db \
+  -v ./old.db:/app/old.db \
+  coolfan1024/xiaomi-album-syncer:latest
 ```
 
 观察此 docker 命令，不难发现主要区别在于多了一个 `-v ./old.db:/app/old.db` 的挂载。`./old.db` 是你 v2 版本的数据库文件路径。
@@ -152,12 +152,28 @@ docker run
 迁移完成后，你可以选择卸载旧数据库文件。
 
 ```bash
-docker run 
-  -p 8232:8080 
-  --name xiaomi-album-syncer
-  -v ~/xiaomi-album-syncer/download:/app/download 
-  -v ~/xiaomi-album-syncer/db:/app/db 
-  coooolfan/xiaomi-album-syncer:latest
+docker run \
+  --name xiaomi-album-syncer \
+  -p 8232:8080 \
+  -v ~/xiaomi-album-syncer/download:/app/download \
+  -v ~/xiaomi-album-syncer/db:/app/db \
+  coolfan1024/xiaomi-album-syncer:latest
 ```
-
+```shell
+curl 'https://immich.coooolfan.com/api/server/version-history' \
+  -H 'accept: application/json' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'cache-control: no-cache' \
+  -b 'immich_access_token=ZjoGo5sqVvLIHvdXzYVHbqyHf2aTHA4qwXrmqsZY0; immich_auth_type=password; immich_is_authenticated=true' \
+  -H 'pragma: no-cache' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://immich.coooolfan.com/admin/library-management' \
+  -H 'sec-ch-ua: "Microsoft Edge";v="141", "Not?A_Brand";v="8", "Chromium";v="141"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "macOS"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0'
+```
 容器本身不存储任何状态和数据，删除重启容器不影响任何数据。

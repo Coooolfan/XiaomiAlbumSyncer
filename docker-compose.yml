@@ -1,0 +1,12 @@
+name: xiaomi-album-syncer
+
+services:
+  app:
+    image: coolfan1024/xiaomi-album-syncer:latest
+    container_name: xiaomi-album-syncer
+    ports:
+      - "8232:8080"
+    volumes:
+      - ~/xiaomi-album-syncer/download:/app/download
+      - ~/xiaomi-album-syncer/db:/app/db
+    restart: unless-stopped
