@@ -133,7 +133,7 @@ async function fetchAlbums() {
 
 async function fetchLatestAlbums() {
   try {
-    toast.add({ severity: 'info', summary: '正在从远程更新相册列表',detail:"请暂时不要离开此页面，同步正在进行", life: 5000 })
+    toast.add({ severity: 'info', summary: '正在从远程更新相册列表', detail: "请暂时不要离开此页面，同步正在进行", life: 5000 })
     albums.value = await api.albumsController.refreshAlbumn()
     toast.add({ severity: 'success', summary: '已更新', life: 1600 })
   } catch (err) {
@@ -188,11 +188,11 @@ function openCreateCron() {
     config: {
       expression: '',
       timeZone: defaultTz,
-      targetPath: '',
+      targetPath: './download',
       downloadImages: true,
       downloadVideos: false,
       rewriteExifTime: false,
-      rewriteExifTimeZone: undefined,
+      rewriteExifTimeZone: defaultTz,
     },
     albumIds: [],
   }
@@ -298,7 +298,7 @@ async function confirmExecute() {
   try {
     const res: Result<number> = await api.crontabController.executeCrontab({ crontabId: showExecuteId.value })
     if (res && typeof res.code === 'number' && res.code === res.SUCCEED_CODE) {
-      toast.add({ severity: 'success', summary: '已触发', detail: `执行ID: ${res.data}` , life: 1800 })
+      toast.add({ severity: 'success', summary: '已触发', detail: `执行ID: ${res.data}`, life: 1800 })
     } else {
       toast.add({ severity: 'warn', summary: '触发返回', detail: res?.description ?? '已发送请求', life: 2200 })
     }
@@ -362,18 +362,10 @@ const albumsRefreshModel = ref([
     <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
       <template #content>
         <div class="w-full overflow-x-hidden">
-          <ContributionHeatmap
-            :data="dataPoints"
-            :label="labelText"
-            :week-start="weekStartNum"
-            :range-days="rangeDaysNum"
-            :end="endDateStr"
-            @day-click="onDayClick"
-          />
-          <div
-            v-if="tip"
-            class="mt-3 inline-flex items-center rounded-md bg-slate-900/80 text-white text-xs px-2 py-1 shadow-md dark:bg-slate-100/10 dark:text-slate-100"
-          >
+          <ContributionHeatmap :data="dataPoints" :label="labelText" :week-start="weekStartNum"
+            :range-days="rangeDaysNum" :end="endDateStr" @day-click="onDayClick" />
+          <div v-if="tip"
+            class="mt-3 inline-flex items-center rounded-md bg-slate-900/80 text-white text-xs px-2 py-1 shadow-md dark:bg-slate-100/10 dark:text-slate-100">
             {{ tip }}
           </div>
         </div>
@@ -397,17 +389,9 @@ const albumsRefreshModel = ref([
           <div v-else>
             <div v-if="!crontabs || crontabs.length === 0" class="text-xs text-slate-500 py-6">暂无计划任务</div>
             <div v-else class="grid grid-cols-1 gap-3">
-              <CrontabCard
-                v-for="item in crontabs"
-                :key="item.id"
-                :crontab="item"
-                :album-options="albumOptions"
-                :busy="updatingRow === item.id"
-                @edit="openEditCron(item)"
-                @delete="requestDelete(item)"
-                @toggle="toggleEnabled(item)"
-                @execute="requestExecute(item)"
-              />
+              <CrontabCard v-for="item in crontabs" :key="item.id" :crontab="item" :album-options="albumOptions"
+                :busy="updatingRow === item.id" @edit="openEditCron(item)" @delete="requestDelete(item)"
+                @toggle="toggleEnabled(item)" @execute="requestExecute(item)" />
             </div>
           </div>
         </div>
@@ -481,30 +465,22 @@ const albumsRefreshModel = ref([
 
     <Panel header="相册" toggleable>
       <template #icons>
-        <SplitButton icon="pi pi-refresh" severity="secondary" outlined rounded @click="fetchAlbums" :model="albumsRefreshModel"/>
+        <SplitButton icon="pi pi-refresh" severity="secondary" outlined rounded @click="fetchAlbums"
+          :model="albumsRefreshModel" />
       </template>
 
       <div class="space-y-2">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          <AlbumCard
-            v-for="a in albums"
-            :key="a.id"
-            :name="a.name"
-            :asset-count="a.assetCount"
-            :last-update-time="a.lastUpdateTime"
-          />
+          <AlbumCard v-for="a in albums" :key="a.id" :name="a.name" :asset-count="a.assetCount"
+            :last-update-time="a.lastUpdateTime" />
           <div v-if="!albums || albums.length === 0" class="text-xs text-slate-500">暂无相册</div>
         </div>
       </div>
     </Panel>
 
     <!-- 创建/编辑 计划任务 -->
-    <Dialog
-      v-model:visible="showCronDialog"
-      modal
-      :header="isEditing ? '编辑计划任务' : '创建计划任务'"
-      class="w-full sm:w-[520px]"
-    >
+    <Dialog v-model:visible="showCronDialog" modal :header="isEditing ? '编辑计划任务' : '创建计划任务'"
+      class="w-full sm:w-[520px]">
       <div class="space-y-4">
         <div class="space-y-2">
           <label class="block text-xs font-medium text-slate-500">名称</label>
@@ -514,13 +490,7 @@ const albumsRefreshModel = ref([
 
         <div class="space-y-2">
           <label class="block text-xs font-medium text-slate-500">描述</label>
-          <Textarea
-            v-model="cronForm.description"
-            rows="2"
-            autoResize
-            placeholder="可选"
-            class="w-full"
-          />
+          <Textarea v-model="cronForm.description" rows="2" autoResize placeholder="可选" class="w-full" />
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -530,17 +500,12 @@ const albumsRefreshModel = ref([
             <div v-if="formErrors.expression" class="text-xs text-red-500">
               {{ formErrors.expression }}
             </div>
-            <div class="text-[10px] text-slate-400">支持标准 6/7 字段 Cron。例：0 0 23 * * ?</div>
+            <div class="text-[10px] text-slate-400">支持标准 6/7 字段 Cron 表达式<br />例：0 0 23 * * ? 表示每天 23 点执行</div>
           </div>
           <div class="space-y-2">
             <label class="block text-xs font-medium text-slate-500">时区</label>
-            <Dropdown
-              v-model="cronForm.config.timeZone"
-              :options="timeZones"
-              placeholder="Asia/Shanghai"
-              filter
-              class="w-full"
-            />
+            <Dropdown v-model="cronForm.config.timeZone" :options="timeZones" placeholder="Asia/Shanghai" filter
+              class="w-full" />
             <div v-if="formErrors.timeZone" class="text-xs text-red-500">
               {{ formErrors.timeZone }}
             </div>
@@ -549,8 +514,9 @@ const albumsRefreshModel = ref([
 
         <div class="space-y-2">
           <label class="block text-xs font-medium text-slate-500">保存路径</label>
-          <InputText v-model="cronForm.config.targetPath" placeholder="例如：/Volumes/Photos/Xiaomi" class="w-full" />
+          <InputText v-model="cronForm.config.targetPath" placeholder="./download" class="w-full" />
           <div v-if="formErrors.targetPath" class="text-xs text-red-500">{{ formErrors.targetPath }}</div>
+          <div class="text-[10px] text-slate-400">如在容器环境下运行，请确保已挂载此路径。将在此路径下创建各自的文件夹。</div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
@@ -570,28 +536,14 @@ const albumsRefreshModel = ref([
 
         <div v-if="cronForm.config.rewriteExifTime" class="space-y-2">
           <label class="block text-xs font-medium text-slate-500">EXIF 时区</label>
-          <Dropdown
-            v-model="cronForm.config.rewriteExifTimeZone"
-            :options="timeZones"
-            placeholder="选择 EXIF 写入时区（可不填）"
-            showClear
-            filter
-            class="w-full"
-          />
+          <Dropdown v-model="cronForm.config.rewriteExifTimeZone" :options="timeZones" placeholder="Asia/Shanghai"
+            filter class="w-full" />
         </div>
 
         <div class="space-y-2">
           <label class="block text-xs font-medium text-slate-500">关联相册</label>
-          <MultiSelect
-            v-model="cronForm.albumIds"
-            :options="albumOptions"
-            display="chip"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="选择相册"
-            class="w-full"
-            filter
-          />
+          <MultiSelect v-model="cronForm.albumIds" :options="albumOptions" display="chip" optionLabel="label"
+            optionValue="value" placeholder="选择相册" class="w-full" filter />
         </div>
 
         <div class="flex items-center justify-between pt-1">
@@ -608,52 +560,32 @@ const albumsRefreshModel = ref([
     </Dialog>
 
     <!-- 删除确认 -->
-    <Dialog
-      v-model:visible="showDeleteVisible"
-      modal
-      header="删除计划任务"
-      class="w-full sm:w-[420px]"
-    >
+    <Dialog v-model:visible="showDeleteVisible" modal header="删除计划任务" class="w-full sm:w-[420px]">
       <div class="text-sm text-slate-700">确定要删除该计划任务吗？该操作不可恢复。</div>
       <template #footer>
         <div class="flex items-center justify-end gap-2 w-full">
-          <Button
-            label="取消"
-            severity="secondary"
-            text
-            @click="
-              () => {
-                showDeleteId = null
-                showDeleteVisible = false
-              }
-            "
-          />
+          <Button label="取消" severity="secondary" text @click="
+            () => {
+              showDeleteId = null
+              showDeleteVisible = false
+            }
+          " />
           <Button label="删除" severity="danger" :loading="deleting" @click="confirmDelete" />
         </div>
       </template>
     </Dialog>
 
     <!-- 立即执行确认 -->
-    <Dialog
-      v-model:visible="showExecuteVisible"
-      modal
-      header="立即执行"
-      class="w-full sm:w-[420px]"
-    >
+    <Dialog v-model:visible="showExecuteVisible" modal header="立即执行" class="w-full sm:w-[420px]">
       <div class="text-sm text-slate-700">确定要立即触发该计划任务的执行吗？该操作较为耗时，将在后台执行。</div>
       <template #footer>
         <div class="flex items-center justify-end gap-2 w-full">
-          <Button
-            label="取消"
-            severity="secondary"
-            text
-            @click="
-              () => {
-                showExecuteId = null
-                showExecuteVisible = false
-              }
-            "
-          />
+          <Button label="取消" severity="secondary" text @click="
+            () => {
+              showExecuteId = null
+              showExecuteVisible = false
+            }
+          " />
           <Button label="执行" severity="warning" :loading="executing" @click="confirmExecute" />
         </div>
       </template>
@@ -667,6 +599,7 @@ const albumsRefreshModel = ref([
     transform 180ms ease,
     box-shadow 180ms ease;
 }
+
 :deep(.p-card:hover) {
   transform: translateY(-1px);
   box-shadow: 0 8px 30px -12px rgba(2, 6, 23, 0.2);
