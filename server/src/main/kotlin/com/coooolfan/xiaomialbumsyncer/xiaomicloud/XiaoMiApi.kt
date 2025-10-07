@@ -11,6 +11,7 @@ import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.time.Instant
+import kotlin.io.path.Path
 
 @Managed
 class XiaoMiApi(private val tokenManager: TokenManager) {
@@ -119,6 +120,13 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         val fetchOssUrlBodyString = fetchOssUrlResp.body.string()
         fetchOssUrlResp.close()
         val fetchOssUrlJson = jacksonObjectMapper().readTree(fetchOssUrlBodyString)
+
+        // 文件已经被删掉了，直接返回一个无效值，避免后续反复请求
+        if (fetchOssUrlJson.at("/code").asInt() == 50050) {
+            log.warn("文件: ${asset.fileName} id: ${asset.id} 已经被删除，跳过下载")
+            return Path("./tmp/DELETED")
+        }
+
         val ossUrl = fetchOssUrlJson.at("/data/url").asText()
 
         // 2. 请求签名直链
