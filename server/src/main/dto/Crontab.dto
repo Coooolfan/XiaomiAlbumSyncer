@@ -1,0 +1,27 @@
+export com.coooolfan.xiaomialbumsyncer.model.Crontab
+
+input CrontabCreateInput {
+
+    name
+
+    description
+
+    enabled
+
+    config
+
+    id(albums) as albumIds
+}
+
+input CrontabUpdateInput {
+
+    name?
+
+    description?
+
+    enabled?
+
+    config?
+
+    id(albums)? as albumIds
+}

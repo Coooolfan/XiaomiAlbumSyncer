@@ -1,0 +1,14 @@
+server.port: 8080
+
+solon.app:
+  name: 'demo-app'
+  group: 'demo'
+  db: './db/xiaomialbumsyncer.db'
+  jimmer-log: false
+
+solon.logging:
+  appender:
+    console:
+      level: INFO
+    file:
+      level: INFO
