@@ -30,7 +30,7 @@ export class AlbumsController {
      * @return List<Album> 返回刷新后的相册列表，包含所有相册的基本信息
      *  
      */
-    readonly refreshAlbumn: () => Promise<
+    readonly refreshAlbums: () => Promise<
         ReadonlyArray<Dynamic_Album>
     > = async() => {
         let _uri = '/api/album/lastest';
@@ -39,6 +39,6 @@ export class AlbumsController {
 }
 
 export type AlbumsControllerOptions = {
-    'refreshAlbumn': {}, 
+    'refreshAlbums': {}, 
     'listAlbums': {}
 }

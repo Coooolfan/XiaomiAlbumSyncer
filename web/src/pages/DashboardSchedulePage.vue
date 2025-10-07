@@ -135,7 +135,7 @@ async function fetchAlbums() {
 async function fetchLatestAlbums() {
   try {
     toast.add({ severity: 'info', summary: '正在从远程更新相册列表', detail: "请暂时不要离开此页面，同步正在进行", life: 5000 })
-    albums.value = await api.albumsController.refreshAlbumn()
+    albums.value = await api.albumsController.refreshAlbums()
     toast.add({ severity: 'success', summary: '已更新', life: 1600 })
   } catch (err) {
     toast.add({ severity: 'error', summary: '更新失败', detail: "请确保您已配置有效的 passToken 与 UserId。\n并确保此已完成相册服务二次验证", life: 10000 })
