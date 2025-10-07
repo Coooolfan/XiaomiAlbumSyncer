@@ -159,21 +159,5 @@ docker run \
   -v ~/xiaomi-album-syncer/db:/app/db \
   coolfan1024/xiaomi-album-syncer:latest
 ```
-```shell
-curl 'https://immich.coooolfan.com/api/server/version-history' \
-  -H 'accept: application/json' \
-  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
-  -H 'cache-control: no-cache' \
-  -b 'immich_access_token=ZjoGo5sqVvLIHvdXzYVHbqyHf2aTHA4qwXrmqsZY0; immich_auth_type=password; immich_is_authenticated=true' \
-  -H 'pragma: no-cache' \
-  -H 'priority: u=1, i' \
-  -H 'referer: https://immich.coooolfan.com/admin/library-management' \
-  -H 'sec-ch-ua: "Microsoft Edge";v="141", "Not?A_Brand";v="8", "Chromium";v="141"' \
-  -H 'sec-ch-ua-mobile: ?0' \
-  -H 'sec-ch-ua-platform: "macOS"' \
-  -H 'sec-fetch-dest: empty' \
-  -H 'sec-fetch-mode: cors' \
-  -H 'sec-fetch-site: same-origin' \
-  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0'
-```
+
 容器本身不存储任何状态和数据，删除重启容器不影响任何数据。
