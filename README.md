@@ -1,5 +1,7 @@
 # Xiaomi Album Syncer
 
+![banner](./static/banner.avif)
+
 ## Features/功能
 
 - [x] 📸 下载指定相册中的所有照片
