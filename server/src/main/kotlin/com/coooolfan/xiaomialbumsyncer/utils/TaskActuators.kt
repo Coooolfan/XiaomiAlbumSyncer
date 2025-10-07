@@ -75,7 +75,7 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
                 val targetPath = Path(crontab.config.targetPath, it.album.name, it.fileName)
                 val path = api.downloadAsset(it, targetPath)
                 sql.saveCommand(CrontabHistoryDetail {
-                    crontabHistoryId = crontab.id
+                    crontabHistoryId = crontabHistory.id
                     downloadTime = Instant.now()
                     filePath = path.toString()
                     assetId = it.id
