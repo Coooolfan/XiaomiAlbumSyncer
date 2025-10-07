@@ -6,9 +6,12 @@ import java.nio.file.Path
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.util.TimeZone
+import java.util.*
 
 fun rewriteExifTime(asset: Asset, path: Path, config: ExifRewriteConfig) {
+
+    if (path.startsWith("/tmp")) return
+
     when (asset.type) {
         com.coooolfan.xiaomialbumsyncer.model.AssetType.IMAGE -> rewriteImageExifTime(asset, path, config)
         com.coooolfan.xiaomialbumsyncer.model.AssetType.VIDEO -> rewriteVideoExifTime(asset, path, config)
