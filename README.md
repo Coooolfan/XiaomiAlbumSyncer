@@ -2,6 +2,8 @@
 
 ![banner](./static/banner.avif)
 
+**[QQ 群聊：1059332701](https://qm.qq.com/q/H2trW6JWM4)**
+
 ## Features/功能
 
 - [x] 📸 下载指定相册中的所有照片
