@@ -22,7 +22,7 @@ import org.noear.solon.core.handle.Result
 @Mapping("/api/crontab")
 @Controller
 @SaCheckLogin
-class CrontabController(private val servce: CrontabService) {
+class CrontabController(private val service: CrontabService) {
     /**
      * 获取所有定时任务列表
      * 
@@ -38,7 +38,7 @@ class CrontabController(private val servce: CrontabService) {
     @Api
     @Mapping("", method = [MethodType.GET])
     fun listCrontabs(): List<@FetchBy("DEFAULT_CRONTAB") Crontab> {
-        return servce.queryCrontab(DEFAULT_CRONTAB)
+        return service.queryCrontab(DEFAULT_CRONTAB)
     }
 
     /**
@@ -57,7 +57,7 @@ class CrontabController(private val servce: CrontabService) {
     @Api
     @Mapping("", method = [MethodType.POST])
     fun createCrontab(@Body input: CrontabCreateInput): @FetchBy("DEFAULT_CRONTAB") Crontab {
-        return servce.createCrontab(input, DEFAULT_CRONTAB)
+        return service.createCrontab(input, DEFAULT_CRONTAB)
     }
 
     /**
@@ -77,7 +77,7 @@ class CrontabController(private val servce: CrontabService) {
     @Api
     @Mapping("/{crontabId}", method = [MethodType.PUT])
     fun updateCrontab(@Body input: CrontabUpdateInput, @Path crontabId: Long): @FetchBy("DEFAULT_CRONTAB") Crontab {
-        return servce.updateCrontab(input.toEntity { id = crontabId }, DEFAULT_CRONTAB)
+        return service.updateCrontab(input.toEntity { id = crontabId }, DEFAULT_CRONTAB)
     }
 
     /**
@@ -95,7 +95,7 @@ class CrontabController(private val servce: CrontabService) {
     @Api
     @Mapping("/{crontabId}", method = [MethodType.DELETE])
     fun deleteCrontab(@Path crontabId: Long) {
-        servce.deleteCrontab(crontabId)
+        service.deleteCrontab(crontabId)
     }
 
     /**
@@ -114,7 +114,7 @@ class CrontabController(private val servce: CrontabService) {
     @Api
     @Mapping("/{crontabId}/executions", method = [MethodType.POST])
     fun executeCrontab(@Path crontabId: Long): Result<Int> {
-        servce.executeCrontab(crontabId)
+        service.executeCrontab(crontabId)
         return Result.succeed(201)
     }
 
