@@ -50,7 +50,7 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
             where(
                 notExists(
                     subQuery(CrontabHistoryDetail::class) {
-                        where(table.crontabHistoryId eq crontab.id)
+                        where(table.crontabHistory.crontabId eq crontab.id)
                         where(table.assetId eq parentTable.id)
                         select(table)
                     }
