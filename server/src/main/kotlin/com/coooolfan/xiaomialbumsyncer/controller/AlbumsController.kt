@@ -29,7 +29,7 @@ class AlbumsController(private val service: AlbumsService) {
     @Api
     @Mapping("/lastest", method = [MethodType.GET])
     @SaCheckLogin
-    fun refreshAlbumn(): List<Album> {
+    fun refreshAlbums(): List<Album> {
         return service.refreshAlbums()
     }
 
