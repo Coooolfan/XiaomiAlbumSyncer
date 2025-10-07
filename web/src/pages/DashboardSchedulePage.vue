@@ -14,6 +14,7 @@ import Textarea from 'primevue/textarea'
 import InputSwitch from 'primevue/inputswitch'
 import Dropdown from 'primevue/dropdown'
 import MultiSelect from 'primevue/multiselect'
+import Message from 'primevue/message'
 import { useToast } from 'primevue/usetoast'
 import type { CrontabDto } from '@/__generated/model/dto'
 import SplitButton from 'primevue/splitbutton';
@@ -545,6 +546,14 @@ const albumsRefreshModel = ref([
           <MultiSelect v-model="cronForm.albumIds" :options="albumOptions" display="chip" optionLabel="label"
             optionValue="value" placeholder="选择相册" class="w-full" filter />
         </div>
+
+        <Message severity="info" variant="simple" icon="pi pi-info-circle">
+          <div class="text-[12px]">
+            不同计划任务的<span class="font-semibold">下载记录</span><span class="font-semibold">相互独立</span>，<span
+              class="font-semibold">互不影响</span>。即使是<span class="font-semibold">同一相册中的同一资产</span>，在不同计划任务中，其<span
+              class="font-semibold">已下载状态</span>也会<span class="font-semibold">分别判断</span>。
+          </div>
+        </Message>
 
         <div class="flex items-center justify-between pt-1">
           <div class="flex items-center gap-2 text-xs text-slate-600">
