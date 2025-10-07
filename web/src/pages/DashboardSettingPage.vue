@@ -226,7 +226,7 @@ onMounted(() => {
             class="w-full"
           />
           <p class="text-xs text-slate-400">
-            如果您使用 Docker 部署此项目，请不要改动此项目。如果您使用其他方式部署此项目，请输入
+            如果您使用 Docker 部署此项目，请不要改动此配置。如果您使用其他方式部署此项目，请输入
             exiftool 可执行文件路径。
           </p>
         </div>
