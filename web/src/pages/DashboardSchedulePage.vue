@@ -517,7 +517,7 @@ const albumsRefreshModel = ref([
           <label class="block text-xs font-medium text-slate-500">保存路径</label>
           <InputText v-model="cronForm.config.targetPath" placeholder="./download" class="w-full" />
           <div v-if="formErrors.targetPath" class="text-xs text-red-500">{{ formErrors.targetPath }}</div>
-          <div class="text-[10px] text-slate-400">如在容器环境下运行，请确保已挂载此路径。将在此路径下创建各自的文件夹。</div>
+          <div class="text-[10px] text-slate-400">如在容器环境下运行，请确保已将此路径映射到宿主机。将在此路径下创建相册各自的文件夹。</div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">

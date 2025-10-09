@@ -4,7 +4,6 @@ import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import InputSwitch from 'primevue/inputswitch'
 import Tag from 'primevue/tag'
-import Divider from 'primevue/divider'
 import type { CrontabDto } from '@/__generated/model/dto'
 import { computed } from 'vue'
 
@@ -58,11 +57,11 @@ const recentHistories = computed(() => {
         </div>
         <div class="flex items-center gap-2 text-xs text-slate-600">
           <span class="hidden sm:inline">启用</span>
-          <InputSwitch :modelValue="crontab.enabled" :disabled="busy" @update:modelValue="() => emit('toggle')" class="mr-2 sm:mr-4" />
+          <InputSwitch :modelValue="crontab.enabled" :disabled="busy" @update:modelValue="() => emit('toggle')"
+            class="mr-2 sm:mr-4" />
           <Button icon="pi pi-play" size="small" severity="warning" class="mr-1" @click="emit('execute')" />
           <Button icon="pi pi-pencil" size="small" @click="emit('edit')" />
-          <!-- TODO 级联删除还有点问题 -->
-          <!-- <Button icon="pi pi-trash" size="small" severity="danger" @click="emit('delete')" /> -->
+          <Button icon="pi pi-trash" size="small" severity="danger" @click="emit('delete')" />
         </div>
       </div>
     </template>
@@ -90,22 +89,20 @@ const recentHistories = computed(() => {
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
-            <Tag :severity="crontab.config?.downloadImages ? 'success' : 'secondary'" :value="crontab.config?.downloadImages ? '下载照片' : '不下载照片'" />
-            <Tag :severity="crontab.config?.downloadVideos ? 'success' : 'secondary'" :value="crontab.config?.downloadVideos ? '下载视频' : '不下载视频'" />
-            <Tag :severity="crontab.config?.rewriteExifTime ? 'success' : 'secondary'" :value="crontab.config?.rewriteExifTime ? '重写 EXIF' : '不重写 EXIF'" />
+            <Tag :severity="crontab.config?.downloadImages ? 'success' : 'secondary'"
+              :value="crontab.config?.downloadImages ? '下载照片' : '不下载照片'" />
+            <Tag :severity="crontab.config?.downloadVideos ? 'success' : 'secondary'"
+              :value="crontab.config?.downloadVideos ? '下载视频' : '不下载视频'" />
+            <Tag :severity="crontab.config?.rewriteExifTime ? 'success' : 'secondary'"
+              :value="crontab.config?.rewriteExifTime ? '重写 EXIF' : '不重写 EXIF'" />
           </div>
 
           <div class="flex flex-wrap items-center gap-2 pt-1">
-            <Chip
-              v-for="id in crontab.albumIds"
-              :key="id"
-              :label="albumMap[id] || String(id)"
-              class="text-xs"
-            />
+            <Chip v-for="id in crontab.albumIds" :key="id" :label="albumMap[id] || String(id)" class="text-xs" />
             <span v-if="!crontab.albumIds || crontab.albumIds.length === 0" class="text-xs text-slate-400">未关联相册</span>
           </div>
 
-   
+
         </div>
 
         <div class="mt-4 md:mt-0 md:w-1/2">
@@ -115,7 +112,8 @@ const recentHistories = computed(() => {
             <ul v-else class="space-y-2">
               <li v-for="h in recentHistories" :key="h.id" class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                  <span class="inline-block w-2 h-2 rounded-full" :class="h.isCompleted ? 'bg-emerald-500' : 'bg-amber-500'" />
+                  <span class="inline-block w-2 h-2 rounded-full"
+                    :class="h.isCompleted ? 'bg-emerald-500' : 'bg-amber-500'" />
                   <span class="text-slate-600">{{ formatTime(h.startTime) }} → {{ formatTime(h.endTime) }}</span>
                 </div>
                 <Tag :severity="h.isCompleted ? 'success' : 'warning'" :value="h.isCompleted ? '完成' : '进行中'" />
@@ -126,17 +124,16 @@ const recentHistories = computed(() => {
       </div>
     </template>
   </Card>
-  
+
 </template>
 
 <style scoped>
 :deep(.p-card) {
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
+
 :deep(.p-card:hover) {
   transform: translateY(-1px);
   box-shadow: 0 8px 30px -12px rgba(2, 6, 23, 0.2);
 }
 </style>
-
-
