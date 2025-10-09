@@ -1,8 +1,10 @@
 package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 
 import com.coooolfan.xiaomialbumsyncer.model.Album
+import com.coooolfan.xiaomialbumsyncer.model.AlbumTimeline
 import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.AssetType
+import com.coooolfan.xiaomialbumsyncer.model.EMPTY_ALBUM_TIMELINE
 import com.coooolfan.xiaomialbumsyncer.utils.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import okhttp3.FormBody
@@ -11,6 +13,8 @@ import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.time.Instant
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter.BASIC_ISO_DATE
 import kotlin.io.path.Path
 
 @Managed
@@ -42,7 +46,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             for (albumJson in albumArrayJson) {
                 val albumId = albumJson.get("albumId").asLong()
                 var albumName: String? = null
-                if (albumId == 1000L) continue
+                if (albumId == 1000L) continue // 私密相册，跳过
                 else if (albumId == 1L) albumName = "相机"
                 else if (albumId == 2L) albumName = "屏幕截图"
 
@@ -51,6 +55,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                     name = albumName ?: albumJson.get("name").asText()
                     assetCount = albumJson.get("mediaCount").asInt()
                     lastUpdateTime = Instant.ofEpochMilli(albumJson.get("lastUpdateTime")?.asLong() ?: 0L)
+                    timeline = EMPTY_ALBUM_TIMELINE
                 })
             }
 
@@ -62,15 +67,20 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         return allAlbums.toList() // 返回不可变列表
     }
 
-    fun fetchAssetsByAlbumId(album: Album): List<Asset> {
+    fun fetchAllAssetsByAlbumId(album: Album, day: LocalDate? = null): List<Asset> {
         val allAssets = mutableListOf<Asset>()
         var pageNum = 0
         var hasMorePages = true
         val pageSize = 200
 
+        var url =
+            "https://i.mi.com/gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.id}"
+        if (day != null)
+            url += "&startDate=${day.format(BASIC_ISO_DATE)}&endDate=${day.format(BASIC_ISO_DATE)}"
+
         while (hasMorePages) {
             val req = Request.Builder()
-                .url("https://i.mi.com/gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.id}")
+                .url(url)
                 .ua()
                 .authHeader(tokenManager.getAuthPair())
                 .get()
@@ -104,6 +114,25 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         }
 
         return allAssets.toList() // 返回不可变列表
+    }
+
+    fun fetchAlbumTimeline(albumId: Long): AlbumTimeline {
+        val req = Request.Builder()
+            .url("https://i.mi.com/gallery/user/timeline?ts=${System.currentTimeMillis()}&albumId=$albumId")
+            .ua()
+            .authHeader(tokenManager.getAuthPair())
+            .get()
+            .build()
+
+        val res = client().newCall(req).execute()
+        throwIfNotSuccess(res.code)
+        val resBodyString = res.body.string()
+        val responseTree = jacksonObjectMapper().readTree(resBodyString)
+        val indexHash = responseTree.at("/data/indexHash").asText()
+        val dayCountMap = responseTree.at("/data/dayCount").properties().asSequence().map {
+            LocalDate.parse(it.key.toString(), BASIC_ISO_DATE) to it.value.asLong()
+        }.toMap()
+        return AlbumTimeline(indexHash, dayCountMap)
     }
 
     fun downloadAsset(asset: Asset, targetPath: Path): Path {
