@@ -11,7 +11,7 @@ type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
 
 const props = defineProps<{
   crontab: Crontab
-  albumOptions: ReadonlyArray<{ label: string; value: number }>
+  albumOptions: ReadonlyArray<{ label: string; value: string }>
   busy?: boolean
 }>()
 
@@ -22,8 +22,8 @@ const emit = defineEmits<{
   (e: 'execute'): void
 }>()
 
-const albumMap = computed<Record<number, string>>(() => {
-  const map: Record<number, string> = {}
+const albumMap = computed<Record<string, string>>(() => {
+  const map: Record<string, string> = {}
   for (const opt of props.albumOptions || []) {
     map[opt.value] = opt.label
   }

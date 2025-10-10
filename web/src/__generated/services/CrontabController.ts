@@ -1,6 +1,6 @@
 import type {Executor} from '../';
 import type {CrontabDto} from '../model/dto/';
-import type {CrontabCreateInput, CrontabUpdateInput, Result} from '../model/static/';
+import type {CrontabCreateInput, CrontabUpdateInput} from '../model/static/';
 
 export class CrontabController {
     
@@ -54,12 +54,12 @@ export class CrontabController {
      *  
      */
     readonly executeCrontab: (options: CrontabControllerOptions['executeCrontab']) => Promise<
-        Result<number>
+        void
     > = async(options) => {
         let _uri = '/api/crontab/';
         _uri += encodeURIComponent(options.crontabId);
         _uri += '/executions';
-        return (await this.executor({uri: _uri, method: 'POST'})) as Promise<Result<number>>;
+        return (await this.executor({uri: _uri, method: 'POST'})) as Promise<void>;
     }
     
     /**

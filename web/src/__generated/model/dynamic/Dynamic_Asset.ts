@@ -2,7 +2,7 @@ import type {AssetType} from '../enums/';
 import type {Dynamic_Album, Dynamic_CrontabHistoryDetail} from './';
 
 export interface Dynamic_Asset {
-    readonly id?: number;
+    readonly id?: string;
     readonly fileName?: string;
     readonly type?: AssetType;
     readonly dateTaken?: string;

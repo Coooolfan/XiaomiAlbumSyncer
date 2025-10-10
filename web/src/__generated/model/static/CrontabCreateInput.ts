@@ -5,5 +5,5 @@ export interface CrontabCreateInput {
     readonly description: string;
     readonly enabled: boolean;
     readonly config: CrontabConfig;
-    readonly albumIds: ReadonlyArray<number>;
+    readonly albumIds: ReadonlyArray<string>;
 }

@@ -18,7 +18,7 @@ import Message from 'primevue/message'
 import { useToast } from 'primevue/usetoast'
 import type { CrontabDto } from '@/__generated/model/dto'
 import SplitButton from 'primevue/splitbutton';
-import type { CrontabCreateInput, Result } from '@/__generated/model/static'
+import type { CrontabCreateInput } from '@/__generated/model/static'
 
 type DataPoint = { timeStamp: number; count: number }
 
@@ -80,7 +80,7 @@ const timeZones = ref<string[]>([])
 const albumOptions = computed(() =>
   (albums.value || [])
     .filter((a) => a.id !== undefined)
-    .map((a) => ({ label: a.name ?? `ID ${a.id}`, value: a.id as number })),
+    .map((a) => ({ label: a.name ?? `ID ${a.id}`, value: a.id as string })), // 这个 as 从逻辑上是多余的，但是不加编译器会报错
 )
 function onDayClick(payload: {
   date: Date
@@ -297,12 +297,9 @@ async function confirmExecute() {
   if (showExecuteId.value === null) return
   executing.value = true
   try {
-    const res: Result<number> = await api.crontabController.executeCrontab({ crontabId: showExecuteId.value })
-    if (res && typeof res.code === 'number' && res.code === res.SUCCEED_CODE) {
-      toast.add({ severity: 'success', summary: '已触发', detail: `执行ID: ${res.data}`, life: 1800 })
-    } else {
-      toast.add({ severity: 'warn', summary: '触发返回', detail: res?.description ?? '已发送请求', life: 2200 })
-    }
+    await api.crontabController.executeCrontab({ crontabId: showExecuteId.value })
+    toast.add({ severity: 'success', summary: '已触发', life: 2000 })
+
     showExecuteId.value = null
     showExecuteVisible.value = false
     fetchCrontabs()

@@ -5,5 +5,5 @@ export interface CrontabUpdateInput {
     readonly description?: string | undefined;
     readonly enabled?: boolean | undefined;
     readonly config?: CrontabConfig | undefined;
-    readonly albumIds?: ReadonlyArray<number> | undefined;
+    readonly albumIds?: ReadonlyArray<string> | undefined;
 }
