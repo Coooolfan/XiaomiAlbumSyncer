@@ -1,7 +1,7 @@
 import type {Dynamic_Asset} from './';
 
 export interface Dynamic_Album {
-    readonly id?: number;
+    readonly id?: string;
     readonly name?: string;
     readonly assetCount?: number;
     readonly lastUpdateTime?: string;

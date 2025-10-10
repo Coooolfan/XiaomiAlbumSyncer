@@ -1,7 +1,8 @@
 package com.coooolfan.xiaomialbumsyncer.model
 
+import org.babyfish.jimmer.jackson.JsonConverter
+import org.babyfish.jimmer.jackson.LongListToStringListConverter
 import org.babyfish.jimmer.sql.*
-import org.noear.solon.validation.annotation.Pattern
 
 @Entity
 interface Crontab {
@@ -21,6 +22,7 @@ interface Crontab {
     val albums: List<Album>
 
     @IdView("albums")
+    @JsonConverter(LongListToStringListConverter::class)
     val albumIds: List<Long>
 
     @OneToMany(mappedBy = "crontab")

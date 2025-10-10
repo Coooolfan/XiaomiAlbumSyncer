@@ -113,9 +113,8 @@ class CrontabController(private val service: CrontabService) {
      */
     @Api
     @Mapping("/{crontabId}/executions", method = [MethodType.POST])
-    fun executeCrontab(@Path crontabId: Long): Result<Int> {
+    fun executeCrontab(@Path crontabId: Long){
         service.executeCrontab(crontabId)
-        return Result.succeed(201)
     }
 
     companion object {

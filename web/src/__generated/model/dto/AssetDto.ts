@@ -2,7 +2,7 @@ import type {AssetType} from '../enums/';
 
 export type AssetDto = {
     'AssetController/DEFAULT_ASSET': {
-        readonly id: number;
+        readonly id: string;
         readonly fileName: string;
         readonly type: AssetType;
         readonly dateTaken: string;

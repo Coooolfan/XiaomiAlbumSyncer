@@ -1,5 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.model
 
+import org.babyfish.jimmer.jackson.JsonConverter
+import org.babyfish.jimmer.jackson.LongToStringConverter
 import org.babyfish.jimmer.sql.DissociateAction
 import org.babyfish.jimmer.sql.Entity
 import org.babyfish.jimmer.sql.Id
@@ -11,6 +13,7 @@ import java.time.Instant
 @Entity
 interface Asset {
     @Id
+    @JsonConverter(LongToStringConverter::class)
     val id: Long
 
     val fileName: String

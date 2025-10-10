@@ -8,6 +8,6 @@ export interface Dynamic_Crontab {
     readonly enabled?: boolean;
     readonly config?: CrontabConfig;
     readonly albums?: ReadonlyArray<Dynamic_Album>;
-    readonly albumIds?: ReadonlyArray<number>;
+    readonly albumIds?: ReadonlyArray<string>;
     readonly histories?: ReadonlyArray<Dynamic_CrontabHistory>;
 }
