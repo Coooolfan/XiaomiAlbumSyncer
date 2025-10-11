@@ -42,7 +42,6 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
             select(table.timelineSnapshot)
         }.firstOrNull()
 
-        // TODO)) 还有 视频下载与否 和 图片下载与否 也要判断
         if (crontab.config.diffByTimeline && albumTimelinesHistory != null && albumTimelinesHistory.keys == crontab.albumIds.toSet()) {
             refreshAssetsByDiffTimeline(crontab, crontabHistory, albumTimelinesHistory)
         } else {
