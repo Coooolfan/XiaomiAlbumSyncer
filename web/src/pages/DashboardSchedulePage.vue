@@ -69,6 +69,7 @@ const cronForm = ref<CrontabCreateInput>({
     targetPath: '',
     downloadImages: true,
     downloadVideos: false,
+    diffByTimeline: false,
     rewriteExifTime: false,
     rewriteExifTimeZone: defaultTz,
   },
@@ -192,6 +193,7 @@ function openCreateCron() {
       targetPath: './download',
       downloadImages: true,
       downloadVideos: false,
+      diffByTimeline: false,
       rewriteExifTime: false,
       rewriteExifTimeZone: defaultTz,
     },
@@ -214,6 +216,7 @@ function openEditCron(item: Crontab) {
       targetPath: item.config.targetPath,
       downloadImages: item.config.downloadImages,
       downloadVideos: item.config.downloadVideos,
+      diffByTimeline: item.config.diffByTimeline,
       rewriteExifTime: item.config.rewriteExifTime,
       rewriteExifTimeZone: item.config.rewriteExifTimeZone ?? item.config.timeZone,
     },
@@ -526,17 +529,8 @@ const albumsRefreshModel = ref([
             <InputSwitch v-model="cronForm.config.downloadVideos" />
             <span>下载视频</span>
           </div>
-          <div class="flex items-center gap-2 text-xs text-slate-600">
-            <InputSwitch v-model="cronForm.config.rewriteExifTime" />
-            <span>重写 EXIF 时间</span>
-          </div>
         </div>
 
-        <div v-if="cronForm.config.rewriteExifTime" class="space-y-2">
-          <label class="block text-xs font-medium text-slate-500">EXIF 时区</label>
-          <Dropdown v-model="cronForm.config.rewriteExifTimeZone" :options="timeZones" placeholder="Asia/Shanghai"
-            filter class="w-full" />
-        </div>
 
         <div class="space-y-2">
           <label class="block text-xs font-medium text-slate-500">关联相册</label>
@@ -551,6 +545,32 @@ const albumsRefreshModel = ref([
               class="font-semibold">已下载状态</span>也会<span class="font-semibold">分别判断</span>。
           </div>
         </Message>
+
+        <Panel header="高级配置" toggleable>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 text-xs text-slate-600">
+                <InputSwitch v-model="cronForm.config.diffByTimeline" />
+                <span>按时间线比对差异</span>
+              </div>
+              <div class="text-[10px] text-slate-400">通过对比上一次同步的相册时间线，将相册资产的获取范围限定为存在变动的日期。</div>
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 text-xs text-slate-600">
+                <InputSwitch v-model="cronForm.config.rewriteExifTime" />
+                <span>填充 EXIF 时间</span>
+              </div>
+              <div class="text-[10px] text-slate-400">将资产在小米云服务的时间写入 EXIF 时间，仅在资产不存在 EXIF 时间时生效。</div>
+            </div>
+          </div>
+
+          <div v-if="cronForm.config.rewriteExifTime" class="space-y-2 mt-3">
+            <label class="block text-xs font-medium text-slate-500">EXIF 时区</label>
+            <Dropdown v-model="cronForm.config.rewriteExifTimeZone" :options="timeZones" placeholder="Asia/Shanghai"
+              filter class="w-full" />
+            <div class="text-[10px] text-slate-400">用于写入 EXIF 的时区；仅在开启“填充 EXIF 时间”后生效。</div>
+          </div>
+        </Panel>
 
         <div class="flex items-center justify-between pt-1">
           <div class="flex items-center gap-2 text-xs text-slate-600">

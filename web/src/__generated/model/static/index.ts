@@ -1,3 +1,4 @@
+export type {AlbumTimeline} from './AlbumTimeline';
 export type {CrontabConfig} from './CrontabConfig';
 export type {CrontabCreateInput} from './CrontabCreateInput';
 export type {CrontabUpdateInput} from './CrontabUpdateInput';
