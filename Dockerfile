@@ -42,7 +42,7 @@ COPY --from=backend-build-stage /app/build/libs/*.jar app.jar
 EXPOSE 8080
 
 # 允许通过环境变量传递JVM参数
-ENV JAVA_OPTS="-Xmx256m"
+ENV JAVA_OPTS=""
 
 # 启动应用
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
