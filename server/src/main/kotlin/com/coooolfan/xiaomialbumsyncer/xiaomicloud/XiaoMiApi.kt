@@ -55,7 +55,6 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                     name = albumName ?: albumJson.get("name").asText()
                     assetCount = albumJson.get("mediaCount").asInt()
                     lastUpdateTime = Instant.ofEpochMilli(albumJson.get("lastUpdateTime")?.asLong() ?: 0L)
-                    timeline = EMPTY_ALBUM_TIMELINE
                 })
             }
 
@@ -92,7 +91,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             val responseTree = jacksonObjectMapper().readTree(resBodyString)
             val assetArrayJson = responseTree.at("/data/galleries")
 
-            log.info("解析相册 ${album.name} ID=${album.id} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
+            log.info("解析相册 ${album.name} ID=${album.id}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
             // 处理当前页数据
             for (assetJson in assetArrayJson) {
                 allAssets.add(Asset {
@@ -132,6 +131,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         val dayCountMap = responseTree.at("/data/dayCount").properties().asSequence().map {
             LocalDate.parse(it.key.toString(), BASIC_ISO_DATE) to it.value.asLong()
         }.toMap()
+        log.info("从远程解析相册 ID=$albumId 时间线")
         return AlbumTimeline(indexHash, dayCountMap)
     }
 

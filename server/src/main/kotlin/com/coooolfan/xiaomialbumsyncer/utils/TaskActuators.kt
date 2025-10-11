@@ -4,17 +4,13 @@ import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.KSqlClient
-import org.babyfish.jimmer.sql.kt.ast.expression.desc
-import org.babyfish.jimmer.sql.kt.ast.expression.eq
-import org.babyfish.jimmer.sql.kt.ast.expression.ne
-import org.babyfish.jimmer.sql.kt.ast.expression.notExists
-import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
+import org.babyfish.jimmer.sql.kt.ast.expression.*
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.util.TimeZone
+import java.util.*
 import kotlin.io.path.Path
 
 @Managed
@@ -37,7 +33,21 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
 
 
         // 2. 对 crontab.albums 进行同步操作, 重新刷新这些相册的所有 Asset
-        refreshAssets(crontab, crontabHistory, crontab.config.diffByTimeline)
+
+        // 2.1 取到上次的 CrontabHistory 的 timelineSnapshot
+        val albumTimelinesHistory = sql.executeQuery(CrontabHistory::class) {
+            orderBy(table.startTime.desc())
+            where(table.crontabId eq crontab.id)
+            where(table.id ne crontabHistory.id)
+            select(table.timelineSnapshot)
+        }.firstOrNull()
+
+        // TODO)) 还有 视频下载与否 和 图片下载与否 也要判断
+        if (crontab.config.diffByTimeline && albumTimelinesHistory != null && albumTimelinesHistory.keys == crontab.albumIds.toSet()) {
+            refreshAssetsByDiffTimeline(crontab, crontabHistory, albumTimelinesHistory)
+        } else {
+            refreshAssetsFull(crontab, crontabHistory)
+        }
 
         // 3. 与 CrontabHistoryDetails 对比，过滤出新增的 Asset
         val needDownloadAssets = sql.executeQuery(Asset::class) {
@@ -106,59 +116,61 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
 
     }
 
-    fun refreshAssets(crontab: Crontab, crontabHistory: CrontabHistory, diffByTimeline: Boolean = false) {
-        if (diffByTimeline) {
-            // 1. 取到最新的一次 CrontabHistory 的 timelineSnapshot
+    fun refreshAssetsByDiffTimeline(
+        crontab: Crontab,
+        crontabHistory: CrontabHistory,
+        albumTimelinesHistory: Map<Long, AlbumTimeline>
+    ) {
+        log.info("时间线对比模式可用，仅对有变更的日期进行刷新")
 
-            val albumTimelinesHistory = sql.executeQuery(CrontabHistory::class) {
-                orderBy(table.startTime.desc())
-                where(table.crontabId eq crontab.id)
-                select(table.timelineSnapshot)
-            }.firstOrNull() ?: throw IllegalStateException("Cannot find last crontab history for crontab ${crontab.id}")
+        // 1. 获取这些相册最新的 timeline
+        val albumTimelinesLastest = fetchAlbumsTimelineSnapshot(crontab.albumIds)
+        sql.executeUpdate(CrontabHistory::class) {
+            set(table.timelineSnapshot, albumTimelinesLastest)
+            where(table.id eq crontabHistory.id)
+        }
 
-            // 2. 获取这些相册最新的 timeline
+        // 2. 对比 timeline，找出有变更的日期
+        val albumsDayCountNeedRefresh = mutableMapOf<Long, Set<LocalDate>>()
+        for ((albumId, timelineLastest) in albumTimelinesLastest) {
+            val timelineHistory = albumTimelinesHistory[albumId] ?: EMPTY_ALBUM_TIMELINE
+            albumsDayCountNeedRefresh[albumId] = (timelineLastest - timelineHistory).filter { it.value > 0 }.keys
+        }
 
-            val albumTimelinesLastest = mutableMapOf<Long, AlbumTimeline>()
-            crontab.albumIds.forEach { albumId ->
-                albumTimelinesLastest[albumId] = api.fetchAlbumTimeline(albumId)
-            }
-            sql.executeUpdate(CrontabHistory::class) {
-                set(table.timelineSnapshot, albumTimelinesLastest)
-                where(table.id eq crontabHistory.id)
-            }
+        // 3. 只刷新这些日期的 Asset
+        albumsDayCountNeedRefresh.forEach { (albumId, dayList) ->
+            val album =
+                sql.findById(Album::class, albumId) ?: throw IllegalStateException("Cannot find album $albumId")
 
-            // 3. 对比 timeline，找出有变更的日期
-
-            val albumsDayCountNeedRefresh = mutableMapOf<Long, List<LocalDate>>()
-            for ((albumId, timelineLastest) in albumTimelinesLastest) {
-                val timelineHistory = albumTimelinesHistory[albumId] ?: EMPTY_ALBUM_TIMELINE
-                albumsDayCountNeedRefresh[albumId] = (timelineLastest - timelineHistory).keys.toList()
-            }
-
-            // 4. 只刷新这些日期的 Asset
-
-            albumsDayCountNeedRefresh.forEach { (albumId, dayList) ->
-                val album =
-                    sql.findById(Album::class, albumId) ?: throw IllegalStateException("Cannot find album $albumId")
-
-                dayList.forEach { day ->
-                    log.info("相册 $albumId 在 $day 有更新，开始刷新此日期的资源")
-                    val assets = api.fetchAllAssetsByAlbumId(album, day)
-                    sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
-                }
-            }
-
-
-        } else {
-            val albums = sql.executeQuery(Album::class) {
-                where(table.id valueIn crontab.albumIds)
-                select(table)
-            }
-
-            albums.forEach {
-                val assets = api.fetchAllAssetsByAlbumId(it)
+            dayList.forEach { day ->
+                log.info("相册 $albumId 在 $day 有新增，开始刷新此日期的资源")
+                val assets = api.fetchAllAssetsByAlbumId(album, day)
                 sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
             }
         }
+    }
+
+    fun refreshAssetsFull(crontab: Crontab, crontabHistory: CrontabHistory) {
+        val albums = sql.executeQuery(Album::class) {
+            where(table.id valueIn crontab.albumIds)
+            select(table)
+        }
+
+        albums.forEach {
+            val assets = api.fetchAllAssetsByAlbumId(it)
+            sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+        }
+        sql.executeUpdate(CrontabHistory::class) {
+            set(table.timelineSnapshot, fetchAlbumsTimelineSnapshot(crontab.albumIds))
+            where(table.id eq crontabHistory.id)
+        }
+    }
+
+    fun fetchAlbumsTimelineSnapshot(albumIds: List<Long>): Map<Long, AlbumTimeline> {
+        val albumTimelines = mutableMapOf<Long, AlbumTimeline>()
+        albumIds.forEach { albumId ->
+            albumTimelines[albumId] = api.fetchAlbumTimeline(albumId)
+        }
+        return albumTimelines
     }
 }

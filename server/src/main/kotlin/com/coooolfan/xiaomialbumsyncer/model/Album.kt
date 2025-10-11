@@ -22,6 +22,4 @@ interface Album {
 
     @OneToMany(mappedBy = "album")
     val assets: List<Asset>
-
-    val timeline: AlbumTimeline
 }

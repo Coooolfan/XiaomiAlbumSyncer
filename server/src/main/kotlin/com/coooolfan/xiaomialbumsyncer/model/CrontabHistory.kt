@@ -19,7 +19,7 @@ interface CrontabHistory {
 
     val endTime: Instant?
 
-    @Scalar
+    @Serialized
     val timelineSnapshot: Map<Long, AlbumTimeline>
 
     @Formula(dependencies = ["endTime"])
