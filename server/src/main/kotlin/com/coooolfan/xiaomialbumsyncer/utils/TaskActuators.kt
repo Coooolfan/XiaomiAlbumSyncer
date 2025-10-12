@@ -130,17 +130,17 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         albumTimelinesHistory: Map<Long, AlbumTimeline>
     ) {
         // 1. 获取这些相册最新的 timeline
-        val albumTimelinesLastest = fetchAlbumsTimelineSnapshot(crontab.albumIds)
+        val albumTimelinesLatest = fetchAlbumsTimelineSnapshot(crontab.albumIds)
         sql.executeUpdate(CrontabHistory::class) {
-            set(table.timelineSnapshot, albumTimelinesLastest)
+            set(table.timelineSnapshot, albumTimelinesLatest)
             where(table.id eq crontabHistory.id)
         }
 
         // 2. 对比 timeline，找出有变更的日期
         val albumsDayCountNeedRefresh = mutableMapOf<Long, Set<LocalDate>>()
-        for ((albumId, timelineLastest) in albumTimelinesLastest) {
+        for ((albumId, timelineLatest) in albumTimelinesLatest) {
             val timelineHistory = albumTimelinesHistory[albumId] ?: EMPTY_ALBUM_TIMELINE
-            albumsDayCountNeedRefresh[albumId] = (timelineLastest - timelineHistory).filter { it.value > 0 }.keys
+            albumsDayCountNeedRefresh[albumId] = (timelineLatest - timelineHistory).filter { it.value > 0 }.keys
         }
 
         // 3. 只刷新这些日期的 Asset
