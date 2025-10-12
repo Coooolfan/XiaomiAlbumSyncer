@@ -72,14 +72,15 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         var hasMorePages = true
         val pageSize = 200
 
-        var url =
-            "https://i.mi.com/gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.id}"
-        if (day != null)
-            url += "&startDate=${day.format(BASIC_ISO_DATE)}&endDate=${day.format(BASIC_ISO_DATE)}"
+        val urlDayParams =
+            if (day == null) "" else "&startDate=${day.format(BASIC_ISO_DATE)}&endDate=${day.format(BASIC_ISO_DATE)}"
 
         while (hasMorePages) {
+            val url =
+                "https://i.mi.com/gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.id}"
+
             val req = Request.Builder()
-                .url(url)
+                .url(url + urlDayParams)
                 .ua()
                 .authHeader(tokenManager.getAuthPair())
                 .get()
