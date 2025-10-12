@@ -39,14 +39,18 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
             orderBy(table.startTime.desc())
             where(table.crontabId eq crontab.id)
             where(table.id ne crontabHistory.id)
+            where(table.endTime ne null)
             select(table.timelineSnapshot)
-        }.firstOrNull()
+        }.firstOrNull() ?: emptyMap()
 
         // 仅在上次有记录且相册列表未变更的情况下，才使用时间线对比模式
-        // 理论上相册列表变动不影响逻辑正确，但是会导致实际发起的查询请求大于传统方案，所以还是要求相册列表一致
-        if (crontab.config.diffByTimeline && albumTimelinesHistory != null && albumTimelinesHistory.keys == crontab.albumIds.toSet()) {
+        // 理论上相册列表变动不影响逻辑正确，但是会导致实际发起的查询请求完整刷新模式，所以还是要求相册列表一致
+        if (crontab.config.diffByTimeline && albumTimelinesHistory.isNotEmpty() && albumTimelinesHistory.keys == crontab.albumIds.toSet()) {
+            log.info("时间线对比模式可用，仅对有变更的日期进行刷新")
             refreshAssetsByDiffTimeline(crontab, crontabHistory, albumTimelinesHistory)
         } else {
+            if (crontab.config.diffByTimeline)
+                log.warn("时间线对比模式不可用，原因：${if (albumTimelinesHistory.isEmpty()) "该任务的最新执行记录无可用于对比的时间线数据" else "相册列表有变更"}，将使用完整刷新模式")
             refreshAssetsFull(crontab, crontabHistory)
         }
 
@@ -75,7 +79,10 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
 
         // 4. 对新增的 Asset 进行下载
         // 5. 更新 CrontabHistory 记录的状态
-        needDownloadAssets.forEach {
+        needDownloadAssets.forEachIndexed { i, it ->
+            if (needDownloadAssets.size / 10 / (i + 1) == 0)
+                log.info("正在下载第 ${i + 1} 个文件，总进度：${(i + 1).percentOf(needDownloadAssets.size)}")
+
             try {
                 val targetPath = Path(crontab.config.targetPath, it.album.name, it.fileName)
                 val path = api.downloadAsset(it, targetPath)
@@ -122,8 +129,6 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         crontabHistory: CrontabHistory,
         albumTimelinesHistory: Map<Long, AlbumTimeline>
     ) {
-        log.info("时间线对比模式可用，仅对有变更的日期进行刷新")
-
         // 1. 获取这些相册最新的 timeline
         val albumTimelinesLastest = fetchAlbumsTimelineSnapshot(crontab.albumIds)
         sql.executeUpdate(CrontabHistory::class) {
