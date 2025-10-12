@@ -79,8 +79,9 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
 
         // 4. 对新增的 Asset 进行下载
         // 5. 更新 CrontabHistory 记录的状态
+        val step = maxOf(needDownloadAssets.size / 10, 1)
         needDownloadAssets.forEachIndexed { i, it ->
-            if (needDownloadAssets.size / 10 / (i + 1) == 0)
+            if ((i + 1) % step == 0)
                 log.info("正在下载第 ${i + 1} 个文件，总进度：${(i + 1).percentOf(needDownloadAssets.size)}")
 
             try {
