@@ -130,7 +130,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         val responseTree = jacksonObjectMapper().readTree(resBodyString)
         val indexHash = responseTree.at("/data/indexHash").asText()
         val dayCountMap = responseTree.at("/data/dayCount").properties().asSequence().map {
-            LocalDate.parse(it.key.toString(), BASIC_ISO_DATE) to it.value.asLong()
+            LocalDate.parse(it.key, BASIC_ISO_DATE) to it.value.asLong()
         }.toMap()
         log.info("从远程解析相册 ID=$albumId 时间线")
         return AlbumTimeline(indexHash, dayCountMap)
