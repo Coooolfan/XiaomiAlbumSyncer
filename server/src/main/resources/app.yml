@@ -4,7 +4,7 @@ solon.app:
   name: 'demo-app'
   group: 'demo'
   db: './db/xiaomialbumsyncer.db'
-  jimmer-log: true
+  jimmer-log: false
 
 solon.logging:
   appender:
