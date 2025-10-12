@@ -97,6 +97,7 @@ class DataImporter(private val sql: KSqlClient) {
         val crontabHistory = CrontabHistory {
             this.crontabId = crontabId
             startTime = Instant.now()
+            timelineSnapshot = emptyMap()
         }
         val crontabHistoryId = sql.saveCommand(crontabHistory, SaveMode.INSERT_ONLY).execute().modifiedEntity.id
 

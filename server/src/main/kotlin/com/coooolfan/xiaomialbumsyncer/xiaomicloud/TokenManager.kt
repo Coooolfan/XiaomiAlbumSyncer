@@ -29,7 +29,7 @@ class TokenManager(private val sql: KSqlClient) {
     private var userId: Long? = null
 
     @Volatile
-    private var lastFreshedTime: Instant? = null
+    private var lastFreshenTime: Instant? = null
     fun getServiceToken(): String {
         // 第一次检查（无锁）
         if (needRefresh()) {
@@ -47,7 +47,7 @@ class TokenManager(private val sql: KSqlClient) {
                     }.firstOrNull() ?: throw IllegalStateException("System is not initialized")
 
                     serviceToken = genServiceToken(config._1, config._2)
-                    lastFreshedTime = Instant.now()
+                    lastFreshenTime = Instant.now()
                     userId = config._2.toLong()
                 }
             }
@@ -56,9 +56,9 @@ class TokenManager(private val sql: KSqlClient) {
     }
 
     private fun needRefresh(): Boolean {
-        return serviceToken == null || lastFreshedTime == null ||
+        return serviceToken == null || lastFreshenTime == null ||
                 // serviceToken 的过期时间非常短，10 分钟强制刷新
-                Instant.now().isAfter(lastFreshedTime!!.plusSeconds(60 * 10))
+                Instant.now().isAfter(lastFreshenTime!!.plusSeconds(60 * 10))
     }
 
     @Synchronized

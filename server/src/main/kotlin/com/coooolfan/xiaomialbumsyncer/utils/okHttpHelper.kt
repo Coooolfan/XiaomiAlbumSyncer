@@ -27,7 +27,7 @@ fun throwIfNotSuccess(respCode: Int) {
     if (i != 2 && i != 3) throw IllegalStateException("Request failed with HTTP code $respCode")
 }
 
-// 保存ResponseBody到指定文件，自动创建父目录，流式写
+// 保存 ResponseBody 到指定文件，自动创建父目录，流式写
 fun ResponseBody.saveToFile(targetPath: Path) {
     val targetFile = targetPath.toFile()
     targetFile.parentFile?.mkdirs()

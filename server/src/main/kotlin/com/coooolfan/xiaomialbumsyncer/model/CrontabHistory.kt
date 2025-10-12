@@ -1,14 +1,8 @@
 package com.coooolfan.xiaomialbumsyncer.model
 
 import org.babyfish.jimmer.Formula
-import org.babyfish.jimmer.sql.DissociateAction
-import org.babyfish.jimmer.sql.Entity
-import org.babyfish.jimmer.sql.GeneratedValue
-import org.babyfish.jimmer.sql.GenerationType
-import org.babyfish.jimmer.sql.Id
-import org.babyfish.jimmer.sql.ManyToOne
-import org.babyfish.jimmer.sql.OnDissociate
-import org.babyfish.jimmer.sql.OneToMany
+import org.babyfish.jimmer.Scalar
+import org.babyfish.jimmer.sql.*
 import java.time.Instant
 
 @Entity
@@ -24,6 +18,9 @@ interface CrontabHistory {
     val startTime: Instant
 
     val endTime: Instant?
+
+    @Serialized
+    val timelineSnapshot: Map<Long, AlbumTimeline>
 
     @Formula(dependencies = ["endTime"])
     val isCompleted: Boolean

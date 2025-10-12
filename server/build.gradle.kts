@@ -16,13 +16,13 @@ repositories {
 }
 
 group = "com.coooolfan"
-version = "0.3.1-BETA"
+version = "0.4.0-BETA"
 description = "A tool to download albums from Xiaomi Cloud."
 
-val jimmerVersion = "0.9.106"
+val jimmerVersion = "0.9.111"
 
 dependencies {
-    implementation(platform("org.noear:solon-parent:3.5.1"))
+    implementation(platform("org.noear:solon-parent:3.6.0"))
     implementation("org.noear:solon-web") {
         exclude(group = "org.noear", module = "solon-serialization-snack3")
     }
@@ -31,7 +31,7 @@ dependencies {
     implementation("org.noear:solon-logging-logback")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
     implementation("cn.dev33:sa-token-solon-plugin:1.44.0")
-    implementation("org.noear:solon-serialization-jackson:3.5.1")
+    implementation("org.noear:solon-serialization-jackson:3.6.0")
     implementation("com.squareup.okhttp3:okhttp:5.1.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
     implementation("org.noear:solon-scheduling-simple")

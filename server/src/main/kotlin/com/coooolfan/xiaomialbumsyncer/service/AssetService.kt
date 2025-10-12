@@ -19,7 +19,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             select(table)
         }.firstOrNull() ?: throw IllegalArgumentException("Album $albumId not found, please refresh albums first")
 
-        val fetchAssetList = api.fetchAssetsByAlbumId(album)
+        val fetchAssetList = api.fetchAllAssetsByAlbumId(album)
         sql.saveEntitiesCommand(fetchAssetList, SaveMode.UPSERT).execute()
 
         // 此处的 fetchAssetList 形状已保证与 fetcher 一致

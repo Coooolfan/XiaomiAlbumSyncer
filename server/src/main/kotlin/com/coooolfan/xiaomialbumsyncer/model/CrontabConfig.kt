@@ -19,5 +19,7 @@ data class CrontabConfig(
 
     val rewriteExifTime: Boolean,
 
+    val diffByTimeline: Boolean = false,
+
     val rewriteExifTimeZone: String?
 )
