@@ -16,10 +16,10 @@ repositories {
 }
 
 group = "com.coooolfan"
-version = "0.3.1-BETA"
+version = "0.4.0-BETA"
 description = "A tool to download albums from Xiaomi Cloud."
 
-val jimmerVersion = "0.9.106"
+val jimmerVersion = "0.9.111"
 
 dependencies {
     implementation(platform("org.noear:solon-parent:3.6.0"))
