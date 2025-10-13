@@ -165,3 +165,24 @@ docker run \
 ```
 
 容器本身不存储任何状态和数据，删除重启容器不影响任何数据。
+
+## Star History
+
+<picture>
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="
+      https://api.star-history.com/svg?repos=Coooolfan/XiaomiAlbumSyncer&type=Date&theme=dark
+    "
+  />
+  <source
+    media="(prefers-color-scheme: light)"
+    srcset="
+      https://api.star-history.com/svg?repos=Coooolfan/XiaomiAlbumSyncer&type=Date
+    "
+  />
+  <img
+    alt="Star History Chart"
+    src="https://api.star-history.com/svg?repos=Coooolfan/XiaomiAlbumSyncer&type=Date"
+  />
+</picture>
