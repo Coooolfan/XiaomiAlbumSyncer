@@ -174,7 +174,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":[] }]
+  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"home","parameterTypes":["org.noear.solon.core.handle.Context"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.config.Jackson",
@@ -343,7 +343,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.SystemConfigService"] }, {"name":"getService","parameterTypes":[] }, {"name":"getSystemConfig","parameterTypes":[] }, {"name":"initConfig","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit"] }, {"name":"isInit","parameterTypes":[] }, {"name":"setService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.SystemConfigService"] }, {"name":"updatePassToken","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPassTokenUpdate"] }, {"name":"updatePassword","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate"] }, {"name":"updateSystemConfig","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate"] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.SystemConfigService"] }, {"name":"getService","parameterTypes":[] }, {"name":"getSystemConfig","parameterTypes":[] }, {"name":"importFromV2Db","parameterTypes":[] }, {"name":"initConfig","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit"] }, {"name":"isInit","parameterTypes":[] }, {"name":"setService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.SystemConfigService"] }, {"name":"updatePassToken","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPassTokenUpdate"] }, {"name":"updatePassword","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate"] }, {"name":"updateSystemConfig","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.controller.SystemConfigController$Companion"
@@ -1147,6 +1147,9 @@
   "name":"java.lang.Enum$EnumDesc"
 },
 {
+  "name":"java.lang.FunctionalInterface"
+},
+{
   "name":"java.lang.Integer"
 },
 {
@@ -1317,6 +1320,8 @@
 },
 {
   "name":"java.util.Map",
+  "allDeclaredFields":true,
+  "allDeclaredClasses":true,
   "queryAllDeclaredMethods":true
 },
 {
@@ -1328,6 +1333,9 @@
 {
   "name":"java.util.RandomAccess",
   "queryAllDeclaredMethods":true
+},
+{
+  "name":"java.util.Set"
 },
 {
   "name":"java.util.concurrent.AbstractExecutorService",
@@ -1355,6 +1363,15 @@
 {
   "name":"java.util.concurrent.atomic.Striped64",
   "fields":[{"name":"base"}, {"name":"cellsBusy"}]
+},
+{
+  "name":"java.util.function.BiConsumer"
+},
+{
+  "name":"java.util.function.BiFunction"
+},
+{
+  "name":"java.util.function.Function"
 },
 {
   "name":"javax.security.auth.x500.X500Principal",
@@ -1409,8 +1426,14 @@
   "methods":[{"name":"bv","parameterTypes":[] }, {"name":"d1","parameterTypes":[] }, {"name":"d2","parameterTypes":[] }, {"name":"k","parameterTypes":[] }, {"name":"mv","parameterTypes":[] }, {"name":"pn","parameterTypes":[] }, {"name":"xi","parameterTypes":[] }, {"name":"xs","parameterTypes":[] }]
 },
 {
+  "name":"kotlin.Nothing"
+},
+{
   "name":"kotlin.SafePublicationLazyImpl",
   "fields":[{"name":"_value"}]
+},
+{
+  "name":"kotlin.SinceKotlin"
 },
 {
   "name":"kotlin.String"
@@ -1434,13 +1457,51 @@
   "methods":[{"name":"allowedTargets","parameterTypes":[] }]
 },
 {
+  "name":"kotlin.collections.Collection"
+},
+{
+  "name":"kotlin.collections.EmptyMap",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"getEntries","parameterTypes":[] }, {"name":"getKeys","parameterTypes":[] }, {"name":"getSize","parameterTypes":[] }, {"name":"getValues","parameterTypes":[] }, {"name":"isEmpty","parameterTypes":[] }]
+},
+{
   "name":"kotlin.collections.List"
 },
 {
   "name":"kotlin.collections.Map"
 },
 {
+  "name":"kotlin.collections.Map.Entry"
+},
+{
+  "name":"kotlin.collections.MutableCollection"
+},
+{
+  "name":"kotlin.collections.MutableMap"
+},
+{
+  "name":"kotlin.collections.MutableMap.MutableEntry"
+},
+{
+  "name":"kotlin.collections.MutableSet"
+},
+{
+  "name":"kotlin.collections.Set"
+},
+{
+  "name":"kotlin.internal.PlatformDependent"
+},
+{
+  "name":"kotlin.io.Serializable"
+},
+{
   "name":"kotlin.jvm.internal.DefaultConstructorMarker"
+},
+{
+  "name":"kotlin.jvm.internal.markers.KMappedMarker",
+  "queryAllDeclaredMethods":true
 },
 {
   "name":"kotlin.reflect.jvm.internal.ReflectionFactoryImpl",
@@ -1652,12 +1713,23 @@
   "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"isCheckDriftOnMigrate","parameterTypes":[] }, {"name":"isPublishResult","parameterTypes":[] }, {"name":"setCheckDriftOnMigrate","parameterTypes":["boolean"] }, {"name":"setPublishResult","parameterTypes":["boolean"] }]
 },
 {
+  "name":"org.noear.solon.annotation.Note"
+},
+{
   "name":"org.noear.solon.core.handle.AbstractEntityConverter",
   "allDeclaredFields":true
 },
 {
   "name":"org.noear.solon.core.handle.AbstractEntityReader",
   "allDeclaredFields":true
+},
+{
+  "name":"org.noear.solon.core.handle.Result",
+  "allDeclaredFields":true,
+  "allDeclaredClasses":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"getCode","parameterTypes":[] }, {"name":"getData","parameterTypes":[] }, {"name":"getDescription","parameterTypes":[] }]
 },
 {
   "name":"org.noear.solon.data.cache.LocalCacheService",

@@ -83,6 +83,10 @@
   }, {
     "pattern":"\\Qkotlin/annotation/annotation.kotlin_builtins\\E"
   }, {
+    "pattern":"\\Qkotlin/collections/Map/Map.kotlin_builtins\\E"
+  }, {
+    "pattern":"\\Qkotlin/collections/MutableMap/MutableMap.kotlin_builtins\\E"
+  }, {
     "pattern":"\\Qkotlin/collections/collections.kotlin_builtins\\E"
   }, {
     "pattern":"\\Qkotlin/concurrent/atomics/atomics.kotlin_builtins\\E"
@@ -90,6 +94,8 @@
     "pattern":"\\Qkotlin/coroutines/coroutines.kotlin_builtins\\E"
   }, {
     "pattern":"\\Qkotlin/internal/internal.kotlin_builtins\\E"
+  }, {
+    "pattern":"\\Qkotlin/io/io.kotlin_builtins\\E"
   }, {
     "pattern":"\\Qkotlin/kotlin.kotlin_builtins\\E"
   }, {
@@ -122,6 +128,38 @@
     "pattern":"\\Qsqlite-jdbc.properties\\E"
   }, {
     "pattern":"\\Qstatic/\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/ApiInstance-lI3SqDeT.js\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/AuthPage-CQ2bvkiW.css\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/AuthPage-geIQX2aH.js\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/DashboardLayout-BlPWEzgE.js\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/DashboardLayout-DPrcgJ8p.css\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/DashboardSchedulePage-D5Qrbmyk.css\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/DashboardSchedulePage-j5NmAgoI.js\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/DashboardSettingPage-D-q3l1IX.js\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/DashboardSettingPage-rjSi1JUi.css\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/index-BHFz2PPO.js\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/index-DNUn9VwN.css\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/inputtext-DlX5Vdt9.js\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/overlayeventbus-CPNheEZg.js\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/primeicons-C6QP2o4f.woff2\\E"
+  }, {
+    "pattern":"\\Qstatic/assets/textarea-DZW7zGZa.js\\E"
+  }, {
+    "pattern":"\\Qstatic/index.html\\E"
   }, {
     "pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt72b/nfc.nrm\\E"
   }, {
