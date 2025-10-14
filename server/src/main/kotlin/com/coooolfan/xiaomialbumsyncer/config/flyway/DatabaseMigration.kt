@@ -25,7 +25,7 @@ class DatabaseMigration {
             .validateOnMigrate(true)
 
         val flyway =
-            if (inNativeImage() && isAotRuntime()) {
+            if (inNativeImage() || isAotRuntime()) {
                 log.info("似乎正在 native-image 环境中运行，使用 IndexedResourceProvider 进行资源加载")
                 configuration
                     .resourceProvider(

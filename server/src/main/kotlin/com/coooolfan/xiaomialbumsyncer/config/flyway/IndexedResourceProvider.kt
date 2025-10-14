@@ -3,6 +3,8 @@ package com.coooolfan.xiaomialbumsyncer.config.flyway
 import org.flywaydb.core.api.ResourceProvider
 import org.flywaydb.core.api.resource.LoadableResource
 import org.flywaydb.core.internal.resource.classpath.ClassPathResource
+import org.noear.solon.core.util.ResourceUtil
+import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.charset.Charset
@@ -33,13 +35,15 @@ class IndexedResourceProvider(
     private val failIfIndexMissing: Boolean = true
 ) : ResourceProvider {
 
+    private val log = LoggerFactory.getLogger(IndexedResourceProvider::class.java)
+
     // 缓存索引内容
     @Volatile
     private var cachedIndex: List<String>? = null
 
     override fun getResource(name: String): LoadableResource? {
         // 直接按绝对路径加载（如 db/migration/V1__init.sql）
-        val url = classLoader.getResource(name) ?: return null
+        classLoader.getResource(name) ?: return null
         // 这里使用 Flyway internal 的 ClassPathResource 简化实现
         return ClassPathResource(null, name, classLoader, encoding)
     }
@@ -54,7 +58,7 @@ class IndexedResourceProvider(
             .filter { path -> startsWithAndEndsWith(path, prefix, suffixes) }
             .mapNotNull { path ->
                 // 再次确认资源存在（native 下只要已被打包，一般能找到）
-                val url = classLoader.getResource(path) ?: return@mapNotNull null
+                classLoader.getResource(path) ?: return@mapNotNull null
                 ClassPathResource(null, path, classLoader, encoding) as LoadableResource
             }
             .toList()
@@ -102,6 +106,7 @@ class IndexedResourceProvider(
                         .filter { it.isNotEmpty() && !it.startsWith("#") }
                         .toList()
                     cachedIndex = lines
+                    log.info("从索引文件加载了 ${lines.size} 条资源记录")
                     return lines
                 }
             }

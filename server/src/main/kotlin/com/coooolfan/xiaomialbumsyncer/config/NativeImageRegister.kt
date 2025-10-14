@@ -5,17 +5,21 @@ import org.noear.solon.aot.RuntimeNativeMetadata
 import org.noear.solon.aot.RuntimeNativeRegistrar
 import org.noear.solon.aot.hint.MemberCategory
 import org.noear.solon.core.AppContext
+import org.slf4j.LoggerFactory
 
 @Configuration
 class NativeImageRegister : RuntimeNativeRegistrar {
+
+    private val log = LoggerFactory.getLogger(NativeImageRegister::class.java)
+
     override fun register(
         context: AppContext?,
         metadata: RuntimeNativeMetadata?
     ) {
         if (metadata == null) return
-        metadata.registerReflection(
-            com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate::class.java,
-            MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS
-        )
+        log.info("注册 Native Image 配置")
+
+        metadata.registerResourceInclude("db/migration/*")
+
     }
 }
