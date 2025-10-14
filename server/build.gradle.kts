@@ -6,8 +6,9 @@ plugins {
     application
     kotlin("jvm") version "2.2.10"
     id("com.google.devtools.ksp") version "2.2.10-2.0.2"
-    id("org.graalvm.buildtools.native") version "0.11.0"
+    id("org.graalvm.buildtools.native")
     id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("org.noear.solon.native")
 }
 
 repositories {
@@ -105,6 +106,10 @@ tasks.named("shadowJar") {
 
 val kspAndFlyway = tasks.register("preCompile") {
     dependsOn("kspKotlin", generateFlywayIndex)
+}
+
+extensions.configure(org.noear.solon.gradle.dsl.SolonExtension::class.java) {
+    mainClass.set("com.coooolfan.xiaomialbumsyncer.App")
 }
 
 tasks.named("processResources") {
