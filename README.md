@@ -1,8 +1,10 @@
 # Xiaomi Album Syncer
 
+发了 **issues** 记得常回来看看有没有回复，或者 >>>>> **[QQ 群聊：1059332701](https://qm.qq.com/q/H2trW6JWM4)**
+
 ![banner](./static/banner.avif)
 
-**[QQ 群聊：1059332701](https://qm.qq.com/q/H2trW6JWM4)**
+发了 issues 记得常回来看看有没有回复，或者 >>>>> **[QQ 群聊：1059332701](https://qm.qq.com/q/H2trW6JWM4)**
 
 ## Features/功能
 
