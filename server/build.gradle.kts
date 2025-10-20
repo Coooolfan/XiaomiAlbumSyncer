@@ -20,19 +20,20 @@ group = "com.coooolfan"
 version = "0.4.0-BETA"
 description = "A tool to download albums from Xiaomi Cloud."
 
-val jimmerVersion = "0.9.111"
+val jimmerVersion = "0.9.112"
 
 dependencies {
     implementation(platform("org.noear:solon-parent:3.6.0"))
     implementation("org.noear:solon-web") {
         exclude(group = "org.noear", module = "solon-serialization-snack3")
+        exclude(group = "org.noear", module = "solon-sessionstate-local")
     }
     implementation("org.noear:solon-web-staticfiles")
     implementation("org.noear:solon-aot")
     implementation("org.noear:solon-logging-logback")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
     implementation("cn.dev33:sa-token-solon-plugin:1.44.0")
-    implementation("org.noear:solon-serialization-jackson:3.6.0")
+    implementation("org.noear:solon-serialization-jackson")
     implementation("com.squareup.okhttp3:okhttp:5.1.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
     implementation("org.noear:solon-scheduling-simple")
@@ -60,31 +61,6 @@ tasks.withType<KotlinCompile> {
     compilerOptions.javaParameters = true
 }
 
-val generateFlywayIndex = tasks.register("generateFlywayIndex") {
-    val resourcesDir = layout.projectDirectory.dir("src/main/resources")
-    val migrationsDir = resourcesDir.dir("db/migration")
-    val indexFile = resourcesDir.file("META-INF/flyway-resources.idx")
-
-    inputs.dir(migrationsDir)
-    outputs.file(indexFile)
-
-    doLast {
-        val base = migrationsDir.asFile.toPath()
-        val indexPath = indexFile.asFile.toPath()
-        indexPath.parent?.let { Files.createDirectories(it) }
-
-        val lines = Files.walk(base)
-            .filter { Files.isRegularFile(it) }
-            .map { base.relativize(it).toString().replace('\\', '/') }
-            .map { "db/migration/$it" }
-            .sorted()
-            .toList()
-
-        Files.write(indexPath, lines)
-        println("Generated flyway index with ${lines.size} entries at $indexPath")
-    }
-}
-
 
 kotlin {
     sourceSets.main {
@@ -96,24 +72,8 @@ application {
     mainClass.set("com.coooolfan.xiaomialbumsyncer.App")
 }
 
-tasks.named("run") {
-    dependsOn(generateFlywayIndex)
-}
-
-tasks.named("shadowJar") {
-    dependsOn(generateFlywayIndex)
-}
-
-val kspAndFlyway = tasks.register("preCompile") {
-    dependsOn("kspKotlin", generateFlywayIndex)
-}
-
 extensions.configure(org.noear.solon.gradle.dsl.SolonExtension::class.java) {
     mainClass.set("com.coooolfan.xiaomialbumsyncer.App")
-}
-
-tasks.named("processResources") {
-    dependsOn(generateFlywayIndex)
 }
 
 // avoid sqlite warnings
@@ -123,10 +83,4 @@ tasks.withType<JavaExec> {
 
 tasks.withType<Test> {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
-}
-
-graalvmNative {
-    agent {
-        defaultMode.set("standard")
-    }
 }

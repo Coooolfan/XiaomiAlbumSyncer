@@ -36,6 +36,7 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
             passToken = "-"
             userId = "-"
             exifToolPath = "exiftool"
+            assetsDateMapTimeZone = "Asia/Shanghai"
         }, SaveMode.INSERT_ONLY).execute()
     }
 
