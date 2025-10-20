@@ -64,7 +64,7 @@ class AlbumsController(private val service: AlbumsService) {
      * @param albumIds List<Long> 需要查询的相册ID列表
      * @return Map<LocalDate, Long> 返回一个映射，键为日期，值为该日期下的照片数量
      *
-     * @api POST /api/album/date-map
+     * @api GET /api/album/date-map
      * @permission 需要登录认证
      * @description 调用AlbumsService.fetchDateMap(albumIds)方法获取日期映射数据
      */
