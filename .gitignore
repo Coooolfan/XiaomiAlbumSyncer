@@ -28,7 +28,7 @@
 web/.yarn/
 logs/
 
-server/download/
-server/src/main/resources/static/
-download/
-db/
+/server/download/
+/server/src/main/resources/static/
+/download/
+/db/
