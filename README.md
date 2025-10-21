@@ -96,6 +96,7 @@
 访问 `http://localhost:8080/#/dashboard/schedule` 选择 `从远程更新整个相册列表`
 
 ![fetchlastestalbums](static/fetchlastestalbums.avif)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FCoooolfan%2FXiaomiAlbumSyncer.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FCoooolfan%2FXiaomiAlbumSyncer?ref=badge_shield)
 
 此接口为同步接口，具体时长取决于相册数量和网络情况。请耐心等待。
 
@@ -188,3 +189,7 @@ docker run \
     src="https://api.star-history.com/svg?repos=Coooolfan/XiaomiAlbumSyncer&type=Date"
   />
 </picture>
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FCoooolfan%2FXiaomiAlbumSyncer.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FCoooolfan%2FXiaomiAlbumSyncer?ref=badge_large)
