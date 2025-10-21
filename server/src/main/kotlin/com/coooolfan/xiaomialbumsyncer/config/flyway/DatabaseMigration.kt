@@ -20,20 +20,18 @@ class DatabaseMigration {
         // 创建Flyway实例
         val configuration = Flyway.configure()
             .dataSource(dataSource)
-            .locations("classpath:db/migration")
+            .locations(MIGRATION_SQL_PATH_IN_JVM)
             .baselineOnMigrate(true)
             .validateOnMigrate(true)
 
         val flyway =
-            if (inNativeImage() && isAotRuntime()) {
+            if (inNativeImage() || isAotRuntime()) {
                 log.info("似乎正在 native-image 环境中运行，使用 IndexedResourceProvider 进行资源加载")
                 configuration
                     .resourceProvider(
                         IndexedResourceProvider(
                             classLoader = Thread.currentThread().contextClassLoader,
-                            encoding = Charsets.UTF_8,
-                            indexPath = "META-INF/flyway-resources.idx",
-                            failIfIndexMissing = true // 没有索引就报错，避免遗漏
+                            encoding = Charsets.UTF_8
                         )
                     )
                     .load()
@@ -58,5 +56,11 @@ class DatabaseMigration {
             log.error("数据库迁移失败: " + e.message)
             throw RuntimeException("数据库迁移失败", e)
         }
+    }
+
+    companion object {
+        const val MIGRATION_SQL_PATH_IN_JVM = "classpath:db/migration"
+
+        const val MIGRATION_SQL_PATTERN_IN_NATIVE = "db/.*"
     }
 }

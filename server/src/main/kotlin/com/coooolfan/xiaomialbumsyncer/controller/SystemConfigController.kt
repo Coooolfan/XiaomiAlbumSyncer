@@ -14,10 +14,7 @@ import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.noear.solon.annotation.Body
 import org.noear.solon.annotation.Controller
 import org.noear.solon.annotation.Mapping
-import org.noear.solon.aot.Settings
-import org.noear.solon.aot.SolonAotProcessor
 import org.noear.solon.core.handle.MethodType
-import java.nio.file.Paths
 
 
 @Api
@@ -153,7 +150,7 @@ class SystemConfigController(private val service: SystemConfigService) {
     @Api
     @Mapping("/import-from-v2", method = [MethodType.POST])
     @SaCheckLogin
-    fun importFromV2Db(){
+    fun importFromV2Db() {
         return service.importFromV2Db()
     }
 

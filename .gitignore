@@ -15,12 +15,20 @@
 /server/target
 /server/.gradle
 /server/logs/server/.gradle/
+
+/server/buildSrc/.idea
+/server/buildSrc/.kotlin
+/server/buildSrc/build
+/server/buildSrc/target
+/server/buildSrc/.gradle
+/server/buildSrc/logs/server/.gradle/
+
 *.db-*
 .cunzhi-memory/
 web/.yarn/
 logs/
-server/download/
-server/src/main/resources/static/
 
-download/
-db/
+/server/download/
+/server/src/main/resources/static/
+/download/
+/db/

@@ -18,4 +18,6 @@ interface SystemConfig {
     val userId: String
 
     val exifToolPath: String
+
+    val assetsDateMapTimeZone: String
 }

@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { ref, inject, computed, onMounted, type Ref } from 'vue'
+import { ref, inject, computed, onMounted, watch, type Ref } from 'vue'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Textarea from 'primevue/textarea'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
+// removed InputSwitch, using SelectButton instead for heat option
+import SelectButton from 'primevue/selectbutton'
 
 import { useToast } from 'primevue/usetoast'
 import { api } from '@/ApiInstance'
 
 type BgMode = 'lightRays' | 'silk'
 const BG_KEY = 'app:bgMode'
+const HEAT_KEY = 'app:optimizeHeatmap'
 
 const backgroundMode = inject<Ref<BgMode>>('backgroundMode')
 const toggleBackground = inject<() => void>('toggleBackground')
@@ -26,20 +29,42 @@ onMounted(() => {
     localStorage.setItem(BG_KEY, bgModeLocal.value)
     setBackgroundMode?.(bgModeLocal.value)
   }
+  // 初始化热力图优化展示，默认开启
+  try {
+    const heatSaved = localStorage.getItem(HEAT_KEY)
+    if (heatSaved === null) {
+      localStorage.setItem(HEAT_KEY, '1')
+      optimizeHeatmapLocal.value = true
+    } else {
+      optimizeHeatmapLocal.value = !(heatSaved === '0' || heatSaved === 'false')
+    }
+  } catch {}
 })
 
-const bgLabel = computed(() => (bgModeLocal.value === 'silk' ? '背景：丝绸' : '背景：光束'))
+const bgOptions: Array<{ label: string; value: BgMode }> = [
+  { label: '光束', value: 'lightRays' },
+  { label: '丝绸', value: 'silk' },
+]
 
-function onToggleBg() {
-  if (toggleBackground) {
-    toggleBackground()
-    bgModeLocal.value =
-      backgroundMode?.value ?? (bgModeLocal.value === 'lightRays' ? 'silk' : 'lightRays')
-  } else {
-    bgModeLocal.value = bgModeLocal.value === 'lightRays' ? 'silk' : 'lightRays'
-  }
-  localStorage.setItem(BG_KEY, bgModeLocal.value)
-}
+const heatOptions: Array<{ label: string; value: boolean }> = [
+  { label: '关闭', value: false },
+  { label: '开启', value: true },
+]
+
+const optimizeHeatmapLocal = ref<boolean>(true)
+
+watch(bgModeLocal, (val) => {
+  try {
+    localStorage.setItem(BG_KEY, val)
+  } catch {}
+  setBackgroundMode?.(val)
+})
+
+watch(optimizeHeatmapLocal, (val) => {
+  try {
+    localStorage.setItem(HEAT_KEY, val ? '1' : '0')
+  } catch {}
+})
 const passToken = ref('')
 const userId = ref('')
 const updating = ref(false)
@@ -240,9 +265,23 @@ onMounted(() => {
       <template #content>
         <div class="flex items-center justify-between">
           <span class="text-sm text-slate-600">背景</span>
-          <Button :label="bgLabel" @click="onToggleBg" />
+          <div class="min-w-[160px]">
+            <SelectButton v-model="bgModeLocal" :options="bgOptions" optionLabel="label" optionValue="value" />
+          </div>
         </div>
-        <p class="text-xs text-slate-400 mt-3">在 LightRays 与 Silk 之间切换，偏好将被本地保存。</p>
+        <p class="text-xs text-slate-400 mt-3">选择背景效果（单选），偏好将被本地保存。</p>
+
+        <div class="mt-4 pt-4 border-t border-slate-200/60">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-slate-600">热力图优化展示</span>
+            </div>
+            <div class="min-w-[160px]">
+              <SelectButton v-model="optimizeHeatmapLocal" :options="heatOptions" optionLabel="label" optionValue="value" />
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 mt-3">开启后，颜色深度将基于近似上界（95%分位）映射，弱化极端离群值影响；偏好将被本地保存。</p>
+        </div>
       </template>
     </Card>
     <Card

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, watch } from 'vue'
 import Card from 'primevue/card'
 import ContributionHeatmap from '@/components/ContributionHeatmap.vue'
 import AlbumCard from '@/components/AlbumCard.vue'
@@ -27,6 +27,8 @@ const weekStartNum = ref(1)
 const rangeDaysNum = ref(365)
 const endDateStr = ref(formatDateInput(new Date()))
 const dataPoints = ref<DataPoint[]>([])
+const rawTimelineMap = ref<Record<string, number>>({})
+const optimizeHeatmap = ref(false)
 const albums = ref<ReadonlyArray<Dynamic_Album>>([])
 const tip = ref('')
 let tipHideTimer: number | undefined
@@ -103,22 +105,81 @@ function formatDateInput(d: Date) {
   return `${y}-${m}-${day}`
 }
 
-function generateRandomData() {
-  const end = new Date(endDateStr.value)
-  end.setHours(0, 0, 0, 0)
-  const start = new Date(end.getTime() - (Math.max(1, rangeDaysNum.value) - 1) * 24 * 3600 * 1000)
-  const arr: DataPoint[] = []
-  const cur = new Date(start)
-  while (cur <= end) {
-    if (Math.random() < 0.45) {
-      arr.push({
-        timeStamp: cur.getTime(),
-        count: Math.floor(Math.random() * 10) + 1,
-      })
-    }
-    cur.setDate(cur.getDate() + 1)
+function parseDateToLocalTimestamp(dateStr: string) {
+  const [y, m, d] = dateStr.split('-').map((n) => Number(n))
+  const dt = new Date(y, (m || 1) - 1, d || 1)
+  dt.setHours(0, 0, 0, 0)
+  return dt.getTime()
+}
+
+async function fetchTimeline() {
+  try {
+    const end = new Date(endDateStr.value)
+    end.setHours(0, 0, 0, 0)
+    const start = new Date(
+      end.getTime() - (Math.max(1, rangeDaysNum.value) - 1) * 24 * 3600 * 1000,
+    )
+    const startStr = formatDateInput(start)
+
+    const albumIds = (albums.value || [])
+      .map((a) => Number(a.id))
+      .filter((id) => Number.isFinite(id)) as number[]
+
+    const resp = await api.albumsController.fetchDateMap({
+      albumIds: albumIds.length > 0 ? albumIds : undefined,
+      start: startStr,
+      end: endDateStr.value,
+    })
+
+    rawTimelineMap.value = resp as Record<string, number>
+    rebuildHeatmapData()
+  } catch (err) {
+    console.error('获取时间线数据失败', err)
   }
-  dataPoints.value = arr
+}
+
+function quantile(values: number[], q: number): number {
+  if (!values || values.length === 0) return 0
+  const arr = [...values].sort((a, b) => a - b)
+  const pos = (arr.length - 1) * q
+  const base = Math.floor(pos)
+  const rest = pos - base
+  if (arr[base + 1] !== undefined) {
+    return arr[base] + rest * (arr[base + 1] - arr[base])
+  }
+  return arr[base]
+}
+
+function rebuildHeatmapData() {
+  const entries = Object.entries(rawTimelineMap.value || {})
+  if (entries.length === 0) {
+    dataPoints.value = []
+    return
+  }
+
+  // 仅考虑正数值用于分位数估计，避免零值影响上界判断
+  const positiveValues = entries
+    .map(([, v]) => (Number.isFinite(v) ? Number(v) : 0))
+    .filter((v) => v > 0)
+
+  let upper = 0
+  if (optimizeHeatmap.value && positiveValues.length >= 5) {
+    // 95分位作为上界，削弱极端大值影响
+    upper = quantile(positiveValues, 0.95)
+  }
+
+  const points: DataPoint[] = entries
+    .map(([dateStr, countRaw]) => {
+      const c = typeof countRaw === 'number' ? countRaw : 0
+      const count = upper > 0 ? Math.min(c, upper) : c
+      return {
+        timeStamp: parseDateToLocalTimestamp(dateStr),
+        count,
+      }
+    })
+    .sort((a, b) => a.timeStamp - b.timeStamp)
+
+  dataPoints.value = points
 }
 
 // function refresh() {
@@ -128,6 +189,7 @@ function generateRandomData() {
 async function fetchAlbums() {
   try {
     albums.value = await api.albumsController.listAlbums()
+    await fetchTimeline()
   } catch (err) {
     console.error('获取相册列表失败', err)
   }
@@ -138,6 +200,7 @@ async function fetchLatestAlbums() {
     toast.add({ severity: 'info', summary: '正在从远程更新相册列表', detail: "请暂时不要离开此页面，同步正在进行", life: 5000 })
     albums.value = await api.albumsController.refreshAlbums()
     toast.add({ severity: 'success', summary: '已更新', life: 1600 })
+    await fetchTimeline()
   } catch (err) {
     toast.add({ severity: 'error', summary: '更新失败', detail: "请确保您已配置有效的 passToken 与 UserId。\n并确保此已完成相册服务二次验证", life: 10000 })
     console.error('获取最新相册列表失败', err)
@@ -332,10 +395,24 @@ async function confirmDelete() {
 }
 
 onMounted(() => {
-  generateRandomData()
+  // 读取本地设置，默认开启
+  try {
+    const saved = localStorage.getItem('app:optimizeHeatmap')
+    if (saved === null) {
+      optimizeHeatmap.value = true
+    } else {
+      optimizeHeatmap.value = !(saved === '0' || saved === 'false')
+    }
+  } catch {
+    optimizeHeatmap.value = true
+  }
   fetchAlbums()
   fetchCrontabs()
   buildTimeZones()
+})
+
+watch(optimizeHeatmap, () => {
+  rebuildHeatmapData()
 })
 
 // const weekOptions = [

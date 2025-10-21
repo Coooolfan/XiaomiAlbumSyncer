@@ -1,10 +1,11 @@
 package com.coooolfan.xiaomialbumsyncer.config.flyway
 
+import com.coooolfan.xiaomialbumsyncer.config.flyway.DatabaseMigration.Companion.MIGRATION_SQL_PATTERN_IN_NATIVE
 import org.flywaydb.core.api.ResourceProvider
 import org.flywaydb.core.api.resource.LoadableResource
 import org.flywaydb.core.internal.resource.classpath.ClassPathResource
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import org.noear.solon.core.util.ResourceUtil
+import org.slf4j.LoggerFactory
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
@@ -20,18 +21,9 @@ import java.nio.charset.StandardCharsets
 class IndexedResourceProvider(
     private val classLoader: ClassLoader = Thread.currentThread().contextClassLoader,
     private val encoding: Charset = StandardCharsets.UTF_8,
-    /**
-     * 资源索引文件路径（必须在 classpath 上），每行一个资源路径，如：
-     * db/migration/V1__init.sql
-     * db/migration/V2__add_table.sql
-     */
-    private val indexPath: String = "META-INF/flyway-resources.idx",
-    /**
-     * 是否在找不到索引文件时抛出异常。
-     * 若为 false，找不到索引时仅返回空结果。
-     */
-    private val failIfIndexMissing: Boolean = true
 ) : ResourceProvider {
+
+    private val log = LoggerFactory.getLogger(IndexedResourceProvider::class.java)
 
     // 缓存索引内容
     @Volatile
@@ -39,7 +31,7 @@ class IndexedResourceProvider(
 
     override fun getResource(name: String): LoadableResource? {
         // 直接按绝对路径加载（如 db/migration/V1__init.sql）
-        val url = classLoader.getResource(name) ?: return null
+        classLoader.getResource(name) ?: return null
         // 这里使用 Flyway internal 的 ClassPathResource 简化实现
         return ClassPathResource(null, name, classLoader, encoding)
     }
@@ -54,7 +46,7 @@ class IndexedResourceProvider(
             .filter { path -> startsWithAndEndsWith(path, prefix, suffixes) }
             .mapNotNull { path ->
                 // 再次确认资源存在（native 下只要已被打包，一般能找到）
-                val url = classLoader.getResource(path) ?: return@mapNotNull null
+                classLoader.getResource(path) ?: return@mapNotNull null
                 ClassPathResource(null, path, classLoader, encoding) as LoadableResource
             }
             .toList()
@@ -83,28 +75,8 @@ class IndexedResourceProvider(
             val again = cachedIndex
             if (again != null) return again
 
-            val stream = classLoader.getResourceAsStream(indexPath)
-            if (stream == null) {
-                if (failIfIndexMissing) {
-                    throw IllegalStateException(
-                        "Resource index not found on classpath: $indexPath. " +
-                                "Please generate it at build time and include it in the image."
-                    )
-                }
-                cachedIndex = emptyList()
-                return emptyList()
-            }
-
-            stream.use { ins ->
-                BufferedReader(InputStreamReader(ins, encoding)).use { reader ->
-                    val lines = reader.lineSequence()
-                        .map { it.trim() }
-                        .filter { it.isNotEmpty() && !it.startsWith("#") }
-                        .toList()
-                    cachedIndex = lines
-                    return lines
-                }
-            }
+            // 由 Solon AOT 在构建期生成的资源索引文件
+            return ResourceUtil.scanResources(MIGRATION_SQL_PATTERN_IN_NATIVE).toList()
         }
     }
 }
