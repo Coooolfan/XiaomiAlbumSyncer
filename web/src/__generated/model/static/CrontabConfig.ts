@@ -7,4 +7,5 @@ export interface CrontabConfig {
     readonly rewriteExifTime: boolean;
     readonly diffByTimeline: boolean;
     readonly rewriteExifTimeZone?: string | undefined;
+    readonly skipExistingFile: boolean;
 }

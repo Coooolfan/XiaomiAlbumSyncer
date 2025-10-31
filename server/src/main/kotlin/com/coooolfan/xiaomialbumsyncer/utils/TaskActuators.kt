@@ -12,6 +12,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.util.*
 import kotlin.io.path.Path
+import kotlin.io.path.exists
 
 @Managed
 class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
@@ -80,12 +81,15 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         // 4. 对新增的 Asset 进行下载
         // 5. 更新 CrontabHistory 记录的状态
         val step = maxOf(needDownloadAssets.size / 10, 1)
-        needDownloadAssets.forEachIndexed { i, it ->
+        for ((i, it) in needDownloadAssets.withIndex()) {
             if ((i + 1) % step == 0)
                 log.info("正在下载第 ${i + 1} 个文件，总进度：${(i + 1).percentOf(needDownloadAssets.size)}")
 
             try {
                 val targetPath = Path(crontab.config.targetPath, it.album.name, it.fileName)
+
+                if (crontab.config.skipExistingFile && targetPath.exists()) continue
+
                 val path = api.downloadAsset(it, targetPath)
                 sql.saveCommand(CrontabHistoryDetail {
                     crontabHistoryId = crontabHistory.id

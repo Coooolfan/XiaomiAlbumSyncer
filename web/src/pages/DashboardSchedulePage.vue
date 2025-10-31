@@ -74,6 +74,7 @@ const cronForm = ref<CrontabCreateInput>({
     diffByTimeline: false,
     rewriteExifTime: false,
     rewriteExifTimeZone: defaultTz,
+    skipExistingFile: true,
   },
   albumIds: [],
 })
@@ -259,6 +260,7 @@ function openCreateCron() {
       diffByTimeline: false,
       rewriteExifTime: false,
       rewriteExifTimeZone: defaultTz,
+      skipExistingFile: true,
     },
     albumIds: [],
   }
@@ -282,6 +284,7 @@ function openEditCron(item: Crontab) {
       diffByTimeline: item.config.diffByTimeline,
       rewriteExifTime: item.config.rewriteExifTime,
       rewriteExifTimeZone: item.config.rewriteExifTimeZone ?? item.config.timeZone,
+      skipExistingFile: item.config.skipExistingFile ?? true,
     },
     albumIds: [...item.albumIds],
   }
@@ -477,70 +480,6 @@ const albumsRefreshModel = ref([
       >
     </Card>
 
-    <!-- <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
-      <template #title>热力图数据 Mock 演示</template>
-      <template #content>
-        <div
-          class="space-y-4 p-4 rounded-lg bg-white/60 dark:bg-slate-900/30 ring-1 ring-slate-200/60"
-        >
-          <div class="space-y-2">
-            <label class="block text-xs font-medium text-slate-500">小标题 label</label>
-            <input
-              v-model="labelText"
-              type="text"
-              class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500/50 dark:bg-slate-900 dark:border-slate-700"
-              placeholder="例如：一年活跃度"
-            />
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-2">
-              <label class="block text-xs font-medium text-slate-500">周起始</label>
-              <select
-                v-model.number="weekStartNum"
-                class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500/50 dark:bg-slate-900 dark:border-slate-700"
-              >
-                <option v-for="opt in weekOptions" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-xs font-medium text-slate-500">范围天数</label>
-              <input
-                v-model.number="rangeDaysNum"
-                type="number"
-                min="7"
-                max="730"
-                step="1"
-                class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500/50 dark:bg-slate-900 dark:border-slate-700"
-              />
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <label class="block text-xs font-medium text-slate-500">截止日期</label>
-            <input
-              v-model="endDateStr"
-              type="date"
-              class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500/50 dark:bg-slate-900 dark:border-slate-700"
-            />
-          </div>
-
-          <div class="pt-2">
-            <button
-              type="button"
-              class="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-700 active:bg-emerald-800"
-              @click="refresh"
-            >
-              随机刷新数据
-            </button>
-          </div>
-        </div>
-      </template>
-    </Card> -->
-
     <Panel header="相册" toggleable>
       <template #icons>
         <SplitButton icon="pi pi-refresh" severity="secondary" outlined rounded @click="fetchAlbums"
@@ -638,6 +577,13 @@ const albumsRefreshModel = ref([
                 <span>填充 EXIF 时间</span>
               </div>
               <div class="text-[10px] text-slate-400">将资产在小米云服务的时间写入 EXIF 时间，仅在资产不存在 EXIF 时间时生效。</div>
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 text-xs text-slate-600">
+                <InputSwitch v-model="cronForm.config.skipExistingFile" />
+                <span>跳过已存在文件</span>
+              </div>
+              <div class="text-[10px] text-slate-400">若资产的目标文件路径已存在，将跳过下载。仅适用于保存路径中已有存量数据。</div>
             </div>
           </div>
 

@@ -94,7 +94,11 @@ const recentHistories = computed(() => {
             <Tag :severity="crontab.config?.downloadVideos ? 'success' : 'secondary'"
               :value="crontab.config?.downloadVideos ? '下载视频' : '不下载视频'" />
             <Tag :severity="crontab.config?.rewriteExifTime ? 'success' : 'secondary'"
-              :value="crontab.config?.rewriteExifTime ? '重写 EXIF' : '不重写 EXIF'" />
+              :value="crontab.config?.rewriteExifTime ? '填充 EXIF' : '不填充 EXIF 时间'" />
+            <Tag :severity="crontab.config?.diffByTimeline ? 'success' : 'secondary'"
+              :value="crontab.config?.diffByTimeline ? '时间线比对差异' : '全量比对差异'" />
+            <Tag :severity="crontab.config?.skipExistingFile ? 'success' : 'danger'"
+              :value="crontab.config?.skipExistingFile ? '跳过已存在文件' : '覆盖已存在文件'" />
           </div>
 
           <div class="flex flex-wrap items-center gap-2 pt-1">

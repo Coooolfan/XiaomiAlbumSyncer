@@ -21,5 +21,7 @@ data class CrontabConfig(
 
     val diffByTimeline: Boolean = false,
 
-    val rewriteExifTimeZone: String?
+    val rewriteExifTimeZone: String?,
+
+    val skipExistingFile: Boolean = true
 )
