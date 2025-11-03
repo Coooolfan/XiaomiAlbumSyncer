@@ -83,7 +83,7 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         val step = maxOf(needDownloadAssets.size / 10, 1)
         for ((i, it) in needDownloadAssets.withIndex()) {
             if ((i + 1) % step == 0)
-                log.info("正在下载第 ${i + 1} 个文件，总进度：${(i + 1).percentOf(needDownloadAssets.size)}")
+                log.info("正在尝试处理第 ${i + 1} 个文件，总进度：${(i + 1).percentOf(needDownloadAssets.size)}")
 
             try {
                 val targetPath = Path(crontab.config.targetPath, it.album.name, it.fileName)
