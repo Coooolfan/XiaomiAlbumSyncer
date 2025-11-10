@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.nio.file.Files
 
 plugins {
     java
@@ -17,7 +16,7 @@ repositories {
 }
 
 group = "com.coooolfan"
-version = "0.6.1-BETA"
+version = "0.6.2-BETA"
 description = "A tool to download albums from Xiaomi Cloud."
 
 val jimmerVersion = "0.9.112"
