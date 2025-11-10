@@ -45,7 +45,7 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }.firstOrNull() ?: emptyMap()
 
         // 仅在上次有记录且相册列表未变更的情况下，才使用时间线对比模式
-        // 理论上相册列表变动不影响逻辑正确，但是会导致实际发起的查询请求完整刷新模式，所以还是要求相册列表一致
+        // 理论上相册列表变动不影响逻辑正确，但是会导致实际发起的查询大于请求完整刷新模式，所以还是要求相册列表一致
         if (crontab.config.diffByTimeline && albumTimelinesHistory.isNotEmpty() && albumTimelinesHistory.keys == crontab.albumIds.toSet()) {
             log.info("时间线对比模式可用，仅对有变更的日期进行刷新")
             refreshAssetsByDiffTimeline(crontab, crontabHistory, albumTimelinesHistory)
