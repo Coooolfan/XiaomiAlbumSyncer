@@ -20,6 +20,7 @@ const emit = defineEmits<{
   (e: 'delete'): void
   (e: 'toggle'): void
   (e: 'execute'): void
+  (e: 'executeExif'): void
 }>()
 
 const albumMap = computed<Record<string, string>>(() => {
@@ -60,6 +61,7 @@ const recentHistories = computed(() => {
           <InputSwitch :modelValue="crontab.enabled" :disabled="busy" @update:modelValue="() => emit('toggle')"
             class="mr-2 sm:mr-4" />
           <Button icon="pi pi-play" size="small" severity="warning" class="mr-1" @click="emit('execute')" />
+          <Button icon="pi pi-clock" size="small" severity="info" class="mr-1" v-if="crontab.config?.rewriteExifTime" @click="emit('executeExif')" />
           <Button icon="pi pi-pencil" size="small" @click="emit('edit')" />
           <Button icon="pi pi-trash" size="small" severity="danger" @click="emit('delete')" />
         </div>

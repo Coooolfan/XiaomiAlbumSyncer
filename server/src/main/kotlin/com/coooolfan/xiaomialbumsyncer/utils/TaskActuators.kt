@@ -77,7 +77,7 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
 
         log.info("共发现 ${needDownloadAssets.size} 个需要下载的文件")
 
-        val assetPathMap = mutableMapOf<Asset, java.nio.file.Path>()
+        val assetPathMap = mutableMapOf<Asset, Path>()
 
         // 4. 对新增的 Asset 进行下载
         // 5. 更新 CrontabHistory 记录的状态
@@ -124,18 +124,27 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
     ) {
         if (!crontab.config.rewriteExifTime) return
 
-        assetPathMap.forEach {
-            val rewriteZone = TimeZone.getTimeZone(ZoneId.of(crontab.config.rewriteExifTimeZone))
+        log.info("开始填充下载文件的 EXIF 时间，共 ${assetPathMap.size} 个文件需要处理")
+
+        var i = 0
+        val step = maxOf(assetPathMap.size / 10, 1)
+        for (it in assetPathMap) {
+            if ((i + 1) % step == 0)
+                log.info("正在尝试填充第 ${i + 1} 个文件的 Exif 数据，总进度：${(i + 1).percentOf(assetPathMap.size)}")
 
             try {
                 rewriteExifTime(
                     it.key, it.value,
-                    ExifRewriteConfig(Path(systemConfig.exifToolPath), rewriteZone)
+                    ExifRewriteConfig(
+                        Path(systemConfig.exifToolPath),
+                        TimeZone.getTimeZone(ZoneId.of(crontab.config.rewriteExifTimeZone))
+                    )
                 )
             } catch (e: Exception) {
                 log.error("修改文件 EXIF 时间失败，跳过此文件，Asset ID: ${it.key.id}")
                 e.printStackTrace()
             }
+            i++
         }
     }
 
