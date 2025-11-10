@@ -7,6 +7,7 @@ import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.*
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
+import java.nio.file.Path
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -105,20 +106,7 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }
 
         // 5.1 可选：批量修改图片 EXIF 时间
-        if (crontab.config.rewriteExifTime) assetPathMap.forEach {
-            val rewriteZone = TimeZone.getTimeZone(ZoneId.of(crontab.config.rewriteExifTimeZone))
-
-            try {
-                rewriteExifTime(
-                    it.key, it.value, ExifRewriteConfig(
-                        Path(systemConfig.exifToolPath), rewriteZone
-                    )
-                )
-            } catch (e: Exception) {
-                log.error("修改文件 EXIF 时间失败，跳过此文件，Asset ID: ${it.key.id}")
-                e.printStackTrace()
-            }
-        }
+        fillExifTime(crontab, assetPathMap, systemConfig)
 
         // 6. 写入 CrontabHistoryDetails 记录
         sql.executeUpdate(CrontabHistory::class) {
@@ -127,6 +115,28 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }
         log.info("定时任务执行完毕: [${crontab.id}:${crontab.name}]，共下载 ${needDownloadAssets.size} 个文件")
 
+    }
+
+    fun fillExifTime(
+        crontab: Crontab,
+        assetPathMap: Map<Asset, Path>,
+        systemConfig: SystemConfig
+    ) {
+        if (!crontab.config.rewriteExifTime) return
+
+        assetPathMap.forEach {
+            val rewriteZone = TimeZone.getTimeZone(ZoneId.of(crontab.config.rewriteExifTimeZone))
+
+            try {
+                rewriteExifTime(
+                    it.key, it.value,
+                    ExifRewriteConfig(Path(systemConfig.exifToolPath), rewriteZone)
+                )
+            } catch (e: Exception) {
+                log.error("修改文件 EXIF 时间失败，跳过此文件，Asset ID: ${it.key.id}")
+                e.printStackTrace()
+            }
+        }
     }
 
     fun refreshAssetsByDiffTimeline(

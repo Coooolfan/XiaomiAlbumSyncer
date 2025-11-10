@@ -15,7 +15,6 @@ import org.noear.solon.annotation.Managed
 import org.noear.solon.annotation.Mapping
 import org.noear.solon.annotation.Path
 import org.noear.solon.core.handle.MethodType
-import org.noear.solon.core.handle.Result
 
 @Api
 @Managed
@@ -105,7 +104,6 @@ class CrontabController(private val service: CrontabService) {
      * 需要用户登录认证才能访问（类级别注解）
      *
      * @param crontabId 定时任务ID，用于指定要立即执行的任务
-     * @return Result<Int> 返回执行结果，状态码201表示执行成功
      *
      * @api POST /api/crontab/{crontabId}/executions
      * @permission 需要登录认证
@@ -117,6 +115,25 @@ class CrontabController(private val service: CrontabService) {
         service.executeCrontab(crontabId)
     }
 
+
+    /**
+     * 立即执行指定定时任务的EXIF填充操作
+     *
+     * 此接口用于立即执行指定定时任务中的EXIF填充操作
+     * 需要用户登录认证才能访问（类级别注解）
+     *
+     * @param crontabId 定时任务ID，用于指定要执行EXIF填充操作的任务
+     *
+     * @api POST /api/crontab/{crontabId}/fill-exif/executions
+     * @permission 需要登录认证
+     * @description 调用CrontabService.executeCrontabFillExif()方法立即执行EXIF填充操作
+     */
+    @Api
+    @Mapping("/{crontabId}/fill-exif/executions", method = [MethodType.POST])
+    fun executeCrontabExifTime(@Path crontabId: Long) {
+        service.executeCrontabExifTime(crontabId)
+    }
+
     companion object {
         private val DEFAULT_CRONTAB = newFetcher(Crontab::class).by {
             allScalarFields()
@@ -126,6 +143,11 @@ class CrontabController(private val service: CrontabService) {
                 isCompleted()
                 timelineSnapshot(false)
             }
+        }
+
+        val CRONTAB_WITH_ALBUM_IDS_FETCHER = newFetcher(Crontab::class).by {
+            allScalarFields()
+            albumIds()
         }
     }
 }

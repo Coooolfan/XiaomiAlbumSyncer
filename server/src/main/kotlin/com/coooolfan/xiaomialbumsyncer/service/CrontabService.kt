@@ -1,16 +1,17 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
 import com.coooolfan.xiaomialbumsyncer.config.TaskScheduler
-import com.coooolfan.xiaomialbumsyncer.model.Crontab
-import com.coooolfan.xiaomialbumsyncer.model.by
+import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CRONTAB_WITH_ALBUM_IDS_FETCHER
+import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput
-import com.coooolfan.xiaomialbumsyncer.model.id
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.noear.solon.annotation.Managed
+import java.nio.file.Path
+import kotlin.io.path.Path
 
 @Managed
 class CrontabService(private val sql: KSqlClient, private val taskScheduler: TaskScheduler) {
@@ -42,14 +43,36 @@ class CrontabService(private val sql: KSqlClient, private val taskScheduler: Tas
     fun executeCrontab(crontabId: Long) {
         val crontab =
             sql.findById(
-                newFetcher(Crontab::class).by {
-                    allScalarFields()
-                    albumIds()
-                },
+                CRONTAB_WITH_ALBUM_IDS_FETCHER,
                 crontabId
-            )
-                ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
+            ) ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
-        taskScheduler.executeNow(crontab, true)
+        taskScheduler.executeCrontab(crontab, true)
+    }
+
+    fun executeCrontabExifTime(crontabId: Long) {
+        val crontab =
+            sql.findById(
+                CRONTAB_WITH_ALBUM_IDS_FETCHER,
+                crontabId
+            ) ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
+
+        val systemConfig = sql.findById(SystemConfig::class, 0)
+            ?: throw IllegalStateException("System is not initialized")
+
+        val crontabHistoryDetails = sql.createQuery(CrontabHistoryDetail::class) {
+            where(table.crontabHistoryId eq crontabId)
+            select(table.fetch(newFetcher(CrontabHistoryDetail::class).by {
+                asset { allTableFields() }
+                filePath()
+            }))
+        }.distinct().execute()
+
+        val assetPathMap = mutableMapOf<Asset, Path>()
+        crontabHistoryDetails.forEach { detail ->
+            assetPathMap[detail.asset] = Path(detail.filePath)
+        }
+
+        taskScheduler.executeCrontabExifTime(crontab, true, assetPathMap, systemConfig)
     }
 }

@@ -1,8 +1,10 @@
 package com.coooolfan.xiaomialbumsyncer.config
 
+import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CRONTAB_WITH_ALBUM_IDS_FETCHER
+import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
+import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.enabled
-import com.coooolfan.xiaomialbumsyncer.model.fetchBy
 import com.coooolfan.xiaomialbumsyncer.utils.TaskActuators
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
@@ -11,6 +13,7 @@ import org.noear.solon.annotation.Managed
 import org.noear.solon.scheduling.annotation.Scheduled
 import org.noear.solon.scheduling.scheduled.manager.IJobManager
 import org.slf4j.LoggerFactory
+import java.nio.file.Path
 import java.text.ParseException
 
 @Managed
@@ -33,10 +36,7 @@ class TaskScheduler(
     fun initJobs() {
         val crontabs = sql.executeQuery(Crontab::class) {
             where(table.enabled eq true)
-            select(table.fetchBy {
-                allScalarFields()
-                albumIds()
-            })
+            select(table.fetch(CRONTAB_WITH_ALBUM_IDS_FETCHER))
         }
         val registeredJobs = mutableListOf<Crontab>()
 
@@ -70,11 +70,22 @@ class TaskScheduler(
      * @param crontab 要执行的定时任务实体
      * @param async 是否异步执行，默认 true。若为 false，则在当前线程中执行该任务，阻塞，直到任务完成才返回
      */
-    fun executeNow(crontab: Crontab, async: Boolean = true) {
+    fun executeCrontab(crontab: Crontab, async: Boolean = true) {
         if (async) {
             thread.taskExecutor().execute { actuators.doWork(crontab) }
         } else {
             actuators.doWork(crontab)
+        }
+    }
+
+    fun executeCrontabExifTime(
+        crontab: Crontab, async: Boolean = true, assetPathMap: Map<Asset, Path>,
+        systemConfig: SystemConfig
+    ) {
+        if (async) {
+            thread.taskExecutor().execute { actuators.fillExifTime(crontab, assetPathMap, systemConfig) }
+        } else {
+            actuators.fillExifTime(crontab, assetPathMap, systemConfig)
         }
     }
 

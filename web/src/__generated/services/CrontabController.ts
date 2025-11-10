@@ -50,7 +50,6 @@ export class CrontabController {
      * 
      * @parameter {CrontabControllerOptions['executeCrontab']} options
      * - crontabId 定时任务ID，用于指定要立即执行的任务
-     * @return Result<Int> 返回执行结果，状态码201表示执行成功
      * 
      */
     readonly executeCrontab: (options: CrontabControllerOptions['executeCrontab']) => Promise<
@@ -59,6 +58,25 @@ export class CrontabController {
         let _uri = '/api/crontab/';
         _uri += encodeURIComponent(options.crontabId);
         _uri += '/executions';
+        return (await this.executor({uri: _uri, method: 'POST'})) as Promise<void>;
+    }
+    
+    /**
+     * 立即执行指定定时任务的EXIF填充操作
+     * 
+     * 此接口用于立即执行指定定时任务中的EXIF填充操作
+     * 需要用户登录认证才能访问（类级别注解）
+     * 
+     * @parameter {CrontabControllerOptions['executeCrontabExifTime']} options
+     * - crontabId 定时任务ID，用于指定要执行EXIF填充操作的任务
+     * 
+     */
+    readonly executeCrontabExifTime: (options: CrontabControllerOptions['executeCrontabExifTime']) => Promise<
+        void
+    > = async(options) => {
+        let _uri = '/api/crontab/';
+        _uri += encodeURIComponent(options.crontabId);
+        _uri += '/fill-exif/executions';
         return (await this.executor({uri: _uri, method: 'POST'})) as Promise<void>;
     }
     
@@ -127,6 +145,14 @@ export type CrontabControllerOptions = {
     'executeCrontab': {
         /**
          * 定时任务ID，用于指定要立即执行的任务
+         * 
+         */
+        readonly crontabId: number
+    }, 
+    'executeCrontabExifTime': {
+        /**
+         * 定时任务ID，用于指定要执行EXIF填充操作的任务
+         * 
          */
         readonly crontabId: number
     }
