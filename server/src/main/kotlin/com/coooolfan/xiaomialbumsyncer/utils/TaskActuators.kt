@@ -146,6 +146,10 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         for ((albumId, timelineLatest) in albumTimelinesLatest) {
             val timelineHistory = albumTimelinesHistory[albumId] ?: EMPTY_ALBUM_TIMELINE
             albumsDayCountNeedRefresh[albumId] = (timelineLatest - timelineHistory).filter { it.value > 0 }.keys
+            sql.executeUpdate(Album::class) {
+                set(table.assetCount, timelineLatest.dayCount.values.sum())
+                where(table.id eq albumId)
+            }
         }
 
         // 3. 只刷新这些日期的 Asset
@@ -170,6 +174,10 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         albums.forEach {
             val assets = api.fetchAllAssetsByAlbumId(it)
             sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+            sql.executeUpdate(Album::class) {
+                set(table.assetCount, assets.size.toLong())
+                where(table.id eq it.id)
+            }
         }
         sql.executeUpdate(CrontabHistory::class) {
             set(table.timelineSnapshot, fetchAlbumsTimelineSnapshot(crontab.albumIds))

@@ -15,7 +15,7 @@ interface Album {
 
     val name: String
 
-    val assetCount: Int
+    val assetCount: Long
 
     // 最后更新时间：指的是相册最后被修改的时间，不是XiaomiAlbumSyncer获取此相册的时间
     val lastUpdateTime: Instant

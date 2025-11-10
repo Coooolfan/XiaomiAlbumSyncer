@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory
 import java.nio.file.Paths
 import java.time.Instant
 import java.util.Locale.getDefault
-import javax.sql.DataSource
 
 @Managed
 class DataImporter(private val sql: KSqlClient) {
@@ -42,7 +41,7 @@ class DataImporter(private val sql: KSqlClient) {
             val album = Album {
                 id = albumsResultSet.getLong("id")
                 name = albumsResultSet.getString("name")
-                assetCount = albumsResultSet.getInt("media_count")
+                assetCount = albumsResultSet.getLong("media_count")
                 lastUpdateTime = Instant.now()
             }
             albums.add(album)

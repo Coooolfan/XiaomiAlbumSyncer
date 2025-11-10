@@ -4,7 +4,6 @@ import com.coooolfan.xiaomialbumsyncer.model.Album
 import com.coooolfan.xiaomialbumsyncer.model.AlbumTimeline
 import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.AssetType
-import com.coooolfan.xiaomialbumsyncer.model.EMPTY_ALBUM_TIMELINE
 import com.coooolfan.xiaomialbumsyncer.utils.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import okhttp3.FormBody
@@ -53,7 +52,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 allAlbums.add(Album {
                     id = albumId
                     name = albumName ?: albumJson.get("name").asText()
-                    assetCount = albumJson.get("mediaCount").asInt()
+                    assetCount = albumJson.get("mediaCount").asLong()
                     lastUpdateTime = Instant.ofEpochMilli(albumJson.get("lastUpdateTime")?.asLong() ?: 0L)
                 })
             }
