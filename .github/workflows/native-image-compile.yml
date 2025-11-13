@@ -22,6 +22,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'yarn'
+          cache-dependency-path: web/yarn.lock
 
       - name: 缓存 Yarn 依赖
         uses: actions/cache@v4
@@ -34,7 +35,6 @@ jobs:
       - name: 构建前端
         working-directory: ./web
         run: |
-          corepack enable
           yarn install
           yarn build
 
