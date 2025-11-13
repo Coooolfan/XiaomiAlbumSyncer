@@ -34,6 +34,7 @@ jobs:
       - name: 构建前端
         working-directory: ./web
         run: |
+          corepack enable
           yarn install
           yarn build
 
