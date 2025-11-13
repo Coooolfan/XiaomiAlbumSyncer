@@ -1,0 +1,114 @@
+name: 全平台二进制编译
+on:
+  release:
+    types: [ published ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "版本号"
+        required: true
+        default: "dev"
+
+jobs:
+  build-frontend:
+    name: 构建前端资源
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v5
+
+      - name: 设置 node 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 缓存 Yarn 依赖
+        uses: actions/cache@v4
+        with:
+          path: web/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('web/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: 构建前端
+        working-directory: ./web
+        run: |
+          yarn install
+          yarn build
+
+      - name: 上传前端产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: web/dist
+
+  build-native:
+    name: 编译二进制文件 (${{ matrix.os }}, ${{ matrix.arch }})
+    needs: build-frontend
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        arch: [ x64, arm64 ]
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v5
+
+      - name: 设置版本号
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          fi
+        shell: bash
+
+      - name: 设置 GraalVM 环境
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 缓存 Gradle 依赖
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: 下载前端产物
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: server/src/main/resources/static
+
+      - name: 编译 Native Image
+        working-directory: ./server
+        run: |
+          if [ "$RUNNER_OS" != "Windows" ]; then
+            chmod +x ./gradlew
+          fi
+          ./gradlew nativeCompile
+
+      - name: 准备产物路径
+        id: prepare_path
+        run: |
+          ARTIFACT_NAME="xiaomi-album-syncer"
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            echo "artifact_path=server/build/native/nativeCompile/${ARTIFACT_NAME}.exe" >> $GITHUB_OUTPUT
+          else
+            echo "artifact_path=server/build/native/nativeCompile/${ARTIFACT_NAME}" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
+      - name: 上传编译产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: xiaomi-album-syncer-${{ matrix.os }}-${{ matrix.arch }}-v${{ env.VERSION }}
+          path: ${{ steps.prepare_path.outputs.artifact_path }}
