@@ -21,13 +21,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'yarn'
-          cache-dependency-path: web/yarn.lock
 
-      - name: 缓存 Yarn 依赖
+      - name: 启用 Corepack 并激活 Yarn 4
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+
+      - name: 缓存 Yarn 包缓存
         uses: actions/cache@v4
         with:
-          path: web/node_modules
+          path: web/.yarn/cache
           key: ${{ runner.os }}-yarn-${{ hashFiles('web/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
@@ -35,7 +38,8 @@ jobs:
       - name: 构建前端
         working-directory: ./web
         run: |
-          yarn install
+          yarn --version
+          yarn install --immutable
           yarn build
 
       - name: 上传前端产物
