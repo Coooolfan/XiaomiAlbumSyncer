@@ -1,4 +1,4 @@
-name: 全平台二进制编译
+name: 原生编译
 on:
   release:
     types: [ published ]
@@ -49,9 +49,12 @@ jobs:
           path: web/dist
 
   build-native:
-    name: 编译二进制文件 (${{ matrix.os }}, ${{ matrix.arch }})
+    name: 构建原生可执行文件:${{ matrix.os }}-${{ matrix.arch }}
     needs: build-frontend
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -69,7 +72,6 @@ jobs:
           else
             echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
           fi
-        shell: bash
 
       - name: 设置 GraalVM 环境
         uses: graalvm/setup-graalvm@v1
@@ -111,7 +113,6 @@ jobs:
           else
             echo "artifact_path=server/build/native/nativeCompile/${ARTIFACT_NAME}" >> $GITHUB_OUTPUT
           fi
-        shell: bash
 
       - name: 上传编译产物
         uses: actions/upload-artifact@v4
