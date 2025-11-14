@@ -124,6 +124,7 @@ jobs:
             chmod +x ./gradlew
           fi
           ./gradlew nativeCompile
+          ./gradlew --stop || true
 
       - name: 准备产物路径
         id: prepare_path
@@ -140,3 +141,32 @@ jobs:
         with:
           name: xiaomi-album-syncer-${{ matrix.os_name }}-${{ matrix.arch }}-v${{ env.VERSION }}
           path: ${{ steps.prepare_path.outputs.artifact_path }}
+
+  upload-release-assets:
+    name: 上传产物到 Release
+    if: github.event_name == 'release'
+    needs: build-native
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 下载所有构建产物
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: 查看产物结构
+        run: |
+          ls -R dist
+
+      - name: 上传到 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: |
+            dist/xiaomi-album-syncer-linux-x64-v*.*
+            dist/xiaomi-album-syncer-linux-arm64-v*.*
+            dist/xiaomi-album-syncer-macos-x64-v*.*
+            dist/xiaomi-album-syncer-macos-arm64-v*.*
+            dist/xiaomi-album-syncer-windows-x64-v*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
