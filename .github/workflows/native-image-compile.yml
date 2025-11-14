@@ -49,7 +49,7 @@ jobs:
           path: web/dist
 
   build-native:
-    name: 构建原生可执行文件:${{ matrix.os }}-${{ matrix.arch }}
+    name: 构建原生可执行文件:${{ matrix.os_name }}-${{ matrix.arch }}
     needs: build-frontend
     runs-on: ${{ matrix.os }}
     defaults:
@@ -58,8 +58,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-latest]
-        arch: [ x64, arm64 ]
+        include:
+          - os: ubuntu-latest
+            arch: x64
+            os_name: linux
+          - os: ubuntu-latest
+            arch: arm64
+            os_name: linux
+          - os: macos-latest
+            arch: x64
+            os_name: macos
+          - os: macos-latest
+            arch: arm64
+            os_name: macos
+          # GraalVM 不支持 Windows ARM64
+          - os: windows-latest
+            arch: x64
+            os_name: windows
 
     steps:
       - name: 检出代码
@@ -96,6 +111,12 @@ jobs:
           name: frontend-dist
           path: server/src/main/resources/static
 
+      - name: 设置临时目录到当前工作目录
+        run: |
+          echo "TMP=$PWD/.tmp" >> $GITHUB_ENV
+          echo "TEMP=$PWD/.tmp" >> $GITHUB_ENV
+          mkdir -p .tmp
+
       - name: 编译 Native Image
         working-directory: ./server
         run: |
@@ -117,5 +138,5 @@ jobs:
       - name: 上传编译产物
         uses: actions/upload-artifact@v4
         with:
-          name: xiaomi-album-syncer-${{ matrix.os }}-${{ matrix.arch }}-v${{ env.VERSION }}
+          name: xiaomi-album-syncer-${{ matrix.os_name }}-${{ matrix.arch }}-v${{ env.VERSION }}
           path: ${{ steps.prepare_path.outputs.artifact_path }}
