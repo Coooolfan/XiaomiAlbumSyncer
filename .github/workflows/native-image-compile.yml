@@ -58,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        os: [ ubuntu-latest, macos-latest]
         arch: [ x64, arm64 ]
 
     steps:
@@ -107,7 +107,7 @@ jobs:
       - name: 准备产物路径
         id: prepare_path
         run: |
-          ARTIFACT_NAME="xiaomi-album-syncer"
+          ARTIFACT_NAME="XiaomiAlbumSyncer"
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             echo "artifact_path=server/build/native/nativeCompile/${ARTIFACT_NAME}.exe" >> $GITHUB_OUTPUT
           else
