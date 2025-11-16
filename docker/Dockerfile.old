@@ -5,7 +5,7 @@ WORKDIR /app
 # 定义版本参数，默认为latest
 ARG TAG_VERSION=latest
 
-COPY web/ .
+COPY ../web .
 
 RUN corepack enable && \
     yarn && \
@@ -18,7 +18,7 @@ WORKDIR /app
 # 定义版本参数，默认为latest
 ARG TAG_VERSION=latest
 
-COPY server/ .
+COPY ../server .
 
 # 从前端构建阶段复制构建结果到后端静态资源目录
 COPY --from=web-build-stage /app/dist /app/src/main/resources/static
@@ -46,4 +46,4 @@ EXPOSE 8080
 ENV JAVA_OPTS="--enable-native-access=ALL-UNNAMED"
 
 # 启动应用
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

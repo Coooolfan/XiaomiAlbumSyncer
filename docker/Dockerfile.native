@@ -1,0 +1,4 @@
+FROM ubuntu:latest
+LABEL authors="yang"
+
+ENTRYPOINT ["top", "-b"]
