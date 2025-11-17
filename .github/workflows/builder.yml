@@ -179,7 +179,7 @@ jobs:
         id: prepare_path
         run: |
           ARTIFACT_NAME="XiaomiAlbumSyncer"
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          if [ "${{ matrix.os_name }}" = "windows" ]; then
             echo "artifact_path=server/build/native/nativeCompile/${ARTIFACT_NAME}.exe" >> $GITHUB_OUTPUT
           else
             echo "artifact_path=server/build/native/nativeCompile/${ARTIFACT_NAME}" >> $GITHUB_OUTPUT
