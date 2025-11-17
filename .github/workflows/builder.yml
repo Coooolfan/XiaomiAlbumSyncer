@@ -1,4 +1,4 @@
-name: 原生编译
+name: Xiaomi Album Syncer CI
 on:
   release:
     types: [ published ]
