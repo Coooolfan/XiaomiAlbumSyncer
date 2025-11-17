@@ -90,7 +90,7 @@ jobs:
       - name: 上传编译产物
         uses: actions/upload-artifact@v4
         with:
-          name: xiaomi-album-syncer-v${{ env.VERSION }.jar
+          name: xiaomi-album-syncer-v${{ env.VERSION }}.jar
           path: server/build/libs/*.jar
 
   build-native:
@@ -104,26 +104,30 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             arch: x64
             os_name: linux
-          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
             arch: arm64
             os_name: linux
-          - os: macos-latest
+          - os: macos-15-intel
             arch: x64
             os_name: macos
-          - os: macos-latest
+          - os: macos-15
             arch: arm64
             os_name: macos
           # GraalVM 不支持 Windows ARM64
-          - os: windows-latest
+          - os: windows-2025
             arch: x64
             os_name: windows
 
     steps:
       - name: 检出代码
         uses: actions/checkout@v5
+
+      - name: uname 信息
+        run: |
+          uname -a || systeminfo
 
       - name: 设置版本号
         run: |
@@ -190,7 +194,9 @@ jobs:
   upload-release-assets:
     name: 上传产物到 Release
     if: github.event_name == 'release'
-    needs: build-native
+    needs:
+      - build-jar
+      - build-native
     runs-on: ubuntu-latest
 
     steps:
@@ -217,38 +223,38 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-docker-for-jvm:
-    name: 构建并推送 Docker 镜像(JVM)
-    if: github.event_name == 'release'
-    needs: build-jar
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 下载所有构建产物
-        uses: actions/download-artifact@v4
-        with:
-          path: dist
-
-      - name: 登陆到 DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-  build-docker-for-native:
-    name: 构建并推送 Docker 镜像(native)
-    if: github.event_name == 'release'
-    needs: build-native
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 下载所有构建产物
-        uses: actions/download-artifact@v4
-        with:
-          path: dist
-
-      - name: 登陆到 DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#  build-docker-for-jvm:
+#    name: 构建并推送 Docker 镜像(JVM)
+#    if: github.event_name == 'release'
+#    needs: build-jar
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: 下载所有构建产物
+#        uses: actions/download-artifact@v4
+#        with:
+#          path: dist
+#
+#      - name: 登陆到 DockerHub
+#        uses: docker/login-action@v3
+#        with:
+#          username: ${{ secrets.DOCKERHUB_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#
+#  build-docker-for-native:
+#    name: 构建并推送 Docker 镜像(native)
+#    if: github.event_name == 'release'
+#    needs: build-native
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: 下载所有构建产物
+#        uses: actions/download-artifact@v4
+#        with:
+#          path: dist
+#
+#      - name: 登陆到 DockerHub
+#        uses: docker/login-action@v3
+#        with:
+#          username: ${{ secrets.DOCKERHUB_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_TOKEN }}

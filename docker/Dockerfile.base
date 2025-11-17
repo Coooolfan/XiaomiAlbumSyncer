@@ -1,4 +1,7 @@
-FROM ubuntu:latest
+FROM alpine:3
+
+RUN apk add --no-cache exiftool
+
 LABEL authors="github.com/coooolfan"
 
 ENTRYPOINT ["top", "-b"]
