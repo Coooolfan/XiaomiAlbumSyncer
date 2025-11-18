@@ -87,11 +87,19 @@ jobs:
           ./gradlew solonJar
           ./gradlew --stop || true
 
+      - name: 整理 JAR 产物
+        working-directory: ./server/build/libs
+        run: |
+          ls -al
+          JAR_FILE=$(ls *.jar | head -n 1)
+          mv "$JAR_FILE" "xiaomi-album-syncer-v${VERSION}.jar"
+
       - name: 上传编译产物
         uses: actions/upload-artifact@v4
         with:
-          name: xiaomi-album-syncer-v${{ env.VERSION }}.jar
-          path: server/build/libs/*.jar
+          # 固定 artifact 名称，内容里是带版本号的 jar 文件
+          name: jar
+          path: server/build/libs/xiaomi-album-syncer-v${{ env.VERSION }}.jar
 
   build-native:
     name: 构建原生可执行文件:${{ matrix.os_name }}-${{ matrix.arch }}
@@ -175,21 +183,23 @@ jobs:
           ./gradlew nativeCompile
           ./gradlew --stop || true
 
-      - name: 准备产物路径
-        id: prepare_path
+      - name: 整理 Native 产物
         run: |
-          ARTIFACT_NAME="XiaomiAlbumSyncer"
+          cd server/build/native/nativeCompile
+          ARTIFACT_BASE="xiaomi-album-syncer-${{ matrix.os_name }}-${{ matrix.arch }}-v${VERSION}"
           if [ "${{ matrix.os_name }}" = "windows" ]; then
-            echo "artifact_path=server/build/native/nativeCompile/${ARTIFACT_NAME}.exe" >> $GITHUB_OUTPUT
+            mv XiaomiAlbumSyncer.exe "${ARTIFACT_BASE}.exe"
           else
-            echo "artifact_path=server/build/native/nativeCompile/${ARTIFACT_NAME}" >> $GITHUB_OUTPUT
+            mv XiaomiAlbumSyncer "${ARTIFACT_BASE}"
+            chmod +x "${ARTIFACT_BASE}"
           fi
+          ls -al
 
       - name: 上传编译产物
         uses: actions/upload-artifact@v4
         with:
-          name: xiaomi-album-syncer-${{ matrix.os_name }}-${{ matrix.arch }}-v${{ env.VERSION }}
-          path: ${{ steps.prepare_path.outputs.artifact_path }}
+          name: native-${{ matrix.os_name }}-${{ matrix.arch }}
+          path: server/build/native/nativeCompile/xiaomi-album-syncer-${{ matrix.os_name }}-${{ matrix.arch }}-v${{ env.VERSION }}*
 
   upload-release-assets:
     name: 上传产物到 Release
@@ -200,9 +210,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 下载所有构建产物
+      - name: 下载 JAR 产物
         uses: actions/download-artifact@v4
         with:
+          name: jar
+          path: dist
+
+      - name: 下载 Native 产物 (linux-x64)
+        uses: actions/download-artifact@v4
+        with:
+          name: native-linux-x64
+          path: dist
+
+      - name: 下载 Native 产物 (linux-arm64)
+        uses: actions/download-artifact@v4
+        with:
+          name: native-linux-arm64
+          path: dist
+
+      - name: 下载 Native 产物 (macos-x64)
+        uses: actions/download-artifact@v4
+        with:
+          name: native-macos-x64
+          path: dist
+
+      - name: 下载 Native 产物 (macos-arm64)
+        uses: actions/download-artifact@v4
+        with:
+          name: native-macos-arm64
+          path: dist
+
+      - name: 下载 Native 产物 (windows-x64)
+        uses: actions/download-artifact@v4
+        with:
+          name: native-windows-x64
           path: dist
 
       - name: 查看产物结构
@@ -214,12 +255,12 @@ jobs:
         with:
           tag_name: ${{ github.event.release.tag_name }}
           files: |
-            dist/xiaomi-album-syncer-linux-x64-v*.*
-            dist/xiaomi-album-syncer-linux-arm64-v*.*
-            dist/xiaomi-album-syncer-macos-x64-v*.*
-            dist/xiaomi-album-syncer-macos-arm64-v*.*
-            dist/xiaomi-album-syncer-windows-x64-v*.exe
-            dist/xiaomi-album-syncer-v*.jar
+            dist/xiaomi-album-syncer-linux-x64-v${{ github.event.release.tag_name }}
+            dist/xiaomi-album-syncer-linux-arm64-v${{ github.event.release.tag_name }}
+            dist/xiaomi-album-syncer-macos-x64-v${{ github.event.release.tag_name }}
+            dist/xiaomi-album-syncer-macos-arm64-v${{ github.event.release.tag_name }}
+            dist/xiaomi-album-syncer-windows-x64-v${{ github.event.release.tag_name }}.exe
+            dist/xiaomi-album-syncer-v${{ github.event.release.tag_name }}.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -239,9 +280,10 @@ jobs:
       - name: 设置 Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 下载所有构建产物
+      - name: 下载 JAR 产物
         uses: actions/download-artifact@v4
         with:
+          name: jar
           path: dist
 
       - name: 登陆到 DockerHub
@@ -259,7 +301,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${{ github.event.release.tag_name }}
-#            ${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:latest
+          # ${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:latest
           build-args: |
             JAR_FILE=dist/xiaomi-album-syncer-v${{ github.event.release.tag_name }}.jar
 
@@ -273,9 +315,16 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v5
 
-      - name: 下载所有构建产物
+      - name: 下载 Native 产物 (linux-x64)
         uses: actions/download-artifact@v4
         with:
+          name: native-linux-x64
+          path: dist
+
+      - name: 下载 Native 产物 (linux-arm64)
+        uses: actions/download-artifact@v4
+        with:
+          name: native-linux-arm64
           path: dist
 
       - name: 设置 QEMU
@@ -299,4 +348,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${{ github.event.release.tag_name }}-native
-#            ${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:latest-native
+          # ${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:latest-native
