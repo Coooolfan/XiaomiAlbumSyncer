@@ -253,17 +253,41 @@ jobs:
         run: |
           ls -R dist
 
+      - name: 安装 zip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zip
+
+      - name: 打包为 ZIP
+        working-directory: dist
+        run: |
+          TAG=${{ github.event.release.tag_name }}
+          
+          # Linux
+          zip "xiaomi-album-syncer-linux-arm64-v${TAG}.zip" "xiaomi-album-syncer-linux-arm64-v${TAG}"
+          zip "xiaomi-album-syncer-linux-x64-v${TAG}.zip"   "xiaomi-album-syncer-linux-x64-v${TAG}"
+          
+          # macOS
+          zip "xiaomi-album-syncer-macos-arm64-v${TAG}.zip" "xiaomi-album-syncer-macos-arm64-v${TAG}"
+          zip "xiaomi-album-syncer-macos-x64-v${TAG}.zip"   "xiaomi-album-syncer-macos-x64-v${TAG}"
+          
+          # Windows
+          zip "xiaomi-album-syncer-windows-x64-v${TAG}.exe.zip" "xiaomi-album-syncer-windows-x64-v${TAG}.exe"
+          
+          # JAR
+          zip "xiaomi-album-syncer-v${TAG}.jar.zip" "xiaomi-album-syncer-v${TAG}.jar"
+
       - name: 上传到 Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.release.tag_name }}
           files: |
-            dist/xiaomi-album-syncer-linux-x64-v${{ github.event.release.tag_name }}
-            dist/xiaomi-album-syncer-linux-arm64-v${{ github.event.release.tag_name }}
-            dist/xiaomi-album-syncer-macos-x64-v${{ github.event.release.tag_name }}
-            dist/xiaomi-album-syncer-macos-arm64-v${{ github.event.release.tag_name }}
-            dist/xiaomi-album-syncer-windows-x64-v${{ github.event.release.tag_name }}.exe
-            dist/xiaomi-album-syncer-v${{ github.event.release.tag_name }}.jar
+            dist/xiaomi-album-syncer-linux-x64-v${{ github.event.release.tag_name }}.zip
+            dist/xiaomi-album-syncer-linux-arm64-v${{ github.event.release.tag_name }}.zip
+            dist/xiaomi-album-syncer-macos-x64-v${{ github.event.release.tag_name }}.zip
+            dist/xiaomi-album-syncer-macos-arm64-v${{ github.event.release.tag_name }}.zip
+            dist/xiaomi-album-syncer-windows-x64-v${{ github.event.release.tag_name }}.exe.zip
+            dist/xiaomi-album-syncer-v${{ github.event.release.tag_name }}.jar.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
