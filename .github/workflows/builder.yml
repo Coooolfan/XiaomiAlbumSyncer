@@ -9,6 +9,9 @@ on:
         required: true
         default: "dev"
 
+permissions:
+  contents: write
+
 jobs:
   build-frontend:
     name: 构建前端资源
