@@ -1,3 +1,4 @@
+import org.graalvm.buildtools.gradle.tasks.BuildNativeImageTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -16,7 +17,7 @@ repositories {
 }
 
 group = "com.coooolfan"
-version = "0.6.3-BETA"
+version = "0.6.6-BETA"
 description = "A tool to download albums from Xiaomi Cloud."
 
 val jimmerVersion = "0.9.112"
@@ -56,6 +57,7 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-parameters")
 }
+
 tasks.withType<KotlinCompile> {
     compilerOptions.javaParameters = true
 }
@@ -82,4 +84,10 @@ tasks.withType<JavaExec> {
 
 tasks.withType<Test> {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+
+tasks.withType<BuildNativeImageTask> {
+    val options = this.options.get()
+//    options.buildArgs.add("--pgo-instrument")
+//    options.buildArgs.add("--pgo=${project.projectDir}/default.iprof")
 }

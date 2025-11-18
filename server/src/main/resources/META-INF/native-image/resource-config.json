@@ -79,6 +79,8 @@
   }, {
     "pattern":"\\Qdb/migration/V0.4.0__timeline.sql\\E"
   }, {
+    "pattern":"\\Qdb/migration/V0.4.1__timeline_map.sql\\E"
+  }, {
     "pattern":"\\Qdb/migration\\E"
   }, {
     "pattern":"\\Qkotlin/annotation/annotation.kotlin_builtins\\E"

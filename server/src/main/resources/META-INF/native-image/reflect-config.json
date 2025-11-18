@@ -182,7 +182,13 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"registerJimmerJacksonModule","parameterTypes":["org.noear.solon.serialization.jackson.JacksonRenderFactory","org.noear.solon.serialization.jackson.JacksonActionExecutor"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }]
+  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"registerJimmerJacksonModule","parameterTypes":["org.noear.solon.serialization.jackson.JacksonRenderFactory","org.noear.solon.serialization.jackson.JacksonActionExecutor"] }, {"name":"registerJimmerJacksonModule","parameterTypes":["org.noear.solon.serialization.jackson.JacksonStringSerializer"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }]
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.config.JacksonKt"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.config.JacksonKt$addDecoder$1"
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.config.NativeImageRegister",
@@ -226,6 +232,9 @@
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
   "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"migrate","parameterTypes":["javax.sql.DataSource"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }]
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.config.flyway.DatabaseMigration$Companion"
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.config.flyway.IndexedResourceProvider"
@@ -303,7 +312,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.AlbumsService"] }, {"name":"getService","parameterTypes":[] }, {"name":"listAlbums","parameterTypes":[] }, {"name":"refreshAlbums","parameterTypes":[] }, {"name":"setService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.AlbumsService"] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.AlbumsService"] }, {"name":"fetchDateMap","parameterTypes":["java.util.List","java.time.Instant","java.time.Instant"] }, {"name":"getService","parameterTypes":[] }, {"name":"listAlbums","parameterTypes":[] }, {"name":"refreshAlbums","parameterTypes":[] }, {"name":"setService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.AlbumsService"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.controller.AssetController",
@@ -322,7 +331,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.CrontabService"] }, {"name":"createCrontab","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput"] }, {"name":"deleteCrontab","parameterTypes":["long"] }, {"name":"executeCrontab","parameterTypes":["long"] }, {"name":"getService","parameterTypes":[] }, {"name":"listCrontabs","parameterTypes":[] }, {"name":"setService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.CrontabService"] }, {"name":"updateCrontab","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.CrontabUpdateInput","long"] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.CrontabService"] }, {"name":"createCrontab","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput"] }, {"name":"deleteCrontab","parameterTypes":["long"] }, {"name":"executeCrontab","parameterTypes":["long"] }, {"name":"executeCrontabExifTime","parameterTypes":["long"] }, {"name":"getService","parameterTypes":[] }, {"name":"listCrontabs","parameterTypes":[] }, {"name":"setService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.CrontabService"] }, {"name":"updateCrontab","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.CrontabUpdateInput","long"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.controller.CrontabController$Companion"
@@ -392,7 +401,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"__equals","parameterTypes":["java.lang.Object","boolean"] }, {"name":"__get","parameterTypes":["java.lang.String"] }, {"name":"__get","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__hashCode","parameterTypes":["boolean"] }, {"name":"__isLoaded","parameterTypes":["java.lang.String"] }, {"name":"__isLoaded","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__isVisible","parameterTypes":["java.lang.String"] }, {"name":"__isVisible","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__shallowEquals","parameterTypes":["java.lang.Object"] }, {"name":"__shallowHashCode","parameterTypes":[] }, {"name":"__type","parameterTypes":[] }, {"name":"clone","parameterTypes":[] }, {"name":"equals","parameterTypes":["java.lang.Object"] }, {"name":"getAssetCount","parameterTypes":[] }, {"name":"getAssets","parameterTypes":[] }, {"name":"getDummyPropForJacksonError__","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getLastUpdateTime","parameterTypes":[] }, {"name":"getName","parameterTypes":[] }, {"name":"get__assetCountLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__assetCountValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__assetsValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__lastUpdateTimeValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__nameValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__visibility$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"hashCode","parameterTypes":[] }, {"name":"set__assetCountLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__assetCountValue$XiaomiAlbumSyncer","parameterTypes":["int"] }, {"name":"set__assetsValue$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.NonSharedList"] }, {"name":"set__idLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__idValue$XiaomiAlbumSyncer","parameterTypes":["long"] }, {"name":"set__lastUpdateTimeValue$XiaomiAlbumSyncer","parameterTypes":["java.time.Instant"] }, {"name":"set__nameValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__visibility$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.Visibility"] }, {"name":"toString","parameterTypes":[] }]
+  "methods":[{"name":"__equals","parameterTypes":["java.lang.Object","boolean"] }, {"name":"__get","parameterTypes":["java.lang.String"] }, {"name":"__get","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__hashCode","parameterTypes":["boolean"] }, {"name":"__isLoaded","parameterTypes":["java.lang.String"] }, {"name":"__isLoaded","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__isVisible","parameterTypes":["java.lang.String"] }, {"name":"__isVisible","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__shallowEquals","parameterTypes":["java.lang.Object"] }, {"name":"__shallowHashCode","parameterTypes":[] }, {"name":"__type","parameterTypes":[] }, {"name":"clone","parameterTypes":[] }, {"name":"equals","parameterTypes":["java.lang.Object"] }, {"name":"getAssetCount","parameterTypes":[] }, {"name":"getAssets","parameterTypes":[] }, {"name":"getDummyPropForJacksonError__","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getLastUpdateTime","parameterTypes":[] }, {"name":"getName","parameterTypes":[] }, {"name":"get__assetCountLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__assetCountValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__assetsValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__lastUpdateTimeValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__nameValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__visibility$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"hashCode","parameterTypes":[] }, {"name":"set__assetCountLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__assetCountValue$XiaomiAlbumSyncer","parameterTypes":["int"] }, {"name":"set__assetCountValue$XiaomiAlbumSyncer","parameterTypes":["long"] }, {"name":"set__assetsValue$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.NonSharedList"] }, {"name":"set__idLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__idValue$XiaomiAlbumSyncer","parameterTypes":["long"] }, {"name":"set__lastUpdateTimeValue$XiaomiAlbumSyncer","parameterTypes":["java.time.Instant"] }, {"name":"set__nameValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__visibility$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.Visibility"] }, {"name":"toString","parameterTypes":[] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.AlbumDraft$$$Implementor",
@@ -551,7 +560,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"getDiffByTimeline","parameterTypes":[] }, {"name":"getDownloadImages","parameterTypes":[] }, {"name":"getDownloadVideos","parameterTypes":[] }, {"name":"getExpression","parameterTypes":[] }, {"name":"getRewriteExifTime","parameterTypes":[] }, {"name":"getRewriteExifTimeZone","parameterTypes":[] }, {"name":"getTargetPath","parameterTypes":[] }, {"name":"getTimeZone","parameterTypes":[] }]
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"getDiffByTimeline","parameterTypes":[] }, {"name":"getDownloadImages","parameterTypes":[] }, {"name":"getDownloadVideos","parameterTypes":[] }, {"name":"getExpression","parameterTypes":[] }, {"name":"getRewriteExifTime","parameterTypes":[] }, {"name":"getRewriteExifTimeZone","parameterTypes":[] }, {"name":"getSkipExistingFile","parameterTypes":[] }, {"name":"getTargetPath","parameterTypes":[] }, {"name":"getTimeZone","parameterTypes":[] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabDraft",
@@ -764,7 +773,7 @@
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.SystemConfig",
   "queryAllDeclaredMethods":true,
-  "methods":[{"name":"exifToolPath","parameterTypes":[] }, {"name":"getExifToolPath","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getPassToken","parameterTypes":[] }, {"name":"getPassword","parameterTypes":[] }, {"name":"getUserId","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"isExifToolPath","parameterTypes":[] }, {"name":"isId","parameterTypes":[] }, {"name":"isPassToken","parameterTypes":[] }, {"name":"isPassword","parameterTypes":[] }, {"name":"isUserId","parameterTypes":[] }, {"name":"passToken","parameterTypes":[] }, {"name":"password","parameterTypes":[] }, {"name":"userId","parameterTypes":[] }]
+  "methods":[{"name":"assetsDateMapTimeZone","parameterTypes":[] }, {"name":"exifToolPath","parameterTypes":[] }, {"name":"getAssetsDateMapTimeZone","parameterTypes":[] }, {"name":"getExifToolPath","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getPassToken","parameterTypes":[] }, {"name":"getPassword","parameterTypes":[] }, {"name":"getUserId","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"isAssetsDateMapTimeZone","parameterTypes":[] }, {"name":"isExifToolPath","parameterTypes":[] }, {"name":"isId","parameterTypes":[] }, {"name":"isPassToken","parameterTypes":[] }, {"name":"isPassword","parameterTypes":[] }, {"name":"isUserId","parameterTypes":[] }, {"name":"passToken","parameterTypes":[] }, {"name":"password","parameterTypes":[] }, {"name":"userId","parameterTypes":[] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.SystemConfig$DefaultImpls",
@@ -789,7 +798,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"__equals","parameterTypes":["java.lang.Object","boolean"] }, {"name":"__get","parameterTypes":["java.lang.String"] }, {"name":"__get","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__hashCode","parameterTypes":["boolean"] }, {"name":"__isLoaded","parameterTypes":["java.lang.String"] }, {"name":"__isLoaded","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__isVisible","parameterTypes":["java.lang.String"] }, {"name":"__isVisible","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__shallowEquals","parameterTypes":["java.lang.Object"] }, {"name":"__shallowHashCode","parameterTypes":[] }, {"name":"__type","parameterTypes":[] }, {"name":"clone","parameterTypes":[] }, {"name":"equals","parameterTypes":["java.lang.Object"] }, {"name":"getDummyPropForJacksonError__","parameterTypes":[] }, {"name":"getExifToolPath","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getPassToken","parameterTypes":[] }, {"name":"getPassword","parameterTypes":[] }, {"name":"getUserId","parameterTypes":[] }, {"name":"get__exifToolPathValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__passTokenValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__passwordValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__userIdValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__visibility$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"hashCode","parameterTypes":[] }, {"name":"set__exifToolPathValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__idLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__idValue$XiaomiAlbumSyncer","parameterTypes":["long"] }, {"name":"set__passTokenValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__passwordValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__userIdValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__visibility$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.Visibility"] }, {"name":"toString","parameterTypes":[] }]
+  "methods":[{"name":"__equals","parameterTypes":["java.lang.Object","boolean"] }, {"name":"__get","parameterTypes":["java.lang.String"] }, {"name":"__get","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__hashCode","parameterTypes":["boolean"] }, {"name":"__isLoaded","parameterTypes":["java.lang.String"] }, {"name":"__isLoaded","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__isVisible","parameterTypes":["java.lang.String"] }, {"name":"__isVisible","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__shallowEquals","parameterTypes":["java.lang.Object"] }, {"name":"__shallowHashCode","parameterTypes":[] }, {"name":"__type","parameterTypes":[] }, {"name":"clone","parameterTypes":[] }, {"name":"equals","parameterTypes":["java.lang.Object"] }, {"name":"getAssetsDateMapTimeZone","parameterTypes":[] }, {"name":"getDummyPropForJacksonError__","parameterTypes":[] }, {"name":"getExifToolPath","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getPassToken","parameterTypes":[] }, {"name":"getPassword","parameterTypes":[] }, {"name":"getUserId","parameterTypes":[] }, {"name":"get__assetsDateMapTimeZoneValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__exifToolPathValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__passTokenValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__passwordValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__userIdValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__visibility$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"hashCode","parameterTypes":[] }, {"name":"set__assetsDateMapTimeZoneValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__exifToolPathValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__idLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__idValue$XiaomiAlbumSyncer","parameterTypes":["long"] }, {"name":"set__passTokenValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__passwordValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__userIdValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__visibility$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.Visibility"] }, {"name":"toString","parameterTypes":[] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.SystemConfigDraft$$$Implementor",
@@ -812,6 +821,9 @@
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$ASSETS_DATE_MAP_TIME_ZONE$1"
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$EXIF_TOOL_PATH$1"
@@ -1175,7 +1187,12 @@
 },
 {
   "name":"java.lang.Thread",
-  "fields":[{"name":"threadLocalRandomProbe"}]
+  "fields":[{"name":"threadLocalRandomProbe"}],
+  "methods":[{"name":"ofVirtual","parameterTypes":[] }]
+},
+{
+  "name":"java.lang.ThreadBuilders$VirtualThreadBuilder",
+  "methods":[{"name":"factory","parameterTypes":[] }]
 },
 {
   "name":"java.lang.annotation.Documented",
@@ -1340,6 +1357,10 @@
 {
   "name":"java.util.concurrent.AbstractExecutorService",
   "allDeclaredFields":true
+},
+{
+  "name":"java.util.concurrent.Executors",
+  "methods":[{"name":"newVirtualThreadPerTaskExecutor","parameterTypes":[] }]
 },
 {
   "name":"java.util.concurrent.ForkJoinTask",
