@@ -12,6 +12,8 @@ ARG TARGETARCH
 
 COPY dist/xiaomi-album-syncer-${TARGETARCH} /app/xiaomi-album-syncer
 
+RUN chmod +x /app/xiaomi-album-syncer
+
 # 暴露应用端口
 EXPOSE 8080
 
