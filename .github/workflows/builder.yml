@@ -342,6 +342,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: 为 Native 二进制文件准备 Docker 上下文
+        run: |
+          mkdir -p docker/native-dist
+          mv dist/xiaomi-album-syncer-linux-x64-v${{ github.event.release.tag_name }} dist/xiaomi-album-syncer-amd64
+          mv dist/xiaomi-album-syncer-linux-arm64-v${{ github.event.release.tag_name }} dist/xiaomi-album-syncer-arm64
+          ls -al dist
+
       - name: 构建并推送 Docker 镜像 (Native)
         uses: docker/build-push-action@v6
         with:

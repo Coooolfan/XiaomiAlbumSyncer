@@ -10,23 +10,7 @@ RUN apt-get update && \
 # 由 Docker BuildKit 自动注入（amd64 / arm64）
 ARG TARGETARCH
 
-# 只使用通配符，不拼变量（COPY 不支持变量+通配符组合）
-COPY dist/xiaomi-album-syncer-linux-x64-v* /tmp/XiaomiAlbumSyncer-amd64
-COPY dist/xiaomi-album-syncer-linux-arm64-v* /tmp/XiaomiAlbumSyncer-arm64
-
-# 根据 TARGETARCH 选择对应的二进制作为最终可执行文件，并清理无用文件
-RUN set -eux; \
-    if [ "$TARGETARCH" = "amd64" ]; then \
-      mv /tmp/XiaomiAlbumSyncer-amd64 /app/xiaomi-album-syncer; \
-      rm -f /tmp/XiaomiAlbumSyncer-arm64 || true; \
-    elif [ "$TARGETARCH" = "arm64" ]; then \
-      mv /tmp/XiaomiAlbumSyncer-arm64 /app/xiaomi-album-syncer; \
-      rm -f /tmp/XiaomiAlbumSyncer-amd64 || true; \
-    else \
-      echo "Unsupported arch: $TARGETARCH"; \
-      exit 1; \
-    fi; \
-    chmod +x /app/xiaomi-album-syncer
+COPY dist/xiaomi-album-syncer-${TARGETARCH} /app/xiaomi-album-syncer
 
 # 暴露应用端口
 EXPOSE 8080
