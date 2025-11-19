@@ -17,7 +17,7 @@ repositories {
 }
 
 group = "com.coooolfan"
-version = "0.6.8-BETA"
+version = "0.7.0-BETA"
 description = "A tool to download albums from Xiaomi Cloud."
 
 val jimmerVersion = "0.9.112"
