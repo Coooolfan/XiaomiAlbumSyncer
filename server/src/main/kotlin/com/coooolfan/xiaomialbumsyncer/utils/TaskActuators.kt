@@ -106,7 +106,27 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }
 
         // 5.1 可选：批量修改图片 EXIF 时间
-        fillExifTime(crontab, assetPathMap, systemConfig)
+        if (crontab.config.rewriteExifTime) {
+            var timeZone: TimeZone? = null
+            try {
+                timeZone = TimeZone.getTimeZone(ZoneId.of(crontab.config.rewriteExifTimeZone))
+            } catch (e: Exception) {
+                log.error("解析时区失败，填充 EXIF 时间操作将被跳过，时区字符串：${crontab.config.rewriteExifTimeZone}")
+                e.printStackTrace()
+            }
+
+            if (timeZone == null)
+                log.warn("未指定有效的时区，填充 EXIF 时间操作将被跳过")
+            else
+                fillExifTime(assetPathMap, systemConfig, timeZone)
+
+        }
+
+        // 5.2 可选：修改文件系统时间
+        if (crontab.config.rewriteFileSystemTime) {
+            log.info("开始修改下载文件的文件系统时间，共 ${assetPathMap.size} 个文件需要处理")
+            rewriteFileSystemTime(assetPathMap)
+        }
 
         // 6. 写入 CrontabHistoryDetails 记录
         sql.executeUpdate(CrontabHistory::class) {
@@ -118,11 +138,10 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
     }
 
     fun fillExifTime(
-        crontab: Crontab,
         assetPathMap: Map<Asset, Path>,
-        systemConfig: SystemConfig
+        systemConfig: SystemConfig,
+        timeZone: TimeZone
     ) {
-        if (!crontab.config.rewriteExifTime) return
 
         log.info("开始填充下载文件的 EXIF 时间，共 ${assetPathMap.size} 个文件需要处理")
 
@@ -135,13 +154,32 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
             try {
                 rewriteExifTime(
                     it.key, it.value,
-                    ExifRewriteConfig(
-                        Path(systemConfig.exifToolPath),
-                        TimeZone.getTimeZone(ZoneId.of(crontab.config.rewriteExifTimeZone))
-                    )
+                    ExifRewriteConfig(Path(systemConfig.exifToolPath), timeZone)
                 )
             } catch (e: Exception) {
                 log.error("修改文件 EXIF 时间失败，跳过此文件，Asset ID: ${it.key.id}")
+                e.printStackTrace()
+            }
+            i++
+        }
+    }
+
+    fun rewriteFileSystemTime(assetPathMap: Map<Asset, Path>) {
+        log.info("开始重写下载文件的文件系统时间，共 ${assetPathMap.size} 个文件需要处理")
+
+        var i = 0
+        val step = maxOf(assetPathMap.size / 10, 1)
+        for (it in assetPathMap) {
+            if ((i + 1) % step == 0)
+                log.info("正在尝试重写第 ${i + 1} 个文件的文件系统时间，总进度：${(i + 1).percentOf(assetPathMap.size)}")
+
+            try {
+                rewriteFSTime(
+                    it.value,
+                    it.key.dateTaken
+                )
+            } catch (e: Exception) {
+                log.error("修改文件系统时间未能正确返回，此操作的结果不可知，Asset ID: ${it.key.id}，Asset Path: ${it.value}")
                 e.printStackTrace()
             }
             i++

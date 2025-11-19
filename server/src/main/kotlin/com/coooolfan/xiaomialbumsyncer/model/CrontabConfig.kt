@@ -23,5 +23,11 @@ data class CrontabConfig(
 
     val rewriteExifTimeZone: String?,
 
-    val skipExistingFile: Boolean = true
+    val skipExistingFile: Boolean = true,
+
+    val rewriteFileSystemTime: Boolean = false,
+
+//    重新发起下载请求有点麻烦，到时候再说吧
+//    val checkSha1: Boolean = false
+
 )

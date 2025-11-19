@@ -15,6 +15,7 @@ import org.noear.solon.scheduling.scheduled.manager.IJobManager
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.text.ParseException
+import java.util.TimeZone
 
 @Managed
 class TaskScheduler(
@@ -79,13 +80,23 @@ class TaskScheduler(
     }
 
     fun executeCrontabExifTime(
-        crontab: Crontab, async: Boolean = true, assetPathMap: Map<Asset, Path>,
-        systemConfig: SystemConfig
+        async: Boolean = true, assetPathMap: Map<Asset, Path>,
+        systemConfig: SystemConfig, timeZone: TimeZone
     ) {
         if (async) {
-            thread.taskExecutor().execute { actuators.fillExifTime(crontab, assetPathMap, systemConfig) }
+            thread.taskExecutor().execute { actuators.fillExifTime(assetPathMap, systemConfig, timeZone) }
         } else {
-            actuators.fillExifTime(crontab, assetPathMap, systemConfig)
+            actuators.fillExifTime(assetPathMap, systemConfig, timeZone)
+        }
+    }
+
+    fun executeCrontabRewriteFileSystemTime(
+        async: Boolean = true, assetPathMap: Map<Asset, Path>
+    ) {
+        if (async) {
+            thread.taskExecutor().execute { actuators.rewriteFileSystemTime(assetPathMap) }
+        } else {
+            actuators.rewriteFileSystemTime(assetPathMap)
         }
     }
 

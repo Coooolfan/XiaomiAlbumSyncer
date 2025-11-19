@@ -4,6 +4,7 @@ import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import InputSwitch from 'primevue/inputswitch'
 import Tag from 'primevue/tag'
+import SplitButton from 'primevue/splitbutton'
 import type { CrontabDto } from '@/__generated/model/dto'
 import { computed } from 'vue'
 
@@ -21,6 +22,7 @@ const emit = defineEmits<{
   (e: 'toggle'): void
   (e: 'execute'): void
   (e: 'executeExif'): void
+  (e: 'executeRewriteFsTime'): void
 }>()
 
 const albumMap = computed<Record<string, string>>(() => {
@@ -47,6 +49,25 @@ const recentHistories = computed(() => {
   list.sort((a, b) => (a.startTime < b.startTime ? 1 : -1))
   return list.slice(0, 3)
 })
+
+const manualActionOptions = computed(() => {
+  const actions: Array<{ label: string; icon: string; command: () => void }> = []
+  if (props.crontab.config?.rewriteExifTime) {
+    actions.push({
+      label: '填充 EXIF 时间',
+      icon: 'pi pi-clock',
+      command: () => emit('executeExif'),
+    })
+  }
+  if (props.crontab.config?.rewriteFileSystemTime) {
+    actions.push({
+      label: '重写文件系统时间',
+      icon: 'pi pi-history',
+      command: () => emit('executeRewriteFsTime'),
+    })
+  }
+  return actions
+})
 </script>
 
 <template>
@@ -60,8 +81,9 @@ const recentHistories = computed(() => {
           <span class="hidden sm:inline">启用</span>
           <InputSwitch :modelValue="crontab.enabled" :disabled="busy" @update:modelValue="() => emit('toggle')"
             class="mr-2 sm:mr-4" />
-          <Button icon="pi pi-play" size="small" severity="warning" class="mr-1" @click="emit('execute')" />
-          <Button icon="pi pi-clock" size="small" severity="info" class="mr-1" v-if="crontab.config?.rewriteExifTime" @click="emit('executeExif')" />
+          <SplitButton v-if="manualActionOptions.length > 0" size="small" severity="warning" class="mr-1"
+            label="立即执行" icon="pi pi-play" :model="manualActionOptions" @click="emit('execute')" />
+          <Button v-else icon="pi pi-play" size="small" severity="warning" class="mr-1" @click="emit('execute')" />
           <Button icon="pi pi-pencil" size="small" @click="emit('edit')" />
           <Button icon="pi pi-trash" size="small" severity="danger" @click="emit('delete')" />
         </div>
@@ -101,6 +123,8 @@ const recentHistories = computed(() => {
               :value="crontab.config?.diffByTimeline ? '时间线比对差异' : '全量比对差异'" />
             <Tag :severity="crontab.config?.skipExistingFile ? 'success' : 'danger'"
               :value="crontab.config?.skipExistingFile ? '跳过已存在文件' : '覆盖已存在文件'" />
+            <Tag :severity="crontab.config?.rewriteFileSystemTime ? 'info' : 'secondary'"
+              :value="crontab.config?.rewriteFileSystemTime ? '重写文件系统时间' : '不重写文件系统时间'" />
           </div>
 
           <div class="flex flex-wrap items-center gap-2 pt-1">

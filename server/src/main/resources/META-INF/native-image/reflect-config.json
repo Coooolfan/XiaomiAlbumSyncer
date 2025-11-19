@@ -331,7 +331,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.CrontabService"] }, {"name":"createCrontab","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput"] }, {"name":"deleteCrontab","parameterTypes":["long"] }, {"name":"executeCrontab","parameterTypes":["long"] }, {"name":"executeCrontabExifTime","parameterTypes":["long"] }, {"name":"getService","parameterTypes":[] }, {"name":"listCrontabs","parameterTypes":[] }, {"name":"setService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.CrontabService"] }, {"name":"updateCrontab","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.CrontabUpdateInput","long"] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.CrontabService"] }, {"name":"createCrontab","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput"] }, {"name":"deleteCrontab","parameterTypes":["long"] }, {"name":"executeCrontab","parameterTypes":["long"] }, {"name":"executeCrontabExifTime","parameterTypes":["long"] }, {"name":"executeCrontabRewriteFileSystemTime","parameterTypes":["long"] }, {"name":"getService","parameterTypes":[] }, {"name":"listCrontabs","parameterTypes":[] }, {"name":"setService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.CrontabService"] }, {"name":"updateCrontab","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.CrontabUpdateInput","long"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.controller.CrontabController$Companion"
@@ -560,7 +560,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"getDiffByTimeline","parameterTypes":[] }, {"name":"getDownloadImages","parameterTypes":[] }, {"name":"getDownloadVideos","parameterTypes":[] }, {"name":"getExpression","parameterTypes":[] }, {"name":"getRewriteExifTime","parameterTypes":[] }, {"name":"getRewriteExifTimeZone","parameterTypes":[] }, {"name":"getSkipExistingFile","parameterTypes":[] }, {"name":"getTargetPath","parameterTypes":[] }, {"name":"getTimeZone","parameterTypes":[] }]
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"getDiffByTimeline","parameterTypes":[] }, {"name":"getDownloadImages","parameterTypes":[] }, {"name":"getDownloadVideos","parameterTypes":[] }, {"name":"getExpression","parameterTypes":[] }, {"name":"getRewriteExifTime","parameterTypes":[] }, {"name":"getRewriteExifTimeZone","parameterTypes":[] }, {"name":"getRewriteFileSystemTime","parameterTypes":[] }, {"name":"getSkipExistingFile","parameterTypes":[] }, {"name":"getTargetPath","parameterTypes":[] }, {"name":"getTimeZone","parameterTypes":[] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabDraft",
@@ -976,7 +976,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"] }, {"name":"getSql","parameterTypes":[] }, {"name":"getTaskScheduler","parameterTypes":[] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"setTaskScheduler","parameterTypes":["com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"] }]
+  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"getTaskScheduler","parameterTypes":[] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"setTaskScheduler","parameterTypes":["com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.service.SystemConfigService",
@@ -1002,6 +1002,9 @@
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.utils.ExifRewriteConfig"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.utils.FSTimeHelperKt"
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.utils.OkHttpHelperKt"

@@ -55,6 +55,9 @@ const executing = ref(false)
 const showExecuteExifId = ref<number | null>(null)
 const showExecuteExifVisible = ref(false)
 const executingExif = ref(false)
+const showExecuteRewriteFsId = ref<number | null>(null)
+const showExecuteRewriteFsVisible = ref(false)
+const executingRewriteFs = ref(false)
 
 const defaultTz = (() => {
   try {
@@ -78,6 +81,7 @@ const cronForm = ref<CrontabCreateInput>({
     rewriteExifTime: false,
     rewriteExifTimeZone: defaultTz,
     skipExistingFile: true,
+    rewriteFileSystemTime: false,
   },
   albumIds: [],
 })
@@ -264,6 +268,7 @@ function openCreateCron() {
       rewriteExifTime: false,
       rewriteExifTimeZone: defaultTz,
       skipExistingFile: true,
+      rewriteFileSystemTime: false,
     },
     albumIds: [],
   }
@@ -288,6 +293,7 @@ function openEditCron(item: Crontab) {
       rewriteExifTime: item.config.rewriteExifTime,
       rewriteExifTimeZone: item.config.rewriteExifTimeZone ?? item.config.timeZone,
       skipExistingFile: item.config.skipExistingFile ?? true,
+      rewriteFileSystemTime: item.config.rewriteFileSystemTime ?? false,
     },
     albumIds: [...item.albumIds],
   }
@@ -370,6 +376,11 @@ function requestExecuteExif(row: Crontab) {
   showExecuteExifVisible.value = true
 }
 
+function requestExecuteRewriteFs(row: Crontab) {
+  showExecuteRewriteFsId.value = row.id
+  showExecuteRewriteFsVisible.value = true
+}
+
 async function confirmExecute() {
   if (showExecuteId.value === null) return
   executing.value = true
@@ -407,6 +418,30 @@ async function confirmExecuteExif() {
     })
   } finally {
     executingExif.value = false
+  }
+}
+
+async function confirmExecuteRewriteFs() {
+  if (showExecuteRewriteFsId.value === null) return
+  executingRewriteFs.value = true
+  try {
+    await api.crontabController.executeCrontabRewriteFileSystemTime({
+      crontabId: showExecuteRewriteFsId.value,
+    })
+    toast.add({ severity: 'success', summary: '已触发文件时间重写', life: 2000 })
+    showExecuteRewriteFsId.value = null
+    showExecuteRewriteFsVisible.value = false
+    fetchCrontabs()
+  } catch (err) {
+    console.error('立即执行文件系统时间重写失败', err)
+    toast.add({
+      severity: 'error',
+      summary: '触发失败',
+      detail: err instanceof Error ? err.message : String(err),
+      life: 2200,
+    })
+  } finally {
+    executingRewriteFs.value = false
   }
 }
 
@@ -503,7 +538,8 @@ const albumsRefreshModel = ref([
               <CrontabCard v-for="item in crontabs" :key="item.id" :crontab="item" :album-options="albumOptions"
                 :busy="updatingRow === item.id" @edit="openEditCron(item)" @delete="requestDelete(item)"
                 @toggle="toggleEnabled(item)" @execute="requestExecute(item)"
-                @execute-exif="requestExecuteExif(item)" />
+                @execute-exif="requestExecuteExif(item)"
+                @execute-rewrite-fs-time="requestExecuteRewriteFs(item)" />
             </div>
           </div>
         </div>
@@ -616,6 +652,13 @@ const albumsRefreshModel = ref([
               </div>
               <div class="text-[10px] text-slate-400">若资产的目标文件路径已存在，将跳过下载。仅适用于保存路径中已有存量数据。</div>
             </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 text-xs text-slate-600">
+                <InputSwitch v-model="cronForm.config.rewriteFileSystemTime" />
+                <span>重写文件时间</span>
+              </div>
+              <div class="text-[10px] text-slate-400">同步完成后，将资产的文件系统时间修改为对应的小米云服务上的时间。</div>
+            </div>
           </div>
 
           <div v-if="cronForm.config.rewriteExifTime" class="space-y-2 mt-3">
@@ -686,6 +729,25 @@ const albumsRefreshModel = ref([
             }
           " />
           <Button label="执行" severity="info" :loading="executingExif" @click="confirmExecuteExif" />
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- 立即执行文件系统时间重写 -->
+    <Dialog v-model:visible="showExecuteRewriteFsVisible" modal header="立即重写文件系统时间"
+      class="w-full sm:w-[420px]">
+      <div class="text-sm text-slate-700">
+        确定要对该计划任务已下载的文件执行文件系统时间重写吗？该操作较为耗时，将在后台执行。可观察程序日志查看进度。<br/>会对此计划任务所有下载过的文件执行此操作。
+      </div>
+      <template #footer>
+        <div class="flex items-center justify-end gap-2 w-full">
+          <Button label="取消" severity="secondary" text @click="
+            () => {
+              showExecuteRewriteFsId = null
+              showExecuteRewriteFsVisible = false
+            }
+          " />
+          <Button label="执行" severity="info" :loading="executingRewriteFs" @click="confirmExecuteRewriteFs" />
         </div>
       </template>
     </Dialog>

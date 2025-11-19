@@ -134,6 +134,24 @@ class CrontabController(private val service: CrontabService) {
         service.executeCrontabExifTime(crontabId)
     }
 
+    /**
+     * 立即执行指定定时任务的文件系统时间重写操作
+     *
+     * 此接口用于立即执行指定定时任务中的文件系统时间重写操作
+     * 需要用户登录认证才能访问（类级别注解）
+     *
+     * @param crontabId 定时任务ID，用于指定要执行文件系统时间重写操作的任务
+     *
+     * @api POST /api/crontab/{crontabId}/rewrite-fs-time/executions
+     * @permission 需要登录认证
+     * @description 调用CrontabService.executeCrontabRewriteFileSystemTime()方法立即执行文件系统时间重写操作
+     */
+    @Api
+    @Mapping("/{crontabId}/rewrite-fs-time/executions", method = [MethodType.POST])
+    fun executeCrontabRewriteFileSystemTime(@Path crontabId: Long) {
+        service.executeCrontabRewriteFileSystemTime(crontabId)
+    }
+
     companion object {
         private val DEFAULT_CRONTAB = newFetcher(Crontab::class).by {
             allScalarFields()
