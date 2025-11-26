@@ -4,7 +4,7 @@
 
 ![banner](./static/banner.avif)
 
-发了 issues 记得常回来看看有没有回复，或者 >>>>> **[QQ 群聊：1059332701](https://qm.qq.com/q/H2trW6JWM4)**
+发了 **issues** 记得常回来看看有没有回复，或者 >>>>> **[QQ 群聊：1059332701](https://qm.qq.com/q/H2trW6JWM4)**
 
 ## Features/功能
 
@@ -12,10 +12,11 @@
 - [x] ⏭️ 自动跳过已下载的照片
 - [x] 🔄 自动刷新 Cookie
 - [x] ⏰ 支持定时任务
-- [x] 📥 支持增量下载
+- [x] 📥 支持增量下载（超快）
 - [x] 🗂️ 支持按相册分类存储照片
 - [x] 🌍 友好的 Web UI
 - [x] 📅 填充照片和视频的 Exif 时间信息
+- [x] 📅 填充照片和视频的文件系统时间
 
 > [!CAUTION] 
 > 此项目已于 `0.3.0` 完成重构。新版目前仅提供 Web UI，部署方式仅提供 Docker。旧版 CLI 工具仍然可用，可前往 [0.2.1 releases](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases/tag/0.2.1) 下载。
@@ -28,11 +29,40 @@
 
 **不建议使用各种自动升级工具。**
 
+> 原生版本和 jvm 版本的逻辑实现都相同，数据库可以通用
+
+### 二进制部署 (Binary)
+
+此部署方式无需安装 Java 环境，直接下载对应平台的可执行文件即可运行。
+
+1.  **下载**: 前往 [Releases](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases) 页面下载对应系统的二进制文件压缩包（Linux/macOS/Windows）。
+    *   **Linux x64**: `xiaomi-album-syncer-linux-x64-vX.X.X.zip`
+    *   **Linux arm64**: `xiaomi-album-syncer-linux-arm64-vX.X.X.zip`
+    *   **macOS x64**: `xiaomi-album-syncer-macos-x64-vX.X.X.zip`
+    *   **macOS arm64**: `xiaomi-album-syncer-macos-arm64-vX.X.X.zip`
+    *   **Windows x64**: `xiaomi-album-syncer-windows-x64-vX.X.X.exe.zip`
+    *   **Windows arm64**: GraalVM 尚不支持 windows on arm
+    
+2.  **解压**: 解压下载的压缩包，得到可执行文件。
+
+3.  **运行**:
+    *   **Linux / macOS**:
+        ```bash
+        # 赋予执行权限 (文件名后的版本号视具体情况而异)
+        chmod +x xiaomi-album-syncer-linux-x64-v0.3.0
+        # 运行
+        ./xiaomi-album-syncer-linux-x64-v0.3.0
+        ```
+    *   **Windows**: 双击运行解压后的 `xiaomi-album-syncer-windows-x64-v0.3.0.exe`。
+
+4.  **访问**: 打开浏览器访问 `http://localhost:8080`。
+
 ### Docker
 
 1. 拉起 docker 容器
 
     ```bash
+    # 使用默认版本 (JVM)
     docker run -d \
       -p 8232:8080 \
       --name xiaomi-album-syncer \
@@ -40,7 +70,19 @@
       -v ~/xiaomi-album-syncer/db:/app/db \
       coolfan1024/xiaomi-album-syncer:latest
     ```
+    
+    或者使用 Native 版本：
 
+    ```bash
+    # 使用 Native 版本
+    docker run -d \
+      -p 8232:8080 \
+      --name xiaomi-album-syncer \
+      -v ~/xiaomi-album-syncer/download:/app/download \
+      -v ~/xiaomi-album-syncer/db:/app/db \
+      coolfan1024/xiaomi-album-syncer:latest-native
+    ```
+    
 2. 访问 Web UI
 
    打开浏览器，访问 `http://localhost:8232`（如果你在本地运行 Docker），或者替换为你的服务器 IP 地址和端口。
