@@ -26,4 +26,19 @@ interface CrontabHistoryDetail {
     val asset: Asset
 
     val filePath: String
+
+    // 预检
+    val precheckCompleted: Boolean
+
+    // 下载
+    val downloadCompleted: Boolean
+
+    // 校验
+    val sha1Verified: Boolean
+
+    // EXIF 填充
+    val exifFilled: Boolean
+
+    // 修改时间更新
+    val fsTimeUpdated: Boolean
 }
