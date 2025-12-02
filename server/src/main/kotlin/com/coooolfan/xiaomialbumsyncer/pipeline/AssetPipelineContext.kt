@@ -13,7 +13,7 @@ package com.coooolfan.xiaomialbumsyncer.pipeline
  * 生命周期：
  * 创建 -> 下载 -> 校验 -> EXIF处理 -> 文件时间处理 -> 完成/失败
  */
-data class AssetTask(
+data class AssetPipelineContext(
     // TODO: 定义任务上下文的数据结构
     val todo: Any
 )
