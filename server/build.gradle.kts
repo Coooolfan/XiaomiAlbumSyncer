@@ -40,6 +40,8 @@ dependencies {
 
     implementation("org.flywaydb:flyway-core:11.13.1")
 
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+
     implementation("org.babyfish.jimmer:jimmer-client:$jimmerVersion")
     implementation("org.babyfish.jimmer:jimmer-core:${jimmerVersion}")
     implementation("org.babyfish.jimmer:jimmer-core-kotlin:${jimmerVersion}")
