@@ -15,6 +15,7 @@
 /server/target
 /server/.gradle
 /server/logs/server/.gradle/
+/server/default.iprof
 
 /server/buildSrc/.idea
 /server/buildSrc/.kotlin
