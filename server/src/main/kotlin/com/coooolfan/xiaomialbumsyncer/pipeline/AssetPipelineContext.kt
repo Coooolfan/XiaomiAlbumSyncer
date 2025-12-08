@@ -2,7 +2,6 @@ package com.coooolfan.xiaomialbumsyncer.pipeline
 
 import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
-import com.coooolfan.xiaomialbumsyncer.utils.ExifRewriteConfig
 import java.nio.file.Path
 import java.time.Instant
 
@@ -23,10 +22,6 @@ data class AssetPipelineContext(
     val crontab: Crontab,
     val crontabHistoryId: Long,
     val targetPath: Path,
-    val rewriteExifTime: Boolean,
-    val rewriteFileSystemTime: Boolean,
-    val exifRewriteConfig: ExifRewriteConfig?,
-    val skipExistingFile: Boolean,
     val maxRetry: Int = 3,
     val createdAt: Instant = Instant.now(),
     var retry: Int = 0,
@@ -35,4 +30,8 @@ data class AssetPipelineContext(
     var finalPath: Path? = null,
     var lastError: Throwable? = null,
     var detailId: Long? = null,
+    var abandoned: Boolean = false,
 )
+
+val AssetPipelineContext.config
+    get() = crontab.config

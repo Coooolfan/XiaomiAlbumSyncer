@@ -4,11 +4,12 @@ import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.model.sha1Verified
 import com.coooolfan.xiaomialbumsyncer.pipeline.AssetPipelineContext
-import com.coooolfan.xiaomialbumsyncer.pipeline.PipelineCoordinator
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flow
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
@@ -27,55 +28,67 @@ class VerificationStage(
 
     private val log = LoggerFactory.getLogger(VerificationStage::class.java)
 
-    fun start(
-        scope: CoroutineScope,
-        downloadChannel: Channel<AssetPipelineContext>,
-        verificationChannel: Channel<AssetPipelineContext>,
-        exifChannel: Channel<AssetPipelineContext>,
-        workerCount: Int,
-        coordinator: PipelineCoordinator,
-    ): Job = scope.launch {
-        repeat(workerCount) {
-            launch {
-                for (context in verificationChannel) {
-                    handleVerification(context, downloadChannel, exifChannel, coordinator)
-                }
-            }
-        }
-    }
-
-    private suspend fun handleVerification(
+    fun process(
         context: AssetPipelineContext,
-        downloadChannel: Channel<AssetPipelineContext>,
-        exifChannel: Channel<AssetPipelineContext>,
-        coordinator: PipelineCoordinator,
-    ) {
+        downloadFlow: (AssetPipelineContext) -> Flow<AssetPipelineContext>
+    ): Flow<AssetPipelineContext> = flow {
         val detailId = context.detailId
         val downloadedPath = context.downloadedPath
 
         if (detailId == null || downloadedPath == null || !Files.exists(downloadedPath)) {
-            log.warn("Verification skipped due to missing file/detail for asset {}", context.asset.id)
-            handleRetry(context, downloadChannel, coordinator, IllegalStateException("missing file"))
-            return
+            log.warn("资源 {} 缺少文件或明细记录，跳过校验阶段", context.asset.id)
+            context.retry += 1
+            context.lastError = IllegalStateException("缺少文件")
+            retryOrReprocess(context, downloadFlow) {
+                "资源 ${context.asset.id} 在校验阶段重试 ${context.retry} 次后被放弃"
+            }
+            return@flow
         }
 
         try {
             val sha1 = computeSha1(downloadedPath)
             if (!sha1.equals(context.asset.sha1, ignoreCase = true)) {
-                log.warn("SHA1 mismatch for asset {} expected {} actual {}", context.asset.id, context.asset.sha1, sha1)
+                log.warn("资源 {} 的 SHA1 校验失败，期望 {} 实际 {}", context.asset.id, context.asset.sha1, sha1)
                 Files.deleteIfExists(downloadedPath)
                 context.downloadedPath = null
-                handleRetry(context, downloadChannel, coordinator, IllegalStateException("sha1 mismatch"))
-                return
+                context.retry += 1
+                context.lastError = IllegalStateException("SHA1 不匹配")
+
+                retryOrReprocess(context, downloadFlow) {
+                    "资源 ${context.asset.id} 在校验阶段重试 ${context.retry} 次后被放弃"
+                }
+                return@flow
             }
 
             context.sha1Verified = true
             context.lastError = null
             markSha1Verified(detailId)
-            exifChannel.send(context)
+            emit(context)
         } catch (ex: Exception) {
-            log.error("Verification failed for asset {}", context.asset.id, ex)
-            handleRetry(context, downloadChannel, coordinator, ex)
+            log.error("资源 {} 校验失败", context.asset.id, ex)
+            context.retry += 1
+            context.lastError = ex
+            retryOrReprocess(context, downloadFlow) {
+                "资源 ${context.asset.id} 在校验阶段重试 ${context.retry} 次后被放弃"
+            }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private suspend fun FlowCollector<AssetPipelineContext>.retryOrReprocess(
+        context: AssetPipelineContext,
+        downloadFlow: (AssetPipelineContext) -> Flow<AssetPipelineContext>,
+        abandonMessage: () -> String,
+    ) {
+        if (context.retry >= context.maxRetry) {
+            log.error(abandonMessage())
+            context.abandoned = true
+            emit(context)
+        } else {
+            emitAll(
+                downloadFlow(context)
+                    .flatMapConcat { process(it, downloadFlow) }
+            )
         }
     }
 
@@ -84,25 +97,6 @@ class VerificationStage(
             set(table.sha1Verified, true)
             where(table.id eq detailId)
         }
-    }
-
-    private suspend fun handleRetry(
-        context: AssetPipelineContext,
-        downloadChannel: Channel<AssetPipelineContext>,
-        coordinator: PipelineCoordinator,
-        error: Throwable,
-    ) {
-        context.retry += 1
-        context.lastError = error
-        context.sha1Verified = false
-
-        if (context.retry >= context.maxRetry) {
-            log.error("Abandon asset {} after {} retries during verification", context.asset.id, context.retry)
-            coordinator.markCompleted()
-            return
-        }
-
-        downloadChannel.send(context)
     }
 
     private fun computeSha1(path: Path): String {

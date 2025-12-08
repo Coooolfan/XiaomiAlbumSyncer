@@ -5,12 +5,10 @@ import com.coooolfan.xiaomialbumsyncer.model.downloadCompleted
 import com.coooolfan.xiaomialbumsyncer.model.filePath
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.pipeline.AssetPipelineContext
-import com.coooolfan.xiaomialbumsyncer.pipeline.PipelineCoordinator
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.emitAll
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
@@ -29,33 +27,13 @@ class DownloadStage(
 
     private val log = LoggerFactory.getLogger(DownloadStage::class.java)
 
-    fun start(
-        scope: CoroutineScope,
-        downloadChannel: Channel<AssetPipelineContext>,
-        verificationChannel: Channel<AssetPipelineContext>,
-        workerCount: Int,
-        coordinator: PipelineCoordinator,
-    ): Job = scope.launch {
-        repeat(workerCount) {
-            launch {
-                for (context in downloadChannel) {
-                    handleDownload(context, downloadChannel, verificationChannel, coordinator)
-                }
-            }
-        }
-    }
-
-    private suspend fun handleDownload(
-        context: AssetPipelineContext,
-        downloadChannel: Channel<AssetPipelineContext>,
-        verificationChannel: Channel<AssetPipelineContext>,
-        coordinator: PipelineCoordinator,
-    ) {
+    fun process(context: AssetPipelineContext): Flow<AssetPipelineContext> = flow {
         val detailId = context.detailId
         if (detailId == null) {
-            log.error("Missing detail record for asset {}", context.asset.id)
-            coordinator.markCompleted()
-            return
+            log.error("资源 {} 缺失明细记录", context.asset.id)
+            context.abandoned = true
+            emit(context)
+            return@flow
         }
 
         try {
@@ -68,10 +46,21 @@ class DownloadStage(
             context.lastError = null
 
             markDownloadCompleted(detailId, downloadedPath)
-            verificationChannel.send(context)
+            emit(context)
         } catch (ex: Exception) {
-            log.error("Download failed for asset {}", context.asset.id, ex)
-            handleRetry(context, downloadChannel, coordinator, ex)
+            log.error("资源 {} 下载失败", context.asset.id, ex)
+            context.retry += 1
+            context.lastError = ex
+            context.downloadedPath = null
+
+            if (context.retry >= context.maxRetry) {
+                log.error("资源 {} 经 {} 次重试后被放弃", context.asset.id, context.retry)
+                context.abandoned = true
+                emit(context)
+            } else {
+                // 递归重试
+                emitAll(process(context))
+            }
         }
     }
 
@@ -81,24 +70,5 @@ class DownloadStage(
             set(table.filePath, filePath.toString())
             where(table.id eq detailId)
         }
-    }
-
-    private suspend fun handleRetry(
-        context: AssetPipelineContext,
-        downloadChannel: Channel<AssetPipelineContext>,
-        coordinator: PipelineCoordinator,
-        error: Throwable,
-    ) {
-        context.retry += 1
-        context.lastError = error
-        context.downloadedPath = null
-
-        if (context.retry >= context.maxRetry) {
-            log.error("Abandon asset {} after {} retries", context.asset.id, context.retry)
-            coordinator.markCompleted()
-            return
-        }
-
-        downloadChannel.send(context)
     }
 }

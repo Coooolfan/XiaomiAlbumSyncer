@@ -2,26 +2,26 @@ package com.coooolfan.xiaomialbumsyncer.pipeline
 
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.CrontabHistory
-import com.coooolfan.xiaomialbumsyncer.pipeline.stages.AssetCollectStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.ExifProcessingStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.VerificationStage
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.onEach
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 /**
  * 计划任务流水线管理器
  */
 @Managed
 class CrontabPipeline(
-    private val assetCollectStage: AssetCollectStage,
     private val downloadStage: DownloadStage,
     private val verificationStage: VerificationStage,
     private val exifProcessingStage: ExifProcessingStage,
@@ -30,63 +30,47 @@ class CrontabPipeline(
 
     private val log = LoggerFactory.getLogger(CrontabPipeline::class.java)
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun execute(
         request: PipelineRequest,
         concurrency: PipelineConcurrency = PipelineConcurrency(),
     ) {
         if (request.tasks.isEmpty()) {
-            log.info("Crontab {} has no assets to process", request.crontab.id)
+            log.info("Crontab {} 无待处理的资源", request.crontab.id)
             return
         }
 
         val coordinator = PipelineCoordinator(request.tasks.size)
 
-        coroutineScope {
-            val downloadChannel = Channel<AssetPipelineContext>(Channel.UNLIMITED)
-            val verificationChannel = Channel<AssetPipelineContext>(Channel.UNLIMITED)
-            val exifChannel = Channel<AssetPipelineContext>(Channel.UNLIMITED)
-            val fileTimeChannel = Channel<AssetPipelineContext>(Channel.UNLIMITED)
+        request.tasks.asFlow()
+            .flatMapMerge(concurrency.downloaders) { context ->
+                downloadStage.process(context)
+            }
+            .flatMapMerge(concurrency.verifiers) { context ->
+                verificationStage.process(context, downloadStage::process)
+            }
+            .flatMapMerge(concurrency.exifProcessors) { context ->
+                exifProcessingStage.process(context)
+            }
+            .flatMapMerge(concurrency.fileTimeWorkers) { context ->
+                fileTimeStage.process(context)
+            }
+            .onEach { context ->
+                if (context.abandoned) {
+                    log.warn("资源 {} 多次重试后被放弃", context.asset.id)
+                } else {
+                    log.debug("资源 {} 处理成功完成", context.asset.id)
+                }
+                coordinator.markCompleted()
+            }
+            .catch { ex ->
+                log.error("流水线执行异常", ex)
+                coordinator.markCompleted()
+            }
+            .collect()
 
-            val jobs = mutableListOf<Job>()
-            jobs += assetCollectStage.start(this, request.tasks, downloadChannel)
-            jobs += downloadStage.start(
-                scope = this,
-                downloadChannel = downloadChannel,
-                verificationChannel = verificationChannel,
-                workerCount = concurrency.downloaders,
-                coordinator = coordinator
-            )
-            jobs += verificationStage.start(
-                scope = this,
-                downloadChannel = downloadChannel,
-                verificationChannel = verificationChannel,
-                exifChannel = exifChannel,
-                workerCount = concurrency.verifiers,
-                coordinator = coordinator
-            )
-            jobs += exifProcessingStage.start(
-                scope = this,
-                exifChannel = exifChannel,
-                fileTimeChannel = fileTimeChannel,
-                workerCount = concurrency.exifProcessors
-            )
-            jobs += fileTimeStage.start(
-                scope = this,
-                fileTimeChannel = fileTimeChannel,
-                request = request,
-                workerCount = concurrency.fileTimeWorkers,
-                coordinator = coordinator
-            )
-
-            coordinator.awaitCompletion()
-
-            downloadChannel.close()
-            verificationChannel.close()
-            exifChannel.close()
-            fileTimeChannel.close()
-
-            jobs.joinAll()
-        }
+        coordinator.awaitCompletion()
+        log.info("Crontab {} 的流水线执行完毕", request.crontab.id)
     }
 }
 

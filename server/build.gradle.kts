@@ -23,7 +23,7 @@ description = "A tool to download albums from Xiaomi Cloud."
 val jimmerVersion = "0.9.112"
 
 dependencies {
-    implementation(platform("org.noear:solon-parent:3.6.0"))
+    implementation(platform("org.noear:solon-parent:3.6.6"))
     implementation("org.noear:solon-web") {
         exclude(group = "org.noear", module = "solon-serialization-snack3")
         exclude(group = "org.noear", module = "solon-sessionstate-local")

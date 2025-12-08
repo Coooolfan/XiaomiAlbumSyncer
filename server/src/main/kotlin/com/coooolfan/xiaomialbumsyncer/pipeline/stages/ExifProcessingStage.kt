@@ -4,10 +4,8 @@ import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
 import com.coooolfan.xiaomialbumsyncer.model.exifFilled
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.pipeline.AssetPipelineContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
@@ -25,33 +23,14 @@ class ExifProcessingStage(
 
     private val log = LoggerFactory.getLogger(ExifProcessingStage::class.java)
 
-    fun start(
-        scope: CoroutineScope,
-        exifChannel: Channel<AssetPipelineContext>,
-        fileTimeChannel: Channel<AssetPipelineContext>,
-        workerCount: Int,
-    ): Job = scope.launch {
-        repeat(workerCount) {
-            launch {
-                for (context in exifChannel) {
-                    handleExif(context, exifChannel, fileTimeChannel)
-                }
-            }
-        }
-    }
-
-    private suspend fun handleExif(
-        context: AssetPipelineContext,
-        exifChannel: Channel<AssetPipelineContext>,
-        fileTimeChannel: Channel<AssetPipelineContext>,
-    ) {
+    fun process(context: AssetPipelineContext): Flow<AssetPipelineContext> = flow {
         val detailId = context.detailId
         val downloadedPath = context.downloadedPath ?: context.targetPath
 
         if (detailId == null || !Files.exists(downloadedPath)) {
-            log.warn("Exif stage skipped due to missing file/detail for asset {}", context.asset.id)
-            fileTimeChannel.send(context)
-            return
+            log.warn("资源 {} 缺少文件或明细记录，跳过 EXIF 处理阶段", context.asset.id)
+            emit(context)
+            return@flow
         }
 
         try {
@@ -63,11 +42,12 @@ class ExifProcessingStage(
 
             context.lastError = null
             markExifFilled(detailId)
-            fileTimeChannel.send(context)
+            emit(context)
         } catch (ex: Exception) {
-            log.error("Exif processing failed for asset {}", context.asset.id, ex)
+            log.error("资源 {} 的 EXIF 处理失败，跳过此步骤", context.asset.id, ex)
             context.lastError = ex
-            exifChannel.send(context)
+            // 失败直接跳过，继续流水线
+            emit(context)
         }
     }
 

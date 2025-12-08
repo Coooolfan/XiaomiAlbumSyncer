@@ -4,13 +4,9 @@ import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
 import com.coooolfan.xiaomialbumsyncer.model.fsTimeUpdated
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.pipeline.AssetPipelineContext
-import com.coooolfan.xiaomialbumsyncer.pipeline.PipelineCoordinator
-import com.coooolfan.xiaomialbumsyncer.pipeline.PipelineRequest
 import com.coooolfan.xiaomialbumsyncer.utils.rewriteFSTime
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
@@ -28,33 +24,14 @@ class FileTimeStage(
 
     private val log = LoggerFactory.getLogger(FileTimeStage::class.java)
 
-    fun start(
-        scope: CoroutineScope,
-        fileTimeChannel: Channel<AssetPipelineContext>,
-        request: PipelineRequest,
-        workerCount: Int,
-        coordinator: PipelineCoordinator,
-    ): Job = scope.launch {
-        repeat(workerCount) {
-            launch {
-                for (context in fileTimeChannel) {
-                    handleFileTime(context, coordinator)
-                }
-            }
-        }
-    }
-
-    private fun handleFileTime(
-        context: AssetPipelineContext,
-        coordinator: PipelineCoordinator,
-    ) {
+    fun process(context: AssetPipelineContext): Flow<AssetPipelineContext> = flow {
         val detailId = context.detailId
         val downloadedPath = context.downloadedPath ?: context.targetPath
 
         if (detailId == null || !Files.exists(downloadedPath)) {
-            log.warn("FileTime stage skipped due to missing file/detail for asset {}", context.asset.id)
-            coordinator.markCompleted()
-            return
+            log.warn("资源 {} 缺少文件或明细记录，跳过文件时间阶段", context.asset.id)
+            emit(context)
+            return@flow
         }
 
         try {
@@ -71,11 +48,12 @@ class FileTimeStage(
             }
 
             markFsUpdated(detailId)
-            coordinator.markCompleted()
+            emit(context)
         } catch (ex: Exception) {
-            log.error("File time stage failed for asset {}", context.asset.id, ex)
+            log.error("资源 {} 的文件时间阶段处理失败", context.asset.id, ex)
             context.lastError = ex
-            coordinator.markCompleted()
+            // 失败也要 emit，确保任务被计数
+            emit(context)
         }
     }
 
