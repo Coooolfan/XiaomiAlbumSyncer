@@ -4,6 +4,7 @@ import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
 import com.coooolfan.xiaomialbumsyncer.model.fsTimeUpdated
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.pipeline.AssetPipelineContext
+import com.coooolfan.xiaomialbumsyncer.pipeline.config
 import com.coooolfan.xiaomialbumsyncer.utils.rewriteFSTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -43,7 +44,7 @@ class FileTimeStage(
 
             context.finalPath = finalPath
 
-            if (context.rewriteFileSystemTime) {
+            if (context.config.rewriteFileSystemTime) {
                 rewriteFSTime(finalPath, context.asset.dateTaken)
             }
 

@@ -4,11 +4,7 @@ import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.model.sha1Verified
 import com.coooolfan.xiaomialbumsyncer.pipeline.AssetPipelineContext
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
@@ -28,20 +24,15 @@ class VerificationStage(
 
     private val log = LoggerFactory.getLogger(VerificationStage::class.java)
 
-    fun process(
-        context: AssetPipelineContext,
-        downloadFlow: (AssetPipelineContext) -> Flow<AssetPipelineContext>
-    ): Flow<AssetPipelineContext> = flow {
+    fun process(context: AssetPipelineContext): Flow<AssetPipelineContext> = flow {
         val detailId = context.detailId
         val downloadedPath = context.downloadedPath
 
         if (detailId == null || downloadedPath == null || !Files.exists(downloadedPath)) {
             log.warn("资源 {} 缺少文件或明细记录，跳过校验阶段", context.asset.id)
-            context.retry += 1
             context.lastError = IllegalStateException("缺少文件")
-            retryOrReprocess(context, downloadFlow) {
-                "资源 ${context.asset.id} 在校验阶段重试 ${context.retry} 次后被放弃"
-            }
+            context.abandoned = true
+            emit(context)
             return@flow
         }
 
@@ -51,12 +42,9 @@ class VerificationStage(
                 log.warn("资源 {} 的 SHA1 校验失败，期望 {} 实际 {}", context.asset.id, context.asset.sha1, sha1)
                 Files.deleteIfExists(downloadedPath)
                 context.downloadedPath = null
-                context.retry += 1
                 context.lastError = IllegalStateException("SHA1 不匹配")
-
-                retryOrReprocess(context, downloadFlow) {
-                    "资源 ${context.asset.id} 在校验阶段重试 ${context.retry} 次后被放弃"
-                }
+                context.abandoned = true
+                emit(context)
                 return@flow
             }
 
@@ -66,29 +54,9 @@ class VerificationStage(
             emit(context)
         } catch (ex: Exception) {
             log.error("资源 {} 校验失败", context.asset.id, ex)
-            context.retry += 1
             context.lastError = ex
-            retryOrReprocess(context, downloadFlow) {
-                "资源 ${context.asset.id} 在校验阶段重试 ${context.retry} 次后被放弃"
-            }
-        }
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private suspend fun FlowCollector<AssetPipelineContext>.retryOrReprocess(
-        context: AssetPipelineContext,
-        downloadFlow: (AssetPipelineContext) -> Flow<AssetPipelineContext>,
-        abandonMessage: () -> String,
-    ) {
-        if (context.retry >= context.maxRetry) {
-            log.error(abandonMessage())
             context.abandoned = true
             emit(context)
-        } else {
-            emitAll(
-                downloadFlow(context)
-                    .flatMapConcat { process(it, downloadFlow) }
-            )
         }
     }
 

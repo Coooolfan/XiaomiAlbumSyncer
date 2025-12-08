@@ -155,7 +155,7 @@ class SystemConfigController(private val service: SystemConfigService) {
     }
 
     companion object {
-        private val NORMAL_SYSTEM_CONFIG = newFetcher(SystemConfig::class).by {
+        val NORMAL_SYSTEM_CONFIG = newFetcher(SystemConfig::class).by {
             exifToolPath()
         }
     }

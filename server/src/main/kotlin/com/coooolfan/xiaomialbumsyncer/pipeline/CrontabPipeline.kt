@@ -47,7 +47,7 @@ class CrontabPipeline(
                 downloadStage.process(context)
             }
             .flatMapMerge(concurrency.verifiers) { context ->
-                verificationStage.process(context, downloadStage::process)
+                verificationStage.process(context)
             }
             .flatMapMerge(concurrency.exifProcessors) { context ->
                 exifProcessingStage.process(context)

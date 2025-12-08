@@ -23,7 +23,7 @@ description = "A tool to download albums from Xiaomi Cloud."
 val jimmerVersion = "0.9.112"
 
 dependencies {
-    implementation(platform("org.noear:solon-parent:3.6.6"))
+    implementation(platform("org.noear:solon-parent:3.6.4"))
     implementation("org.noear:solon-web") {
         exclude(group = "org.noear", module = "solon-serialization-snack3")
         exclude(group = "org.noear", module = "solon-sessionstate-local")
@@ -89,7 +89,7 @@ tasks.withType<Test> {
 }
 
 tasks.withType<BuildNativeImageTask> {
-    val options = this.options.get()
+//    val options = this.options.get()
 //    options.buildArgs.add("--pgo-instrument")
 //    options.buildArgs.add("--pgo=${project.projectDir}/default.iprof")
 }

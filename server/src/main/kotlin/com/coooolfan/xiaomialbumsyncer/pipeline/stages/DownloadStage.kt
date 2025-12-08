@@ -5,10 +5,10 @@ import com.coooolfan.xiaomialbumsyncer.model.downloadCompleted
 import com.coooolfan.xiaomialbumsyncer.model.filePath
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.pipeline.AssetPipelineContext
+import com.coooolfan.xiaomialbumsyncer.pipeline.config
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.emitAll
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
@@ -39,7 +39,7 @@ class DownloadStage(
         try {
             val targetPath = context.targetPath
             targetPath.parent?.let { Files.createDirectories(it) }
-            val exists = context.skipExistingFile && Files.exists(targetPath)
+            val exists = context.config.skipExistingFile && Files.exists(targetPath)
             val downloadedPath = if (exists) targetPath else api.downloadAsset(context.asset, targetPath)
 
             context.downloadedPath = downloadedPath
@@ -49,18 +49,10 @@ class DownloadStage(
             emit(context)
         } catch (ex: Exception) {
             log.error("资源 {} 下载失败", context.asset.id, ex)
-            context.retry += 1
             context.lastError = ex
             context.downloadedPath = null
-
-            if (context.retry >= context.maxRetry) {
-                log.error("资源 {} 经 {} 次重试后被放弃", context.asset.id, context.retry)
-                context.abandoned = true
-                emit(context)
-            } else {
-                // 递归重试
-                emitAll(process(context))
-            }
+            context.abandoned = true
+            emit(context)
         }
     }
 

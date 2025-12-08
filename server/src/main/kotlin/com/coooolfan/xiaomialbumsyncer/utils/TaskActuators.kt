@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.util.*
 import kotlin.io.path.Path
 import kotlin.io.path.exists
@@ -109,14 +108,14 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
         if (crontab.config.rewriteExifTime) {
             var timeZone: TimeZone? = null
             try {
-                timeZone = TimeZone.getTimeZone(ZoneId.of(crontab.config.rewriteExifTimeZone))
+                timeZone = crontab.config.rewriteExifTimeZone?.toTimeZone()
             } catch (e: Exception) {
                 log.error("解析时区失败，填充 EXIF 时间操作将被跳过，时区字符串：${crontab.config.rewriteExifTimeZone}")
                 e.printStackTrace()
             }
 
             if (timeZone == null)
-                log.warn("未指定有效的时区，填充 EXIF 时间操作将被跳过")
+                log.warn("未指定有效的时区，填充 EXIF 时间操作将被跳过。时区字符串：${crontab.config.rewriteExifTimeZone}")
             else
                 fillExifTime(assetPathMap, systemConfig, timeZone)
 
