@@ -56,8 +56,8 @@ class CrontabPipeline(
                 fileTimeStage.process(context)
             }
             .onEach { context ->
-                if (context.abandoned) {
-                    log.warn("资源 {} 多次重试后被放弃", context.asset.id)
+                if (context.lastError != null) {
+                    log.warn("资源 {} 处理失败: {}", context.asset.id, context.lastError?.message)
                 } else {
                     log.debug("资源 {} 处理成功完成", context.asset.id)
                 }

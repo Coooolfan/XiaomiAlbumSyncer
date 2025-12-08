@@ -31,7 +31,7 @@ class DownloadStage(
         val detailId = context.detailId
         if (detailId == null) {
             log.error("资源 {} 缺失明细记录", context.asset.id)
-            context.abandoned = true
+            context.lastError = IllegalStateException("缺失明细记录")
             emit(context)
             return@flow
         }
@@ -40,18 +40,14 @@ class DownloadStage(
             val targetPath = context.targetPath
             targetPath.parent?.let { Files.createDirectories(it) }
             val exists = context.config.skipExistingFile && Files.exists(targetPath)
-            val downloadedPath = if (exists) targetPath else api.downloadAsset(context.asset, targetPath)
-
-            context.downloadedPath = downloadedPath
+            val filePath = if (exists) targetPath else api.downloadAsset(context.asset, targetPath)
             context.lastError = null
 
-            markDownloadCompleted(detailId, downloadedPath)
+            markDownloadCompleted(detailId, filePath)
             emit(context)
         } catch (ex: Exception) {
             log.error("资源 {} 下载失败", context.asset.id, ex)
             context.lastError = ex
-            context.downloadedPath = null
-            context.abandoned = true
             emit(context)
         }
     }

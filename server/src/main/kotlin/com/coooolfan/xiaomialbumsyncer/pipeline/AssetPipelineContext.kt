@@ -10,7 +10,7 @@ import java.time.Instant
  *
  * 作用：
  * 1. 承载单个 Asset 在整个流水线中流转的所有状态信息
- * 2. 包含 Asset 本身的元数据、目标路径、临时文件位置等
+ * 2. 包含 Asset 本身的元数据、目标路径等
  * 3. 记录任务在各个阶段的处理状态和时间戳
  * 4. 降低各处理阶段之间的耦合度
  *
@@ -22,12 +22,9 @@ data class AssetPipelineContext(
     val crontabHistoryId: Long,
     val targetPath: Path,
     val createdAt: Instant = Instant.now(),
-    var downloadedPath: Path? = null,
     var sha1Verified: Boolean = false,
-    var finalPath: Path? = null,
     var lastError: Throwable? = null,
     var detailId: Long? = null,
-    var abandoned: Boolean = false,
 )
 
 val AssetPipelineContext.config

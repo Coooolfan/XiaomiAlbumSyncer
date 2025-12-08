@@ -32,9 +32,9 @@ class ExifProcessingStage(
 
     fun process(context: AssetPipelineContext): Flow<AssetPipelineContext> = flow {
         val detailId = context.detailId
-        val downloadedPath = context.downloadedPath ?: context.targetPath
+        val filePath = context.targetPath
 
-        if (detailId == null || !Files.exists(downloadedPath)) {
+        if (detailId == null || !Files.exists(filePath)) {
             log.warn("资源 {} 缺少文件或明细记录，跳过 EXIF 处理阶段", context.asset.id)
             emit(context)
             return@flow
@@ -53,7 +53,7 @@ class ExifProcessingStage(
                     context.config.rewriteExifTimeZone!!.toTimeZone()
                 )
 
-                rewriteExifTime(context.asset, downloadedPath, config)
+                rewriteExifTime(context.asset, filePath, config)
             }
 
             context.lastError = null

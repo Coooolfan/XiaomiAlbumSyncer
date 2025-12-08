@@ -26,24 +26,21 @@ class VerificationStage(
 
     fun process(context: AssetPipelineContext): Flow<AssetPipelineContext> = flow {
         val detailId = context.detailId
-        val downloadedPath = context.downloadedPath
+        val filePath = context.targetPath
 
-        if (detailId == null || downloadedPath == null || !Files.exists(downloadedPath)) {
+        if (detailId == null || !Files.exists(filePath)) {
             log.warn("资源 {} 缺少文件或明细记录，跳过校验阶段", context.asset.id)
             context.lastError = IllegalStateException("缺少文件")
-            context.abandoned = true
             emit(context)
             return@flow
         }
 
         try {
-            val sha1 = computeSha1(downloadedPath)
+            val sha1 = computeSha1(filePath)
             if (!sha1.equals(context.asset.sha1, ignoreCase = true)) {
                 log.warn("资源 {} 的 SHA1 校验失败，期望 {} 实际 {}", context.asset.id, context.asset.sha1, sha1)
-                Files.deleteIfExists(downloadedPath)
-                context.downloadedPath = null
+                Files.deleteIfExists(filePath)
                 context.lastError = IllegalStateException("SHA1 不匹配")
-                context.abandoned = true
                 emit(context)
                 return@flow
             }
@@ -55,7 +52,6 @@ class VerificationStage(
         } catch (ex: Exception) {
             log.error("资源 {} 校验失败", context.asset.id, ex)
             context.lastError = ex
-            context.abandoned = true
             emit(context)
         }
     }

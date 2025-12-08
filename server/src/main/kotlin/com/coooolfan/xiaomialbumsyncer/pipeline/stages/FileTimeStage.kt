@@ -13,7 +13,6 @@ import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 
 /**
  * 文件时间处理阶段处理器
@@ -27,25 +26,17 @@ class FileTimeStage(
 
     fun process(context: AssetPipelineContext): Flow<AssetPipelineContext> = flow {
         val detailId = context.detailId
-        val downloadedPath = context.downloadedPath ?: context.targetPath
+        val filePath = context.targetPath
 
-        if (detailId == null || !Files.exists(downloadedPath)) {
+        if (detailId == null || !Files.exists(filePath)) {
             log.warn("资源 {} 缺少文件或明细记录，跳过文件时间阶段", context.asset.id)
             emit(context)
             return@flow
         }
 
         try {
-            val finalPath = context.targetPath
-            if (downloadedPath != finalPath) {
-                Files.createDirectories(finalPath.parent)
-                Files.move(downloadedPath, finalPath, StandardCopyOption.REPLACE_EXISTING)
-            }
-
-            context.finalPath = finalPath
-
             if (context.config.rewriteFileSystemTime) {
-                rewriteFSTime(finalPath, context.asset.dateTaken)
+                rewriteFSTime(filePath, context.asset.dateTaken)
             }
 
             markFsUpdated(detailId)
