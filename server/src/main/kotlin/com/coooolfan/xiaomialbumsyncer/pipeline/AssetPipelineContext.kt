@@ -22,7 +22,6 @@ data class AssetPipelineContext(
     val crontabHistoryId: Long,
     val targetPath: Path,
     val createdAt: Instant = Instant.now(),
-    var sha1Verified: Boolean = false,
     var lastError: Throwable? = null,
     var detailId: Long? = null,
 )

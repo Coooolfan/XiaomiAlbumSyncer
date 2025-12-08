@@ -45,7 +45,6 @@ class VerificationStage(
                 return@flow
             }
 
-            context.sha1Verified = true
             context.lastError = null
             markSha1Verified(detailId)
             emit(context)
