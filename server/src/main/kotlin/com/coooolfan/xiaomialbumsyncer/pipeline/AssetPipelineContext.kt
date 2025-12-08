@@ -1,9 +1,8 @@
 package com.coooolfan.xiaomialbumsyncer.pipeline
 
 import com.coooolfan.xiaomialbumsyncer.model.Asset
-import com.coooolfan.xiaomialbumsyncer.model.Crontab
+import com.coooolfan.xiaomialbumsyncer.model.CrontabConfig
 import java.nio.file.Path
-import java.time.Instant
 
 /**
  * 资产处理任务上下文
@@ -18,13 +17,8 @@ import java.time.Instant
  */
 data class AssetPipelineContext(
     val asset: Asset,
-    val crontab: Crontab,
-    val crontabHistoryId: Long,
+    val crontabConfig: CrontabConfig,
     val targetPath: Path,
-    val createdAt: Instant = Instant.now(),
     var lastError: Throwable? = null,
     var detailId: Long? = null,
 )
-
-val AssetPipelineContext.config
-    get() = crontab.config

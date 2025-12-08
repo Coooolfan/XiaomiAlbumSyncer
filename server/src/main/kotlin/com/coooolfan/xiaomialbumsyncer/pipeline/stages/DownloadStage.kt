@@ -5,7 +5,6 @@ import com.coooolfan.xiaomialbumsyncer.model.downloadCompleted
 import com.coooolfan.xiaomialbumsyncer.model.filePath
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.pipeline.AssetPipelineContext
-import com.coooolfan.xiaomialbumsyncer.pipeline.config
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -39,7 +38,7 @@ class DownloadStage(
         try {
             val targetPath = context.targetPath
             targetPath.parent?.let { Files.createDirectories(it) }
-            val exists = context.config.skipExistingFile && Files.exists(targetPath)
+            val exists = context.crontabConfig.skipExistingFile && Files.exists(targetPath)
             val filePath = if (exists) targetPath else api.downloadAsset(context.asset, targetPath)
             context.lastError = null
 

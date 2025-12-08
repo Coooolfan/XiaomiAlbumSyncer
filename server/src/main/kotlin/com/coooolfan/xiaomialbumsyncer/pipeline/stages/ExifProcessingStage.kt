@@ -5,7 +5,6 @@ import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
 import com.coooolfan.xiaomialbumsyncer.model.exifFilled
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.pipeline.AssetPipelineContext
-import com.coooolfan.xiaomialbumsyncer.pipeline.config
 import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
 import com.coooolfan.xiaomialbumsyncer.utils.ExifRewriteConfig
 import com.coooolfan.xiaomialbumsyncer.utils.rewriteExifTime
@@ -41,16 +40,16 @@ class ExifProcessingStage(
         }
 
         try {
-            if (context.config.rewriteExifTime) {
-                if (context.config.rewriteExifTimeZone == null) {
-                    log.warn("未指定有效的时区，填充 EXIF 时间操作将被跳过。时区字符串：${context.config.rewriteExifTimeZone}")
+            if (context.crontabConfig.rewriteExifTime) {
+                if (context.crontabConfig.rewriteExifTimeZone == null) {
+                    log.warn("未指定有效的时区，填充 EXIF 时间操作将被跳过。时区字符串：${context.crontabConfig.rewriteExifTimeZone}")
                     emit(context)
                     return@flow
                 }
-                context.config.rewriteExifTimeZone
+                context.crontabConfig.rewriteExifTimeZone
                 val config = ExifRewriteConfig(
                     Path(systemConfigService.getConfig(NORMAL_SYSTEM_CONFIG).exifToolPath),
-                    context.config.rewriteExifTimeZone!!.toTimeZone()
+                    context.crontabConfig.rewriteExifTimeZone.toTimeZone()
                 )
 
                 rewriteExifTime(context.asset, filePath, config)
