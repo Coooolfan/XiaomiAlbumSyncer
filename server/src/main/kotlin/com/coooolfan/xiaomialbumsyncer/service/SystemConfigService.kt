@@ -18,9 +18,13 @@ import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
 import java.security.MessageDigest
+import java.util.concurrent.ConcurrentHashMap
 
 @Managed
 class SystemConfigService(private val sql: KSqlClient, private val dataImporter: DataImporter) {
+
+    private val configCache = ConcurrentHashMap<Fetcher<SystemConfig>, SystemConfig>()
+
     fun isInit(): Boolean {
         return sql.executeQuery(SystemConfig::class) {
             selectCount()
@@ -59,10 +63,11 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
         sql.saveCommand(SystemConfig(update) {
             id = 0
         }, SaveMode.UPDATE_ONLY).execute()
+        invalidateConfigCache()
     }
 
     fun getConfig(fetcher: Fetcher<SystemConfig>): SystemConfig {
-        return sql.findById(fetcher, 0) ?: throw IllegalStateException("System is not initialized")
+        return configCache.computeIfAbsent(fetcher) { loadConfig(it) }
     }
 
     fun updatePassword(update: SystemConfigPasswordUpdate) {
@@ -101,4 +106,13 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
 
         dataImporter.exec()
     }
+
+    private fun loadConfig(fetcher: Fetcher<SystemConfig>): SystemConfig {
+        return sql.findById(fetcher, 0) ?: throw IllegalStateException("System is not initialized")
+    }
+
+    private fun invalidateConfigCache() {
+        configCache.clear()
+    }
 }
+
