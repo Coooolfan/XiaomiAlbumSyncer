@@ -2,15 +2,9 @@ package com.coooolfan.xiaomialbumsyncer.service
 
 import cn.dev33.satoken.stp.StpUtil
 import com.coooolfan.xiaomialbumsyncer.controller.LoginRequest
-import com.coooolfan.xiaomialbumsyncer.model.Album
-import com.coooolfan.xiaomialbumsyncer.model.Asset
-import com.coooolfan.xiaomialbumsyncer.model.Crontab
-import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
+import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate
-import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate
-import com.coooolfan.xiaomialbumsyncer.model.id
-import com.coooolfan.xiaomialbumsyncer.model.password
 import com.coooolfan.xiaomialbumsyncer.utils.DataImporter
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
@@ -101,7 +95,7 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
                 sql.executeQuery(Asset::class) { selectCount() }[0]
 
         if (existsRows > 0) {
-            throw IllegalStateException("Current database is not empty, import aborted")
+            throw IllegalStateException("当前数据库非空，导入已中止")
         }
 
         dataImporter.exec()
