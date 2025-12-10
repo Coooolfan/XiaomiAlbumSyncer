@@ -15,6 +15,8 @@ import org.noear.solon.annotation.Body
 import org.noear.solon.annotation.Controller
 import org.noear.solon.annotation.Mapping
 import org.noear.solon.core.handle.MethodType
+import org.noear.solon.core.runtime.NativeDetector.inNativeImage
+import org.noear.solon.core.runtime.NativeDetector.isAotRuntime
 
 
 @Api
@@ -137,6 +139,21 @@ class SystemConfigController(private val service: SystemConfigService) {
         return service.updatePassword(update)
     }
 
+
+    @Api
+    @Mapping("/info", method = [MethodType.GET])
+    @SaCheckLogin
+    fun getSystemInfo(): SystemInfoResponse {
+        val jvmVersion = System.getProperty("java.version")
+        val isAotRuntime = isAotRuntime()
+        val isNativeImage = inNativeImage()
+        return SystemInfoResponse(
+            aotRuntime = isAotRuntime,
+            nativeImage = isNativeImage,
+            jvmVersion = jvmVersion
+        )
+    }
+
     /**
      * 从旧版本数据库导入数据
      *
@@ -163,4 +180,11 @@ class SystemConfigController(private val service: SystemConfigService) {
 
 data class IsInitResponse(
     val init: Boolean
+)
+
+data class SystemInfoResponse(
+    val aotRuntime: Boolean,
+    val nativeImage: Boolean,
+    val jvmVersion: String?,
+    val appVersion: String = "0.7.0-BETA"
 )

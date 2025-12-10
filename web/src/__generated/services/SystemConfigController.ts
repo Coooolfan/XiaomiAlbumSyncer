@@ -5,7 +5,8 @@ import type {
     SystemConfigInit, 
     SystemConfigPassTokenUpdate, 
     SystemConfigPasswordUpdate, 
-    SystemConfigUpdate
+    SystemConfigUpdate, 
+    SystemInfoResponse
 } from '../model/static/';
 
 export class SystemConfigController {
@@ -26,6 +27,13 @@ export class SystemConfigController {
     > = async() => {
         let _uri = '/api/system-config/normal';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<SystemConfigDto['SystemConfigController/NORMAL_SYSTEM_CONFIG']>;
+    }
+    
+    readonly getSystemInfo: () => Promise<
+        SystemInfoResponse
+    > = async() => {
+        let _uri = '/api/system-config/info';
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<SystemInfoResponse>;
     }
     
     /**
@@ -158,5 +166,6 @@ export type SystemConfigControllerOptions = {
          */
         readonly body: SystemConfigPasswordUpdate
     }, 
+    'getSystemInfo': {}, 
     'importFromV2Db': {}
 }
