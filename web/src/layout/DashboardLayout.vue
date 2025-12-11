@@ -85,7 +85,7 @@ async function logout() {
               AOT
             </span>
             <span v-else class="font-medium text-amber-600">
-              JVM
+              JVM {{ systemInfo.jvmVersion }}
             </span>
           </div>
           <Button
