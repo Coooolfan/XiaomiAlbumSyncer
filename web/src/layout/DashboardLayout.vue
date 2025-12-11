@@ -38,7 +38,7 @@ async function logout() {
   try {
     await api.tokenController.logout()
   } catch (error) {
-    console.log(error)
+    console.error('Failed to log out:', error)
   } finally {
     loggingOut.value = false
     window.location.href = '/'
