@@ -26,45 +26,31 @@ class VerificationStage(
 
     private val log = LoggerFactory.getLogger(VerificationStage::class.java)
 
-    fun process(context: AssetPipelineContext): Flow<AssetPipelineContext> = flow {
+    fun process(context: AssetPipelineContext) {
         val detailId = context.detailId
         val filePath = context.targetPath
 
         if (detailId == null || !Files.exists(filePath)) {
             log.warn("资源 {} 缺少文件或明细记录，跳过校验阶段", context.asset.id)
             context.lastError = IllegalStateException("缺少文件")
-            emit(context)
-            return@flow
+            return
         }
 
-        try {
-            val sha1 = computeSha1(filePath)
-            if (!sha1.equals(context.asset.sha1, ignoreCase = true)) {
-                log.warn("资源 {} 的 SHA1 校验失败，期望 {} 实际 {}", context.asset.id, context.asset.sha1, sha1)
-                withContext(Dispatchers.IO) {
-                    Files.deleteIfExists(filePath)
-                }
-                context.lastError = IllegalStateException("SHA1 不匹配")
-                emit(context)
-                return@flow
-            }
-
-            context.lastError = null
-            markSha1Verified(detailId)
-            emit(context)
-        } catch (ex: Exception) {
-            log.error("资源 {} 校验失败", context.asset.id, ex)
-            context.lastError = ex
-            emit(context)
+        val sha1 = computeSha1(filePath)
+        if (!sha1.equals(context.asset.sha1, ignoreCase = true)) {
+            log.warn("资源 {} 的 SHA1 校验失败，期望 {} 实际 {}", context.asset.id, context.asset.sha1, sha1)
+            Files.deleteIfExists(filePath)
+            context.lastError = IllegalStateException("SHA1 不匹配")
+            // TODO: 这里需要思考一下怎么从头再来
+            return
         }
-    }
 
-    private fun markSha1Verified(detailId: Long) {
         sql.executeUpdate(CrontabHistoryDetail::class) {
             set(table.sha1Verified, true)
             where(table.id eq detailId)
         }
     }
+
 
     private fun computeSha1(path: Path): String {
         val digest = MessageDigest.getInstance("SHA-1")
@@ -77,4 +63,5 @@ class VerificationStage(
         }
         return digest.digest().joinToString("") { byte -> "%02x".format(byte) }
     }
+
 }

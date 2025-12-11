@@ -6,14 +6,11 @@ import com.coooolfan.xiaomialbumsyncer.model.filePath
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.pipeline.AssetPipelineContext
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
-import java.nio.file.Path
 
 /**
  * 下载阶段处理器
@@ -26,36 +23,23 @@ class DownloadStage(
 
     private val log = LoggerFactory.getLogger(DownloadStage::class.java)
 
-    fun process(context: AssetPipelineContext): Flow<AssetPipelineContext> = flow {
-        val detailId = context.detailId
-        if (detailId == null) {
-            log.error("资源 {} 缺失明细记录", context.asset.id)
-            context.lastError = IllegalStateException("缺失明细记录")
-            emit(context)
-            return@flow
-        }
+    fun process(context: AssetPipelineContext) {
+        if (context.detailId == null) throw IllegalStateException("缺失明细记录: ${context.asset.id}")
 
-        try {
-            val targetPath = context.targetPath
-            targetPath.parent?.let { Files.createDirectories(it) }
-            val exists = context.crontabConfig.skipExistingFile && Files.exists(targetPath)
-            val filePath = if (exists) targetPath else api.downloadAsset(context.asset, targetPath)
-            context.lastError = null
+        val targetPath = context.targetPath
+        targetPath.parent?.let { Files.createDirectories(it) }
 
-            markDownloadCompleted(detailId, filePath)
-            emit(context)
-        } catch (ex: Exception) {
-            log.error("资源 {} 下载失败", context.asset.id, ex)
-            context.lastError = ex
-            emit(context)
-        }
-    }
+        if (context.crontabConfig.skipExistingFile && Files.exists(targetPath))
+            log.info("跳过已存在文件 {}", targetPath)
+        else
+            api.downloadAsset(context.asset, targetPath)
 
-    private fun markDownloadCompleted(detailId: Long, filePath: Path) {
         sql.executeUpdate(CrontabHistoryDetail::class) {
             set(table.downloadCompleted, true)
-            set(table.filePath, filePath.toString())
-            where(table.id eq detailId)
+            set(table.filePath, context.targetPath.toString())
+            where(table.id eq context.detailId)
         }
     }
+
+
 }

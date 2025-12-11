@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flow
 
 /**
  * 计划任务流水线管理器
@@ -44,10 +45,11 @@ class CrontabPipeline(
 
         request.tasks.asFlow()
             .flatMapMerge(concurrency.downloaders) { context ->
-                downloadStage.process(context)
+                flow { emit(downloadStage.process(context)) }
             }
             .flatMapMerge(concurrency.verifiers) { context ->
-                verificationStage.process(context)
+                // TODO: 这样类型推断也会有问题
+                flow { emit(verificationStage.process(context)) }
             }
             .flatMapMerge(concurrency.exifProcessors) { context ->
                 exifProcessingStage.process(context)
