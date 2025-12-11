@@ -19,7 +19,7 @@ onMounted(async () => {
   try {
     systemInfo.value = await api.systemConfigController.getSystemInfo()
   } catch (error) {
-    console.log(error)
+    console.error('Failed to load system info:', error)
   }
 })
 
