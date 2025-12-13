@@ -41,6 +41,9 @@ class VerificationStage(
             set(table.sha1Verified, true)
             where(table.id eq context.detail.id)
         }
+        context.detail = CrontabHistoryDetail(context.detail) {
+            sha1Verified = true
+        }
         return context
     }
 

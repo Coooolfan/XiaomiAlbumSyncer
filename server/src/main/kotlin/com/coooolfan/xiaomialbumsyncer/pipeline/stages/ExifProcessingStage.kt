@@ -56,6 +56,9 @@ class ExifProcessingStage(
             set(table.exifFilled, true)
             where(table.id eq context.detail.id)
         }
+        context.detail = CrontabHistoryDetail(context.detail) {
+            exifFilled = true
+        }
         return context
     }
 

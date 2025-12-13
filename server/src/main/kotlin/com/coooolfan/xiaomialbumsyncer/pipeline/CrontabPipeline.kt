@@ -40,7 +40,11 @@ class CrontabPipeline(
             return
         }
 
+        var total = 0
+        var success = 0
+
         request.tasks.asFlow()
+            .onEach { total++ }
             .flatMapMerge(concurrency.downloaders) { context ->
                 flow {
                     emit(downloadStage.process(context))
@@ -70,11 +74,12 @@ class CrontabPipeline(
                 }
             }
             .onEach { context ->
+                success++
                 log.info("资源 {} 处理完成", context.asset.id)
             }
             .collect()
 
-        log.info("Crontab {} 的流水线执行完毕", request.crontab.id)
+        log.info("Crontab {} 的流水线执行完毕, 成功 {}/{}", request.crontab.id, success, total)
     }
 }
 

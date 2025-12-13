@@ -43,6 +43,9 @@ class DownloadStage(
             set(table.filePath, targetPath.toString())
             where(table.id eq context.detail.id)
         }
+        context.detail = CrontabHistoryDetail(context.detail) {
+            downloadCompleted = true
+        }
         return context
     }
 

@@ -35,6 +35,9 @@ class FileTimeStage(
             set(table.fsTimeUpdated, true)
             where(table.id eq context.detail.id)
         }
+        context.detail = CrontabHistoryDetail(context.detail) {
+            fsTimeUpdated = true
+        }
         return context
     }
 }
