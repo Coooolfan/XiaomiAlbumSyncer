@@ -2,13 +2,24 @@ package com.coooolfan.xiaomialbumsyncer.service
 
 import com.coooolfan.xiaomialbumsyncer.model.Album
 import com.coooolfan.xiaomialbumsyncer.model.Asset
+import com.coooolfan.xiaomialbumsyncer.model.AssetType
+import com.coooolfan.xiaomialbumsyncer.model.Crontab
+import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
 import com.coooolfan.xiaomialbumsyncer.model.albumId
+import com.coooolfan.xiaomialbumsyncer.model.assetId
+import com.coooolfan.xiaomialbumsyncer.model.crontabHistory
+import com.coooolfan.xiaomialbumsyncer.model.crontabId
+import com.coooolfan.xiaomialbumsyncer.model.fetchBy
 import com.coooolfan.xiaomialbumsyncer.model.id
+import com.coooolfan.xiaomialbumsyncer.model.type
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
+import org.babyfish.jimmer.sql.kt.ast.expression.ne
+import org.babyfish.jimmer.sql.kt.ast.expression.notExists
+import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
 import org.noear.solon.annotation.Managed
 
 @Managed
@@ -31,5 +42,25 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             where(table.albumId eq albumId)
             select(table.fetch(fetcher))
         }
+    }
+
+    fun getAssetsUndownloadByCrontab(crontab: Crontab, pageIndex: Int, pageSize: Int): List<Asset> {
+        return sql.createQuery(Asset::class) {
+            where(table.albumId valueIn crontab.albumIds)
+            where(
+                notExists(
+                    subQuery(CrontabHistoryDetail::class) {
+                        where(table.crontabHistory.crontabId eq crontab.id)
+                        where(table.assetId eq parentTable.id)
+                        select(table)
+                    })
+            )
+            if (!crontab.config.downloadImages) where(table.type ne AssetType.IMAGE)
+            if (!crontab.config.downloadVideos) where(table.type ne AssetType.VIDEO)
+            select(table.fetchBy {
+                allScalarFields()
+                album { name() }
+            })
+        }.fetchPage(pageIndex, pageSize).rows
     }
 }

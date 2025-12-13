@@ -8,6 +8,7 @@ import org.babyfish.jimmer.sql.Id
 import org.babyfish.jimmer.sql.ManyToOne
 import org.babyfish.jimmer.sql.OnDissociate
 import java.time.Instant
+import kotlin.io.path.Path
 
 @Entity
 interface CrontabHistoryDetail {
@@ -42,4 +43,20 @@ interface CrontabHistoryDetail {
 
     // 修改时间更新
     val fsTimeUpdated: Boolean
+
+    companion object {
+        fun init(history: CrontabHistory, asset: Asset): CrontabHistoryDetail {
+            return CrontabHistoryDetail {
+                crontabHistoryId = history.id
+                downloadTime = Instant.now()
+                assetId = asset.id
+                filePath = Path(history.crontab.config.targetPath, asset.album.name, asset.fileName).toString()
+                precheckCompleted = false
+                downloadCompleted = false
+                sha1Verified = false
+                exifFilled = false
+                fsTimeUpdated = false
+            }
+        }
+    }
 }

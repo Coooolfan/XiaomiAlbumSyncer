@@ -15,6 +15,7 @@ import kotlin.io.path.Path
 import kotlin.io.path.exists
 
 @Managed
+@Deprecated("使用 CrontabPipeline 替代")
 class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
 
     private val log = LoggerFactory.getLogger(TaskActuators::class.java)

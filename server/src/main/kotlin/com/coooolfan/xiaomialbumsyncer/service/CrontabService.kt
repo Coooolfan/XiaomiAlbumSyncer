@@ -13,7 +13,7 @@ import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.time.ZoneId
-import java.util.TimeZone
+import java.util.*
 import kotlin.io.path.Path
 
 @Managed
@@ -70,7 +70,7 @@ class CrontabService(private val sql: KSqlClient, private val taskScheduler: Tas
             throw IllegalArgumentException("定时任务未启用重写Exif时间选项: $crontabId")
         }
 
-        var timeZone: TimeZone? = null
+        var timeZone: TimeZone?
         try {
             timeZone = TimeZone.getTimeZone(ZoneId.of(crontab.config.rewriteExifTimeZone))
         } catch (e: Exception) {

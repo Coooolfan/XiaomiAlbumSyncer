@@ -1,40 +1,19 @@
 package com.coooolfan.xiaomialbumsyncer.pipeline
 
-import com.coooolfan.xiaomialbumsyncer.model.Asset
-import com.coooolfan.xiaomialbumsyncer.model.AssetType
-import com.coooolfan.xiaomialbumsyncer.model.Crontab
-import com.coooolfan.xiaomialbumsyncer.model.CrontabHistory
-import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
-import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
-import com.coooolfan.xiaomialbumsyncer.model.albumId
-import com.coooolfan.xiaomialbumsyncer.model.assetId
-import com.coooolfan.xiaomialbumsyncer.model.crontabHistory
-import com.coooolfan.xiaomialbumsyncer.model.crontabId
-import com.coooolfan.xiaomialbumsyncer.model.fetchBy
-import com.coooolfan.xiaomialbumsyncer.model.id
-import com.coooolfan.xiaomialbumsyncer.model.type
+import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.ExifProcessingStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.VerificationStage
+import com.coooolfan.xiaomialbumsyncer.service.AssetService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flatMapMerge
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
-import org.babyfish.jimmer.sql.kt.ast.expression.ne
-import org.babyfish.jimmer.sql.kt.ast.expression.notExists
-import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.time.Instant
-import kotlin.io.path.Path
 
 /**
  * 计划任务流水线管理器
@@ -45,11 +24,13 @@ class CrontabPipeline(
     private val verificationStage: VerificationStage,
     private val exifProcessingStage: ExifProcessingStage,
     private val fileTimeStage: FileTimeStage,
+    private val assetService: AssetService,
     private val sql: KSqlClient,
 ) {
 
     private val log = LoggerFactory.getLogger(CrontabPipeline::class.java)
 
+    // 从 Crontab 创建一个任务
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun execute(
         request: PipelineRequest,
@@ -61,46 +42,22 @@ class CrontabPipeline(
         var pageIndex = 0
         val pageSize = 10
 
-        flow {
+        // TODO)) 应该从 Crontab 开始
+        listOf(request.crontabHistory).asFlow()
+        .transform {
             var currentRows: Int
 
             do {
                 // 1. 查询需要下载的资产(假设已经从远程同步好了本地数据库中的资产)
                 // TODO)) 这里还需要考虑从终止的数据库中恢复的场景。
-                val assets = sql.createQuery(Asset::class) {
-                    where(table.albumId valueIn request.crontab.albumIds)
-                    where(
-                        notExists(
-                            subQuery(CrontabHistoryDetail::class) {
-                                where(table.crontabHistory.crontabId eq request.crontab.id)
-                                where(table.assetId eq parentTable.id)
-                                select(table)
-                            })
-                    )
-                    if (!request.crontab.config.downloadImages) where(table.type ne AssetType.IMAGE)
-                    if (!request.crontab.config.downloadVideos) where(table.type ne AssetType.VIDEO)
-                    select(table.fetchBy {
-                        allScalarFields()
-                        album { name() }
-                    })
-                }.fetchPage(pageIndex, pageSize).rows
+                val assets = assetService.getAssetsUndownloadByCrontab(it.crontab, pageIndex, pageSize)
 
                 val details = mutableListOf<CrontabHistoryDetail>()
                 val contexts = mutableListOf<AssetPipelineContext>()
 
-                assets.map { asset ->
-                    val detail = CrontabHistoryDetail {
-                        crontabHistoryId = request.crontabHistory.id
-                        downloadTime = Instant.now()
-                        assetId = asset.id
-                        filePath = Path(request.crontab.config.targetPath, asset.album.name, asset.fileName).toString()
-                        precheckCompleted = false
-                        downloadCompleted = false
-                        sha1Verified = false
-                        exifFilled = false
-                        fsTimeUpdated = false
-                    }
-                    val context = AssetPipelineContext(asset, request.crontab.config, detail)
+                assets.forEach { asset ->
+                    val detail = CrontabHistoryDetail.init(it, asset)
+                    val context = AssetPipelineContext(asset, it.crontab.config, detail)
                     details.add(detail)
                     contexts.add(context)
                 }
@@ -143,6 +100,11 @@ class CrontabPipeline(
             success++
             log.info("资源 {} 处理完成", context.asset.id)
         }.collect()
+
+        sql.executeUpdate(CrontabHistory::class) {
+            set(table.endTime, Instant.now())
+            where(table.id eq request.crontabHistory.id)
+        }
 
         log.info("Crontab {} 的流水线执行完毕, 成功 {}/{}", request.crontab.id, success, total)
     }
