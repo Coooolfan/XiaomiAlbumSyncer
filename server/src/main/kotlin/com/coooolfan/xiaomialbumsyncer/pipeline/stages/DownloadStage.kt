@@ -11,6 +11,7 @@ import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
+import kotlin.io.path.Path
 
 /**
  * 下载阶段处理器
@@ -24,9 +25,12 @@ class DownloadStage(
     private val log = LoggerFactory.getLogger(DownloadStage::class.java)
 
     fun process(context: AssetPipelineContext): AssetPipelineContext {
-        if (context.detailId == null) throw IllegalStateException("缺失明细记录: ${context.asset.id}")
+        if (context.detail.downloadCompleted) {
+            log.info("资源 {} 的下载已完成或者被标记为无需处理，跳过下载阶段", context.asset.id)
+            return context
+        }
 
-        val targetPath = context.targetPath
+        val targetPath = Path(context.detail.filePath)
         targetPath.parent?.let { Files.createDirectories(it) }
 
         if (context.crontabConfig.skipExistingFile && Files.exists(targetPath))
@@ -36,8 +40,8 @@ class DownloadStage(
 
         sql.executeUpdate(CrontabHistoryDetail::class) {
             set(table.downloadCompleted, true)
-            set(table.filePath, context.targetPath.toString())
-            where(table.id eq context.detailId)
+            set(table.filePath, targetPath.toString())
+            where(table.id eq context.detail.id)
         }
         return context
     }

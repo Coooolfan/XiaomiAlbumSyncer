@@ -2,6 +2,7 @@ package com.coooolfan.xiaomialbumsyncer.pipeline
 
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.CrontabHistory
+import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.ExifProcessingStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage
@@ -56,7 +57,7 @@ class CrontabPipeline(
             }
             .flatMapMerge(concurrency.exifProcessors) { context ->
                 flow {
-                    emit(exifProcessingStage.process(context))
+                    emit(exifProcessingStage.process(context, request.systemConfig))
                 }.catch {
                     log.error("资源 {} 的 EXIF 处理失败, 将跳过后续处理", context.asset.id, it)
                 }
@@ -79,6 +80,7 @@ class CrontabPipeline(
 
 data class PipelineRequest(
     val crontab: Crontab,
+    val systemConfig: SystemConfig,
     val crontabHistory: CrontabHistory,
     val tasks: List<AssetPipelineContext>,
 )

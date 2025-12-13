@@ -1,11 +1,10 @@
 package com.coooolfan.xiaomialbumsyncer.pipeline.stages
 
-import com.coooolfan.xiaomialbumsyncer.controller.SystemConfigController.Companion.NORMAL_SYSTEM_CONFIG
 import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
+import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.exifFilled
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.pipeline.AssetPipelineContext
-import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
 import com.coooolfan.xiaomialbumsyncer.utils.ExifRewriteConfig
 import com.coooolfan.xiaomialbumsyncer.utils.rewriteExifTime
 import com.coooolfan.xiaomialbumsyncer.utils.toTimeZone
@@ -13,7 +12,6 @@ import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
 import kotlin.io.path.Path
 
 /**
@@ -22,14 +20,13 @@ import kotlin.io.path.Path
 @Managed
 class ExifProcessingStage(
     private val sql: KSqlClient,
-    private val systemConfigService: SystemConfigService,
 ) {
 
     private val log = LoggerFactory.getLogger(ExifProcessingStage::class.java)
 
-    fun process(context: AssetPipelineContext): AssetPipelineContext {
-        if (context.detailId == null || !Files.exists(context.targetPath)) {
-            log.warn("资源 {} 缺少文件或明细记录，跳过 EXIF 处理阶段", context.asset.id)
+    fun process(context: AssetPipelineContext, systemConfig: SystemConfig): AssetPipelineContext {
+        if (context.detail.exifFilled) {
+            log.info("资源 {} 的 EXIF 已处理或者被标记为无需处理，跳过 EXIF 处理阶段", context.asset.id)
             return context
         }
 
@@ -40,12 +37,12 @@ class ExifProcessingStage(
             }
 
             val config = ExifRewriteConfig(
-                Path(systemConfigService.getConfig(NORMAL_SYSTEM_CONFIG).exifToolPath),
+                Path(systemConfig.exifToolPath),
                 context.crontabConfig.rewriteExifTimeZone.toTimeZone()
             )
 
             try {
-                rewriteExifTime(context.asset, context.targetPath, config)
+                rewriteExifTime(context.asset, Path(context.detail.filePath), config)
             } catch (e: RuntimeException) {
                 if (e.message?.contains("Not a valid JPG") ?: false) {
                     log.warn("资源 {} 的 EXIF 处理失败, 将跳过后续处理", context.asset.id, e)
@@ -57,7 +54,7 @@ class ExifProcessingStage(
 
         sql.executeUpdate(CrontabHistoryDetail::class) {
             set(table.exifFilled, true)
-            where(table.id eq context.detailId)
+            where(table.id eq context.detail.id)
         }
         return context
     }
