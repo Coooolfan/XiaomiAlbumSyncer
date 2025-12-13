@@ -15,6 +15,7 @@ import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
  *
  * 生命周期：创建 -> 下载 -> 校验 -> EXIF 处理 -> 文件时间处理 -> 完成/失败
  */
+// TODO)) 感觉这个完全可以用 CrontabHistoryDetail 替代
 data class AssetPipelineContext(
     val asset: Asset,
     val crontabConfig: CrontabConfig,

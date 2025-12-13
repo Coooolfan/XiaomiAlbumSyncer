@@ -19,6 +19,7 @@ interface CrontabHistoryDetail {
     @ManyToOne
     val crontabHistory: CrontabHistory
 
+    // TODO)) 这个字段可以删掉了
     val downloadTime: Instant
 
     @OnDissociate(DissociateAction.DELETE)
