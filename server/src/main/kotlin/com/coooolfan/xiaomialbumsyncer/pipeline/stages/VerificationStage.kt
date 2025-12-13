@@ -23,25 +23,22 @@ class VerificationStage(
     private val log = LoggerFactory.getLogger(VerificationStage::class.java)
 
     fun process(context: AssetPipelineContext): AssetPipelineContext {
-        val detailId = context.detailId
-        val filePath = context.targetPath
-
-        if (detailId == null || !Files.exists(filePath)) {
+        if (context.detailId == null || !Files.exists(context.targetPath)) {
             log.warn("资源 {} 缺少文件或明细记录，跳过校验阶段", context.asset.id)
             return context
         }
 
-        val sha1 = computeSha1(filePath)
+        val sha1 = computeSha1(context.targetPath)
         if (!sha1.equals(context.asset.sha1, ignoreCase = true)) {
             log.warn("资源 {} 的 SHA1 校验失败，期望 {} 实际 {}", context.asset.id, context.asset.sha1, sha1)
-            Files.deleteIfExists(filePath)
+            Files.deleteIfExists(context.targetPath)
             // TODO: 这里需要思考一下怎么从头再来
             return context
         }
 
         sql.executeUpdate(CrontabHistoryDetail::class) {
             set(table.sha1Verified, true)
-            where(table.id eq detailId)
+            where(table.id eq context.detailId)
         }
         return context
     }
