@@ -48,7 +48,15 @@ class ExifProcessingStage(
                 context.crontabConfig.rewriteExifTimeZone.toTimeZone()
             )
 
-            rewriteExifTime(context.asset, filePath, config)
+            try {
+                rewriteExifTime(context.asset, filePath, config)
+            } catch (e: RuntimeException) {
+                if (e.message?.contains("Not a valid JPG") ?: false) {
+                    log.warn("资源 {} 的 EXIF 处理失败, 将跳过后续处理", context.asset.id, e)
+                } else {
+                    throw e
+                }
+            }
         }
 
         sql.executeUpdate(CrontabHistoryDetail::class) {
