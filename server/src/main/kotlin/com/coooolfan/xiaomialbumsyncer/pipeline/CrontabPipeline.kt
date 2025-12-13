@@ -44,28 +44,28 @@ class CrontabPipeline(
                 flow {
                     emit(downloadStage.process(context))
                 }.catch {
-                    log.error("资源 {} 的下载失败", context.asset.id, it)
+                    log.error("资源 {} 的下载失败, 将跳过后续处理", context.asset.id, it)
                 }
             }
             .flatMapMerge(concurrency.verifiers) { context ->
                 flow {
                     emit(verificationStage.process(context))
                 }.catch {
-                    log.error("资源 {} 的校验失败", context.asset.id, it)
+                    log.error("资源 {} 的校验失败, 将跳过后续处理", context.asset.id, it)
                 }
             }
             .flatMapMerge(concurrency.exifProcessors) { context ->
                 flow {
                     emit(exifProcessingStage.process(context))
                 }.catch {
-                    log.error("资源 {} 的 EXIF 处理失败", context.asset.id, it)
+                    log.error("资源 {} 的 EXIF 处理失败, 将跳过后续处理", context.asset.id, it)
                 }
             }
             .flatMapMerge(concurrency.fileTimeWorkers) { context ->
                 flow {
                     emit(fileTimeStage.process(context))
                 }.catch {
-                    log.error("资源 {} 的文件时间阶段处理失败", context.asset.id, it)
+                    log.error("资源 {} 的文件时间阶段处理失败, 将跳过后续处理", context.asset.id, it)
                 }
             }
             .onEach { context ->
