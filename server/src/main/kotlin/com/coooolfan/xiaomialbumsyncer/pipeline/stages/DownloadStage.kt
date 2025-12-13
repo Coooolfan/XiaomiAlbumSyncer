@@ -23,7 +23,7 @@ class DownloadStage(
 
     private val log = LoggerFactory.getLogger(DownloadStage::class.java)
 
-    fun process(context: AssetPipelineContext) {
+    fun process(context: AssetPipelineContext): AssetPipelineContext {
         if (context.detailId == null) throw IllegalStateException("缺失明细记录: ${context.asset.id}")
 
         val targetPath = context.targetPath
@@ -39,6 +39,7 @@ class DownloadStage(
             set(table.filePath, context.targetPath.toString())
             where(table.id eq context.detailId)
         }
+        return context
     }
 
 

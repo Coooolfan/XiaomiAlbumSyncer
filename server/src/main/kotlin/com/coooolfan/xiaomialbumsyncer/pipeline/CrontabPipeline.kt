@@ -6,17 +6,15 @@ import com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.ExifProcessingStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.VerificationStage
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
-import java.util.concurrent.atomic.AtomicInteger
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flow
 
 /**
  * 计划任务流水线管理器
@@ -41,37 +39,40 @@ class CrontabPipeline(
             return
         }
 
-        val coordinator = PipelineCoordinator(request.tasks.size)
-
         request.tasks.asFlow()
             .flatMapMerge(concurrency.downloaders) { context ->
-                flow { emit(downloadStage.process(context)) }
+                flow {
+                    emit(downloadStage.process(context))
+                }.catch {
+                    log.error("资源 {} 的下载失败", context.asset.id, it)
+                }
             }
             .flatMapMerge(concurrency.verifiers) { context ->
-                // TODO: 这样类型推断也会有问题
-                flow { emit(verificationStage.process(context)) }
+                flow {
+                    emit(verificationStage.process(context))
+                }.catch {
+                    log.error("资源 {} 的校验失败", context.asset.id, it)
+                }
             }
             .flatMapMerge(concurrency.exifProcessors) { context ->
-                exifProcessingStage.process(context)
+                flow {
+                    emit(exifProcessingStage.process(context))
+                }.catch {
+                    log.error("资源 {} 的 EXIF 处理失败", context.asset.id, it)
+                }
             }
             .flatMapMerge(concurrency.fileTimeWorkers) { context ->
-                fileTimeStage.process(context)
+                flow {
+                    emit(fileTimeStage.process(context))
+                }.catch {
+                    log.error("资源 {} 的文件时间阶段处理失败", context.asset.id, it)
+                }
             }
             .onEach { context ->
-                if (context.lastError != null) {
-                    log.warn("资源 {} 处理失败: {}", context.asset.id, context.lastError?.message)
-                } else {
-                    log.debug("资源 {} 处理成功完成", context.asset.id)
-                }
-                coordinator.markCompleted()
-            }
-            .catch { ex ->
-                log.error("流水线执行异常", ex)
-                coordinator.markCompleted()
+                log.info("资源 {} 处理完成", context.asset.id)
             }
             .collect()
 
-        coordinator.awaitCompletion()
         log.info("Crontab {} 的流水线执行完毕", request.crontab.id)
     }
 }
@@ -88,21 +89,3 @@ data class PipelineConcurrency(
     val exifProcessors: Int = 1,
     val fileTimeWorkers: Int = 1,
 )
-
-class PipelineCoordinator(totalTasks: Int) {
-    private val remaining = AtomicInteger(totalTasks)
-    private val completion = CompletableDeferred<Unit>().apply {
-        if (totalTasks == 0) complete(Unit)
-    }
-
-    fun markCompleted() {
-        val left = remaining.decrementAndGet()
-        if (left <= 0 && !completion.isCompleted) {
-            completion.complete(Unit)
-        }
-    }
-
-    suspend fun awaitCompletion() {
-        completion.await()
-    }
-}

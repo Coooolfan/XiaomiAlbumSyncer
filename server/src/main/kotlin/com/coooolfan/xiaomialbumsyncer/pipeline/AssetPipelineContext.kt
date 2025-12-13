@@ -19,6 +19,5 @@ data class AssetPipelineContext(
     val asset: Asset,
     val crontabConfig: CrontabConfig,
     val targetPath: Path,
-    var lastError: Throwable? = null,
     var detailId: Long? = null,
 )

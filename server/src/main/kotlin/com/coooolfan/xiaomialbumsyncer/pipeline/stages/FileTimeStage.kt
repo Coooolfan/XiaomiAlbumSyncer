@@ -5,8 +5,6 @@ import com.coooolfan.xiaomialbumsyncer.model.fsTimeUpdated
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.pipeline.AssetPipelineContext
 import com.coooolfan.xiaomialbumsyncer.utils.rewriteFSTime
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
@@ -23,35 +21,23 @@ class FileTimeStage(
 
     private val log = LoggerFactory.getLogger(FileTimeStage::class.java)
 
-    fun process(context: AssetPipelineContext): Flow<AssetPipelineContext> = flow {
+    fun process(context: AssetPipelineContext): AssetPipelineContext {
         val detailId = context.detailId
         val filePath = context.targetPath
 
         if (detailId == null || !Files.exists(filePath)) {
             log.warn("资源 {} 缺少文件或明细记录，跳过文件时间阶段", context.asset.id)
-            emit(context)
-            return@flow
+            return context
         }
 
-        try {
-            if (context.crontabConfig.rewriteFileSystemTime) {
-                rewriteFSTime(filePath, context.asset.dateTaken)
-            }
-
-            markFsUpdated(detailId)
-            emit(context)
-        } catch (ex: Exception) {
-            log.error("资源 {} 的文件时间阶段处理失败", context.asset.id, ex)
-            context.lastError = ex
-            // 失败也要 emit，确保任务被计数
-            emit(context)
+        if (context.crontabConfig.rewriteFileSystemTime) {
+            rewriteFSTime(filePath, context.asset.dateTaken)
         }
-    }
 
-    private fun markFsUpdated(detailId: Long) {
         sql.executeUpdate(CrontabHistoryDetail::class) {
             set(table.fsTimeUpdated, true)
             where(table.id eq detailId)
         }
+        return context
     }
 }
