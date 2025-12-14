@@ -15,6 +15,7 @@ import org.noear.solon.scheduling.scheduled.manager.IJobManager
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.text.ParseException
+import java.util.Collections
 import java.util.TimeZone
 
 @Managed
@@ -26,6 +27,7 @@ class TaskScheduler(
 ) {
 
     private val log = LoggerFactory.getLogger(this.javaClass)
+    private val runningCrontabs: MutableSet<Long> = Collections.synchronizedSet(mutableSetOf())
 
     /** 初始化并注册所有启用的定时任务
      * 该方法在应用启动时执行一次，也可以重复调用以重新载入所有任务
@@ -50,7 +52,7 @@ class TaskScheduler(
                     "${crontab.id}:${crontab.name}",
                     Scheduled(cron = crontab.config.expression, zone = crontab.config.timeZone)
                 ) {
-                    thread.taskExecutor().execute { actuators.doWork(crontab) }
+                    executeCrontab(crontab)
                 }
                 registeredJobs.add(crontab)
             } catch (e: IllegalArgumentException) {
@@ -73,9 +75,21 @@ class TaskScheduler(
      */
     fun executeCrontab(crontab: Crontab, async: Boolean = true) {
         if (async) {
-            thread.taskExecutor().execute { actuators.doWork(crontab) }
+            thread.taskExecutor().execute { executeWithGuard(crontab) }
         } else {
+            executeWithGuard(crontab)
+        }
+    }
+
+    private fun executeWithGuard(crontab: Crontab) {
+        if (!runningCrontabs.add(crontab.id)) {
+            log.warn("定时任务[${crontab.id}:${crontab.name}]正在运行中，跳过本次执行")
+            return
+        }
+        try {
             actuators.doWork(crontab)
+        } finally {
+            runningCrontabs.remove(crontab.id)
         }
     }
 
