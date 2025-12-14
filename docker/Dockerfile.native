@@ -10,9 +10,7 @@ RUN apt-get update && \
 # 由 Docker BuildKit 自动注入（amd64 / arm64）
 ARG TARGETARCH
 
-COPY dist/xiaomi-album-syncer-${TARGETARCH} /app/xiaomi-album-syncer
-
-RUN chmod +x /app/xiaomi-album-syncer
+COPY --chmod=755 dist/xiaomi-album-syncer-${TARGETARCH} /app/xiaomi-album-syncer
 
 # 暴露应用端口
 EXPOSE 8080

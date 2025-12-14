@@ -212,7 +212,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["org.noear.solon.scheduling.scheduled.manager.IJobManager","org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.utils.TaskActuators","com.coooolfan.xiaomialbumsyncer.config.ThreadExecutor"] }, {"name":"getActuators","parameterTypes":[] }, {"name":"getJobManager","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"getThread","parameterTypes":[] }, {"name":"initJobs","parameterTypes":[] }, {"name":"setActuators","parameterTypes":["com.coooolfan.xiaomialbumsyncer.utils.TaskActuators"] }, {"name":"setJobManager","parameterTypes":["org.noear.solon.scheduling.scheduled.manager.IJobManager"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"setThread","parameterTypes":["com.coooolfan.xiaomialbumsyncer.config.ThreadExecutor"] }]
+  "methods":[{"name":"<init>","parameterTypes":["org.noear.solon.scheduling.scheduled.manager.IJobManager","org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.utils.TaskActuators","com.coooolfan.xiaomialbumsyncer.config.ThreadExecutor"] }, {"name":"getActuators","parameterTypes":[] }, {"name":"getJobManager","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getRunningCrontabs","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"getThread","parameterTypes":[] }, {"name":"initJobs","parameterTypes":[] }, {"name":"setActuators","parameterTypes":["com.coooolfan.xiaomialbumsyncer.utils.TaskActuators"] }, {"name":"setJobManager","parameterTypes":["org.noear.solon.scheduling.scheduled.manager.IJobManager"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setRunningCrontabs","parameterTypes":["java.util.Set"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"setThread","parameterTypes":["com.coooolfan.xiaomialbumsyncer.config.ThreadExecutor"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.config.TaskScheduler$annotationImpl$org_noear_solon_scheduling_annotation_Scheduled$0"
@@ -352,10 +352,17 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.SystemConfigService"] }, {"name":"getService","parameterTypes":[] }, {"name":"getSystemConfig","parameterTypes":[] }, {"name":"importFromV2Db","parameterTypes":[] }, {"name":"initConfig","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit"] }, {"name":"isInit","parameterTypes":[] }, {"name":"setService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.SystemConfigService"] }, {"name":"updatePassToken","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPassTokenUpdate"] }, {"name":"updatePassword","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate"] }, {"name":"updateSystemConfig","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate"] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.SystemConfigService"] }, {"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.SystemConfigService","com.coooolfan.xiaomialbumsyncer.service.DebugService"] }, {"name":"getDebugService","parameterTypes":[] }, {"name":"getService","parameterTypes":[] }, {"name":"getSystemConfig","parameterTypes":[] }, {"name":"getSystemDebugInfo","parameterTypes":[] }, {"name":"getSystemInfo","parameterTypes":[] }, {"name":"importFromV2Db","parameterTypes":[] }, {"name":"initConfig","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit"] }, {"name":"isInit","parameterTypes":[] }, {"name":"setDebugService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.DebugService"] }, {"name":"setService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.SystemConfigService"] }, {"name":"updatePassToken","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPassTokenUpdate"] }, {"name":"updatePassword","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate"] }, {"name":"updateSystemConfig","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.controller.SystemConfigController$Companion"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.controller.SystemInfoResponse",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":["boolean","boolean","java.lang.String","java.lang.String"] }, {"name":"getAotRuntime","parameterTypes":[] }, {"name":"getAppVersion","parameterTypes":[] }, {"name":"getJvmVersion","parameterTypes":[] }, {"name":"getNativeImage","parameterTypes":[] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.controller.TokenController",
@@ -977,6 +984,14 @@
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
   "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"getTaskScheduler","parameterTypes":[] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"setTaskScheduler","parameterTypes":["com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"] }]
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.service.DebugService",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.service.SystemConfigService",
