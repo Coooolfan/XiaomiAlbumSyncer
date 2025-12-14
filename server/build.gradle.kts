@@ -17,7 +17,7 @@ repositories {
 }
 
 group = "com.coooolfan"
-version = "0.7.0-BETA"
+version = "0.7.1-BETA"
 description = "A tool to download albums from Xiaomi Cloud."
 
 val jimmerVersion = "0.9.112"
@@ -87,7 +87,7 @@ tasks.withType<Test> {
 }
 
 tasks.withType<BuildNativeImageTask> {
-    val options = this.options.get()
+//    val options = this.options.get()
 //    options.buildArgs.add("--pgo-instrument")
 //    options.buildArgs.add("--pgo=${project.projectDir}/default.iprof")
 }

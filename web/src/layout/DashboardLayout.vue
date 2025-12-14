@@ -87,11 +87,15 @@ async function logout() {
             <span v-else class="font-medium text-amber-600">
               JVM {{ systemInfo.jvmVersion }}
             </span>
+            <span class="text-slate-300">|</span>
+            <a href="https://github.com/coooolfan/xiaomialbumsyncer" target="_blank"><i
+              class="pi pi-github text-black"/></a>
           </div>
+
           <Button
             label="退出登录"
             severity="secondary"
-            class="!py-2 !px-3"
+            class="py-2! px-3!"
             :loading="loggingOut"
             @click="logout"
           />
@@ -101,8 +105,15 @@ async function logout() {
 
     <!-- Content -->
     <main class="max-w-7xl mx-auto px-4 py-8">
-      <router-view />
+      <router-view/>
     </main>
+
+    <!-- Footer -->
+    <footer class="my-2 text-center text-xs text-slate-500">
+      <p>{{ new Date().getFullYear() }} Xiaomi Album Syncer © <a
+        href="https://github.com/coooolfan/xiaomialbumsyncer" target="_blank">github.com/coooolfan/xiaomialbumsyncer</a>
+      </p>
+    </footer>
   </div>
 </template>
 

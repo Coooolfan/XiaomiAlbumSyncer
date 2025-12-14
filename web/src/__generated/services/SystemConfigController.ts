@@ -29,6 +29,13 @@ export class SystemConfigController {
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<SystemConfigDto['SystemConfigController/NORMAL_SYSTEM_CONFIG']>;
     }
     
+    readonly getSystemDebugInfo: () => Promise<
+        string
+    > = async() => {
+        let _uri = '/api/system-config/info/debug';
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<string>;
+    }
+    
     readonly getSystemInfo: () => Promise<
         SystemInfoResponse
     > = async() => {
@@ -167,5 +174,6 @@ export type SystemConfigControllerOptions = {
         readonly body: SystemConfigPasswordUpdate
     }, 
     'getSystemInfo': {}, 
+    'getSystemDebugInfo': {}, 
     'importFromV2Db': {}
 }

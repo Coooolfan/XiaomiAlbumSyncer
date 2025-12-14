@@ -7,6 +7,7 @@ import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPassTokenUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate
+import com.coooolfan.xiaomialbumsyncer.service.DebugService
 import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.client.meta.Api
@@ -22,7 +23,7 @@ import org.noear.solon.core.runtime.NativeDetector.isAotRuntime
 @Api
 @Controller
 @Mapping("/api/system-config")
-class SystemConfigController(private val service: SystemConfigService) {
+class SystemConfigController(private val service: SystemConfigService, private val debugService: DebugService) {
 
     /**
      * 检查系统是否已完成初始化
@@ -154,6 +155,13 @@ class SystemConfigController(private val service: SystemConfigService) {
         )
     }
 
+    @Api
+    @Mapping("/info/debug", method = [MethodType.GET])
+    @SaCheckLogin
+    fun getSystemDebugInfo(): String {
+        return debugService.getDebugInfo()
+    }
+
     /**
      * 从旧版本数据库导入数据
      *
@@ -186,5 +194,5 @@ data class SystemInfoResponse(
     val aotRuntime: Boolean,
     val nativeImage: Boolean,
     val jvmVersion: String?,
-    val appVersion: String = "0.7.0-BETA"
+    val appVersion: String = "0.7.1-BETA"
 )

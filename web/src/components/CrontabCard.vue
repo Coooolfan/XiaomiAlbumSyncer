@@ -123,13 +123,13 @@ const manualActionOptions = computed(() => {
               :value="crontab.config?.diffByTimeline ? '时间线比对差异' : '全量比对差异'" />
             <Tag :severity="crontab.config?.skipExistingFile ? 'success' : 'danger'"
               :value="crontab.config?.skipExistingFile ? '跳过已存在文件' : '覆盖已存在文件'" />
-            <Tag :severity="crontab.config?.rewriteFileSystemTime ? 'info' : 'secondary'"
+            <Tag :severity="crontab.config?.rewriteFileSystemTime ? 'success' : 'secondary'"
               :value="crontab.config?.rewriteFileSystemTime ? '重写文件系统时间' : '不重写文件系统时间'" />
           </div>
 
           <div class="flex flex-wrap items-center gap-2 pt-1">
             <Chip v-for="id in crontab.albumIds" :key="id" :label="albumMap[id] || String(id)" class="text-xs" />
-            <span v-if="!crontab.albumIds || crontab.albumIds.length === 0" class="text-xs text-slate-400">未关联相册</span>
+            <span v-if="!crontab.albumIds || crontab.albumIds.length === 0" class="text-xs text-slate-400">无关联相册</span>
           </div>
 
 

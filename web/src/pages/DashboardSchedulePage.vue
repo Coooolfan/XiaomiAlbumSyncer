@@ -72,7 +72,7 @@ const cronForm = ref<CrontabCreateInput>({
   description: '',
   enabled: true,
   config: {
-    expression: '',
+    expression: '0 0 23 * * ?',
     timeZone: defaultTz,
     targetPath: '',
     downloadImages: true,
@@ -259,7 +259,7 @@ function openCreateCron() {
     description: '',
     enabled: true,
     config: {
-      expression: '',
+      expression: '0 0 23 * * ?',
       timeZone: defaultTz,
       targetPath: './download',
       downloadImages: true,
@@ -304,8 +304,20 @@ function openEditCron(item: Crontab) {
 function validateCronForm(): boolean {
   const errors: Record<string, string> = {}
   if (!cronForm.value.name || cronForm.value.name.trim() === '') errors.name = '必填'
-  if (!cronForm.value.config.expression || cronForm.value.config.expression.trim() === '')
+  if (!cronForm.value.config.expression || cronForm.value.config.expression.trim() === '') {
     errors.expression = '必填'
+  } else {
+    const crontabExpression = cronForm.value.config.expression.split(' ');
+    if (crontabExpression.length < 6) {
+      errors.expression = '看起来这不是一个有效的表达式'
+    } else {
+      if (crontabExpression[0] === '*') {
+        errors.expression = '每秒运行一次似乎有点太高频了'
+      } else if (crontabExpression[1] === '*') {
+        errors.expression = '每分钟运行一次似乎有点太高频了'
+      }
+    }
+  }
   if (!cronForm.value.config.timeZone || cronForm.value.config.timeZone.trim() === '') errors.timeZone = '必选'
   if (!cronForm.value.config.targetPath || cronForm.value.config.targetPath.trim() === '') errors.targetPath = '必填'
   formErrors.value = errors
