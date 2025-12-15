@@ -5,6 +5,7 @@ import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.enabled
+import com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline
 import com.coooolfan.xiaomialbumsyncer.utils.TaskActuators
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
@@ -13,6 +14,7 @@ import org.noear.solon.annotation.Managed
 import org.noear.solon.scheduling.annotation.Scheduled
 import org.noear.solon.scheduling.scheduled.manager.IJobManager
 import org.slf4j.LoggerFactory
+import kotlinx.coroutines.runBlocking
 import java.nio.file.Path
 import java.text.ParseException
 import java.util.*
@@ -22,7 +24,7 @@ class TaskScheduler(
     private val jobManager: IJobManager,
     private val sql: KSqlClient,
     private val actuators: TaskActuators,
-//    private val pipeline: CrontabPipeline,
+    private val pipeline: CrontabPipeline,
     private val thread: ThreadExecutor
 ) {
 
@@ -87,8 +89,9 @@ class TaskScheduler(
             return
         }
         try {
-//            pipeline.execute()
-            actuators.doWork(crontab)
+            runBlocking {
+                pipeline.execute(crontab)
+            }
         } finally {
             runningCrontabs.remove(crontab.id)
         }

@@ -11,6 +11,7 @@ import org.babyfish.jimmer.sql.kt.ast.expression.desc
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.ast.expression.ne
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
+import org.noear.solon.annotation.Inject
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
@@ -20,7 +21,11 @@ import java.util.*
 import kotlin.io.path.Path
 
 @Managed
-class CrontabService(private val sql: KSqlClient, private val taskScheduler: TaskScheduler) {
+class CrontabService(private val sql: KSqlClient) {
+
+    // 避免一下循环依赖
+    @Inject
+    private lateinit var taskScheduler: TaskScheduler
 
     private val log = LoggerFactory.getLogger(this.javaClass)
 

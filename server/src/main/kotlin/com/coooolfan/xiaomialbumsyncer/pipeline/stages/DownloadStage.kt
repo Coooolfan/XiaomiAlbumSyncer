@@ -4,7 +4,6 @@ import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
 import com.coooolfan.xiaomialbumsyncer.model.downloadCompleted
 import com.coooolfan.xiaomialbumsyncer.model.filePath
 import com.coooolfan.xiaomialbumsyncer.model.id
-import com.coooolfan.xiaomialbumsyncer.pipeline.AssetPipelineContext
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
@@ -24,16 +23,16 @@ class DownloadStage(
 
     private val log = LoggerFactory.getLogger(DownloadStage::class.java)
 
-    fun process(context: AssetPipelineContext): AssetPipelineContext {
-        if (context.detail.downloadCompleted) {
+    fun process(context: CrontabHistoryDetail): CrontabHistoryDetail {
+        if (context.downloadCompleted) {
             log.info("资源 {} 的下载已完成或者被标记为无需处理，跳过下载阶段", context.asset.id)
             return context
         }
 
-        val targetPath = Path(context.detail.filePath)
+        val targetPath = Path(context.filePath)
         targetPath.parent?.let { Files.createDirectories(it) }
 
-        if (context.crontabConfig.skipExistingFile && Files.exists(targetPath))
+        if (context.crontabHistory.crontab.config.skipExistingFile && Files.exists(targetPath))
             log.info("跳过已存在文件 {}", targetPath)
         else
             api.downloadAsset(context.asset, targetPath)
@@ -41,12 +40,11 @@ class DownloadStage(
         sql.executeUpdate(CrontabHistoryDetail::class) {
             set(table.downloadCompleted, true)
             set(table.filePath, targetPath.toString())
-            where(table.id eq context.detail.id)
+            where(table.id eq context.id)
         }
-        context.detail = CrontabHistoryDetail(context.detail) {
+        return CrontabHistoryDetail(context) {
             downloadCompleted = true
         }
-        return context
     }
 
 
