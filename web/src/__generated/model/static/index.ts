@@ -7,3 +7,4 @@ export type {SystemConfigInit} from './SystemConfigInit';
 export type {SystemConfigPassTokenUpdate} from './SystemConfigPassTokenUpdate';
 export type {SystemConfigPasswordUpdate} from './SystemConfigPasswordUpdate';
 export type {SystemConfigUpdate} from './SystemConfigUpdate';
+export type {SystemInfoResponse} from './SystemInfoResponse';

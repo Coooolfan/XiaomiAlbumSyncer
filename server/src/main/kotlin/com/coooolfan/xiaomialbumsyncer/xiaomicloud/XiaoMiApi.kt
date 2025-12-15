@@ -34,10 +34,10 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 .get()
                 .build()
 
-            val res = client().newCall(req).execute()
-            throwIfNotSuccess(res.code)
-            val resBodyString = res.body.string()
-            val responseTree = jacksonObjectMapper().readTree(resBodyString)
+            val responseTree = client().newCall(req).execute().use { res ->
+                throwIfNotSuccess(res.code)
+                jacksonObjectMapper().readTree(res.body.string())
+            }
             val albumArrayJson = responseTree.at("/data/albums")
 
             log.info("解析第 ${pageNum + 1} 页相册数据，此页共 ${albumArrayJson.size()} 个相册")
@@ -85,10 +85,10 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 .get()
                 .build()
 
-            val res = client().newCall(req).execute()
-            throwIfNotSuccess(res.code)
-            val resBodyString = res.body.string()
-            val responseTree = jacksonObjectMapper().readTree(resBodyString)
+            val responseTree = client().newCall(req).execute().use { res ->
+                throwIfNotSuccess(res.code)
+                jacksonObjectMapper().readTree(res.body.string())
+            }
             val assetArrayJson = responseTree.at("/data/galleries")
 
             log.info("解析相册 ${album.name} ID=${album.id}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
@@ -123,10 +123,10 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             .get()
             .build()
 
-        val res = client().newCall(req).execute()
-        throwIfNotSuccess(res.code)
-        val resBodyString = res.body.string()
-        val responseTree = jacksonObjectMapper().readTree(resBodyString)
+        val responseTree = client().newCall(req).execute().use { res ->
+            throwIfNotSuccess(res.code)
+            jacksonObjectMapper().readTree(res.body.string())
+        }
         val indexHash = responseTree.at("/data/indexHash").asText()
         val dayCountMap = responseTree.at("/data/dayCount").properties().asSequence().map {
             LocalDate.parse(it.key, BASIC_ISO_DATE) to it.value.asLong()
@@ -144,11 +144,10 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             .authHeader(tokenManager.getAuthPair())
             .get()
             .build()
-        val fetchOssUrlResp = client().newCall(fetchOssUrlReq).execute()
-        throwIfNotSuccess(fetchOssUrlResp.code)
-        val fetchOssUrlBodyString = fetchOssUrlResp.body.string()
-        fetchOssUrlResp.close()
-        val fetchOssUrlJson = jacksonObjectMapper().readTree(fetchOssUrlBodyString)
+        val fetchOssUrlJson = client().newCall(fetchOssUrlReq).execute().use { resp ->
+            throwIfNotSuccess(resp.code)
+            jacksonObjectMapper().readTree(resp.body.string())
+        }
 
         // 文件已经被删掉了，直接返回一个无效值，避免后续反复请求
         if (fetchOssUrlJson.at("/code").asInt() == 50050) {
@@ -160,12 +159,10 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
 
         // 2. 请求签名直链
         val fetchSignedUrlReq = Request.Builder().url(ossUrl).ua().get().build()
-        val fetchSignedUrlResp = client().newCall(fetchSignedUrlReq).execute()
-        throwIfNotSuccess(fetchSignedUrlResp.code)
-        val fetchSignedUrlBodyString = fetchSignedUrlResp.body.string()
-        fetchSignedUrlResp.close()
-        val fetchSignedUrlJson =
-            jacksonObjectMapper().readTree(fetchSignedUrlBodyString.substringAfter('(').substringBefore(')'))
+        val fetchSignedUrlJson = client().newCall(fetchSignedUrlReq).execute().use { resp ->
+            throwIfNotSuccess(resp.code)
+            jacksonObjectMapper().readTree(resp.body.string().substringAfter('(').substringBefore(')'))
+        }
 
         // 3. 下载文件
         val downloadUrl = fetchSignedUrlJson.get("url").asText()
@@ -174,11 +171,11 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             .add("meta", downloadMeta)
             .build()
         val downloadReq = Request.Builder().url(downloadUrl).ua().post(formBody).build()
-        val downloadResp = client().newCall(downloadReq).execute()
-        throwIfNotSuccess(downloadResp.code)
-
-        // 4. 保存文件
-        downloadResp.body.saveToFile(targetPath)
+        client().newCall(downloadReq).execute().use { downloadResp ->
+            throwIfNotSuccess(downloadResp.code)
+            // 4. 保存文件
+            downloadResp.body.saveToFile(targetPath)
+        }
 
         return targetPath
     }

@@ -1,4 +1,4 @@
-FROM ibm-semeru-runtimes:open-25-jre-noble
+FROM eclipse-temurin:25-jre-noble
 WORKDIR /app
 
 # 安装 ExifTool
