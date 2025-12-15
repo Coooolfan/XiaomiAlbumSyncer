@@ -2,15 +2,13 @@ package com.coooolfan.xiaomialbumsyncer.service
 
 import com.coooolfan.xiaomialbumsyncer.config.TaskScheduler
 import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CRONTAB_WITH_ALBUM_IDS_FETCHER
+import com.coooolfan.xiaomialbumsyncer.controller.CrontabCurrentStats
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
-import org.babyfish.jimmer.sql.kt.ast.expression.desc
-import org.babyfish.jimmer.sql.kt.ast.expression.eq
-import org.babyfish.jimmer.sql.kt.ast.expression.ne
-import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
+import org.babyfish.jimmer.sql.kt.ast.expression.*
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.noear.solon.annotation.Inject
 import org.noear.solon.annotation.Managed
@@ -48,6 +46,60 @@ class CrontabService(private val sql: KSqlClient) {
         }
         taskScheduler.initJobs()
     }
+
+    fun getCrontabCurrentStats(crontabId: Long): CrontabCurrentStats {
+        if (!taskScheduler.checkIsRunning(crontabId))
+            throw IllegalStateException("计划任务 ${crontabId} 没有正在运行")
+
+        val runningCrontabHistory = sql.createQuery(CrontabHistory::class) {
+            where(table.crontabId eq crontabId)
+            orderBy(table.startTime.desc())
+            select(table)
+        }.limit(1).execute().firstOrNull() ?: throw IllegalStateException("时机不对，请再试一次")
+
+        if (!runningCrontabHistory.fetchedAllAssets) {
+            return CrontabCurrentStats(Instant.now())
+        }
+
+        val downloadCompletedCount = sql.createQuery(CrontabHistoryDetail::class) {
+            where(table.crontabHistoryId eq runningCrontabHistory.id)
+            where(table.downloadCompleted eq true)
+            select(count(table))
+        }.execute().firstOrNull() ?: throw IllegalStateException("时机不对，请再试一次")
+
+        val sha1VerifiedCount = sql.createQuery(CrontabHistoryDetail::class) {
+            where(table.crontabHistoryId eq runningCrontabHistory.id)
+            where(table.downloadCompleted eq true)
+            where(table.sha1Verified eq true)
+            select(count(table))
+        }.execute().firstOrNull() ?: throw IllegalStateException("时机不对，请再试一次")
+
+        val exifFilledCount = sql.createQuery(CrontabHistoryDetail::class) {
+            where(table.crontabHistoryId eq runningCrontabHistory.id)
+            where(table.exifFilled eq true)
+            where(table.downloadCompleted eq true)
+            where(table.sha1Verified eq true)
+            select(count(table))
+        }.execute().firstOrNull() ?: throw IllegalStateException("时机不对，请再试一次")
+
+        val fsTimeUpdateCount = sql.createQuery(CrontabHistoryDetail::class) {
+            where(table.crontabHistoryId eq runningCrontabHistory.id)
+            where(table.fsTimeUpdated eq true)
+            where(table.exifFilled eq true)
+            where(table.downloadCompleted eq true)
+            where(table.sha1Verified eq true)
+            select(count(table))
+        }.execute().firstOrNull() ?: throw IllegalStateException("时机不对，请再试一次")
+
+        return CrontabCurrentStats(
+            Instant.now(),
+            downloadCompletedCount,
+            sha1VerifiedCount,
+            exifFilledCount,
+            fsTimeUpdateCount,
+        )
+    }
+
 
     fun updateCrontab(crontab: Crontab, fetcher: Fetcher<Crontab>): Crontab {
         val execute = sql.saveCommand(crontab, SaveMode.UPDATE_ONLY).execute(fetcher)

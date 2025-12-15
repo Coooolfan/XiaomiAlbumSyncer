@@ -1,6 +1,7 @@
 export type {AlbumTimeline} from './AlbumTimeline';
 export type {CrontabConfig} from './CrontabConfig';
 export type {CrontabCreateInput} from './CrontabCreateInput';
+export type {CrontabCurrentStats} from './CrontabCurrentStats';
 export type {CrontabUpdateInput} from './CrontabUpdateInput';
 export type {IsInitResponse} from './IsInitResponse';
 export type {SystemConfigInit} from './SystemConfigInit';

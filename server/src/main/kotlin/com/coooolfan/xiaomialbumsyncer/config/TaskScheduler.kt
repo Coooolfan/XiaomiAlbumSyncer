@@ -7,6 +7,7 @@ import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.enabled
 import com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline
 import com.coooolfan.xiaomialbumsyncer.utils.SingleStagePatch
+import kotlinx.coroutines.runBlocking
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Init
@@ -14,7 +15,6 @@ import org.noear.solon.annotation.Managed
 import org.noear.solon.scheduling.annotation.Scheduled
 import org.noear.solon.scheduling.scheduled.manager.IJobManager
 import org.slf4j.LoggerFactory
-import kotlinx.coroutines.runBlocking
 import java.nio.file.Path
 import java.text.ParseException
 import java.util.*
@@ -69,6 +69,10 @@ class TaskScheduler(
 
         log.info("载入定时任务完成，共注册 ${registeredJobs.size} 个任务")
 
+    }
+
+    fun checkIsRunning(crontabId: Long): Boolean {
+        return runningCrontabs.contains(crontabId)
     }
 
     /** 立即执行某个定时任务

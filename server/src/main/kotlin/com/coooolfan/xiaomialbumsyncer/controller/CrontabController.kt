@@ -15,6 +15,7 @@ import org.noear.solon.annotation.Managed
 import org.noear.solon.annotation.Mapping
 import org.noear.solon.annotation.Path
 import org.noear.solon.core.handle.MethodType
+import java.time.Instant
 
 @Api
 @Managed
@@ -115,6 +116,12 @@ class CrontabController(private val service: CrontabService) {
         service.executeCrontab(crontabId)
     }
 
+    @Api
+    @Mapping("/{crontabId}/current", method = [MethodType.POST])
+    fun getCrontabCurrentStats(@Path crontabId: Long): CrontabCurrentStats {
+        return service.getCrontabCurrentStats(crontabId)
+    }
+
 
     /**
      * 立即执行指定定时任务的EXIF填充操作
@@ -156,6 +163,7 @@ class CrontabController(private val service: CrontabService) {
         private val DEFAULT_CRONTAB = newFetcher(Crontab::class).by {
             allScalarFields()
             albumIds()
+            running()
             histories {
                 allScalarFields()
                 isCompleted()
@@ -169,3 +177,12 @@ class CrontabController(private val service: CrontabService) {
         }
     }
 }
+
+data class CrontabCurrentStats(
+    val ts: Instant,
+    val downloadCompletedFinished: Long? = null,
+    val sha1VerifiedFinished: Long? = null,
+    val exifFilledFinished: Long? = null,
+    val fsTimeUpdatedFinished: Long? = null,
+
+    )

@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.model
 
+import com.coooolfan.xiaomialbumsyncer.utils.CrontabRunningResolver
 import org.babyfish.jimmer.jackson.JsonConverter
 import org.babyfish.jimmer.jackson.LongListToStringListConverter
 import org.babyfish.jimmer.sql.*
@@ -20,6 +21,9 @@ interface Crontab {
 
     @ManyToMany
     val albums: List<Album>
+
+    @Transient(CrontabRunningResolver::class)
+    val running: Boolean
 
     @IdView("albums")
     @JsonConverter(LongListToStringListConverter::class)
