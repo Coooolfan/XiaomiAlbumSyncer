@@ -6,7 +6,7 @@ import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.enabled
 import com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline
-import com.coooolfan.xiaomialbumsyncer.utils.TaskActuators
+import com.coooolfan.xiaomialbumsyncer.utils.SingleStagePatch
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Init
@@ -23,7 +23,7 @@ import java.util.*
 class TaskScheduler(
     private val jobManager: IJobManager,
     private val sql: KSqlClient,
-    private val actuators: TaskActuators,
+    private val singleStagePatch: SingleStagePatch,
     private val pipeline: CrontabPipeline,
     private val thread: ThreadExecutor
 ) {
@@ -102,9 +102,9 @@ class TaskScheduler(
         systemConfig: SystemConfig, timeZone: TimeZone
     ) {
         if (async) {
-            thread.taskExecutor().execute { actuators.fillExifTime(assetPathMap, systemConfig, timeZone) }
+            thread.taskExecutor().execute { singleStagePatch.fillExifTime(assetPathMap, systemConfig, timeZone) }
         } else {
-            actuators.fillExifTime(assetPathMap, systemConfig, timeZone)
+            singleStagePatch.fillExifTime(assetPathMap, systemConfig, timeZone)
         }
     }
 
@@ -112,9 +112,9 @@ class TaskScheduler(
         async: Boolean = true, assetPathMap: Map<Asset, Path>
     ) {
         if (async) {
-            thread.taskExecutor().execute { actuators.rewriteFileSystemTime(assetPathMap) }
+            thread.taskExecutor().execute { singleStagePatch.rewriteFileSystemTime(assetPathMap) }
         } else {
-            actuators.rewriteFileSystemTime(assetPathMap)
+            singleStagePatch.rewriteFileSystemTime(assetPathMap)
         }
     }
 
