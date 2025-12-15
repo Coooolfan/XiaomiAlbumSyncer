@@ -217,8 +217,9 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
 
             dayList.forEach { day ->
                 log.info("相册 $albumId 在 $day 有新增，开始刷新此日期的资源")
-                val assets = api.fetchAllAssetsByAlbumId(album, day)
-                sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+                api.fetchAssetsByAlbumId(album, day) { assets ->
+                    sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+                }
             }
         }
     }
@@ -229,12 +230,13 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
             select(table)
         }
 
-        albums.forEach {
-            val assets = api.fetchAllAssetsByAlbumId(it)
-            sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+        albums.forEach { album ->
+            val assetCount = api.fetchAssetsByAlbumId(album) { assets ->
+                sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+            }
             sql.executeUpdate(Album::class) {
-                set(table.assetCount, assets.size.toLong())
-                where(table.id eq it.id)
+                set(table.assetCount, assetCount)
+                where(table.id eq album.id)
             }
         }
         sql.executeUpdate(CrontabHistory::class) {

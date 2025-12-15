@@ -5,7 +5,6 @@ import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.enabled
-import com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline
 import com.coooolfan.xiaomialbumsyncer.utils.TaskActuators
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
@@ -16,15 +15,14 @@ import org.noear.solon.scheduling.scheduled.manager.IJobManager
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.text.ParseException
-import java.util.Collections
-import java.util.TimeZone
+import java.util.*
 
 @Managed
 class TaskScheduler(
     private val jobManager: IJobManager,
     private val sql: KSqlClient,
     private val actuators: TaskActuators,
-    private val pipeline: CrontabPipeline,
+//    private val pipeline: CrontabPipeline,
     private val thread: ThreadExecutor
 ) {
 

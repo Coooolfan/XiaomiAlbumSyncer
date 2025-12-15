@@ -65,8 +65,12 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         return allAlbums.toList() // 返回不可变列表
     }
 
-    fun fetchAllAssetsByAlbumId(album: Album, day: LocalDate? = null): List<Asset> {
-        val allAssets = mutableListOf<Asset>()
+    /**
+     * 流式获取相册资源，每获取一页就调用 handler 处理，避免大相册内存溢出
+     * @return 总资源数量
+     */
+    fun fetchAssetsByAlbumId(album: Album, day: LocalDate? = null, handler: (List<Asset>) -> Unit): Long {
+        var totalCount = 0L
         var pageNum = 0
         var hasMorePages = true
         val pageSize = 200
@@ -92,9 +96,10 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             val assetArrayJson = responseTree.at("/data/galleries")
 
             log.info("解析相册 ${album.name} ID=${album.id}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
+
             // 处理当前页数据
-            for (assetJson in assetArrayJson) {
-                allAssets.add(Asset {
+            val pageAssets = assetArrayJson.map { assetJson ->
+                Asset {
                     id = assetJson.get("id").asLong()
                     fileName = assetJson.get("fileName").asText()
                     type = AssetType.valueOf(assetJson.get("type").asText().uppercase())
@@ -104,15 +109,30 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                     mimeType = assetJson.get("mimeType").asText()
                     title = assetJson.get("title").asText()
                     size = assetJson.get("size").asLong()
-                })
+                }
             }
+
+            // 立即处理这一页，避免累积
+            handler(pageAssets)
+            totalCount += pageAssets.size
 
             // 检查是否还有更多页面
             hasMorePages = !responseTree.at("/data/isLastPage").asBoolean()
             pageNum++
         }
 
-        return allAssets.toList() // 返回不可变列表
+        return totalCount
+    }
+
+    /**
+     * 获取相册全部资源并返回列表（适用于小相册或需要返回值的场景）
+     */
+    fun fetchAllAssetsByAlbumId(album: Album, day: LocalDate? = null): List<Asset> {
+        val allAssets = mutableListOf<Asset>()
+        fetchAssetsByAlbumId(album, day) { pageAssets ->
+            allAssets.addAll(pageAssets)
+        }
+        return allAssets.toList()
     }
 
     fun fetchAlbumTimeline(albumId: Long): AlbumTimeline {
