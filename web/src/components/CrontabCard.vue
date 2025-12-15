@@ -125,6 +125,8 @@ const manualActionOptions = computed(() => {
               :value="crontab.config?.skipExistingFile ? '跳过已存在文件' : '覆盖已存在文件'" />
             <Tag :severity="crontab.config?.rewriteFileSystemTime ? 'success' : 'secondary'"
               :value="crontab.config?.rewriteFileSystemTime ? '重写文件系统时间' : '不重写文件系统时间'" />
+            <Tag :severity="crontab.config?.checkSha1 ? 'success' : 'secondary'"
+              :value="crontab.config?.checkSha1 ? '校验 SHA1' : '不校验 SHA1'" />
           </div>
 
           <div class="flex flex-wrap items-center gap-2 pt-1">

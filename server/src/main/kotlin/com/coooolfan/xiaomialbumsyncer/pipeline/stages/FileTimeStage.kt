@@ -27,7 +27,9 @@ class FileTimeStage(
         }
 
         if (context.crontabHistory.crontab.config.rewriteFileSystemTime) {
+            log.info("开始处理资源 {} 的文件系统时间", context.asset.id)
             rewriteFSTime(Path(context.filePath), context.asset.dateTaken)
+            log.info("资源 {} 的文件系统时间处理完成", context.asset.id)
         }
 
         sql.executeUpdate(CrontabHistoryDetail::class) {

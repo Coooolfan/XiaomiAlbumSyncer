@@ -10,6 +10,7 @@ import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.desc
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.ast.expression.ne
+import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.noear.solon.annotation.Inject
 import org.noear.solon.annotation.Managed
@@ -65,10 +66,21 @@ class CrontabService(private val sql: KSqlClient) {
     }
 
     fun createCrontabHistory(crontab: Crontab): CrontabHistory {
-        return sql.saveCommand(CrontabHistory {
+        val crontabHistoryId = sql.saveCommand(CrontabHistory {
             crontabId = crontab.id
             startTime = Instant.now()
-        }, SaveMode.INSERT_ONLY).execute().modifiedEntity
+        }, SaveMode.INSERT_ONLY).execute().modifiedEntity.id
+
+        return sql.findOneById(
+            newFetcher(CrontabHistory::class).by {
+                allScalarFields()
+                crontab {
+                    allScalarFields()
+                    albumIds()
+                }
+            },
+            crontabHistoryId,
+        )
     }
 
     fun getAlbumTimelinesHistory(history: CrontabHistory): Map<Long, AlbumTimeline> {
@@ -81,8 +93,29 @@ class CrontabService(private val sql: KSqlClient) {
         }.firstOrNull() ?: emptyMap()
     }
 
-    fun insertCrontabHistoryDetails(details: List<CrontabHistoryDetail>) {
-        sql.saveEntitiesCommand(details, SaveMode.INSERT_ONLY).execute()
+    fun insertCrontabHistoryDetails(details: List<CrontabHistoryDetail>): List<CrontabHistoryDetail> {
+        val details2Save = details.map { origin ->
+            CrontabHistoryDetail(origin) {
+                crontabHistory = CrontabHistory { id = origin.crontabHistory.id }
+                asset = Asset { id = origin.asset.id }
+            }
+        }.toCollection(mutableListOf())
+
+        val saveResult = sql.saveEntitiesCommand(details2Save, SaveMode.INSERT_ONLY).execute()
+
+        val saveIds = saveResult.items.map { it.modifiedEntity.id }.toCollection(mutableListOf())
+
+        return sql.executeQuery(CrontabHistoryDetail::class) {
+            where(table.id valueIn saveIds)
+            select(table.fetch(newFetcher(CrontabHistoryDetail::class).by {
+                allScalarFields()
+                crontabHistory {
+                    allScalarFields()
+                    crontab { allScalarFields() }
+                }
+                asset { allScalarFields() }
+            }))
+        }
     }
 
     fun finishCrontabHistoryFetchedAllAssets(crontabHistory: CrontabHistory) {

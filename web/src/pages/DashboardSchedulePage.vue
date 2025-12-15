@@ -82,6 +82,7 @@ const cronForm = ref<CrontabCreateInput>({
     rewriteExifTimeZone: defaultTz,
     skipExistingFile: true,
     rewriteFileSystemTime: false,
+    checkSha1: false,
   },
   albumIds: [],
 })
@@ -269,6 +270,7 @@ function openCreateCron() {
       rewriteExifTimeZone: defaultTz,
       skipExistingFile: true,
       rewriteFileSystemTime: false,
+      checkSha1: false,
     },
     albumIds: [],
   }
@@ -294,6 +296,7 @@ function openEditCron(item: Crontab) {
       rewriteExifTimeZone: item.config.rewriteExifTimeZone ?? item.config.timeZone,
       skipExistingFile: item.config.skipExistingFile ?? true,
       rewriteFileSystemTime: item.config.rewriteFileSystemTime ?? false,
+      checkSha1: item.config.checkSha1 ?? false,
     },
     albumIds: [...item.albumIds],
   }
@@ -670,6 +673,13 @@ const albumsRefreshModel = ref([
                 <span>重写文件时间</span>
               </div>
               <div class="text-[10px] text-slate-400">同步完成后，将资产的文件系统时间修改为对应的小米云服务上的时间。</div>
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 text-xs text-slate-600">
+                <InputSwitch v-model="cronForm.config.checkSha1" />
+                <span>校验 SHA1</span>
+              </div>
+              <div class="text-[10px] text-slate-400">对下载的文件进行 SHA1 校验，失败则重新下载。没必要开。</div>
             </div>
           </div>
 

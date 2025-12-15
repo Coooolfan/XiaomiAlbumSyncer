@@ -27,7 +27,6 @@ data class CrontabConfig(
 
     val rewriteFileSystemTime: Boolean = false,
 
-//    重新发起下载请求有点麻烦，到时候再说吧
-//    val checkSha1: Boolean = false
+    val checkSha1: Boolean = false
 
 )

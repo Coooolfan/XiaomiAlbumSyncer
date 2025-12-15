@@ -28,6 +28,7 @@ class VerificationStage(
             return context
         }
 
+        log.info("开始校验资源 {} 的 SHA1", context.asset.id)
         val sha1 = computeSha1(Path(context.filePath))
         if (!sha1.equals(context.asset.sha1, ignoreCase = true)) {
             log.warn("资源 {} 的 SHA1 校验失败，期望 {} 实际 {}", context.asset.id, context.asset.sha1, sha1)
@@ -35,6 +36,7 @@ class VerificationStage(
             // TODO: 这里需要思考一下怎么从头再来
             return context
         }
+        log.info("资源 {} 的 SHA1 校验成功", context.asset.id)
 
         sql.executeUpdate(CrontabHistoryDetail::class) {
             set(table.sha1Verified, true)

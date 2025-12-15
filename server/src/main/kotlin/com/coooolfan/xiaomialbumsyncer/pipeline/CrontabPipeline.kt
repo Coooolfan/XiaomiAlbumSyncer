@@ -45,7 +45,6 @@ class CrontabPipeline(
 
         // 仅在上次有记录且相册列表未变更的情况下，才使用时间线对比模式
         // 理论上相册列表变动不影响逻辑正确，但是会导致实际发起的查询大于请求完整刷新模式，所以还是要求相册列表一致
-        // TODO)) 这的刷新也可以改造成并发
         if (crontab.config.diffByTimeline && albumTimelinesHistory.isNotEmpty() && albumTimelinesHistory.keys == crontab.albumIds.toSet()) {
             log.info("时间线对比模式可用，仅对有变更的日期进行刷新")
             assetService.refreshAssetsByDiffTimeline(crontab, crontabHistory, albumTimelinesHistory)
@@ -63,29 +62,29 @@ class CrontabPipeline(
         var total = 0
         var success = 0
         listOf(crontabHistory).asFlow()
-            .transform {
+            .transform { history ->
                 var currentRows: Int
                 var pageIndex = 0
                 val pageSize = 10
 
                 do {
                     // 1. 查询需要下载的资产(已经从远程同步好了本地数据库中的资产)
-                    val assets = assetService.getAssetsUndownloadByCrontab(it.crontab, pageIndex, pageSize)
+                    val assets = assetService.getAssetsUndownloadByCrontab(history.crontab, pageIndex, pageSize)
 
                     val details = mutableListOf<CrontabHistoryDetail>()
 
                     assets.forEach { asset ->
-                        val detail = CrontabHistoryDetail.init(it, asset)
+                        val detail = CrontabHistoryDetail.init(history, asset)
                         details.add(detail)
                     }
 
                     // 2. 保存 CrontabHistoryDetail，落库
-                    crontabService.insertCrontabHistoryDetails(details)
+                    val details2Emit = crontabService.insertCrontabHistoryDetails(details)
 
                     currentRows = assets.size
                     pageIndex++
 
-                    emitAll(details.asFlow())
+                    emitAll(details2Emit.asFlow())
                 } while (currentRows > 0)
             }.onEach {
                 total++

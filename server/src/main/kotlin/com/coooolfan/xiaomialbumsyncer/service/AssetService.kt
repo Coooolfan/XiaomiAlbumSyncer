@@ -1,24 +1,13 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
-import com.coooolfan.xiaomialbumsyncer.model.Album
-import com.coooolfan.xiaomialbumsyncer.model.AlbumTimeline
-import com.coooolfan.xiaomialbumsyncer.model.Asset
-import com.coooolfan.xiaomialbumsyncer.model.AssetType
-import com.coooolfan.xiaomialbumsyncer.model.Crontab
-import com.coooolfan.xiaomialbumsyncer.model.CrontabHistory
-import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
-import com.coooolfan.xiaomialbumsyncer.model.EMPTY_ALBUM_TIMELINE
-import com.coooolfan.xiaomialbumsyncer.model.albumId
-import com.coooolfan.xiaomialbumsyncer.model.assetCount
-import com.coooolfan.xiaomialbumsyncer.model.assetId
-import com.coooolfan.xiaomialbumsyncer.model.crontabHistory
-import com.coooolfan.xiaomialbumsyncer.model.crontabId
-import com.coooolfan.xiaomialbumsyncer.model.fetchBy
-import com.coooolfan.xiaomialbumsyncer.model.id
-import com.coooolfan.xiaomialbumsyncer.model.minus
-import com.coooolfan.xiaomialbumsyncer.model.timelineSnapshot
-import com.coooolfan.xiaomialbumsyncer.model.type
+import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
@@ -27,14 +16,14 @@ import org.babyfish.jimmer.sql.kt.ast.expression.ne
 import org.babyfish.jimmer.sql.kt.ast.expression.notExists
 import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
 import org.noear.solon.annotation.Managed
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.forEach
-import kotlin.collections.iterator
 
 @Managed
 class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
+
+    private val log = LoggerFactory.getLogger(AssetService::class.java)
+
     fun refreshAssets(albumId: Long, fetcher: Fetcher<Asset>): List<Asset> {
         val album = sql.executeQuery(Album::class) {
             where(table.id eq albumId)
@@ -71,17 +60,24 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             }
         }
 
-        // 3. 只刷新这些日期的 Asset
-        albumsDayCountNeedRefresh.forEach { (albumId, dayList) ->
-            val album =
-                sql.findById(Album::class, albumId) ?: throw IllegalStateException("Cannot find album $albumId")
+        // 3. 只刷新这些日期的 Asset（并发执行）
+        runBlocking(Dispatchers.IO) {
+            val semaphore = Semaphore(10)
+            albumsDayCountNeedRefresh.flatMap { (albumId, dayList) ->
+                val album =
+                    sql.findById(Album::class, albumId) ?: throw IllegalStateException("Cannot find album $albumId")
 
-            dayList.forEach { day ->
-//                log.info("相册 $albumId 在 $day 有新增，开始刷新此日期的资源")
-                api.fetchAssetsByAlbumId(album, day) { assets ->
-                    sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+                dayList.map { day ->
+                    async {
+                        semaphore.withPermit {
+                            log.info("开始刷新相册 {} 的 {} 日的 Asset", albumId, day)
+                            api.fetchAssetsByAlbumId(album, day) { assets ->
+                                sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+                            }
+                        }
+                    }
                 }
-            }
+            }.awaitAll()
         }
     }
 
@@ -91,14 +87,23 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             select(table)
         }
 
-        albums.forEach { album ->
-            val assetCount = api.fetchAssetsByAlbumId(album) { assets ->
-                sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
-            }
-            sql.executeUpdate(Album::class) {
-                set(table.assetCount, assetCount)
-                where(table.id eq album.id)
-            }
+        runBlocking(Dispatchers.IO) {
+            val semaphore = Semaphore(5)
+            albums.map { album ->
+                async {
+                    semaphore.withPermit {
+                        log.info("开始刷新相册 {} 的 Asset", album.id)
+                        val assetCount = api.fetchAssetsByAlbumId(album) { assets ->
+                            sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+                        }
+                        sql.executeUpdate(Album::class) {
+                            set(table.assetCount, assetCount)
+                            where(table.id eq album.id)
+                        }
+                    }
+
+                }
+            }.awaitAll()
         }
         sql.executeUpdate(CrontabHistory::class) {
             set(table.timelineSnapshot, fetchAlbumsTimelineSnapshot(crontab.albumIds))

@@ -29,9 +29,6 @@ interface CrontabHistoryDetail {
 
     val filePath: String
 
-    // 预检
-    val precheckCompleted: Boolean
-
     // 下载
     val downloadCompleted: Boolean
 
@@ -45,17 +42,41 @@ interface CrontabHistoryDetail {
     val fsTimeUpdated: Boolean
 
     companion object {
-        fun init(history: CrontabHistory, asset: Asset): CrontabHistoryDetail {
+        fun init(
+            history: CrontabHistory,
+            asset: Asset,
+            precheckCompleted: Boolean = false,
+            downloadCompleted: Boolean = false,
+            sha1Verified: Boolean = false,
+            exifFilled: Boolean = false,
+            fsTimeUpdated: Boolean = false,
+        ): CrontabHistoryDetail {
             return CrontabHistoryDetail {
-                crontabHistoryId = history.id
-                downloadTime = Instant.now()
-                assetId = asset.id
-                filePath = Path(history.crontab.config.targetPath, asset.album.name, asset.fileName).toString()
-                precheckCompleted = false
-                downloadCompleted = false
-                sha1Verified = false
-                exifFilled = false
-                fsTimeUpdated = false
+                this.crontabHistory = history
+                this.downloadTime = Instant.now()
+                this.asset = asset
+                this.filePath = Path(history.crontab.config.targetPath, asset.album.name, asset.fileName).toString()
+                this.downloadCompleted = downloadCompleted
+                this.sha1Verified = sha1Verified
+                this.exifFilled = exifFilled
+                this.fsTimeUpdated = fsTimeUpdated
+            }
+        }
+
+        fun init(
+            history: CrontabHistory,
+            asset: Asset,
+            crontabConfig: CrontabConfig
+        ): CrontabHistoryDetail {
+            return CrontabHistoryDetail {
+                this.crontabHistory = history
+                this.downloadTime = Instant.now()
+                this.asset = asset
+                this.filePath = Path(history.crontab.config.targetPath, asset.album.name, asset.fileName).toString()
+                this.downloadCompleted = false
+                this.sha1Verified = !crontabConfig.checkSha1
+                this.exifFilled = !crontabConfig.rewriteExifTime
+                this.fsTimeUpdated = !crontabConfig.rewriteFileSystemTime
             }
         }
     }

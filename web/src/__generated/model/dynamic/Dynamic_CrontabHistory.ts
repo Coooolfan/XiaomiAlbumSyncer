@@ -7,6 +7,7 @@ export interface Dynamic_CrontabHistory {
     readonly startTime?: string;
     readonly endTime?: string | undefined;
     readonly timelineSnapshot?: {readonly [key:string]: AlbumTimeline};
+    readonly fetchedAllAssets?: boolean;
     readonly isCompleted?: boolean;
     readonly details?: ReadonlyArray<Dynamic_CrontabHistoryDetail>;
 }

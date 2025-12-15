@@ -9,4 +9,5 @@ export interface CrontabConfig {
     readonly rewriteExifTimeZone?: string | undefined;
     readonly skipExistingFile: boolean;
     readonly rewriteFileSystemTime: boolean;
+    readonly checkSha1: boolean;
 }
