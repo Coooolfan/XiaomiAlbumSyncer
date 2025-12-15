@@ -35,6 +35,7 @@ class JimmerStarter {
                 setDatabaseValidationMode(
                     DatabaseValidationMode.ERROR
                 )
+                setTransientResolverProvider(SolonTransientResolverProvider())
             }
             return kSqlClient
         } catch (e: DatabaseValidationException) {
