@@ -20,6 +20,7 @@ class TaskActuators(private val sql: KSqlClient, private val api: XiaoMiApi) {
 
     private val log = LoggerFactory.getLogger(TaskActuators::class.java)
 
+    @Deprecated("使用 CrontabPipeline 替代")
     fun doWork(crontab: Crontab) {
 
         log.info("执行定时任务: ${crontab.id}:${crontab.name}")

@@ -1,7 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.model
 
 import org.babyfish.jimmer.Formula
-import org.babyfish.jimmer.Scalar
 import org.babyfish.jimmer.sql.*
 import java.time.Instant
 
@@ -21,6 +20,8 @@ interface CrontabHistory {
 
     @Serialized
     val timelineSnapshot: Map<Long, AlbumTimeline>
+
+    val fetchedAllAssets: Boolean
 
     @Formula(dependencies = ["endTime"])
     val isCompleted: Boolean

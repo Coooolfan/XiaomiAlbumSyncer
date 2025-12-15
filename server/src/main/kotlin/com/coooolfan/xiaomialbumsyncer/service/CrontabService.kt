@@ -7,11 +7,14 @@ import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.babyfish.jimmer.sql.kt.ast.expression.desc
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
+import org.babyfish.jimmer.sql.kt.ast.expression.ne
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
+import java.time.Instant
 import java.time.ZoneId
 import java.util.*
 import kotlin.io.path.Path
@@ -54,6 +57,41 @@ class CrontabService(private val sql: KSqlClient, private val taskScheduler: Tas
             ) ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
         taskScheduler.executeCrontab(crontab, true)
+    }
+
+    fun createCrontabHistory(crontab: Crontab): CrontabHistory {
+        return sql.saveCommand(CrontabHistory {
+            crontabId = crontab.id
+            startTime = Instant.now()
+        }, SaveMode.INSERT_ONLY).execute().modifiedEntity
+    }
+
+    fun getAlbumTimelinesHistory(history: CrontabHistory): Map<Long, AlbumTimeline> {
+        return sql.executeQuery(CrontabHistory::class) {
+            orderBy(table.startTime.desc())
+            where(table.crontabId eq history.crontab.id)
+            where(table.id ne history.id)
+            where(table.endTime ne null)
+            select(table.timelineSnapshot)
+        }.firstOrNull() ?: emptyMap()
+    }
+
+    fun insertCrontabHistoryDetails(details: List<CrontabHistoryDetail>) {
+        sql.saveEntitiesCommand(details, SaveMode.INSERT_ONLY).execute()
+    }
+
+    fun finishCrontabHistoryFetchedAllAssets(crontabHistory: CrontabHistory) {
+        sql.executeUpdate(CrontabHistory::class) {
+            set(table.fetchedAllAssets, true)
+            where(table.id eq crontabHistory.id)
+        }
+    }
+
+    fun finishCrontabHistory(crontabHistory: CrontabHistory) {
+        sql.executeUpdate(CrontabHistory::class) {
+            set(table.endTime, Instant.now())
+            where(table.id eq crontabHistory.id)
+        }
     }
 
     fun executeCrontabExifTime(crontabId: Long) {
@@ -122,4 +160,6 @@ class CrontabService(private val sql: KSqlClient, private val taskScheduler: Tas
         }
         return assetPathMap
     }
+
+
 }

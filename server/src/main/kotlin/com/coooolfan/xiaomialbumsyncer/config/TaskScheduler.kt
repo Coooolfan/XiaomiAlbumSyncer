@@ -5,6 +5,7 @@ import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.enabled
+import com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline
 import com.coooolfan.xiaomialbumsyncer.utils.TaskActuators
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
@@ -23,6 +24,7 @@ class TaskScheduler(
     private val jobManager: IJobManager,
     private val sql: KSqlClient,
     private val actuators: TaskActuators,
+    private val pipeline: CrontabPipeline,
     private val thread: ThreadExecutor
 ) {
 
@@ -87,6 +89,7 @@ class TaskScheduler(
             return
         }
         try {
+//            pipeline.execute()
             actuators.doWork(crontab)
         } finally {
             runningCrontabs.remove(crontab.id)
