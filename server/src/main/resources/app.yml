@@ -11,10 +11,10 @@ solon:
     appender:
       console:
         level: INFO
-        pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) %magenta(${PID:-}) %-10([%10.10thread]) %-56(%cyan(%-40.40logger{39})) : %msg%n"
+        pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) %-18(%cyan(%-18.18logger{0})) : %msg%n"
       file:
         level: INFO
-        pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level ${PID:-} %-10([%10.10thread]) %-56(%-40.40logger{39}) : %msg%n"
+        pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-25level %-18(%-18.18logger{0}) : %msg%n"
 
 sa-token:
   is-print: off

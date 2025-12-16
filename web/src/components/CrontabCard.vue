@@ -2,7 +2,7 @@
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
-import InputSwitch from 'primevue/inputswitch'
+import ToggleSwitch from 'primevue/toggleswitch'
 import Tag from 'primevue/tag'
 import SplitButton from 'primevue/splitbutton'
 import type {CrontabDto} from '@/__generated/model/dto'
@@ -87,6 +87,9 @@ async function fetchStats() {
   if (!props.crontab.id) return
   try {
     currentStats.value = await api.crontabController.getCrontabCurrentStats({crontabId: props.crontab.id})
+    if (!currentStats.value.ts) {
+      emit('refresh')
+    }
     lastFetchTime.value = Date.now()
   } catch (e: any) {
     console.debug('Failed to fetch stats', e)
@@ -149,7 +152,7 @@ onUnmounted(() => {
         </div>
         <div class="flex items-center gap-2 text-xs text-slate-600">
           <span class="hidden sm:inline">启用</span>
-          <InputSwitch :modelValue="crontab.enabled" :disabled="busy" @update:modelValue="() => emit('toggle')"
+          <ToggleSwitch :modelValue="crontab.enabled" :disabled="busy" @update:modelValue="() => emit('toggle')"
             class="mr-2 sm:mr-4" />
           <SplitButton v-if="manualActionOptions.length > 0" size="small" severity="warning" class="mr-1"
             label="立即执行" icon="pi pi-play" :model="manualActionOptions" @click="emit('execute')" />
@@ -285,7 +288,7 @@ onUnmounted(() => {
                   <span class="text-slate-600">{{ formatTime(h.startTime) }} → {{ formatTime(h.endTime) }}</span>
                 </div>
                 <Tag v-if="index === 0 && crontab.running" :severity="h.isCompleted ? 'success' : 'info'" :value="h.isCompleted ? '完成' : '进行中'" />
-                <Tag v-else :severity="h.isCompleted ? 'success' : 'warn'" :value="h.isCompleted ? '完成' : '异常终止'" />
+                <Tag v-else :severity="h.isCompleted ? 'success' : 'warn'" :value="h.isCompleted ? '完成' : '终止'" />
               </li>
             </ul>
           </div>

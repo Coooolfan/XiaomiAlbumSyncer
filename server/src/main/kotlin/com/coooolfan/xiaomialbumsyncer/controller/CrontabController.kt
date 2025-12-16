@@ -210,7 +210,7 @@ class CrontabController(private val service: CrontabService) {
  * @property fsTimeUpdatedCount 文件系统时间更新完成数
  */
 data class CrontabCurrentStats(
-    val ts: Instant,
+    val ts: Instant? = null,
     val assetCount: Long? = null,
     val downloadCompletedCount: Long? = null,
     val sha1VerifiedCount: Long? = null,

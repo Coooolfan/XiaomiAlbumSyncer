@@ -9,6 +9,13 @@ import type {
     SystemInfoResponse
 } from '../model/static/';
 
+/**
+ * 系统配置管理控制器
+ * 
+ * 提供系统配置相关的API接口，包括系统初始化、配置更新、密码管理、系统信息查询等功能
+ * 部分接口需要用户登录认证（通过方法级别注解 @SaCheckLogin 控制）
+ * 
+ */
 export class SystemConfigController {
     
     constructor(private executor: Executor) {}
@@ -29,6 +36,15 @@ export class SystemConfigController {
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<SystemConfigDto['SystemConfigController/NORMAL_SYSTEM_CONFIG']>;
     }
     
+    /**
+     * 获取系统调试信息
+     * 
+     * 此接口用于获取系统的详细调试信息，用于问题诊断和系统监控
+     * 需要用户登录认证才能访问
+     * 
+     * @return String 返回系统调试信息字符串
+     * 
+     */
     readonly getSystemDebugInfo: () => Promise<
         string
     > = async() => {
@@ -36,6 +52,15 @@ export class SystemConfigController {
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<string>;
     }
     
+    /**
+     * 获取系统信息
+     * 
+     * 此接口用于获取当前系统的运行时信息，包括JVM版本、AOT运行时状态等
+     * 需要用户登录认证才能访问
+     * 
+     * @return SystemInfoResponse 返回系统信息响应，包含AOT运行时、原生镜像、JVM版本等信息
+     * 
+     */
     readonly getSystemInfo: () => Promise<
         SystemInfoResponse
     > = async() => {

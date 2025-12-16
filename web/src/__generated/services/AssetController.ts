@@ -1,6 +1,13 @@
 import type {Executor} from '../';
 import type {AssetDto} from '../model/dto/';
 
+/**
+ * 媒体资源管理控制器
+ * 
+ * 提供媒体资源相关的API接口，包括刷新媒体资源列表、获取媒体资源信息等功能
+ * 所有接口均需要用户登录认证（通过类级别注解 @SaCheckLogin 控制）
+ * 
+ */
 export class AssetController {
     
     constructor(private executor: Executor) {}

@@ -2,6 +2,13 @@ import type {Executor} from '../';
 import type {CrontabDto} from '../model/dto/';
 import type {CrontabCreateInput, CrontabCurrentStats, CrontabUpdateInput} from '../model/static/';
 
+/**
+ * 定时任务管理控制器
+ * 
+ * 提供定时任务相关的API接口，包括定时任务的创建、更新、删除、执行等功能
+ * 所有接口均需要用户登录认证（通过类级别注解 @SaCheckLogin 控制）
+ * 
+ */
 export class CrontabController {
     
     constructor(private executor: Executor) {}
@@ -99,6 +106,17 @@ export class CrontabController {
         return (await this.executor({uri: _uri, method: 'POST'})) as Promise<void>;
     }
     
+    /**
+     * 获取指定定时任务的当前统计信息
+     * 
+     * 此接口用于获取指定定时任务的当前执行统计信息，包括资源数量、下载完成数等
+     * 需要用户登录认证才能访问（类级别注解）
+     * 
+     * @parameter {CrontabControllerOptions['getCrontabCurrentStats']} options
+     * - crontabId 定时任务ID，用于指定要获取统计信息的任务
+     * @return CrontabCurrentStats 返回定时任务的当前统计信息
+     * 
+     */
     readonly getCrontabCurrentStats: (options: CrontabControllerOptions['getCrontabCurrentStats']) => Promise<
         CrontabCurrentStats
     > = async(options) => {
@@ -178,6 +196,9 @@ export type CrontabControllerOptions = {
         readonly crontabId: number
     }, 
     'getCrontabCurrentStats': {
+        /**
+         * 定时任务ID，用于指定要获取统计信息的任务
+         */
         readonly crontabId: number
     }, 
     'executeCrontabExifTime': {

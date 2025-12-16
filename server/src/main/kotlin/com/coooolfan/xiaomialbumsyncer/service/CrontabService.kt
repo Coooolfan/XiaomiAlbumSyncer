@@ -49,13 +49,13 @@ class CrontabService(private val sql: KSqlClient) {
 
     fun getCrontabCurrentStats(crontabId: Long): CrontabCurrentStats {
         if (!taskScheduler.checkIsRunning(crontabId))
-            throw IllegalStateException("计划任务 ${crontabId} 没有正在运行")
+            return CrontabCurrentStats() // 没有正在运行
 
         val runningCrontabHistory = sql.createQuery(CrontabHistory::class) {
             where(table.crontabId eq crontabId)
             orderBy(table.startTime.desc())
             select(table)
-        }.limit(1).execute().firstOrNull() ?: throw IllegalStateException("时机不对，请再试一次")
+        }.limit(1).execute().firstOrNull() ?: return CrontabCurrentStats() // 没有正在运行
 
         if (!runningCrontabHistory.fetchedAllAssets) {
             return CrontabCurrentStats(Instant.now())
@@ -64,20 +64,20 @@ class CrontabService(private val sql: KSqlClient) {
         val assetCount = sql.createQuery(CrontabHistoryDetail::class) {
             where(table.crontabHistoryId eq runningCrontabHistory.id)
             select(count(table))
-        }.execute().firstOrNull() ?: throw IllegalStateException("时机不对，请再试一次")
+        }.execute().firstOrNull()
 
         val downloadCompletedCount = sql.createQuery(CrontabHistoryDetail::class) {
             where(table.crontabHistoryId eq runningCrontabHistory.id)
             where(table.downloadCompleted eq true)
             select(count(table))
-        }.execute().firstOrNull() ?: throw IllegalStateException("时机不对，请再试一次")
+        }.execute().firstOrNull()
 
         val sha1VerifiedCount = sql.createQuery(CrontabHistoryDetail::class) {
             where(table.crontabHistoryId eq runningCrontabHistory.id)
             where(table.downloadCompleted eq true)
             where(table.sha1Verified eq true)
             select(count(table))
-        }.execute().firstOrNull() ?: throw IllegalStateException("时机不对，请再试一次")
+        }.execute().firstOrNull()
 
         val exifFilledCount = sql.createQuery(CrontabHistoryDetail::class) {
             where(table.crontabHistoryId eq runningCrontabHistory.id)
@@ -85,7 +85,7 @@ class CrontabService(private val sql: KSqlClient) {
             where(table.downloadCompleted eq true)
             where(table.sha1Verified eq true)
             select(count(table))
-        }.execute().firstOrNull() ?: throw IllegalStateException("时机不对，请再试一次")
+        }.execute().firstOrNull()
 
         val fsTimeUpdatedCount = sql.createQuery(CrontabHistoryDetail::class) {
             where(table.crontabHistoryId eq runningCrontabHistory.id)
@@ -94,7 +94,7 @@ class CrontabService(private val sql: KSqlClient) {
             where(table.downloadCompleted eq true)
             where(table.sha1Verified eq true)
             select(count(table))
-        }.execute().firstOrNull() ?: throw IllegalStateException("时机不对，请再试一次")
+        }.execute().firstOrNull()
 
         return CrontabCurrentStats(
             Instant.now(),
