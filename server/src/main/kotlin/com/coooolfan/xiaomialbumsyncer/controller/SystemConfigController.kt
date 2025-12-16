@@ -20,6 +20,15 @@ import org.noear.solon.core.runtime.NativeDetector.inNativeImage
 import org.noear.solon.core.runtime.NativeDetector.isAotRuntime
 
 
+/**
+ * 系统配置管理控制器
+ *
+ * 提供系统配置相关的API接口，包括系统初始化、配置更新、密码管理、系统信息查询等功能
+ * 部分接口需要用户登录认证（通过方法级别注解 @SaCheckLogin 控制）
+ *
+ * @property service 系统配置服务，用于处理系统配置相关的业务逻辑
+ * @property debugService 调试服务，用于获取系统调试信息
+ */
 @Api
 @Controller
 @Mapping("/api/system-config")
@@ -141,6 +150,18 @@ class SystemConfigController(private val service: SystemConfigService, private v
     }
 
 
+    /**
+     * 获取系统信息
+     *
+     * 此接口用于获取当前系统的运行时信息，包括JVM版本、AOT运行时状态等
+     * 需要用户登录认证才能访问
+     *
+     * @return SystemInfoResponse 返回系统信息响应，包含AOT运行时、原生镜像、JVM版本等信息
+     *
+     * @api GET /api/system-config/info
+     * @permission 需要登录认证
+     * @description 从系统属性和运行时检测器中获取系统信息
+     */
     @Api
     @Mapping("/info", method = [MethodType.GET])
     @SaCheckLogin
@@ -155,6 +176,18 @@ class SystemConfigController(private val service: SystemConfigService, private v
         )
     }
 
+    /**
+     * 获取系统调试信息
+     *
+     * 此接口用于获取系统的详细调试信息，用于问题诊断和系统监控
+     * 需要用户登录认证才能访问
+     *
+     * @return String 返回系统调试信息字符串
+     *
+     * @api GET /api/system-config/info/debug
+     * @permission 需要登录认证
+     * @description 调用DebugService.getDebugInfo()方法获取系统调试信息
+     */
     @Api
     @Mapping("/info/debug", method = [MethodType.GET])
     @SaCheckLogin
@@ -186,10 +219,23 @@ class SystemConfigController(private val service: SystemConfigService, private v
     }
 }
 
+/**
+ * 系统初始化状态响应数据类
+ *
+ * @property init 系统是否已完成初始化
+ */
 data class IsInitResponse(
     val init: Boolean
 )
 
+/**
+ * 系统信息响应数据类
+ *
+ * @property aotRuntime 是否运行在AOT运行时
+ * @property nativeImage 是否运行在原生镜像中
+ * @property jvmVersion JVM版本号
+ * @property appVersion 应用程序版本号
+ */
 data class SystemInfoResponse(
     val aotRuntime: Boolean,
     val nativeImage: Boolean,
@@ -197,6 +243,13 @@ data class SystemInfoResponse(
     val appVersion: String = loadAppVersion()
 )
 
+/**
+ * 加载应用程序版本号
+ *
+ * 从版本属性文件中读取应用程序版本号，如果读取失败则返回 "dev"
+ *
+ * @return 应用程序版本号字符串
+ */
 private fun loadAppVersion(): String {
     return try {
         val props = java.util.Properties()

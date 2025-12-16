@@ -8,6 +8,14 @@ import org.noear.solon.annotation.Mapping
 import org.noear.solon.annotation.Param
 import org.noear.solon.core.handle.MethodType
 
+/**
+ * 令牌管理控制器
+ *
+ * 提供用户登录认证相关的API接口，包括用户登录、登出等功能
+ * 登录接口为公开接口，无需认证；登出接口需要用户登录认证（通过方法级别注解控制）
+ *
+ * @property service 系统配置服务，用于处理用户认证相关的业务逻辑
+ */
 @Api
 @Controller
 @Mapping("/api/token")
@@ -47,6 +55,11 @@ class TokenController(private val service: SystemConfigService) {
     }
 }
 
+/**
+ * 登录请求数据类
+ *
+ * @property password 用户密码
+ */
 data class LoginRequest(
     val password: String
 )

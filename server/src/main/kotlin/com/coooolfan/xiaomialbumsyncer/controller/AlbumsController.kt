@@ -12,6 +12,14 @@ import org.noear.solon.core.handle.MethodType
 import java.time.Instant
 import java.time.LocalDate
 
+/**
+ * 相册管理控制器
+ *
+ * 提供相册相关的API接口，包括刷新相册列表、获取相册信息、查询相册日期映射等功能
+ * 所有接口均需要用户登录认证（通过类级别注解 @SaCheckLogin 控制）
+ *
+ * @property service 相册服务，用于处理相册相关的业务逻辑
+ */
 @Api
 @Managed
 @Mapping("/api/album")
@@ -61,12 +69,14 @@ class AlbumsController(private val service: AlbumsService) {
      * 此接口用于获取指定相册中照片的日期分布情况
      * 需要用户登录认证才能访问
      *
-     * @param albumIds List<Long> 需要查询的相册ID列表
+     * @param albumIds List<Long> 需要查询的相册ID列表，可选参数，默认为空列表
+     * @param start Instant 查询的开始时间戳，可选参数，默认为纪元时间
+     * @param end Instant 查询的结束时间戳，可选参数，默认为当前时间
      * @return Map<LocalDate, Long> 返回一个映射，键为日期，值为该日期下的照片数量
      *
      * @api GET /api/album/date-map
      * @permission 需要登录认证
-     * @description 调用AlbumsService.fetchDateMap(albumIds)方法获取日期映射数据
+     * @description 调用AlbumsService.fetchDateMap(albumIds, start, end)方法获取日期映射数据
      */
     @Api
     @Mapping("/date-map", method = [MethodType.GET])
