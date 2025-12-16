@@ -679,7 +679,7 @@ const albumsRefreshModel = ref([
                 <InputSwitch v-model="cronForm.config.checkSha1" />
                 <span>校验 SHA1</span>
               </div>
-              <div class="text-[10px] text-slate-400">对下载的文件进行 SHA1 校验，失败则重新下载。没必要开。</div>
+              <div class="text-[10px] text-slate-400">对下载的文件进行 SHA1 校验，失败则重新下载。<span class="font-bold">没必要开。</span></div>
             </div>
           </div>
 
