@@ -57,7 +57,7 @@
 
 4.  **访问**: 打开浏览器访问 `http://localhost:8080`。
 
-    > [!INFO]
+    > [!NOTE]
     > 如果在 Windows 下运行，且用户名为中文，可能会遇到类似于 `java.lang.UnsatisfiedLinkError: Can't load library` 或者 `Failed to load native library: ... sqlite-3.50.3.0-...-sqlitejdbc.dll`
     >
     > 这是由于系统的临时路径存在非 ASCII 字符导致的。可以使用 `-Dorg.sqlite.tmpdir=C:\sqlite_tmp` 参数手动指定临时路径。
