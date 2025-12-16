@@ -17,10 +17,14 @@ fun withCookie(vararg pairs: Pair<String, String?>): String {
     return pairs.joinToString(" ") { (k, v) -> "$k=${v ?: ""};" }
 }
 
-fun client(): OkHttpClient = OkHttpClient().newBuilder()
-    .followRedirects(false)           // 禁用HTTP重定向
-    .followSslRedirects(false)        // 禁用HTTPS重定向
-    .build()
+private val httpClient: OkHttpClient by lazy {
+    OkHttpClient.Builder()
+        .followRedirects(false)           // 禁用HTTP重定向
+        .followSslRedirects(false)        // 禁用HTTPS重定向
+        .build()
+}
+
+fun client(): OkHttpClient = httpClient
 
 fun throwIfNotSuccess(respCode: Int) {
     val i = respCode / 100
