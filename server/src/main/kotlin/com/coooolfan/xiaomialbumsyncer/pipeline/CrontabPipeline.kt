@@ -65,7 +65,7 @@ class CrontabPipeline(
             .transform { history ->
                 var currentRows: Int
                 var pageIndex = 0
-                val pageSize = 10
+                val pageSize = 2
 
                 do {
                     // 1. 查询需要下载的资产(已经从远程同步好了本地数据库中的资产)
@@ -124,8 +124,8 @@ class CrontabPipeline(
 }
 
 data class PipelineConcurrency(
-    val downloaders: Int = 4,
-    val verifiers: Int = 2,
-    val exifProcessors: Int = 1,
-    val fileTimeWorkers: Int = 1,
+    val downloaders: Int = 10,
+    val verifiers: Int = 5,
+    val exifProcessors: Int = 5,
+    val fileTimeWorkers: Int = 5,
 )

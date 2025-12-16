@@ -268,9 +268,9 @@ onUnmounted(() => {
                  </div>
               </div>
 
-            </div>
-            <div v-else class="text-xs text-slate-400 pl-6 py-2">
-              正在获取状态...
+              <div v-else class="text-xs text-slate-400 pl-6 py-2">
+                正在获取远程数据和资产差异检查...
+              </div>
             </div>
           </div>
 
@@ -278,13 +278,14 @@ onUnmounted(() => {
             <div class="text-xs font-medium text-slate-500 mb-2">最近执行(本地时间)</div>
             <div v-if="recentHistories.length === 0" class="text-xs text-slate-400">暂无历史</div>
             <ul v-else class="space-y-2">
-              <li v-for="h in recentHistories" :key="h.id" class="flex items-center justify-between">
+              <li v-for="(h,index) in recentHistories" :key="h.id" class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <span class="inline-block w-2 h-2 rounded-full"
                     :class="h.isCompleted ? 'bg-emerald-500' : 'bg-amber-500'" />
                   <span class="text-slate-600">{{ formatTime(h.startTime) }} → {{ formatTime(h.endTime) }}</span>
                 </div>
-                <Tag :severity="h.isCompleted ? 'success' : 'warning'" :value="h.isCompleted ? '完成' : '进行中'" />
+                <Tag v-if="index === 0 && crontab.running" :severity="h.isCompleted ? 'success' : 'info'" :value="h.isCompleted ? '完成' : '进行中'" />
+                <Tag v-else :severity="h.isCompleted ? 'success' : 'warn'" :value="h.isCompleted ? '完成' : '异常终止'" />
               </li>
             </ul>
           </div>
