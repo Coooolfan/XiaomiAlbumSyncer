@@ -554,7 +554,7 @@ const albumsRefreshModel = ref([
                 :busy="updatingRow === item.id" @edit="openEditCron(item)" @delete="requestDelete(item)"
                 @toggle="toggleEnabled(item)" @execute="requestExecute(item)"
                 @execute-exif="requestExecuteExif(item)"
-                @execute-rewrite-fs-time="requestExecuteRewriteFs(item)" />
+                @execute-rewrite-fs-time="requestExecuteRewriteFs(item)" @refresh="fetchCrontabs" />
             </div>
           </div>
         </div>

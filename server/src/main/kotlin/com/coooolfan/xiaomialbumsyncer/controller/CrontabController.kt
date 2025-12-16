@@ -180,9 +180,10 @@ class CrontabController(private val service: CrontabService) {
 
 data class CrontabCurrentStats(
     val ts: Instant,
-    val downloadCompletedFinished: Long? = null,
-    val sha1VerifiedFinished: Long? = null,
-    val exifFilledFinished: Long? = null,
-    val fsTimeUpdatedFinished: Long? = null,
+    val assetCount: Long? = null,
+    val downloadCompletedCount: Long? = null,
+    val sha1VerifiedCount: Long? = null,
+    val exifFilledCount: Long? = null,
+    val fsTimeUpdatedCount: Long? = null,
 
     )

@@ -61,6 +61,11 @@ class CrontabService(private val sql: KSqlClient) {
             return CrontabCurrentStats(Instant.now())
         }
 
+        val assetCount = sql.createQuery(CrontabHistoryDetail::class) {
+            where(table.crontabHistoryId eq runningCrontabHistory.id)
+            select(count(table))
+        }.execute().firstOrNull() ?: throw IllegalStateException("时机不对，请再试一次")
+
         val downloadCompletedCount = sql.createQuery(CrontabHistoryDetail::class) {
             where(table.crontabHistoryId eq runningCrontabHistory.id)
             where(table.downloadCompleted eq true)
@@ -82,7 +87,7 @@ class CrontabService(private val sql: KSqlClient) {
             select(count(table))
         }.execute().firstOrNull() ?: throw IllegalStateException("时机不对，请再试一次")
 
-        val fsTimeUpdateCount = sql.createQuery(CrontabHistoryDetail::class) {
+        val fsTimeUpdatedCount = sql.createQuery(CrontabHistoryDetail::class) {
             where(table.crontabHistoryId eq runningCrontabHistory.id)
             where(table.fsTimeUpdated eq true)
             where(table.exifFilled eq true)
@@ -93,10 +98,11 @@ class CrontabService(private val sql: KSqlClient) {
 
         return CrontabCurrentStats(
             Instant.now(),
+            assetCount,
             downloadCompletedCount,
             sha1VerifiedCount,
             exifFilledCount,
-            fsTimeUpdateCount,
+            fsTimeUpdatedCount,
         )
     }
 

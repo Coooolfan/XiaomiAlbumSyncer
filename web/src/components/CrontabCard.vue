@@ -5,8 +5,10 @@ import Chip from 'primevue/chip'
 import InputSwitch from 'primevue/inputswitch'
 import Tag from 'primevue/tag'
 import SplitButton from 'primevue/splitbutton'
-import type { CrontabDto } from '@/__generated/model/dto'
-import { computed } from 'vue'
+import type {CrontabDto} from '@/__generated/model/dto'
+import type {CrontabCurrentStats} from '@/__generated/model/static'
+import {computed, onUnmounted, ref, watch} from 'vue'
+import {api} from '@/ApiInstance'
 
 type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
 
@@ -23,6 +25,7 @@ const emit = defineEmits<{
   (e: 'execute'): void
   (e: 'executeExif'): void
   (e: 'executeRewriteFsTime'): void
+  (e: 'refresh'): void
 }>()
 
 const albumMap = computed<Record<string, string>>(() => {
@@ -52,6 +55,10 @@ const recentHistories = computed(() => {
 
 const manualActionOptions = computed(() => {
   const actions: Array<{ label: string; icon: string; command: () => void }> = []
+  if (props.crontab.running) {
+    // If running, maybe disable execute?
+    // But user might want to force execute? Let's leave it.
+  }
   if (props.crontab.config?.rewriteExifTime) {
     actions.push({
       label: '填充 EXIF 时间',
@@ -67,6 +74,69 @@ const manualActionOptions = computed(() => {
     })
   }
   return actions
+})
+
+const currentStats = ref<CrontabCurrentStats | null>(null)
+const polling = ref(false)
+const lastFetchTime = ref(0)
+const now = ref(Date.now())
+let pollTimer: number | undefined
+let nowTimer: number | undefined
+
+async function fetchStats() {
+  if (!props.crontab.id) return
+  try {
+    currentStats.value = await api.crontabController.getCrontabCurrentStats({crontabId: props.crontab.id})
+    lastFetchTime.value = Date.now()
+  } catch (e: any) {
+    console.debug('Failed to fetch stats', e)
+    const msg = e instanceof Error ? e.message : String(e)
+    if (msg.includes('没有正在运行')) {
+      stopPolling()
+      emit('refresh')
+    }
+  }
+}
+
+function startPolling() {
+  if (polling.value) return
+  polling.value = true
+  fetchStats()
+  pollTimer = window.setInterval(fetchStats, 1000)
+  nowTimer = window.setInterval(() => {
+    now.value = Date.now()
+  }, 200)
+}
+
+function stopPolling() {
+  polling.value = false
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = undefined
+  }
+  if (nowTimer) {
+    clearInterval(nowTimer)
+    nowTimer = undefined
+  }
+  currentStats.value = null
+  lastFetchTime.value = 0
+}
+
+function getPercent(val?: number) {
+  if (val === undefined || !currentStats.value?.assetCount) return 0
+  return Math.min(100, Math.round((val / currentStats.value.assetCount) * 100))
+}
+
+watch(() => props.crontab.running, (v) => {
+  if (v) {
+    startPolling()
+  } else {
+    stopPolling()
+  }
+}, { immediate: true })
+
+onUnmounted(() => {
+  stopPolling()
 })
 </script>
 
@@ -138,6 +208,72 @@ const manualActionOptions = computed(() => {
         </div>
 
         <div class="mt-4 md:mt-0 md:w-1/2">
+          <div v-if="crontab.running" class="mb-3 rounded-md bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-200/60 p-3">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <i class="pi pi-spin pi-spinner text-blue-500"></i>
+                <span class="text-xs font-medium text-blue-700 dark:text-blue-300">正在执行中...</span>
+              </div>
+              <div class="flex flex-col items-end">
+                 <span class="text-[10px] text-blue-600/60 font-mono" title="数据获取时间">{{ currentStats?.ts ? new Date(currentStats.ts).toLocaleTimeString() : '' }}</span>
+                 <span v-if="lastFetchTime" class="text-[9px] text-blue-400 font-mono">
+                    {{ ((now - lastFetchTime) / 1000).toFixed(1) }}s ago
+                 </span>
+              </div>
+            </div>
+
+            <div v-if="currentStats" class="space-y-2">
+              <div class="text-xs flex justify-between items-center pb-1 border-b border-blue-100 dark:border-blue-800">
+                  <span class="text-slate-500">总计资产</span>
+                  <span class="font-mono text-blue-700 font-bold">{{ currentStats.assetCount ?? '-' }}</span>
+              </div>
+
+              <div v-if="currentStats.downloadCompletedCount !== undefined" class="text-xs">
+                 <div class="flex justify-between items-center mb-1">
+                    <span class="text-slate-500">下载进度</span>
+                    <span class="font-mono text-slate-700">{{ currentStats.downloadCompletedCount }} <span class="text-slate-400" v-if="currentStats.assetCount">/ {{ currentStats.assetCount }}</span></span>
+                 </div>
+                 <div class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5" v-if="currentStats.assetCount">
+                    <div class="bg-blue-500 h-1.5 rounded-full transition-all duration-500" :style="{ width: getPercent(currentStats.downloadCompletedCount) + '%' }"></div>
+                 </div>
+              </div>
+
+              <div v-if="currentStats.sha1VerifiedCount !== undefined && crontab.config?.checkSha1" class="text-xs">
+                 <div class="flex justify-between items-center mb-1">
+                    <span class="text-slate-500">SHA1 校验</span>
+                    <span class="font-mono text-slate-700">{{ currentStats.sha1VerifiedCount }}</span>
+                 </div>
+                 <div class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5" v-if="currentStats.assetCount">
+                    <div class="bg-purple-500 h-1.5 rounded-full transition-all duration-500" :style="{ width: getPercent(currentStats.sha1VerifiedCount) + '%' }"></div>
+                 </div>
+              </div>
+
+              <div v-if="currentStats.exifFilledCount !== undefined && crontab.config?.rewriteExifTime" class="text-xs">
+                 <div class="flex justify-between items-center mb-1">
+                    <span class="text-slate-500">EXIF 填充</span>
+                    <span class="font-mono text-slate-700">{{ currentStats.exifFilledCount }}</span>
+                 </div>
+                 <div class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5" v-if="currentStats.assetCount">
+                    <div class="bg-amber-500 h-1.5 rounded-full transition-all duration-500" :style="{ width: getPercent(currentStats.exifFilledCount) + '%' }"></div>
+                 </div>
+              </div>
+
+              <div v-if="currentStats.fsTimeUpdatedCount !== undefined && crontab.config?.rewriteFileSystemTime" class="text-xs">
+                 <div class="flex justify-between items-center mb-1">
+                    <span class="text-slate-500">时间重写</span>
+                    <span class="font-mono text-slate-700">{{ currentStats.fsTimeUpdatedCount }}</span>
+                 </div>
+                 <div class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5" v-if="currentStats.assetCount">
+                    <div class="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" :style="{ width: getPercent(currentStats.fsTimeUpdatedCount) + '%' }"></div>
+                 </div>
+              </div>
+
+            </div>
+            <div v-else class="text-xs text-slate-400 pl-6 py-2">
+              正在获取状态...
+            </div>
+          </div>
+
           <div class="rounded-md bg-slate-50 dark:bg-slate-900/30 ring-1 ring-slate-200/60 p-3">
             <div class="text-xs font-medium text-slate-500 mb-2">最近执行(本地时间)</div>
             <div v-if="recentHistories.length === 0" class="text-xs text-slate-400">暂无历史</div>
