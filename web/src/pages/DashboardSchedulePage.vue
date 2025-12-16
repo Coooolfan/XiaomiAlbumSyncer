@@ -14,6 +14,7 @@ import Textarea from 'primevue/textarea'
 import InputSwitch from 'primevue/inputswitch'
 import Dropdown from 'primevue/dropdown'
 import MultiSelect from 'primevue/multiselect'
+import InputNumber from 'primevue/inputnumber'
 import Message from 'primevue/message'
 import { useToast } from 'primevue/usetoast'
 import type { CrontabDto } from '@/__generated/model/dto'
@@ -82,6 +83,12 @@ const cronForm = ref<CrontabCreateInput>({
     rewriteExifTimeZone: defaultTz,
     skipExistingFile: true,
     rewriteFileSystemTime: false,
+    checkSha1: false,
+    fetchFromDbSize: 2,
+    downloaders: 10,
+    verifiers: 5,
+    exifProcessors: 5,
+    fileTimeWorkers: 5,
   },
   albumIds: [],
 })
@@ -269,6 +276,12 @@ function openCreateCron() {
       rewriteExifTimeZone: defaultTz,
       skipExistingFile: true,
       rewriteFileSystemTime: false,
+      checkSha1: false,
+      fetchFromDbSize: 2,
+      downloaders: 10,
+      verifiers: 5,
+      exifProcessors: 5,
+      fileTimeWorkers: 5,
     },
     albumIds: [],
   }
@@ -294,6 +307,12 @@ function openEditCron(item: Crontab) {
       rewriteExifTimeZone: item.config.rewriteExifTimeZone ?? item.config.timeZone,
       skipExistingFile: item.config.skipExistingFile ?? true,
       rewriteFileSystemTime: item.config.rewriteFileSystemTime ?? false,
+      checkSha1: item.config.checkSha1 ?? false,
+      fetchFromDbSize: item.config.fetchFromDbSize ?? 2,
+      downloaders: item.config.downloaders ?? 10,
+      verifiers: item.config.verifiers ?? 5,
+      exifProcessors: item.config.exifProcessors ?? 5,
+      fileTimeWorkers: item.config.fileTimeWorkers ?? 5,
     },
     albumIds: [...item.albumIds],
   }
@@ -320,6 +339,7 @@ function validateCronForm(): boolean {
   }
   if (!cronForm.value.config.timeZone || cronForm.value.config.timeZone.trim() === '') errors.timeZone = '必选'
   if (!cronForm.value.config.targetPath || cronForm.value.config.targetPath.trim() === '') errors.targetPath = '必填'
+  if (cronForm.value.config.fetchFromDbSize > cronForm.value.config.downloaders) errors.concurrency = '必须小于资产下载'
   formErrors.value = errors
   return Object.keys(errors).length === 0
 }
@@ -495,16 +515,6 @@ watch(optimizeHeatmap, () => {
   rebuildHeatmapData()
 })
 
-// const weekOptions = [
-//   { value: 1, label: '周一' },
-//   { value: 0, label: '周日' },
-//   { value: 2, label: '周二' },
-//   { value: 3, label: '周三' },
-//   { value: 4, label: '周四' },
-//   { value: 5, label: '周五' },
-//   { value: 6, label: '周六' },
-// ]
-
 const albumsRefreshModel = ref([
   {
     label: '从远程更新整个相册列表',
@@ -551,7 +561,7 @@ const albumsRefreshModel = ref([
                 :busy="updatingRow === item.id" @edit="openEditCron(item)" @delete="requestDelete(item)"
                 @toggle="toggleEnabled(item)" @execute="requestExecute(item)"
                 @execute-exif="requestExecuteExif(item)"
-                @execute-rewrite-fs-time="requestExecuteRewriteFs(item)" />
+                @execute-rewrite-fs-time="requestExecuteRewriteFs(item)" @refresh="fetchCrontabs" />
             </div>
           </div>
         </div>
@@ -671,6 +681,13 @@ const albumsRefreshModel = ref([
               </div>
               <div class="text-[10px] text-slate-400">同步完成后，将资产的文件系统时间修改为对应的小米云服务上的时间。</div>
             </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 text-xs text-slate-600">
+                <InputSwitch v-model="cronForm.config.checkSha1" />
+                <span>校验 SHA1</span>
+              </div>
+              <div class="text-[10px] text-slate-400">对下载的文件进行 SHA1 校验，失败则重新下载。<span class="font-bold">没必要开。</span></div>
+            </div>
           </div>
 
           <div v-if="cronForm.config.rewriteExifTime" class="space-y-2 mt-3">
@@ -679,6 +696,78 @@ const albumsRefreshModel = ref([
               filter class="w-full" />
             <div class="text-[10px] text-slate-400">用于写入 EXIF 的时区；仅在开启“填充 EXIF 时间”后生效。</div>
           </div>
+
+        <Panel header="并发与性能" toggleable collapsed class="mt-4">
+          <div class="text-[10px] text-slate-400 mb-4">除非你明确知道改动这些值的后果，否则不要改动</div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+               <div class="space-y-2">
+                 <label class="block text-xs font-medium text-slate-500">数据库读批大小</label>
+                 <InputNumber v-model="cronForm.config.fetchFromDbSize" :min="1" :max="20" showButtons buttonLayout="horizontal" inputClass="w-12 text-center" class="w-full" >
+                   <template >
+                     <span class="pi pi-plus" />
+                   </template>
+                   <template>
+                     <span class="pi pi-minus" />
+                   </template>
+                 </InputNumber>
+                 <div class="text-[10px] text-slate-400">每次从数据库拉取的并发数，必须小于<span class="font-bold">资产下载</span>并发数</div>
+                 <div v-if="formErrors.concurrency" class="text-xs text-red-500">{{ formErrors.concurrency }}</div>
+               </div>
+
+                <div class="space-y-2">
+                   <label class="block text-xs font-medium text-slate-500">资产下载</label>
+                   <InputNumber v-model="cronForm.config.downloaders" :min="1" :max="50" showButtons buttonLayout="horizontal" inputClass="w-12 text-center" class="w-full" >
+                      <template >
+                        <span class="pi pi-plus" />
+                      </template>
+                      <template>
+                        <span class="pi pi-minus" />
+                      </template>
+                   </InputNumber>
+                   <div class="text-[10px] text-slate-400">同时下载的资产数</div>
+                </div>
+
+                <div class="space-y-2">
+                   <label class="block text-xs font-medium text-slate-500">文件系统时间重写</label>
+                   <InputNumber v-model="cronForm.config.fileTimeWorkers" :min="1" :max="50" showButtons buttonLayout="horizontal" inputClass="w-12 text-center" class="w-full" >
+                      <template >
+                        <span class="pi pi-plus" />
+                      </template>
+                      <template>
+                        <span class="pi pi-minus" />
+                      </template>
+                   </InputNumber>
+                   <div class="text-[10px] text-slate-400">文件系统时间重写并发数</div>
+                </div>
+
+                <div class="space-y-2">
+                   <label class="block text-xs font-medium text-slate-500">文件校验</label>
+                   <InputNumber v-model="cronForm.config.verifiers" :min="1" :max="50" showButtons buttonLayout="horizontal" inputClass="w-12 text-center" class="w-full" >
+                      <template >
+                        <span class="pi pi-plus" />
+                      </template>
+                      <template>
+                        <span class="pi pi-minus" />
+                      </template>
+                   </InputNumber>
+                   <div class="text-[10px] text-slate-400">SHA1 校验检查并发数</div>
+                </div>
+
+                <div class="space-y-2">
+                   <label class="block text-xs font-medium text-slate-500">EXIF 填充</label>
+                   <InputNumber v-model="cronForm.config.exifProcessors" :min="1" :max="50" showButtons buttonLayout="horizontal" inputClass="w-12 text-center" class="w-full" >
+                      <template >
+                        <span class="pi pi-plus" />
+                      </template>
+                      <template>
+                        <span class="pi pi-minus" />
+                      </template>
+                   </InputNumber>
+                   <div class="text-[10px] text-slate-400">EXIF 信息填充并发数</div>
+                </div>
+             </div>
+        </Panel>
         </Panel>
 
         <div class="flex items-center justify-between pt-1">

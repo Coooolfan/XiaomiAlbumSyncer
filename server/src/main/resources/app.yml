@@ -1,14 +1,20 @@
-server.port: 8080
+server:
+  port: 8080
 
-solon.app:
-  name: 'demo-app'
-  group: 'demo'
-  db: './db/xiaomialbumsyncer.db'
-  jimmer-log: false
+solon:
+  app:
+    name: 'XiaomiAlbumSyncer'
+    group: 'com.coooolfan'
+    db: './db/xiaomialbumsyncer.db'
+    jimmer-log: false
+  logging:
+    appender:
+      console:
+        level: INFO
+        pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) %magenta(${PID:-}) %-10([%10.10thread]) %-56(%cyan(%-40.40logger{39})) : %msg%n"
+      file:
+        level: INFO
+        pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level ${PID:-} %-10([%10.10thread]) %-56(%-40.40logger{39}) : %msg%n"
 
-solon.logging:
-  appender:
-    console:
-      level: INFO
-    file:
-      level: INFO
+sa-token:
+  is-print: off

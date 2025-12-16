@@ -53,9 +53,9 @@ async function logout() {
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-2">
             <div
-              class="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold"
+              class="h-8 w-8 flex items-center justify-center"
             >
-              X
+              <img src="/logo.avif" alt="Logo" class="w-full h-full object-contain">
             </div>
             <div class="font-semibold tracking-tight text-slate-700">Xiaomi Album Syncer</div>
           </div>

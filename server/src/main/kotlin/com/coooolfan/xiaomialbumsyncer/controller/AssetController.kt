@@ -14,6 +14,14 @@ import org.noear.solon.annotation.Mapping
 import org.noear.solon.annotation.Path
 import org.noear.solon.core.handle.MethodType
 
+/**
+ * 媒体资源管理控制器
+ *
+ * 提供媒体资源相关的API接口，包括刷新媒体资源列表、获取媒体资源信息等功能
+ * 所有接口均需要用户登录认证（通过类级别注解 @SaCheckLogin 控制）
+ *
+ * @property service 媒体资源服务，用于处理媒体资源相关的业务逻辑
+ */
 @Api
 @Managed
 @Mapping("/api/asset")

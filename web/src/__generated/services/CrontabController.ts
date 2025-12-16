@@ -1,6 +1,6 @@
 import type {Executor} from '../';
 import type {CrontabDto} from '../model/dto/';
-import type {CrontabCreateInput, CrontabUpdateInput} from '../model/static/';
+import type {CrontabCreateInput, CrontabCurrentStats, CrontabUpdateInput} from '../model/static/';
 
 export class CrontabController {
     
@@ -99,6 +99,15 @@ export class CrontabController {
         return (await this.executor({uri: _uri, method: 'POST'})) as Promise<void>;
     }
     
+    readonly getCrontabCurrentStats: (options: CrontabControllerOptions['getCrontabCurrentStats']) => Promise<
+        CrontabCurrentStats
+    > = async(options) => {
+        let _uri = '/api/crontab/';
+        _uri += encodeURIComponent(options.crontabId);
+        _uri += '/current';
+        return (await this.executor({uri: _uri, method: 'POST'})) as Promise<CrontabCurrentStats>;
+    }
+    
     /**
      * 获取所有定时任务列表
      * 
@@ -166,6 +175,9 @@ export type CrontabControllerOptions = {
          * 定时任务ID，用于指定要立即执行的任务
          * 
          */
+        readonly crontabId: number
+    }, 
+    'getCrontabCurrentStats': {
         readonly crontabId: number
     }, 
     'executeCrontabExifTime': {

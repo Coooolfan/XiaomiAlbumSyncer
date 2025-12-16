@@ -15,7 +15,16 @@ import org.noear.solon.annotation.Managed
 import org.noear.solon.annotation.Mapping
 import org.noear.solon.annotation.Path
 import org.noear.solon.core.handle.MethodType
+import java.time.Instant
 
+/**
+ * 定时任务管理控制器
+ *
+ * 提供定时任务相关的API接口，包括定时任务的创建、更新、删除、执行等功能
+ * 所有接口均需要用户登录认证（通过类级别注解 @SaCheckLogin 控制）
+ *
+ * @property service 定时任务服务，用于处理定时任务相关的业务逻辑
+ */
 @Api
 @Managed
 @Mapping("/api/crontab")
@@ -115,6 +124,25 @@ class CrontabController(private val service: CrontabService) {
         service.executeCrontab(crontabId)
     }
 
+    /**
+     * 获取指定定时任务的当前统计信息
+     *
+     * 此接口用于获取指定定时任务的当前执行统计信息，包括资源数量、下载完成数等
+     * 需要用户登录认证才能访问（类级别注解）
+     *
+     * @param crontabId 定时任务ID，用于指定要获取统计信息的任务
+     * @return CrontabCurrentStats 返回定时任务的当前统计信息
+     *
+     * @api POST /api/crontab/{crontabId}/current
+     * @permission 需要登录认证
+     * @description 调用CrontabService.getCrontabCurrentStats()方法获取定时任务当前统计信息
+     */
+    @Api
+    @Mapping("/{crontabId}/current", method = [MethodType.POST])
+    fun getCrontabCurrentStats(@Path crontabId: Long): CrontabCurrentStats {
+        return service.getCrontabCurrentStats(crontabId)
+    }
+
 
     /**
      * 立即执行指定定时任务的EXIF填充操作
@@ -156,6 +184,7 @@ class CrontabController(private val service: CrontabService) {
         private val DEFAULT_CRONTAB = newFetcher(Crontab::class).by {
             allScalarFields()
             albumIds()
+            running()
             histories {
                 allScalarFields()
                 isCompleted()
@@ -169,3 +198,22 @@ class CrontabController(private val service: CrontabService) {
         }
     }
 }
+
+/**
+ * 定时任务当前统计信息数据类
+ *
+ * @property ts 统计时间戳
+ * @property assetCount 资源总数
+ * @property downloadCompletedCount 下载完成数
+ * @property sha1VerifiedCount SHA1验证完成数
+ * @property exifFilledCount EXIF填充完成数
+ * @property fsTimeUpdatedCount 文件系统时间更新完成数
+ */
+data class CrontabCurrentStats(
+    val ts: Instant,
+    val assetCount: Long? = null,
+    val downloadCompletedCount: Long? = null,
+    val sha1VerifiedCount: Long? = null,
+    val exifFilledCount: Long? = null,
+    val fsTimeUpdatedCount: Long? = null
+)

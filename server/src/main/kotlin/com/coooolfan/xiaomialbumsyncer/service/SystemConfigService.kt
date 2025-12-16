@@ -2,15 +2,9 @@ package com.coooolfan.xiaomialbumsyncer.service
 
 import cn.dev33.satoken.stp.StpUtil
 import com.coooolfan.xiaomialbumsyncer.controller.LoginRequest
-import com.coooolfan.xiaomialbumsyncer.model.Album
-import com.coooolfan.xiaomialbumsyncer.model.Asset
-import com.coooolfan.xiaomialbumsyncer.model.Crontab
-import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
+import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate
-import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate
-import com.coooolfan.xiaomialbumsyncer.model.id
-import com.coooolfan.xiaomialbumsyncer.model.password
 import com.coooolfan.xiaomialbumsyncer.utils.DataImporter
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
@@ -18,9 +12,13 @@ import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
 import java.security.MessageDigest
+import java.util.concurrent.ConcurrentHashMap
 
 @Managed
 class SystemConfigService(private val sql: KSqlClient, private val dataImporter: DataImporter) {
+
+    private val configCache = ConcurrentHashMap<Fetcher<SystemConfig>, SystemConfig>()
+
     fun isInit(): Boolean {
         return sql.executeQuery(SystemConfig::class) {
             selectCount()
@@ -59,10 +57,11 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
         sql.saveCommand(SystemConfig(update) {
             id = 0
         }, SaveMode.UPDATE_ONLY).execute()
+        invalidateConfigCache()
     }
 
     fun getConfig(fetcher: Fetcher<SystemConfig>): SystemConfig {
-        return sql.findById(fetcher, 0) ?: throw IllegalStateException("System is not initialized")
+        return configCache.computeIfAbsent(fetcher) { loadConfig(it) }
     }
 
     fun updatePassword(update: SystemConfigPasswordUpdate) {
@@ -96,9 +95,18 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
                 sql.executeQuery(Asset::class) { selectCount() }[0]
 
         if (existsRows > 0) {
-            throw IllegalStateException("Current database is not empty, import aborted")
+            throw IllegalStateException("当前数据库非空，导入已中止")
         }
 
         dataImporter.exec()
     }
+
+    private fun loadConfig(fetcher: Fetcher<SystemConfig>): SystemConfig {
+        return sql.findById(fetcher, 0) ?: throw IllegalStateException("System is not initialized")
+    }
+
+    private fun invalidateConfigCache() {
+        configCache.clear()
+    }
 }
+

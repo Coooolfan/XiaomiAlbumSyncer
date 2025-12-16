@@ -27,7 +27,16 @@ data class CrontabConfig(
 
     val rewriteFileSystemTime: Boolean = false,
 
-//    重新发起下载请求有点麻烦，到时候再说吧
-//    val checkSha1: Boolean = false
+    val checkSha1: Boolean = false,
 
-)
+    val fetchFromDbSize: Int = 2,
+
+    val downloaders: Int = 10,
+
+    val verifiers: Int = 5,
+
+    val exifProcessors: Int = 5,
+
+    val fileTimeWorkers: Int = 5,
+
+    )

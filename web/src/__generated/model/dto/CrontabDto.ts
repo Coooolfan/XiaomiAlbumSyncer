@@ -8,10 +8,12 @@ export type CrontabDto = {
         readonly enabled: boolean;
         readonly config: CrontabConfig;
         readonly albumIds: ReadonlyArray<string>;
+        readonly running: boolean;
         readonly histories: ReadonlyArray<{
             readonly id: number;
             readonly startTime: string;
             readonly endTime?: string | undefined;
+            readonly fetchedAllAssets: boolean;
             readonly isCompleted: boolean;
         }>;
     }

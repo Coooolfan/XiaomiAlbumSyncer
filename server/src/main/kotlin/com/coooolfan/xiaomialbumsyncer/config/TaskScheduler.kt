@@ -5,7 +5,9 @@ import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.enabled
-import com.coooolfan.xiaomialbumsyncer.utils.TaskActuators
+import com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline
+import com.coooolfan.xiaomialbumsyncer.utils.SingleStagePatch
+import kotlinx.coroutines.runBlocking
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Init
@@ -15,14 +17,14 @@ import org.noear.solon.scheduling.scheduled.manager.IJobManager
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.text.ParseException
-import java.util.Collections
-import java.util.TimeZone
+import java.util.*
 
 @Managed
 class TaskScheduler(
     private val jobManager: IJobManager,
     private val sql: KSqlClient,
-    private val actuators: TaskActuators,
+    private val singleStagePatch: SingleStagePatch,
+    private val pipeline: CrontabPipeline,
     private val thread: ThreadExecutor
 ) {
 
@@ -69,6 +71,10 @@ class TaskScheduler(
 
     }
 
+    fun checkIsRunning(crontabId: Long): Boolean {
+        return runningCrontabs.contains(crontabId)
+    }
+
     /** 立即执行某个定时任务
      * @param crontab 要执行的定时任务实体
      * @param async 是否异步执行，默认 true。若为 false，则在当前线程中执行该任务，阻塞，直到任务完成才返回
@@ -87,7 +93,9 @@ class TaskScheduler(
             return
         }
         try {
-            actuators.doWork(crontab)
+            runBlocking {
+                pipeline.execute(crontab)
+            }
         } finally {
             runningCrontabs.remove(crontab.id)
         }
@@ -98,9 +106,9 @@ class TaskScheduler(
         systemConfig: SystemConfig, timeZone: TimeZone
     ) {
         if (async) {
-            thread.taskExecutor().execute { actuators.fillExifTime(assetPathMap, systemConfig, timeZone) }
+            thread.taskExecutor().execute { singleStagePatch.fillExifTime(assetPathMap, systemConfig, timeZone) }
         } else {
-            actuators.fillExifTime(assetPathMap, systemConfig, timeZone)
+            singleStagePatch.fillExifTime(assetPathMap, systemConfig, timeZone)
         }
     }
 
@@ -108,9 +116,9 @@ class TaskScheduler(
         async: Boolean = true, assetPathMap: Map<Asset, Path>
     ) {
         if (async) {
-            thread.taskExecutor().execute { actuators.rewriteFileSystemTime(assetPathMap) }
+            thread.taskExecutor().execute { singleStagePatch.rewriteFileSystemTime(assetPathMap) }
         } else {
-            actuators.rewriteFileSystemTime(assetPathMap)
+            singleStagePatch.rewriteFileSystemTime(assetPathMap)
         }
     }
 

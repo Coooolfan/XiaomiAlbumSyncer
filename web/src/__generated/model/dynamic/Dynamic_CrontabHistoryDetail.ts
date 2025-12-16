@@ -6,4 +6,8 @@ export interface Dynamic_CrontabHistoryDetail {
     readonly downloadTime?: string;
     readonly asset?: Dynamic_Asset;
     readonly filePath?: string;
+    readonly downloadCompleted?: boolean;
+    readonly sha1Verified?: boolean;
+    readonly exifFilled?: boolean;
+    readonly fsTimeUpdated?: boolean;
 }

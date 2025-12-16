@@ -84,6 +84,18 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
+  "name":"ch.qos.logback.core.pattern.IdentityCompositeConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"ch.qos.logback.core.pattern.color.CyanCompositeConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"ch.qos.logback.core.pattern.color.MagentaCompositeConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
   "name":"ch.qos.logback.core.rolling.helper.DateTokenConverter",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
@@ -104,7 +116,8 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
-  "methods":[{"name":"getActiveTimeout","parameterTypes":[] }, {"name":"getAutoRenew","parameterTypes":[] }, {"name":"getCheckSameToken","parameterTypes":[] }, {"name":"getCookie","parameterTypes":[] }, {"name":"getCookieAutoFillPrefix","parameterTypes":[] }, {"name":"getCurrDomain","parameterTypes":[] }, {"name":"getDataRefreshPeriod","parameterTypes":[] }, {"name":"getDynamicActiveTimeout","parameterTypes":[] }, {"name":"getHttpBasic","parameterTypes":[] }, {"name":"getHttpDigest","parameterTypes":[] }, {"name":"getIsColorLog","parameterTypes":[] }, {"name":"getIsConcurrent","parameterTypes":[] }, {"name":"getIsLastingCookie","parameterTypes":[] }, {"name":"getIsLog","parameterTypes":[] }, {"name":"getIsLogoutKeepFreezeOps","parameterTypes":[] }, {"name":"getIsLogoutKeepTokenSession","parameterTypes":[] }, {"name":"getIsPrint","parameterTypes":[] }, {"name":"getIsReadBody","parameterTypes":[] }, {"name":"getIsReadCookie","parameterTypes":[] }, {"name":"getIsReadHeader","parameterTypes":[] }, {"name":"getIsShare","parameterTypes":[] }, {"name":"getIsWriteHeader","parameterTypes":[] }, {"name":"getJwtSecretKey","parameterTypes":[] }, {"name":"getLogLevel","parameterTypes":[] }, {"name":"getLogLevelInt","parameterTypes":[] }, {"name":"getLogoutRange","parameterTypes":[] }, {"name":"getMaxLoginCount","parameterTypes":[] }, {"name":"getMaxTryTimes","parameterTypes":[] }, {"name":"getOverflowLogoutMode","parameterTypes":[] }, {"name":"getReplacedRange","parameterTypes":[] }, {"name":"getRightNowCreateTokenSession","parameterTypes":[] }, {"name":"getSameTokenTimeout","parameterTypes":[] }, {"name":"getTimeout","parameterTypes":[] }, {"name":"getTokenName","parameterTypes":[] }, {"name":"getTokenPrefix","parameterTypes":[] }, {"name":"getTokenSessionCheckLogin","parameterTypes":[] }, {"name":"getTokenStyle","parameterTypes":[] }, {"name":"setActiveTimeout","parameterTypes":["long"] }, {"name":"setAutoRenew","parameterTypes":["java.lang.Boolean"] }, {"name":"setCheckSameToken","parameterTypes":["java.lang.Boolean"] }, {"name":"setCookie","parameterTypes":["cn.dev33.satoken.config.SaCookieConfig"] }, {"name":"setCookieAutoFillPrefix","parameterTypes":["java.lang.Boolean"] }, {"name":"setCurrDomain","parameterTypes":["java.lang.String"] }, {"name":"setDataRefreshPeriod","parameterTypes":["int"] }, {"name":"setDynamicActiveTimeout","parameterTypes":["java.lang.Boolean"] }, {"name":"setHttpBasic","parameterTypes":["java.lang.String"] }, {"name":"setHttpDigest","parameterTypes":["java.lang.String"] }, {"name":"setIsColorLog","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsConcurrent","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsLastingCookie","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsLog","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsLogoutKeepFreezeOps","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsLogoutKeepTokenSession","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsPrint","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsReadBody","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsReadCookie","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsReadHeader","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsShare","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsWriteHeader","parameterTypes":["java.lang.Boolean"] }, {"name":"setJwtSecretKey","parameterTypes":["java.lang.String"] }, {"name":"setLogLevel","parameterTypes":["java.lang.String"] }, {"name":"setLogLevelInt","parameterTypes":["int"] }, {"name":"setLogoutRange","parameterTypes":["cn.dev33.satoken.stp.parameter.enums.SaLogoutRange"] }, {"name":"setMaxLoginCount","parameterTypes":["int"] }, {"name":"setMaxTryTimes","parameterTypes":["int"] }, {"name":"setOverflowLogoutMode","parameterTypes":["cn.dev33.satoken.stp.parameter.enums.SaLogoutMode"] }, {"name":"setReplacedRange","parameterTypes":["cn.dev33.satoken.stp.parameter.enums.SaReplacedRange"] }, {"name":"setRightNowCreateTokenSession","parameterTypes":["java.lang.Boolean"] }, {"name":"setSameTokenTimeout","parameterTypes":["long"] }, {"name":"setTimeout","parameterTypes":["long"] }, {"name":"setTokenName","parameterTypes":["java.lang.String"] }, {"name":"setTokenPrefix","parameterTypes":["java.lang.String"] }, {"name":"setTokenSessionCheckLogin","parameterTypes":["java.lang.Boolean"] }, {"name":"setTokenStyle","parameterTypes":["java.lang.String"] }]
+  "queryAllPublicConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"<init>","parameterTypes":["java.util.Properties"] }, {"name":"getActiveTimeout","parameterTypes":[] }, {"name":"getAutoRenew","parameterTypes":[] }, {"name":"getCheckSameToken","parameterTypes":[] }, {"name":"getCookie","parameterTypes":[] }, {"name":"getCookieAutoFillPrefix","parameterTypes":[] }, {"name":"getCurrDomain","parameterTypes":[] }, {"name":"getDataRefreshPeriod","parameterTypes":[] }, {"name":"getDynamicActiveTimeout","parameterTypes":[] }, {"name":"getHttpBasic","parameterTypes":[] }, {"name":"getHttpDigest","parameterTypes":[] }, {"name":"getIsColorLog","parameterTypes":[] }, {"name":"getIsConcurrent","parameterTypes":[] }, {"name":"getIsLastingCookie","parameterTypes":[] }, {"name":"getIsLog","parameterTypes":[] }, {"name":"getIsLogoutKeepFreezeOps","parameterTypes":[] }, {"name":"getIsLogoutKeepTokenSession","parameterTypes":[] }, {"name":"getIsPrint","parameterTypes":[] }, {"name":"getIsReadBody","parameterTypes":[] }, {"name":"getIsReadCookie","parameterTypes":[] }, {"name":"getIsReadHeader","parameterTypes":[] }, {"name":"getIsShare","parameterTypes":[] }, {"name":"getIsWriteHeader","parameterTypes":[] }, {"name":"getJwtSecretKey","parameterTypes":[] }, {"name":"getLogLevel","parameterTypes":[] }, {"name":"getLogLevelInt","parameterTypes":[] }, {"name":"getLogoutRange","parameterTypes":[] }, {"name":"getMaxLoginCount","parameterTypes":[] }, {"name":"getMaxTryTimes","parameterTypes":[] }, {"name":"getOverflowLogoutMode","parameterTypes":[] }, {"name":"getReplacedRange","parameterTypes":[] }, {"name":"getRightNowCreateTokenSession","parameterTypes":[] }, {"name":"getSameTokenTimeout","parameterTypes":[] }, {"name":"getTimeout","parameterTypes":[] }, {"name":"getTokenName","parameterTypes":[] }, {"name":"getTokenPrefix","parameterTypes":[] }, {"name":"getTokenSessionCheckLogin","parameterTypes":[] }, {"name":"getTokenStyle","parameterTypes":[] }, {"name":"setActiveTimeout","parameterTypes":["long"] }, {"name":"setAutoRenew","parameterTypes":["java.lang.Boolean"] }, {"name":"setCheckSameToken","parameterTypes":["java.lang.Boolean"] }, {"name":"setCookie","parameterTypes":["cn.dev33.satoken.config.SaCookieConfig"] }, {"name":"setCookieAutoFillPrefix","parameterTypes":["java.lang.Boolean"] }, {"name":"setCurrDomain","parameterTypes":["java.lang.String"] }, {"name":"setDataRefreshPeriod","parameterTypes":["int"] }, {"name":"setDynamicActiveTimeout","parameterTypes":["java.lang.Boolean"] }, {"name":"setHttpBasic","parameterTypes":["java.lang.String"] }, {"name":"setHttpDigest","parameterTypes":["java.lang.String"] }, {"name":"setIsColorLog","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsConcurrent","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsLastingCookie","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsLog","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsLogoutKeepFreezeOps","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsLogoutKeepTokenSession","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsPrint","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsReadBody","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsReadCookie","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsReadHeader","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsShare","parameterTypes":["java.lang.Boolean"] }, {"name":"setIsWriteHeader","parameterTypes":["java.lang.Boolean"] }, {"name":"setJwtSecretKey","parameterTypes":["java.lang.String"] }, {"name":"setLogLevel","parameterTypes":["java.lang.String"] }, {"name":"setLogLevelInt","parameterTypes":["int"] }, {"name":"setLogoutRange","parameterTypes":["cn.dev33.satoken.stp.parameter.enums.SaLogoutRange"] }, {"name":"setMaxLoginCount","parameterTypes":["int"] }, {"name":"setMaxTryTimes","parameterTypes":["int"] }, {"name":"setOverflowLogoutMode","parameterTypes":["cn.dev33.satoken.stp.parameter.enums.SaLogoutMode"] }, {"name":"setReplacedRange","parameterTypes":["cn.dev33.satoken.stp.parameter.enums.SaReplacedRange"] }, {"name":"setRightNowCreateTokenSession","parameterTypes":["java.lang.Boolean"] }, {"name":"setSameTokenTimeout","parameterTypes":["long"] }, {"name":"setTimeout","parameterTypes":["long"] }, {"name":"setTokenName","parameterTypes":["java.lang.String"] }, {"name":"setTokenPrefix","parameterTypes":["java.lang.String"] }, {"name":"setTokenSessionCheckLogin","parameterTypes":["java.lang.Boolean"] }, {"name":"setTokenStyle","parameterTypes":["java.lang.String"] }]
 },
 {
   "name":"cn.dev33.satoken.solon.SaBeanInject",
@@ -212,10 +225,13 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["org.noear.solon.scheduling.scheduled.manager.IJobManager","org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.utils.TaskActuators","com.coooolfan.xiaomialbumsyncer.config.ThreadExecutor"] }, {"name":"getActuators","parameterTypes":[] }, {"name":"getJobManager","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getRunningCrontabs","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"getThread","parameterTypes":[] }, {"name":"initJobs","parameterTypes":[] }, {"name":"setActuators","parameterTypes":["com.coooolfan.xiaomialbumsyncer.utils.TaskActuators"] }, {"name":"setJobManager","parameterTypes":["org.noear.solon.scheduling.scheduled.manager.IJobManager"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setRunningCrontabs","parameterTypes":["java.util.Set"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"setThread","parameterTypes":["com.coooolfan.xiaomialbumsyncer.config.ThreadExecutor"] }]
+  "methods":[{"name":"<init>","parameterTypes":["org.noear.solon.scheduling.scheduled.manager.IJobManager","org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.utils.SingleStagePatch","com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline","com.coooolfan.xiaomialbumsyncer.config.ThreadExecutor"] }, {"name":"<init>","parameterTypes":["org.noear.solon.scheduling.scheduled.manager.IJobManager","org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.utils.TaskActuators","com.coooolfan.xiaomialbumsyncer.config.ThreadExecutor"] }, {"name":"getActuators","parameterTypes":[] }, {"name":"getJobManager","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getPipeline","parameterTypes":[] }, {"name":"getRunningCrontabs","parameterTypes":[] }, {"name":"getSingleStagePatch","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"getThread","parameterTypes":[] }, {"name":"initJobs","parameterTypes":[] }, {"name":"setActuators","parameterTypes":["com.coooolfan.xiaomialbumsyncer.utils.TaskActuators"] }, {"name":"setJobManager","parameterTypes":["org.noear.solon.scheduling.scheduled.manager.IJobManager"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setPipeline","parameterTypes":["com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline"] }, {"name":"setRunningCrontabs","parameterTypes":["java.util.Set"] }, {"name":"setSingleStagePatch","parameterTypes":["com.coooolfan.xiaomialbumsyncer.utils.SingleStagePatch"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"setThread","parameterTypes":["com.coooolfan.xiaomialbumsyncer.config.ThreadExecutor"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.config.TaskScheduler$annotationImpl$org_noear_solon_scheduling_annotation_Scheduled$0"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.config.TaskScheduler$executeWithGuard$1"
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.config.ThreadExecutor",
@@ -299,6 +315,9 @@
   "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.config.jimmer.JimmerProperties"] }, {"name":"getIndexHtmlTemplate","parameterTypes":[] }, {"name":"getNoApiHtml","parameterTypes":[] }, {"name":"getProperties","parameterTypes":[] }, {"name":"setIndexHtmlTemplate","parameterTypes":["java.lang.String"] }, {"name":"setNoApiHtml","parameterTypes":["java.lang.String"] }, {"name":"setProperties","parameterTypes":["com.coooolfan.xiaomialbumsyncer.config.jimmer.JimmerProperties"] }]
 },
 {
+  "name":"com.coooolfan.xiaomialbumsyncer.config.jimmer.SolonTransientResolverProvider"
+},
+{
   "name":"com.coooolfan.xiaomialbumsyncer.config.jimmer.TypeScriptController",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
@@ -337,6 +356,9 @@
   "name":"com.coooolfan.xiaomialbumsyncer.controller.CrontabController$Companion"
 },
 {
+  "name":"com.coooolfan.xiaomialbumsyncer.controller.CrontabCurrentStats"
+},
+{
   "name":"com.coooolfan.xiaomialbumsyncer.controller.IsInitResponse",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
@@ -356,6 +378,9 @@
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.controller.SystemConfigController$Companion"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.controller.SystemConfigControllerKt"
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.controller.SystemInfoResponse",
@@ -455,7 +480,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.util.Map"] }, {"name":"getDayCount","parameterTypes":[] }, {"name":"getIndexHash","parameterTypes":[] }]
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.util.Map"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.util.Map","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"getDayCount","parameterTypes":[] }, {"name":"getIndexHash","parameterTypes":[] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.AlbumTimelineKt"
@@ -554,7 +579,7 @@
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.Crontab",
   "queryAllDeclaredMethods":true,
-  "methods":[{"name":"albumIds","parameterTypes":[] }, {"name":"albums","parameterTypes":[] }, {"name":"config","parameterTypes":[] }, {"name":"description","parameterTypes":[] }, {"name":"enabled","parameterTypes":[] }, {"name":"getAlbumIds","parameterTypes":[] }, {"name":"getAlbums","parameterTypes":[] }, {"name":"getConfig","parameterTypes":[] }, {"name":"getDescription","parameterTypes":[] }, {"name":"getEnabled","parameterTypes":[] }, {"name":"getHistories","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getName","parameterTypes":[] }, {"name":"histories","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"isAlbumIds","parameterTypes":[] }, {"name":"isAlbums","parameterTypes":[] }, {"name":"isConfig","parameterTypes":[] }, {"name":"isDescription","parameterTypes":[] }, {"name":"isEnabled","parameterTypes":[] }, {"name":"isHistories","parameterTypes":[] }, {"name":"isId","parameterTypes":[] }, {"name":"isName","parameterTypes":[] }, {"name":"name","parameterTypes":[] }]
+  "methods":[{"name":"albumIds","parameterTypes":[] }, {"name":"albums","parameterTypes":[] }, {"name":"config","parameterTypes":[] }, {"name":"description","parameterTypes":[] }, {"name":"enabled","parameterTypes":[] }, {"name":"getAlbumIds","parameterTypes":[] }, {"name":"getAlbums","parameterTypes":[] }, {"name":"getConfig","parameterTypes":[] }, {"name":"getDescription","parameterTypes":[] }, {"name":"getEnabled","parameterTypes":[] }, {"name":"getHistories","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getName","parameterTypes":[] }, {"name":"getRunning","parameterTypes":[] }, {"name":"histories","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"isAlbumIds","parameterTypes":[] }, {"name":"isAlbums","parameterTypes":[] }, {"name":"isConfig","parameterTypes":[] }, {"name":"isDescription","parameterTypes":[] }, {"name":"isEnabled","parameterTypes":[] }, {"name":"isHistories","parameterTypes":[] }, {"name":"isId","parameterTypes":[] }, {"name":"isName","parameterTypes":[] }, {"name":"isRunning","parameterTypes":[] }, {"name":"name","parameterTypes":[] }, {"name":"running","parameterTypes":[] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.Crontab$DefaultImpls",
@@ -567,7 +592,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"getDiffByTimeline","parameterTypes":[] }, {"name":"getDownloadImages","parameterTypes":[] }, {"name":"getDownloadVideos","parameterTypes":[] }, {"name":"getExpression","parameterTypes":[] }, {"name":"getRewriteExifTime","parameterTypes":[] }, {"name":"getRewriteExifTimeZone","parameterTypes":[] }, {"name":"getRewriteFileSystemTime","parameterTypes":[] }, {"name":"getSkipExistingFile","parameterTypes":[] }, {"name":"getTargetPath","parameterTypes":[] }, {"name":"getTimeZone","parameterTypes":[] }]
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean","boolean","int","int","int","int","int"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean","boolean","int","int","int","int","int","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"getCheckSha1","parameterTypes":[] }, {"name":"getDiffByTimeline","parameterTypes":[] }, {"name":"getDownloadImages","parameterTypes":[] }, {"name":"getDownloadVideos","parameterTypes":[] }, {"name":"getDownloaders","parameterTypes":[] }, {"name":"getExifProcessors","parameterTypes":[] }, {"name":"getExpression","parameterTypes":[] }, {"name":"getFetchFromDbSize","parameterTypes":[] }, {"name":"getFileTimeWorkers","parameterTypes":[] }, {"name":"getRewriteExifTime","parameterTypes":[] }, {"name":"getRewriteExifTimeZone","parameterTypes":[] }, {"name":"getRewriteFileSystemTime","parameterTypes":[] }, {"name":"getSkipExistingFile","parameterTypes":[] }, {"name":"getTargetPath","parameterTypes":[] }, {"name":"getTimeZone","parameterTypes":[] }, {"name":"getVerifiers","parameterTypes":[] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabDraft",
@@ -586,7 +611,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"__equals","parameterTypes":["java.lang.Object","boolean"] }, {"name":"__get","parameterTypes":["java.lang.String"] }, {"name":"__get","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__hashCode","parameterTypes":["boolean"] }, {"name":"__isLoaded","parameterTypes":["java.lang.String"] }, {"name":"__isLoaded","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__isVisible","parameterTypes":["java.lang.String"] }, {"name":"__isVisible","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__shallowEquals","parameterTypes":["java.lang.Object"] }, {"name":"__shallowHashCode","parameterTypes":[] }, {"name":"__type","parameterTypes":[] }, {"name":"clone","parameterTypes":[] }, {"name":"equals","parameterTypes":["java.lang.Object"] }, {"name":"getAlbumIds","parameterTypes":[] }, {"name":"getAlbums","parameterTypes":[] }, {"name":"getConfig","parameterTypes":[] }, {"name":"getDescription","parameterTypes":[] }, {"name":"getDummyPropForJacksonError__","parameterTypes":[] }, {"name":"getEnabled","parameterTypes":[] }, {"name":"getHistories","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getName","parameterTypes":[] }, {"name":"get__albumsValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__configValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__descriptionValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__enabledLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__enabledValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__historiesValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__nameValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__visibility$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"hashCode","parameterTypes":[] }, {"name":"set__albumsValue$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.NonSharedList"] }, {"name":"set__configValue$XiaomiAlbumSyncer","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.CrontabConfig"] }, {"name":"set__descriptionValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__enabledLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__enabledValue$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__historiesValue$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.NonSharedList"] }, {"name":"set__idLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__idValue$XiaomiAlbumSyncer","parameterTypes":["long"] }, {"name":"set__nameValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__visibility$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.Visibility"] }, {"name":"toString","parameterTypes":[] }]
+  "methods":[{"name":"__equals","parameterTypes":["java.lang.Object","boolean"] }, {"name":"__get","parameterTypes":["java.lang.String"] }, {"name":"__get","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__hashCode","parameterTypes":["boolean"] }, {"name":"__isLoaded","parameterTypes":["java.lang.String"] }, {"name":"__isLoaded","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__isVisible","parameterTypes":["java.lang.String"] }, {"name":"__isVisible","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__shallowEquals","parameterTypes":["java.lang.Object"] }, {"name":"__shallowHashCode","parameterTypes":[] }, {"name":"__type","parameterTypes":[] }, {"name":"clone","parameterTypes":[] }, {"name":"equals","parameterTypes":["java.lang.Object"] }, {"name":"getAlbumIds","parameterTypes":[] }, {"name":"getAlbums","parameterTypes":[] }, {"name":"getConfig","parameterTypes":[] }, {"name":"getDescription","parameterTypes":[] }, {"name":"getDummyPropForJacksonError__","parameterTypes":[] }, {"name":"getEnabled","parameterTypes":[] }, {"name":"getHistories","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getName","parameterTypes":[] }, {"name":"getRunning","parameterTypes":[] }, {"name":"get__albumsValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__configValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__descriptionValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__enabledLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__enabledValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__historiesValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__nameValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__runningLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__runningValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__visibility$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"hashCode","parameterTypes":[] }, {"name":"set__albumsValue$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.NonSharedList"] }, {"name":"set__configValue$XiaomiAlbumSyncer","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.CrontabConfig"] }, {"name":"set__descriptionValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__enabledLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__enabledValue$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__historiesValue$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.NonSharedList"] }, {"name":"set__idLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__idValue$XiaomiAlbumSyncer","parameterTypes":["long"] }, {"name":"set__nameValue$XiaomiAlbumSyncer","parameterTypes":["java.lang.String"] }, {"name":"set__runningLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__runningValue$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__visibility$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.Visibility"] }, {"name":"toString","parameterTypes":[] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabDraft$$$Implementor",
@@ -610,7 +635,7 @@
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistory",
   "queryAllDeclaredMethods":true,
-  "methods":[{"name":"crontab","parameterTypes":[] }, {"name":"details","parameterTypes":[] }, {"name":"endTime","parameterTypes":[] }, {"name":"getCrontab","parameterTypes":[] }, {"name":"getDetails","parameterTypes":[] }, {"name":"getEndTime","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getIsCompleted","parameterTypes":[] }, {"name":"getStartTime","parameterTypes":[] }, {"name":"getTimelineSnapshot","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"isCompleted","parameterTypes":[] }, {"name":"isCrontab","parameterTypes":[] }, {"name":"isDetails","parameterTypes":[] }, {"name":"isEndTime","parameterTypes":[] }, {"name":"isId","parameterTypes":[] }, {"name":"isIsCompleted","parameterTypes":[] }, {"name":"isStartTime","parameterTypes":[] }, {"name":"isTimelineSnapshot","parameterTypes":[] }, {"name":"startTime","parameterTypes":[] }, {"name":"timelineSnapshot","parameterTypes":[] }]
+  "methods":[{"name":"crontab","parameterTypes":[] }, {"name":"details","parameterTypes":[] }, {"name":"endTime","parameterTypes":[] }, {"name":"fetchedAllAssets","parameterTypes":[] }, {"name":"getCrontab","parameterTypes":[] }, {"name":"getDetails","parameterTypes":[] }, {"name":"getEndTime","parameterTypes":[] }, {"name":"getFetchedAllAssets","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getIsCompleted","parameterTypes":[] }, {"name":"getStartTime","parameterTypes":[] }, {"name":"getTimelineSnapshot","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"isCompleted","parameterTypes":[] }, {"name":"isCrontab","parameterTypes":[] }, {"name":"isDetails","parameterTypes":[] }, {"name":"isEndTime","parameterTypes":[] }, {"name":"isFetchedAllAssets","parameterTypes":[] }, {"name":"isId","parameterTypes":[] }, {"name":"isIsCompleted","parameterTypes":[] }, {"name":"isStartTime","parameterTypes":[] }, {"name":"isTimelineSnapshot","parameterTypes":[] }, {"name":"startTime","parameterTypes":[] }, {"name":"timelineSnapshot","parameterTypes":[] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistory$DefaultImpls",
@@ -620,7 +645,10 @@
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail",
-  "methods":[{"name":"asset","parameterTypes":[] }, {"name":"crontabHistory","parameterTypes":[] }, {"name":"downloadTime","parameterTypes":[] }, {"name":"filePath","parameterTypes":[] }, {"name":"getAsset","parameterTypes":[] }, {"name":"getCrontabHistory","parameterTypes":[] }, {"name":"getDownloadTime","parameterTypes":[] }, {"name":"getFilePath","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"isAsset","parameterTypes":[] }, {"name":"isCrontabHistory","parameterTypes":[] }, {"name":"isDownloadTime","parameterTypes":[] }, {"name":"isFilePath","parameterTypes":[] }, {"name":"isId","parameterTypes":[] }]
+  "methods":[{"name":"asset","parameterTypes":[] }, {"name":"crontabHistory","parameterTypes":[] }, {"name":"downloadCompleted","parameterTypes":[] }, {"name":"downloadTime","parameterTypes":[] }, {"name":"exifFilled","parameterTypes":[] }, {"name":"filePath","parameterTypes":[] }, {"name":"fsTimeUpdated","parameterTypes":[] }, {"name":"getAsset","parameterTypes":[] }, {"name":"getCrontabHistory","parameterTypes":[] }, {"name":"getDownloadCompleted","parameterTypes":[] }, {"name":"getDownloadTime","parameterTypes":[] }, {"name":"getExifFilled","parameterTypes":[] }, {"name":"getFilePath","parameterTypes":[] }, {"name":"getFsTimeUpdated","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getSha1Verified","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"isAsset","parameterTypes":[] }, {"name":"isCrontabHistory","parameterTypes":[] }, {"name":"isDownloadCompleted","parameterTypes":[] }, {"name":"isDownloadTime","parameterTypes":[] }, {"name":"isExifFilled","parameterTypes":[] }, {"name":"isFilePath","parameterTypes":[] }, {"name":"isFsTimeUpdated","parameterTypes":[] }, {"name":"isId","parameterTypes":[] }, {"name":"isSha1Verified","parameterTypes":[] }, {"name":"sha1Verified","parameterTypes":[] }]
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail$Companion"
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail$DefaultImpls",
@@ -671,13 +699,25 @@
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$CRONTAB_HISTORY$1"
 },
 {
+  "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$DOWNLOAD_COMPLETED$1"
+},
+{
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$DOWNLOAD_TIME$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$EXIF_FILLED$1"
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$FILE_PATH$1"
 },
 {
+  "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$FS_TIME_UPDATED$1"
+},
+{
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$ID$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$SHA1_VERIFIED$1"
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailPropsKt"
@@ -699,7 +739,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"__equals","parameterTypes":["java.lang.Object","boolean"] }, {"name":"__get","parameterTypes":["java.lang.String"] }, {"name":"__get","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__hashCode","parameterTypes":["boolean"] }, {"name":"__isLoaded","parameterTypes":["java.lang.String"] }, {"name":"__isLoaded","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__isVisible","parameterTypes":["java.lang.String"] }, {"name":"__isVisible","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__shallowEquals","parameterTypes":["java.lang.Object"] }, {"name":"__shallowHashCode","parameterTypes":[] }, {"name":"__type","parameterTypes":[] }, {"name":"clone","parameterTypes":[] }, {"name":"equals","parameterTypes":["java.lang.Object"] }, {"name":"getCrontab","parameterTypes":[] }, {"name":"getDetails","parameterTypes":[] }, {"name":"getDummyPropForJacksonError__","parameterTypes":[] }, {"name":"getEndTime","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getStartTime","parameterTypes":[] }, {"name":"getTimelineSnapshot","parameterTypes":[] }, {"name":"get__crontabValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__detailsValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__endTimeLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__endTimeValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__startTimeValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__timelineSnapshotValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__visibility$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"hashCode","parameterTypes":[] }, {"name":"isCompleted","parameterTypes":[] }, {"name":"set__crontabValue$XiaomiAlbumSyncer","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.Crontab"] }, {"name":"set__detailsValue$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.NonSharedList"] }, {"name":"set__endTimeLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__endTimeValue$XiaomiAlbumSyncer","parameterTypes":["java.time.Instant"] }, {"name":"set__idLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__idValue$XiaomiAlbumSyncer","parameterTypes":["long"] }, {"name":"set__startTimeValue$XiaomiAlbumSyncer","parameterTypes":["java.time.Instant"] }, {"name":"set__timelineSnapshotValue$XiaomiAlbumSyncer","parameterTypes":["java.util.Map"] }, {"name":"set__visibility$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.Visibility"] }, {"name":"toString","parameterTypes":[] }]
+  "methods":[{"name":"__equals","parameterTypes":["java.lang.Object","boolean"] }, {"name":"__get","parameterTypes":["java.lang.String"] }, {"name":"__get","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__hashCode","parameterTypes":["boolean"] }, {"name":"__isLoaded","parameterTypes":["java.lang.String"] }, {"name":"__isLoaded","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__isVisible","parameterTypes":["java.lang.String"] }, {"name":"__isVisible","parameterTypes":["org.babyfish.jimmer.meta.PropId"] }, {"name":"__shallowEquals","parameterTypes":["java.lang.Object"] }, {"name":"__shallowHashCode","parameterTypes":[] }, {"name":"__type","parameterTypes":[] }, {"name":"clone","parameterTypes":[] }, {"name":"equals","parameterTypes":["java.lang.Object"] }, {"name":"getCrontab","parameterTypes":[] }, {"name":"getDetails","parameterTypes":[] }, {"name":"getDummyPropForJacksonError__","parameterTypes":[] }, {"name":"getEndTime","parameterTypes":[] }, {"name":"getFetchedAllAssets","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getStartTime","parameterTypes":[] }, {"name":"getTimelineSnapshot","parameterTypes":[] }, {"name":"get__crontabValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__detailsValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__endTimeLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__endTimeValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__fetchedAllAssetsLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__fetchedAllAssetsValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idLoaded$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__idValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__startTimeValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__timelineSnapshotValue$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"get__visibility$XiaomiAlbumSyncer","parameterTypes":[] }, {"name":"hashCode","parameterTypes":[] }, {"name":"isCompleted","parameterTypes":[] }, {"name":"set__crontabValue$XiaomiAlbumSyncer","parameterTypes":["com.coooolfan.xiaomialbumsyncer.model.Crontab"] }, {"name":"set__detailsValue$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.NonSharedList"] }, {"name":"set__endTimeLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__endTimeValue$XiaomiAlbumSyncer","parameterTypes":["java.time.Instant"] }, {"name":"set__fetchedAllAssetsLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__fetchedAllAssetsValue$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__idLoaded$XiaomiAlbumSyncer","parameterTypes":["boolean"] }, {"name":"set__idValue$XiaomiAlbumSyncer","parameterTypes":["long"] }, {"name":"set__startTimeValue$XiaomiAlbumSyncer","parameterTypes":["java.time.Instant"] }, {"name":"set__timelineSnapshotValue$XiaomiAlbumSyncer","parameterTypes":["java.util.Map"] }, {"name":"set__visibility$XiaomiAlbumSyncer","parameterTypes":["org.babyfish.jimmer.runtime.Visibility"] }, {"name":"toString","parameterTypes":[] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDraft$$$Implementor",
@@ -731,6 +771,9 @@
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$END_TIME$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$FETCHED_ALL_ASSETS$1"
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$ID$1"
@@ -773,6 +816,9 @@
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabProps$NAME$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabProps$RUNNING$1"
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabPropsKt"
@@ -962,6 +1008,100 @@
   "name":"com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdateKt"
 },
 {
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage","com.coooolfan.xiaomialbumsyncer.pipeline.stages.VerificationStage","com.coooolfan.xiaomialbumsyncer.pipeline.stages.ExifProcessingStage","com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage","com.coooolfan.xiaomialbumsyncer.service.SystemConfigService","com.coooolfan.xiaomialbumsyncer.service.AssetService","com.coooolfan.xiaomialbumsyncer.service.CrontabService"] }, {"name":"getAssetService","parameterTypes":[] }, {"name":"getCrontabService","parameterTypes":[] }, {"name":"getDownloadStage","parameterTypes":[] }, {"name":"getExifProcessingStage","parameterTypes":[] }, {"name":"getFileTimeStage","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSystemConfigService","parameterTypes":[] }, {"name":"getVerificationStage","parameterTypes":[] }, {"name":"setAssetService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.AssetService"] }, {"name":"setCrontabService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.CrontabService"] }, {"name":"setDownloadStage","parameterTypes":["com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage"] }, {"name":"setExifProcessingStage","parameterTypes":["com.coooolfan.xiaomialbumsyncer.pipeline.stages.ExifProcessingStage"] }, {"name":"setFileTimeStage","parameterTypes":["com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSystemConfigService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.SystemConfigService"] }, {"name":"setVerificationStage","parameterTypes":["com.coooolfan.xiaomialbumsyncer.pipeline.stages.VerificationStage"] }]
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$$inlined$transform$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$$inlined$transform$1$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$$inlined$transform$1$1$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$3"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$4"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$4$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$4$2"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$5"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$5$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$5$2"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$6"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$6$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$6$2"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$7"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$7$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$7$2"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$8"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi","org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"getApi","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setApi","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.stages.ExifProcessingStage",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.stages.VerificationStage",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
+},
+{
   "name":"com.coooolfan.xiaomialbumsyncer.service.AlbumsService",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
@@ -975,7 +1115,19 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"] }, {"name":"getApi","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setApi","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
+  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"] }, {"name":"getApi","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setApi","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsByDiffTimeline$4"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsByDiffTimeline$4$1$1$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsFull$1"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsFull$1$1$1"
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.service.CrontabService",
@@ -983,7 +1135,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"getTaskScheduler","parameterTypes":[] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"setTaskScheduler","parameterTypes":["com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"] }]
+  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"getTaskScheduler","parameterTypes":[] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"setTaskScheduler","parameterTypes":["com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.service.DebugService",
@@ -999,7 +1151,15 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.utils.DataImporter"] }, {"name":"getDataImporter","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setDataImporter","parameterTypes":["com.coooolfan.xiaomialbumsyncer.utils.DataImporter"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
+  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.utils.DataImporter"] }, {"name":"getConfigCache","parameterTypes":[] }, {"name":"getDataImporter","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setConfigCache","parameterTypes":["java.util.concurrent.ConcurrentHashMap"] }, {"name":"setDataImporter","parameterTypes":["com.coooolfan.xiaomialbumsyncer.utils.DataImporter"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.utils.CrontabRunningResolver",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"] }, {"name":"getTaskScheduler","parameterTypes":[] }, {"name":"setTaskScheduler","parameterTypes":["com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.utils.DataImporter",
@@ -1019,6 +1179,9 @@
   "name":"com.coooolfan.xiaomialbumsyncer.utils.ExifRewriteConfig"
 },
 {
+  "name":"com.coooolfan.xiaomialbumsyncer.utils.ExtendFunctionsKt"
+},
+{
   "name":"com.coooolfan.xiaomialbumsyncer.utils.FSTimeHelperKt"
 },
 {
@@ -1026,6 +1189,14 @@
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.utils.PercentOfKt"
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.utils.SingleStagePatch",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.utils.TaskActuators",
@@ -1195,7 +1366,7 @@
 },
 {
   "name":"java.lang.Object",
-  "methods":[{"name":"addExclude","parameterTypes":["java.lang.String[]"] }, {"name":"addInclude","parameterTypes":["java.lang.String[]"] }, {"name":"deserialize","parameterTypes":["java.lang.Object","java.lang.reflect.Type"] }, {"name":"serialize","parameterTypes":["java.lang.Object"] }, {"name":"setAuth","parameterTypes":["cn.dev33.satoken.filter.SaFilterAuthStrategy"] }, {"name":"setBeforeAuth","parameterTypes":["cn.dev33.satoken.filter.SaFilterAuthStrategy"] }, {"name":"setError","parameterTypes":["cn.dev33.satoken.filter.SaFilterErrorStrategy"] }, {"name":"setExcludeList","parameterTypes":["java.util.List"] }, {"name":"setIncludeList","parameterTypes":["java.util.List"] }]
+  "methods":[{"name":"addExclude","parameterTypes":["java.lang.String[]"] }, {"name":"addInclude","parameterTypes":["java.lang.String[]"] }, {"name":"deserialize","parameterTypes":["java.lang.Object","java.lang.reflect.Type"] }, {"name":"getDefaultValue","parameterTypes":[] }, {"name":"serialize","parameterTypes":["java.lang.Object"] }, {"name":"setAuth","parameterTypes":["cn.dev33.satoken.filter.SaFilterAuthStrategy"] }, {"name":"setBeforeAuth","parameterTypes":["cn.dev33.satoken.filter.SaFilterAuthStrategy"] }, {"name":"setError","parameterTypes":["cn.dev33.satoken.filter.SaFilterErrorStrategy"] }, {"name":"setExcludeList","parameterTypes":["java.util.List"] }, {"name":"setIncludeList","parameterTypes":["java.util.List"] }]
 },
 {
   "name":"java.lang.RuntimePermission"
@@ -1551,6 +1722,90 @@
   "allPublicFields":true
 },
 {
+  "name":"kotlinx.coroutines.AwaitAll",
+  "fields":[{"name":"notCompletedCount$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.AwaitAll$AwaitAllNode",
+  "fields":[{"name":"_disposer$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.CancellableContinuationImpl",
+  "fields":[{"name":"_decisionAndIndex$volatile"}, {"name":"_parentHandle$volatile"}, {"name":"_state$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.CancelledContinuation",
+  "fields":[{"name":"_resumed$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.CompletedExceptionally",
+  "fields":[{"name":"_handled$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.EventLoopImplBase",
+  "fields":[{"name":"_delayed$volatile"}, {"name":"_isCompleted$volatile"}, {"name":"_queue$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.JobSupport",
+  "fields":[{"name":"_parentHandle$volatile"}, {"name":"_state$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.JobSupport$Finishing",
+  "fields":[{"name":"_exceptionsHolder$volatile"}, {"name":"_isCompleting$volatile"}, {"name":"_rootCause$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.channels.BufferedChannel",
+  "fields":[{"name":"_closeCause$volatile"}, {"name":"bufferEnd$volatile"}, {"name":"bufferEndSegment$volatile"}, {"name":"closeHandler$volatile"}, {"name":"completedExpandBuffersAndPauseFlag$volatile"}, {"name":"receiveSegment$volatile"}, {"name":"receivers$volatile"}, {"name":"sendSegment$volatile"}, {"name":"sendersAndCloseStatus$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.AtomicOp",
+  "fields":[{"name":"_consensus$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.ConcurrentLinkedListNode",
+  "fields":[{"name":"_next$volatile"}, {"name":"_prev$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.DispatchedContinuation",
+  "fields":[{"name":"_reusableCancellableContinuation$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.LimitedDispatcher",
+  "fields":[{"name":"runningWorkers$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.LockFreeLinkedListNode",
+  "fields":[{"name":"_next$volatile"}, {"name":"_prev$volatile"}, {"name":"_removedRef$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.LockFreeTaskQueue",
+  "fields":[{"name":"_cur$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.LockFreeTaskQueueCore",
+  "fields":[{"name":"_next$volatile"}, {"name":"_state$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.Segment",
+  "fields":[{"name":"cleanedAndPointers$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.scheduling.CoroutineScheduler",
+  "fields":[{"name":"_isTerminated$volatile"}, {"name":"controlState$volatile"}, {"name":"parkedWorkersStack$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.scheduling.CoroutineScheduler$Worker",
+  "fields":[{"name":"workerCtl$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.scheduling.WorkQueue",
+  "fields":[{"name":"blockingTasksInBuffer$volatile"}, {"name":"consumerIndex$volatile"}, {"name":"lastScheduledTask$volatile"}, {"name":"producerIndex$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.sync.SemaphoreImpl",
+  "fields":[{"name":"_availablePermits$volatile"}, {"name":"deqIdx$volatile"}, {"name":"enqIdx$volatile"}, {"name":"head$volatile"}, {"name":"tail$volatile"}]
+},
+{
   "name":"okhttp3.internal.connection.RealConnectionPool",
   "fields":[{"name":"addressStates"}]
 },
@@ -1661,6 +1916,11 @@
 },
 {
   "name":"org.babyfish.jimmer.sql.TargetTransferMode"
+},
+{
+  "name":"org.babyfish.jimmer.sql.Transient",
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"ref","parameterTypes":[] }, {"name":"value","parameterTypes":[] }]
 },
 {
   "name":"org.babyfish.jimmer.sql.association.Association",

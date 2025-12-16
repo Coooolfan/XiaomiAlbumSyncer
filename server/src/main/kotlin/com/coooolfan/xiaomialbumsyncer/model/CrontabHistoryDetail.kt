@@ -8,6 +8,7 @@ import org.babyfish.jimmer.sql.Id
 import org.babyfish.jimmer.sql.ManyToOne
 import org.babyfish.jimmer.sql.OnDissociate
 import java.time.Instant
+import kotlin.io.path.Path
 
 @Entity
 interface CrontabHistoryDetail {
@@ -19,6 +20,7 @@ interface CrontabHistoryDetail {
     @ManyToOne
     val crontabHistory: CrontabHistory
 
+    // TODO)) 这个字段可以删掉了
     val downloadTime: Instant
 
     @OnDissociate(DissociateAction.DELETE)
@@ -26,4 +28,56 @@ interface CrontabHistoryDetail {
     val asset: Asset
 
     val filePath: String
+
+    // 下载
+    val downloadCompleted: Boolean
+
+    // 校验
+    val sha1Verified: Boolean
+
+    // EXIF 填充
+    val exifFilled: Boolean
+
+    // 修改时间更新
+    val fsTimeUpdated: Boolean
+
+    companion object {
+        fun init(
+            history: CrontabHistory,
+            asset: Asset,
+            precheckCompleted: Boolean = false,
+            downloadCompleted: Boolean = false,
+            sha1Verified: Boolean = false,
+            exifFilled: Boolean = false,
+            fsTimeUpdated: Boolean = false,
+        ): CrontabHistoryDetail {
+            return CrontabHistoryDetail {
+                this.crontabHistory = history
+                this.downloadTime = Instant.now()
+                this.asset = asset
+                this.filePath = Path(history.crontab.config.targetPath, asset.album.name, asset.fileName).toString()
+                this.downloadCompleted = downloadCompleted
+                this.sha1Verified = sha1Verified
+                this.exifFilled = exifFilled
+                this.fsTimeUpdated = fsTimeUpdated
+            }
+        }
+
+        fun init(
+            history: CrontabHistory,
+            asset: Asset,
+            crontabConfig: CrontabConfig
+        ): CrontabHistoryDetail {
+            return CrontabHistoryDetail {
+                this.crontabHistory = history
+                this.downloadTime = Instant.now()
+                this.asset = asset
+                this.filePath = Path(history.crontab.config.targetPath, asset.album.name, asset.fileName).toString()
+                this.downloadCompleted = false
+                this.sha1Verified = !crontabConfig.checkSha1
+                this.exifFilled = !crontabConfig.rewriteExifTime
+                this.fsTimeUpdated = !crontabConfig.rewriteFileSystemTime
+            }
+        }
+    }
 }
