@@ -159,14 +159,14 @@ class CrontabService(private val sql: KSqlClient) {
 
         return sql.executeQuery(CrontabHistoryDetail::class) {
             where(table.id valueIn saveIds)
-            select(table.fetch(newFetcher(CrontabHistoryDetail::class).by {
+            select(table.fetchBy {
                 allScalarFields()
                 crontabHistory {
                     allScalarFields()
                     crontab { allScalarFields() }
                 }
                 asset { allScalarFields() }
-            }))
+            })
         }
     }
 
@@ -238,10 +238,10 @@ class CrontabService(private val sql: KSqlClient) {
     private fun fetchAssetPathMapBy(crontabId: Long): Map<Asset, Path> {
         val crontabHistoryDetails = sql.createQuery(CrontabHistoryDetail::class) {
             where(table.crontabHistoryId eq crontabId)
-            select(table.fetch(newFetcher(CrontabHistoryDetail::class).by {
+            select(table.fetchBy {
                 asset { allTableFields() }
                 filePath()
-            }))
+            })
         }.distinct().execute()
 
         val assetPathMap = mutableMapOf<Asset, Path>()

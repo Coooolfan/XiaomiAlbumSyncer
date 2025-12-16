@@ -126,6 +126,10 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
                     subQuery(CrontabHistoryDetail::class) {
                         where(table.crontabHistory.crontabId eq crontab.id)
                         where(table.assetId eq parentTable.id)
+                        where(table.downloadCompleted eq true)
+                        where(table.sha1Verified eq true)
+                        where(table.exifFilled eq true)
+                        where(table.fsTimeUpdated eq true)
                         select(table)
                     })
             )
