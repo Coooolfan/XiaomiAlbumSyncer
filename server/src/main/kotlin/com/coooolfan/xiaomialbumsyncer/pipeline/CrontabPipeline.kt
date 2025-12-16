@@ -35,7 +35,6 @@ class CrontabPipeline(
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun execute(
         crontab: Crontab,
-        concurrency: PipelineConcurrency = PipelineConcurrency(),
     ) {
         // 对资产的刷新操作作为独立步骤执行，不混入后续的并发流，避免状态管理复杂化
         val crontabHistory = crontabService.createCrontabHistory(crontab)
@@ -65,7 +64,7 @@ class CrontabPipeline(
             .transform { history ->
                 var currentRows: Int
                 var pageIndex = 0
-                val pageSize = 2
+                val pageSize = crontab.config.fetchFromDbSize
 
                 do {
                     // 1. 查询需要下载的资产(已经从远程同步好了本地数据库中的资产)
@@ -88,25 +87,25 @@ class CrontabPipeline(
                 } while (currentRows > 0)
             }.onEach {
                 total++
-            }.flatMapMerge(concurrency.downloaders) { context ->
+            }.flatMapMerge(crontab.config.downloaders) { context ->
                 flow {
                     emit(downloadStage.process(context))
                 }.catch {
                     log.error("资源 {} 的下载失败, 将跳过后续处理", context.asset.id, it)
                 }
-            }.flatMapMerge(concurrency.verifiers) { context ->
+            }.flatMapMerge(crontab.config.verifiers) { context ->
                 flow {
                     emit(verificationStage.process(context))
                 }.catch {
                     log.error("资源 {} 的校验失败, 将跳过后续处理", context.asset.id, it)
                 }
-            }.flatMapMerge(concurrency.exifProcessors) { context ->
+            }.flatMapMerge(crontab.config.exifProcessors) { context ->
                 flow {
                     emit(exifProcessingStage.process(context, systemConfig))
                 }.catch {
                     log.error("资源 {} 的 EXIF 处理失败, 将跳过后续处理", context.asset.id, it)
                 }
-            }.flatMapMerge(concurrency.fileTimeWorkers) { context ->
+            }.flatMapMerge(crontab.config.fileTimeWorkers) { context ->
                 flow {
                     emit(fileTimeStage.process(context))
                 }.catch {
@@ -122,10 +121,3 @@ class CrontabPipeline(
         log.info("Crontab {} 的流水线执行完毕, 成功 {}/{}", crontab.id, success, total)
     }
 }
-
-data class PipelineConcurrency(
-    val downloaders: Int = 10,
-    val verifiers: Int = 5,
-    val exifProcessors: Int = 5,
-    val fileTimeWorkers: Int = 5,
-)
