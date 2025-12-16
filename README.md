@@ -1,4 +1,4 @@
-# Xiaomi Album Syncer
+# <img src="./static/xiaomi-album-syncer-logo.png" alt="logo" width="20rem"> Xiaomi Album Syncer
 
 发了 **issues** 记得常回来看看有没有回复，或者 >>>>> **[QQ 群聊：1059332701](https://qm.qq.com/q/H2trW6JWM4)**
 
