@@ -17,7 +17,7 @@ repositories {
 }
 
 group = "com.coooolfan"
-version = "0.7.1-BETA"
+version = getGitVersion()
 description = "A tool to download albums from Xiaomi Cloud."
 
 val jimmerVersion = "0.9.112"
@@ -92,4 +92,39 @@ tasks.withType<BuildNativeImageTask> {
 //    val options = this.options.get()
 //    options.buildArgs.add("--pgo-instrument")
 //    options.buildArgs.add("--pgo=${project.projectDir}/default.iprof")
+}
+
+val generateVersionProperties by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated/resources")
+    outputs.dir(outputDir)
+    doLast {
+        val propsFile = outputDir.get().asFile.resolve("version.properties")
+        propsFile.parentFile.mkdirs()
+        propsFile.writeText("app.version=${project.version}\n")
+    }
+}
+
+sourceSets {
+    main {
+        resources.srcDir(layout.buildDirectory.dir("generated/resources"))
+    }
+}
+
+tasks.named("processResources") {
+    dependsOn(generateVersionProperties)
+}
+
+fun getGitVersion(): String = try {
+    val out = providers.exec {
+        commandLine("git", "describe", "--tags", "--abbrev=0")
+        isIgnoreExitValue = true
+    }
+
+    if (out.result.get().exitValue == 0) {
+        out.standardOutput.asText.get().trim().ifEmpty { "dev" }
+    } else {
+        "dev"
+    }
+} catch (_: Exception) {
+    "dev"
 }

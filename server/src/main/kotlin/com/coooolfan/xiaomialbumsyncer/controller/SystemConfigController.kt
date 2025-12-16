@@ -194,5 +194,17 @@ data class SystemInfoResponse(
     val aotRuntime: Boolean,
     val nativeImage: Boolean,
     val jvmVersion: String?,
-    val appVersion: String = "0.7.1-BETA"
+    val appVersion: String = loadAppVersion()
 )
+
+private fun loadAppVersion(): String {
+    return try {
+        val props = java.util.Properties()
+        SystemInfoResponse::class.java.classLoader
+            .getResourceAsStream("version.properties")
+            ?.use { props.load(it) }
+        props.getProperty("app.version", "dev")
+    } catch (_: Exception) {
+        "dev"
+    }
+}
