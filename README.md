@@ -19,7 +19,7 @@
 - [x] 📅 填充照片和视频的文件系统时间
 
 > [!CAUTION] 
-> 此项目已于 `0.3.0` 完成重构。新版目前仅提供 Web UI，部署方式仅提供 Docker。旧版 CLI 工具仍然可用，可前往 [0.2.1 releases](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases/tag/0.2.1) 下载。
+> 此项目已于 `0.3.0` 完成重构。新版目前仅提供 Web UI，部署方式提供 Docker、JVM、原生二进制版本。旧版 CLI 工具仍然可用，可前往 [0.2.1 releases](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases/tag/0.2.1) 下载。
 >
 > 如需从旧版迁移数据，请参考 [从 v2 迁移](#从v2迁移) 一节。
 
@@ -29,7 +29,7 @@
 
 **不建议使用各种自动升级工具。**
 
-> 原生版本和 jvm 版本的逻辑实现都相同，数据库可以通用
+> 原生版本和 jvm 版本的逻辑实现相同，数据库可以通用
 
 ### 二进制部署 (Binary)
 
@@ -56,6 +56,14 @@
     *   **Windows**: 双击运行解压后的 `xiaomi-album-syncer-windows-x64-v0.3.0.exe`。
 
 4.  **访问**: 打开浏览器访问 `http://localhost:8080`。
+
+    > [!INFO]
+    > 如果在 Windows 下运行，且用户名为中文，可能会遇到类似于 `java.lang.UnsatisfiedLinkError: Can't load library` 或者 `Failed to load native library: ... sqlite-3.50.3.0-...-sqlitejdbc.dll`
+    >
+    > 这是由于系统的临时路径存在非 ASCII 字符导致的。可以使用 `-Dorg.sqlite.tmpdir=C:\sqlite_tmp` 参数手动指定临时路径。
+    >
+    > 例如可以打开控制后使用命令 `.\xiaomi-album-syncer-windows-x64-v0.3.0.exe -Dorg.sqlite.tmpdir=C:\sqlite_tmp` 执行
+
 
 ### Docker
 
@@ -93,9 +101,11 @@
     ```bash
     mkdir -p ~/xiaomi-album-syncer
     cd ~/xiaomi-album-syncer
-    curl -O https://raw.githubusercontent.com/Coooolfan/XiaomiAlbumSyncer/main/docker-compose.yml
+    curl -O https://raw.githubusercontent.com/Coooolfan/XiaomiAlbumSyncer/main/docker/docker-compose.yml
     ```
 2. 按需编辑`docker-compose.yml`文件
+   - JVM 版本(默认)：版本号或者 latest。eg. `0.8.0` `latest`
+   - Native 版本：在版本号或者 latest 后添加 **-native** 后缀。eg. `0.8.0-native` `latest-native`
 
 3. 启动服务
     ```bash
