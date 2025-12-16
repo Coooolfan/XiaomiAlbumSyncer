@@ -2,8 +2,11 @@ package com.coooolfan.xiaomialbumsyncer.utils
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import okhttp3.ResponseBody
+import java.net.SocketTimeoutException
 import java.nio.file.Path
+import java.util.concurrent.TimeUnit
 
 const val UA =
     """Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"""
@@ -19,12 +22,25 @@ fun withCookie(vararg pairs: Pair<String, String?>): String {
 
 private val httpClient: OkHttpClient by lazy {
     OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .followRedirects(false)           // 禁用HTTP重定向
         .followSslRedirects(false)        // 禁用HTTPS重定向
         .build()
 }
 
 fun client(): OkHttpClient = httpClient
+
+// 超时时自动重试一次
+fun OkHttpClient.executeWithRetry(request: Request): Response {
+    return try {
+        newCall(request).execute()
+    } catch (_: SocketTimeoutException) {
+        // 超时后无条件重试一次
+        newCall(request).execute()
+    }
+}
 
 fun throwIfNotSuccess(respCode: Int) {
     val i = respCode / 100

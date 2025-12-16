@@ -34,7 +34,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 .get()
                 .build()
 
-            val responseTree = client().newCall(req).execute().use { res ->
+            val responseTree = client().executeWithRetry(req).use { res ->
                 throwIfNotSuccess(res.code)
                 jacksonObjectMapper().readTree(res.body.string())
             }
@@ -89,7 +89,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 .get()
                 .build()
 
-            val responseTree = client().newCall(req).execute().use { res ->
+            val responseTree = client().executeWithRetry(req).use { res ->
                 throwIfNotSuccess(res.code)
                 jacksonObjectMapper().readTree(res.body.string())
             }
@@ -143,7 +143,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             .get()
             .build()
 
-        val responseTree = client().newCall(req).execute().use { res ->
+        val responseTree = client().executeWithRetry(req).use { res ->
             throwIfNotSuccess(res.code)
             jacksonObjectMapper().readTree(res.body.string())
         }
@@ -164,7 +164,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             .authHeader(tokenManager.getAuthPair())
             .get()
             .build()
-        val fetchOssUrlJson = client().newCall(fetchOssUrlReq).execute().use { resp ->
+        val fetchOssUrlJson = client().executeWithRetry(fetchOssUrlReq).use { resp ->
             throwIfNotSuccess(resp.code)
             jacksonObjectMapper().readTree(resp.body.string())
         }
@@ -179,7 +179,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
 
         // 2. 请求签名直链
         val fetchSignedUrlReq = Request.Builder().url(ossUrl).ua().get().build()
-        val fetchSignedUrlJson = client().newCall(fetchSignedUrlReq).execute().use { resp ->
+        val fetchSignedUrlJson = client().executeWithRetry(fetchSignedUrlReq).use { resp ->
             throwIfNotSuccess(resp.code)
             jacksonObjectMapper().readTree(resp.body.string().substringAfter('(').substringBefore(')'))
         }
@@ -191,7 +191,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             .add("meta", downloadMeta)
             .build()
         val downloadReq = Request.Builder().url(downloadUrl).ua().post(formBody).build()
-        client().newCall(downloadReq).execute().use { downloadResp ->
+        client().executeWithRetry(downloadReq).use { downloadResp ->
             throwIfNotSuccess(downloadResp.code)
             // 4. 保存文件
             downloadResp.body.saveToFile(targetPath)
