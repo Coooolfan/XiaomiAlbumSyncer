@@ -81,6 +81,8 @@
   }, {
     "pattern":"\\Qdb/migration/V0.4.1__timeline_map.sql\\E"
   }, {
+    "pattern":"\\Qdb/migration/V0.8.0__concurrency.sql\\E"
+  }, {
     "pattern":"\\Qdb/migration\\E"
   }, {
     "pattern":"\\Qkotlin/annotation/annotation.kotlin_builtins\\E"
@@ -162,6 +164,8 @@
     "pattern":"\\Qstatic/assets/textarea-DZW7zGZa.js\\E"
   }, {
     "pattern":"\\Qstatic/index.html\\E"
+  }, {
+    "pattern":"\\Qversion.properties\\E"
   }, {
     "pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt72b/nfc.nrm\\E"
   }, {
