@@ -4,10 +4,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     java
     application
-    kotlin("jvm") version "2.2.10"
-    id("com.google.devtools.ksp") version "2.2.10-2.0.2"
+    kotlin("jvm") version "2.3.0"
+    id("com.google.devtools.ksp") version "2.3.4"
     id("org.graalvm.buildtools.native")
-    id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.noear.solon.native")
 }
 
@@ -20,7 +19,7 @@ group = "com.coooolfan"
 version = getGitVersion()
 description = "A tool to download albums from Xiaomi Cloud."
 
-val jimmerVersion = "0.9.112"
+val jimmerVersion = "0.9.117"
 
 dependencies {
     implementation(platform("org.noear:solon-parent:3.6.4"))
@@ -69,6 +68,7 @@ kotlin {
     sourceSets.main {
         kotlin.srcDir("build/generated/ksp/main/kotlin")
     }
+    jvmToolchain(25)
 }
 
 application {
