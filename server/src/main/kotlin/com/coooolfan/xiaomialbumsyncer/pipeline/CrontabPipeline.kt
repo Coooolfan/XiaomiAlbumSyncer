@@ -73,7 +73,7 @@ class CrontabPipeline(
                     val details = mutableListOf<CrontabHistoryDetail>()
 
                     assets.forEach { asset ->
-                        val detail = CrontabHistoryDetail.init(history, asset)
+                        val detail = CrontabHistoryDetail.init(history, asset, history.crontab.config)
                         details.add(detail)
                     }
 
