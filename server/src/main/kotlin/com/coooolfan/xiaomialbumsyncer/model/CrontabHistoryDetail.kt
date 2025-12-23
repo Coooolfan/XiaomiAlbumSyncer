@@ -45,27 +45,6 @@ interface CrontabHistoryDetail {
         fun init(
             history: CrontabHistory,
             asset: Asset,
-            precheckCompleted: Boolean = false,
-            downloadCompleted: Boolean = false,
-            sha1Verified: Boolean = false,
-            exifFilled: Boolean = false,
-            fsTimeUpdated: Boolean = false,
-        ): CrontabHistoryDetail {
-            return CrontabHistoryDetail {
-                this.crontabHistory = history
-                this.downloadTime = Instant.now()
-                this.asset = asset
-                this.filePath = Path(history.crontab.config.targetPath, asset.album.name, asset.fileName).toString()
-                this.downloadCompleted = downloadCompleted
-                this.sha1Verified = sha1Verified
-                this.exifFilled = exifFilled
-                this.fsTimeUpdated = fsTimeUpdated
-            }
-        }
-
-        fun init(
-            history: CrontabHistory,
-            asset: Asset,
             crontabConfig: CrontabConfig
         ): CrontabHistoryDetail {
             return CrontabHistoryDetail {
