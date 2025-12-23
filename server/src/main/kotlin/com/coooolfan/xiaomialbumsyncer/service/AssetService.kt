@@ -135,6 +135,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             )
             if (!crontab.config.downloadImages) where(table.type ne AssetType.IMAGE)
             if (!crontab.config.downloadVideos) where(table.type ne AssetType.VIDEO)
+            if (!crontab.config.downloadAudios) where(table.type ne AssetType.AUDIO)
             select(table.fetchBy {
                 allScalarFields()
                 album { name() }

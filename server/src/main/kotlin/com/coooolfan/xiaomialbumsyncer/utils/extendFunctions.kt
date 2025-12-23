@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.utils
 
+import com.coooolfan.xiaomialbumsyncer.model.Album
 import java.text.DecimalFormat
 import java.time.ZoneId
 import java.util.TimeZone
@@ -12,4 +13,8 @@ fun Int.percentOf(total: Int): String {
 
 fun String.toTimeZone(): TimeZone {
     return TimeZone.getTimeZone(ZoneId.of(this))
+}
+
+fun Album.isAudioAlbum(): Boolean {
+    return this.id == -1L
 }
