@@ -89,9 +89,16 @@ tasks.withType<Test> {
 }
 
 tasks.withType<BuildNativeImageTask> {
-//    val options = this.options.get()
-//    options.buildArgs.add("--pgo-instrument")
-//    options.buildArgs.add("--pgo=${project.projectDir}/default.iprof")
+    val buildArgs = this.options.get().buildArgs
+    val arch = System.getProperty("os.arch").lowercase()
+
+    // avx 指令集兼容
+    if (arch == "amd64" || arch == "x86_64") {
+        buildArgs.add("-march=compatibility")
+    }
+
+    // buildArgs.add("--pgo-instrument")
+    // buildArgs.add("--pgo=${project.projectDir}/default.iprof")
 }
 
 val generateVersionProperties by tasks.registering {
