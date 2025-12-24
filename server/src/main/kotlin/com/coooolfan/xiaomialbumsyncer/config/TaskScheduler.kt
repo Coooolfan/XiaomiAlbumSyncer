@@ -7,6 +7,7 @@ import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.enabled
 import com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline
 import com.coooolfan.xiaomialbumsyncer.utils.SingleStagePatch
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.text.ParseException
 import java.util.*
+import java.util.concurrent.Executor
 
 @Managed
 class TaskScheduler(
@@ -25,7 +27,7 @@ class TaskScheduler(
     private val sql: KSqlClient,
     private val singleStagePatch: SingleStagePatch,
     private val pipeline: CrontabPipeline,
-    private val thread: ThreadExecutor
+    private val thread: Executor
 ) {
 
     private val log = LoggerFactory.getLogger(this.javaClass)
@@ -81,7 +83,7 @@ class TaskScheduler(
      */
     fun executeCrontab(crontab: Crontab, async: Boolean = true) {
         if (async) {
-            thread.taskExecutor().execute { executeWithGuard(crontab) }
+            thread.execute { executeWithGuard(crontab) }
         } else {
             executeWithGuard(crontab)
         }
@@ -93,7 +95,7 @@ class TaskScheduler(
             return
         }
         try {
-            runBlocking {
+            runBlocking(Dispatchers.IO) {
                 pipeline.execute(crontab)
             }
         } finally {
@@ -106,7 +108,7 @@ class TaskScheduler(
         systemConfig: SystemConfig, timeZone: TimeZone
     ) {
         if (async) {
-            thread.taskExecutor().execute { singleStagePatch.fillExifTime(assetPathMap, systemConfig, timeZone) }
+            thread.execute { singleStagePatch.fillExifTime(assetPathMap, systemConfig, timeZone) }
         } else {
             singleStagePatch.fillExifTime(assetPathMap, systemConfig, timeZone)
         }
@@ -116,7 +118,7 @@ class TaskScheduler(
         async: Boolean = true, assetPathMap: Map<Asset, Path>
     ) {
         if (async) {
-            thread.taskExecutor().execute { singleStagePatch.rewriteFileSystemTime(assetPathMap) }
+            thread.execute { singleStagePatch.rewriteFileSystemTime(assetPathMap) }
         } else {
             singleStagePatch.rewriteFileSystemTime(assetPathMap)
         }
