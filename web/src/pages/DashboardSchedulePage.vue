@@ -85,10 +85,10 @@ const cronForm = ref<CrontabCreateInput>({
     rewriteFileSystemTime: false,
     checkSha1: false,
     fetchFromDbSize: 2,
-    downloaders: 10,
-    verifiers: 5,
-    exifProcessors: 5,
-    fileTimeWorkers: 5,
+    downloaders: 8,
+    verifiers: 2,
+    exifProcessors: 2,
+    fileTimeWorkers: 2,
   },
   albumIds: [],
 })
@@ -140,7 +140,7 @@ async function fetchTimeline() {
       .map((a) => Number(a.id))
       .filter((id) => Number.isFinite(id)) as number[]
 
-    const resp = await api.albumsController.fetchDateMap({
+    const resp = await api.albumsController.fetchDateMap( {
       albumIds: albumIds.length > 0 ? albumIds : undefined,
       start: startStr,
       end: endDateStr.value,
@@ -278,10 +278,10 @@ function openCreateCron() {
       rewriteFileSystemTime: false,
       checkSha1: false,
       fetchFromDbSize: 2,
-      downloaders: 10,
-      verifiers: 5,
-      exifProcessors: 5,
-      fileTimeWorkers: 5,
+      downloaders: 8,
+      verifiers: 2,
+      exifProcessors: 2,
+      fileTimeWorkers: 2,
     },
     albumIds: [],
   }
@@ -309,10 +309,10 @@ function openEditCron(item: Crontab) {
       rewriteFileSystemTime: item.config.rewriteFileSystemTime ?? false,
       checkSha1: item.config.checkSha1 ?? false,
       fetchFromDbSize: item.config.fetchFromDbSize ?? 2,
-      downloaders: item.config.downloaders ?? 10,
-      verifiers: item.config.verifiers ?? 5,
-      exifProcessors: item.config.exifProcessors ?? 5,
-      fileTimeWorkers: item.config.fileTimeWorkers ?? 5,
+      downloaders: item.config.downloaders ?? 8,
+      verifiers: item.config.verifiers ?? 2,
+      exifProcessors: item.config.exifProcessors ?? 2,
+      fileTimeWorkers: item.config.fileTimeWorkers ?? 2,
     },
     albumIds: [...item.albumIds],
   }
