@@ -31,13 +31,13 @@ data class CrontabConfig(
 
     val fetchFromDbSize: Int = 2,
 
-    val downloaders: Int = 10,
+    val downloaders: Int = 8,
 
-    val verifiers: Int = 5,
+    val verifiers: Int = 2,
 
-    val exifProcessors: Int = 5,
+    val exifProcessors: Int = 2,
 
-    val fileTimeWorkers: Int = 5,
+    val fileTimeWorkers: Int = 2,
 
     val downloadAudios: Boolean = true,
     )
