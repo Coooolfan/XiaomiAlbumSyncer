@@ -339,7 +339,7 @@ function validateCronForm(): boolean {
   }
   if (!cronForm.value.config.timeZone || cronForm.value.config.timeZone.trim() === '') errors.timeZone = '必选'
   if (!cronForm.value.config.targetPath || cronForm.value.config.targetPath.trim() === '') errors.targetPath = '必填'
-  if (cronForm.value.config.fetchFromDbSize > cronForm.value.config.downloaders) errors.concurrency = '必须小于资产下载'
+  // if (cronForm.value.config.fetchFromDbSize > cronForm.value.config.downloaders) errors.concurrency = '必须小于资产下载'
   formErrors.value = errors
   return Object.keys(errors).length === 0
 }
