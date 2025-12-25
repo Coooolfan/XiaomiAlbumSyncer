@@ -78,6 +78,7 @@ const cronForm = ref<CrontabCreateInput>({
     targetPath: '',
     downloadImages: true,
     downloadVideos: false,
+    downloadAudios: true,
     diffByTimeline: false,
     rewriteExifTime: false,
     rewriteExifTimeZone: defaultTz,
@@ -271,6 +272,7 @@ function openCreateCron() {
       targetPath: './download',
       downloadImages: true,
       downloadVideos: false,
+      downloadAudios: true,
       diffByTimeline: false,
       rewriteExifTime: false,
       rewriteExifTimeZone: defaultTz,
@@ -302,6 +304,7 @@ function openEditCron(item: Crontab) {
       targetPath: item.config.targetPath,
       downloadImages: item.config.downloadImages,
       downloadVideos: item.config.downloadVideos,
+      downloadAudios: item.config.downloadAudios,
       diffByTimeline: item.config.diffByTimeline,
       rewriteExifTime: item.config.rewriteExifTime,
       rewriteExifTimeZone: item.config.rewriteExifTimeZone ?? item.config.timeZone,
@@ -622,7 +625,7 @@ const albumsRefreshModel = ref([
           <label class="block text-xs font-medium text-slate-500">保存路径</label>
           <InputText v-model="cronForm.config.targetPath" placeholder="./download" class="w-full" />
           <div v-if="formErrors.targetPath" class="text-xs text-red-500">{{ formErrors.targetPath }}</div>
-          <div class="text-[10px] text-slate-400">如在容器环境下运行，请确保已将此路径映射到宿主机。将在此路径下创建相册各自的文件夹。</div>
+          <div class="text-[10px] text-slate-400">如在容器环境下运行，请确保已将此路径映射到宿主机。程序将在此路径下创建相册各自的文件夹。</div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
@@ -633,6 +636,10 @@ const albumsRefreshModel = ref([
           <div class="flex items-center gap-2 text-xs text-slate-600">
             <InputSwitch v-model="cronForm.config.downloadVideos" />
             <span>下载视频</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-slate-600">
+            <InputSwitch v-model="cronForm.config.downloadAudios" />
+            <span>下载录音</span>
           </div>
         </div>
 
@@ -711,7 +718,7 @@ const albumsRefreshModel = ref([
                      <span class="pi pi-minus" />
                    </template>
                  </InputNumber>
-                 <div class="text-[10px] text-slate-400">每次从数据库拉取的并发数，必须小于<span class="font-bold">资产下载</span>并发数</div>
+                 <div class="text-[10px] text-slate-400">每次从数据库拉取的资产数量</div>
                  <div v-if="formErrors.concurrency" class="text-xs text-red-500">{{ formErrors.concurrency }}</div>
                </div>
 

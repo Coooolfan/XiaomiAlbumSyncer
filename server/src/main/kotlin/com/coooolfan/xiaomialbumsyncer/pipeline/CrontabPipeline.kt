@@ -1,6 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.pipeline
 
 import com.coooolfan.xiaomialbumsyncer.controller.SystemConfigController.Companion.NORMAL_SYSTEM_CONFIG
+import com.coooolfan.xiaomialbumsyncer.model.AlbumTimeline
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage
@@ -14,6 +15,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
+import kotlin.collections.toSet
 
 /**
  * 计划任务流水线管理器
@@ -44,13 +46,13 @@ class CrontabPipeline(
 
         // 仅在上次有记录且相册列表未变更的情况下，才使用时间线对比模式
         // 理论上相册列表变动不影响逻辑正确，但是会导致实际发起的查询大于请求完整刷新模式，所以还是要求相册列表一致
-        if (crontab.config.diffByTimeline && albumTimelinesHistory.isNotEmpty() && albumTimelinesHistory.keys == crontab.albumIds.toSet()) {
+        val timelineDiffUsable = checkTimelineDiffUsable(crontab, albumTimelinesHistory)
+        if (timelineDiffUsable != null) {
+            if (crontab.config.diffByTimeline) log.warn("时间线对比模式不可用，原因：$timelineDiffUsable，将使用完整刷新模式")
+            assetService.refreshAssetsFull(crontab, crontabHistory)
+        } else {
             log.info("时间线对比模式可用，仅对有变更的日期进行刷新")
             assetService.refreshAssetsByDiffTimeline(crontab, crontabHistory, albumTimelinesHistory)
-        } else {
-            if (crontab.config.diffByTimeline)
-                log.warn("时间线对比模式不可用，原因：${if (albumTimelinesHistory.isEmpty()) "该任务的最新执行记录无可用于对比的时间线数据" else "相册列表有变更"}，将使用完整刷新模式")
-            assetService.refreshAssetsFull(crontab, crontabHistory)
         }
 
         // 记录一下，以后如果支持恢复暂停的任务可以从这开始
@@ -60,64 +62,84 @@ class CrontabPipeline(
 
         var total = 0
         var success = 0
-        listOf(crontabHistory).asFlow()
-            .transform { history ->
-                var currentRows: Int
-                var pageIndex = 0
-                val pageSize = crontab.config.fetchFromDbSize
+        channelFlow {
+            var currentRows: Int
+            var lastId = 0L
+            val pageSize = crontab.config.fetchFromDbSize
 
-                do {
-                    // 1. 查询需要下载的资产(已经从远程同步好了本地数据库中的资产)
-                    val assets = assetService.getAssetsUndownloadByCrontab(history.crontab, pageIndex, pageSize)
+            do {
+                // 1. 查询需要下载的资产(已经从远程同步好了本地数据库中的资产)
+                val assets = assetService.getAssetsUndownloadByCrontab(
+                    crontabHistory.crontab,
+                    pageSize,
+                    lastId
+                )
 
-                    val details = mutableListOf<CrontabHistoryDetail>()
+                val details = mutableListOf<CrontabHistoryDetail>()
 
-                    assets.forEach { asset ->
-                        val detail = CrontabHistoryDetail.init(history, asset, history.crontab.config)
-                        details.add(detail)
-                    }
-
-                    // 2. 保存 CrontabHistoryDetail，落库
-                    val details2Emit = crontabService.insertCrontabHistoryDetails(details)
-
-                    currentRows = assets.size
-                    pageIndex++
-
-                    emitAll(details2Emit.asFlow())
-                } while (currentRows > 0)
-            }.onEach {
-                total++
-            }.flatMapMerge(crontab.config.downloaders) { context ->
-                flow {
-                    emit(downloadStage.process(context))
-                }.catch {
-                    log.error("资源 {} 的下载失败, 将跳过后续处理", context.asset.id, it)
+                assets.forEach { asset ->
+                    val detail = CrontabHistoryDetail.init(crontabHistory, asset, crontabHistory.crontab.config)
+                    details.add(detail)
                 }
-            }.flatMapMerge(crontab.config.verifiers) { context ->
-                flow {
-                    emit(verificationStage.process(context))
-                }.catch {
-                    log.error("资源 {} 的校验失败, 将跳过后续处理", context.asset.id, it)
-                }
-            }.flatMapMerge(crontab.config.exifProcessors) { context ->
-                flow {
-                    emit(exifProcessingStage.process(context, systemConfig))
-                }.catch {
-                    log.error("资源 {} 的 EXIF 处理失败, 将跳过后续处理", context.asset.id, it)
-                }
-            }.flatMapMerge(crontab.config.fileTimeWorkers) { context ->
-                flow {
-                    emit(fileTimeStage.process(context))
-                }.catch {
-                    log.error("资源 {} 的文件时间阶段处理失败, 将跳过后续处理", context.asset.id, it)
-                }
-            }.onEach { context ->
-                success++
-                log.info("资源 {} 处理完成", context.asset.id)
-            }.collect()
+
+                // 2. 保存 CrontabHistoryDetail，落库
+                val details2Emit = crontabService.insertCrontabHistoryDetails(details)
+
+                currentRows = assets.size
+                if (currentRows != 0) lastId = assets.last().id
+
+                details2Emit.forEach { send(it) }
+            } while (currentRows > 0)
+        }.onEach {
+            total++
+        }.flatMapMerge(crontab.config.downloaders) { context ->
+            flow {
+                emit(downloadStage.process(context))
+            }.catch {
+                log.error("资源 {} 的下载失败, 将跳过后续处理", context.asset.id, it)
+            }
+        }.flatMapMerge(crontab.config.verifiers) { context ->
+            flow {
+                emit(verificationStage.process(context))
+            }.catch {
+                log.error("资源 {} 的校验失败, 将跳过后续处理", context.asset.id, it)
+            }
+        }.flatMapMerge(crontab.config.exifProcessors) { context ->
+            flow {
+                emit(exifProcessingStage.process(context, systemConfig))
+            }.catch {
+                log.error("资源 {} 的 EXIF 处理失败, 将跳过后续处理", context.asset.id, it)
+            }
+        }.flatMapMerge(crontab.config.fileTimeWorkers) { context ->
+            flow {
+                emit(fileTimeStage.process(context))
+            }.catch {
+                log.error("资源 {} 的文件时间阶段处理失败, 将跳过后续处理", context.asset.id, it)
+            }
+        }.onEach { context ->
+            success++
+            log.info("资源 {} 处理完成", context.asset.id)
+        }.collect()
 
         crontabService.finishCrontabHistory(crontabHistory)
 
         log.info("Crontab {} 的流水线执行完毕, 成功 {}/{}", crontab.id, success, total)
+    }
+
+
+    private fun checkTimelineDiffUsable(crontab: Crontab, albumTimelinesHistory: Map<Long, AlbumTimeline>): String? {
+        if (!crontab.config.diffByTimeline) {
+            return "时间线对比模式未打开"
+        }
+        if (albumTimelinesHistory.isEmpty()) {
+            return "该任务的最新执行记录无可用于对比的时间线数据"
+        }
+        if (albumTimelinesHistory.keys != crontab.albumIds.toSet()) {
+            return "相册列表有变更"
+        }
+        if (crontab.albumIds.contains(-1L)) {
+            return "\"录音\"不支持时间线对比"
+        }
+        return null
     }
 }

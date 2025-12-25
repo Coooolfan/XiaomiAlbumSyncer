@@ -11,7 +11,9 @@ import kotlinx.coroutines.sync.withPermit
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.babyfish.jimmer.sql.kt.ast.expression.asc
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
+import org.babyfish.jimmer.sql.kt.ast.expression.gt
 import org.babyfish.jimmer.sql.kt.ast.expression.ne
 import org.babyfish.jimmer.sql.kt.ast.expression.notExists
 import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
@@ -118,9 +120,14 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }
     }
 
-    fun getAssetsUndownloadByCrontab(crontab: Crontab, pageIndex: Int, pageSize: Int): List<Asset> {
+    fun getAssetsUndownloadByCrontab(
+        crontab: Crontab,
+        pageSize: Int,
+        lastId: Long
+    ): List<Asset> {
         return sql.createQuery(Asset::class) {
             where(table.albumId valueIn crontab.albumIds)
+            where(table.id gt lastId)
             where(
                 notExists(
                     subQuery(CrontabHistoryDetail::class) {
@@ -136,11 +143,12 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             if (!crontab.config.downloadImages) where(table.type ne AssetType.IMAGE)
             if (!crontab.config.downloadVideos) where(table.type ne AssetType.VIDEO)
             if (!crontab.config.downloadAudios) where(table.type ne AssetType.AUDIO)
+            orderBy(table.id.asc())
             select(table.fetchBy {
                 allScalarFields()
                 album { name() }
             })
-        }.fetchPage(pageIndex, pageSize).rows
+        }.limit(pageSize).execute()
     }
 
     private fun fetchAlbumsTimelineSnapshot(albumIds: List<Long>): Map<Long, AlbumTimeline> {
