@@ -6,9 +6,9 @@ import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
 @Configuration
-class ThreadExecutor {
+class ThreadExecutorManager {
     @Managed
     fun taskExecutor(): Executor {
-        return Executors.newFixedThreadPool(4)
+        return Executors.newFixedThreadPool(8)
     }
 }

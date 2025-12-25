@@ -5,11 +5,13 @@ import com.coooolfan.xiaomialbumsyncer.model.AlbumTimeline
 import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.AssetType
 import com.coooolfan.xiaomialbumsyncer.utils.*
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import okhttp3.FormBody
 import okhttp3.Request
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 import java.time.LocalDate
@@ -62,6 +64,13 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             pageNum++
         }
 
+        allAlbums.add(Album {
+            id = -1
+            name = "录音"
+            assetCount = 0
+            lastUpdateTime = Instant.now()
+        })
+
         return allAlbums.toList() // 返回不可变列表
     }
 
@@ -73,14 +82,18 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         var totalCount = 0L
         var pageNum = 0
         var hasMorePages = true
-        val pageSize = 200
+        val pageSize = if (album.isAudioAlbum()) 500 else 200
 
         val urlDayParams =
             if (day == null) "" else "&startDate=${day.format(BASIC_ISO_DATE)}&endDate=${day.format(BASIC_ISO_DATE)}"
 
         while (hasMorePages) {
             val url =
-                "https://i.mi.com/gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.id}"
+                if (album.isAudioAlbum())
+                    "https://i.mi.com/sfs/ns/recorder/dir/0/list?ts=${System.currentTimeMillis()}&limit=$pageSize&offset=${pageNum * pageSize}"
+                else
+                    "https://i.mi.com/gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.id}"
+
 
             val req = Request.Builder()
                 .url(url + urlDayParams)
@@ -93,31 +106,28 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 throwIfNotSuccess(res.code)
                 jacksonObjectMapper().readTree(res.body.string())
             }
-            val assetArrayJson = responseTree.at("/data/galleries")
+            val assetArrayJson =
+                if (album.isAudioAlbum())
+                    responseTree.at("/data/list")
+                else
+                    responseTree.at("/data/galleries")
 
             log.info("解析相册 ${album.name} ID=${album.id}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
 
             // 处理当前页数据
-            val pageAssets = assetArrayJson.map { assetJson ->
-                Asset {
-                    id = assetJson.get("id").asLong()
-                    fileName = assetJson.get("fileName").asText()
-                    type = AssetType.valueOf(assetJson.get("type").asText().uppercase())
-                    dateTaken = Instant.ofEpochMilli(assetJson.get("dateTaken").asLong())
-                    albumId = album.id
-                    sha1 = assetJson.get("sha1").asText()
-                    mimeType = assetJson.get("mimeType").asText()
-                    title = assetJson.get("title").asText()
-                    size = assetJson.get("size").asLong()
-                }
-            }
+            val pageAssets = assetArrayJson.map { parseJsonNode(it, album) }
 
             // 立即处理这一页，避免累积
             handler(pageAssets)
             totalCount += pageAssets.size
 
             // 检查是否还有更多页面
-            hasMorePages = !responseTree.at("/data/isLastPage").asBoolean()
+            hasMorePages =
+                if (album.isAudioAlbum()) // 录音好像没有这种标记
+                    assetArrayJson.size() != 0
+                else
+                    !responseTree.at("/data/isLastPage").asBoolean()
+
             pageNum++
         }
 
@@ -156,10 +166,16 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
     }
 
     fun downloadAsset(asset: Asset, targetPath: Path): Path {
+        val url =
+            if (asset.type == AssetType.AUDIO)
+                "https://i.mi.com/sfs/ns/recorder/file/${asset.id}/cb/dl_sfs_cb_${System.currentTimeMillis()}_0/storage?ts=${System.currentTimeMillis()}"
+            else
+                "https://i.mi.com/gallery/storage?ts=${System.currentTimeMillis()}&id=${asset.id}"
+
         // 这里的 resp 还是需要 close 一下，因为后面的 saveToFile 可能会阻塞很久，okhttp3 会报 warning
         // 1. 获取 OSS URL
         val fetchOssUrlReq = Request.Builder()
-            .url("https://i.mi.com/gallery/storage?ts=${System.currentTimeMillis()}&id=${asset.id}")
+            .url(url)
             .ua()
             .authHeader(tokenManager.getAuthPair())
             .get()
@@ -198,6 +214,41 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         }
 
         return targetPath
+    }
+
+    private fun parseJsonNode(jsonNode: JsonNode, album: Album): Asset {
+        return when (album.isAudioAlbum()) {
+            false -> Asset {
+                id = jsonNode.get("id").asLong()
+                fileName = jsonNode.get("fileName").asText()
+                type = AssetType.valueOf(jsonNode.get("type").asText().uppercase())
+                dateTaken = Instant.ofEpochMilli(jsonNode.get("dateTaken").asLong())
+                albumId = album.id
+                sha1 = jsonNode.get("sha1").asText()
+                mimeType = jsonNode.get("mimeType").asText()
+                title = jsonNode.get("title").asText()
+                size = jsonNode.get("size").asLong()
+            }
+
+            true -> {
+                val name = jsonNode.get("name").asText()
+                // 从名字尾部开始匹配可以避免文件名中包含“_”的场景
+                val fileName =
+                    name.substringBeforeLast("_").substringBeforeLast("_").substringBeforeLast("_")
+                        .substringBeforeLast("_")
+                Asset {
+                    this.id = jsonNode.get("id").asLong()
+                    this.fileName = fileName
+                    this.type = AssetType.AUDIO
+                    this.dateTaken = Instant.ofEpochMilli(jsonNode.get("create_time").asLong())
+                    this.albumId = album.id
+                    this.sha1 = jsonNode.get("sha1").asText()
+                    this.mimeType = Files.probeContentType(Path(fileName)) ?: "application/octet-stream"
+                    this.title = fileName.substringBeforeLast(".")
+                    this.size = jsonNode.get("size").asLong()
+                }
+            }
+        }
     }
 }
 

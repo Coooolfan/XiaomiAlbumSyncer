@@ -1,20 +1,24 @@
 package com.coooolfan.xiaomialbumsyncer.utils
 
 import com.coooolfan.xiaomialbumsyncer.model.Asset
+import com.coooolfan.xiaomialbumsyncer.model.AssetType
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.nio.file.Path
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import java.util.*
+import kotlin.concurrent.thread
 
 fun rewriteExifTime(asset: Asset, path: Path, config: ExifRewriteConfig) {
 
     if (path.startsWith("/tmp")) return
 
     when (asset.type) {
-        com.coooolfan.xiaomialbumsyncer.model.AssetType.IMAGE -> rewriteImageExifTime(asset, path, config)
-        com.coooolfan.xiaomialbumsyncer.model.AssetType.VIDEO -> rewriteVideoExifTime(asset, path, config)
+        AssetType.IMAGE -> rewriteImageExifTime(asset, path, config)
+        AssetType.VIDEO -> rewriteVideoExifTime(asset, path, config)
+        AssetType.AUDIO -> {}
     }
 }
 
@@ -61,17 +65,35 @@ fun rewriteVideoExifTime(asset: Asset, path: Path, config: ExifRewriteConfig) {
 fun runExifTool(binPath: Path, args: List<String>): String {
     val command = listOf(binPath.toString()) + args
 
-    val process = ProcessBuilder(command).start()
+    val process = ProcessBuilder(command)
+        .redirectErrorStream(true)
+        .start()
 
-    val output = process.inputStream.bufferedReader().readText()
-    val exitCode = process.waitFor()
-
-    if (exitCode != 0) {
-        val error = process.errorStream.bufferedReader().readText()
-        throw RuntimeException("ExifTool failed (exit code: $exitCode): $error")
+    val output = StringBuilder()
+    val readerThread = thread(name = "exiftool-output-reader", isDaemon = true) {
+        process.inputStream.bufferedReader().useLines { lines ->
+            lines.forEach { line ->
+                output.appendLine(line)
+            }
+        }
     }
 
-    return output.trim()
+    val finished = process.waitFor(120, TimeUnit.SECONDS)
+    if (!finished) {
+        process.destroyForcibly()
+        readerThread.join(5000)
+        throw RuntimeException("ExifTool timeout")
+    }
+
+    readerThread.join(5000)
+
+    val exitCode = process.exitValue()
+    val outputText = output.toString().trim()
+    if (exitCode != 0) {
+        throw RuntimeException("ExifTool failed (exit code: $exitCode): $outputText")
+    }
+
+    return outputText
 }
 
 fun Instant.formatExif(zone: ZoneOffset = ZoneOffset.UTC): String {

@@ -87,10 +87,10 @@ class TokenManager(private val sql: KSqlClient) {
         ).ua()
             .header("Cookie", withCookie("userId" to userId, "deviceId" to deviceId, "passToken" to passToken)).get()
             .build()
-        val preLoginRes = client().newCall(preLoginReq).execute()
-        throwIfNotSuccess(preLoginRes.code)
-        val preLoginBodyString = preLoginRes.body.string()
-        preLoginRes.close()
+        val preLoginBodyString = client().newCall(preLoginReq).execute().use { res ->
+            throwIfNotSuccess(res.code)
+            res.body.string()
+        }
         val loginUrl = jacksonObjectMapper()
             .readTree(preLoginBodyString)
             .at("/data/loginUrl")
@@ -100,13 +100,17 @@ class TokenManager(private val sql: KSqlClient) {
         val loginReq = Request.Builder().url(loginUrl).ua()
             .header("Cookie", withCookie("userId" to userId, "deviceId" to deviceId, "passToken" to passToken)).get()
             .build()
-        val loginRes = client().newCall(loginReq).execute()
-        throwIfNotSuccess(loginRes.code)
-        val location = loginRes.header("Location")
-        loginRes.close()
+        val (location, loginResMeta) = client().newCall(loginReq).execute().use { res ->
+            val code = res.code
+            val headers = res.headers.toString()
+            val body = res.body.string()
+            throwIfNotSuccess(code)
+            res.header("Location") to Triple(code, headers, body)
+        }
+        val (loginResCode, loginResHeaders, loginResDebugBody) = loginResMeta
 
         if (location == null) {
-            log.error("loginResStatusCode: ${loginRes.code} body: ${loginRes.body.string()} headers: ${loginRes.headers}")
+            log.error("loginResStatusCode: $loginResCode body: $loginResDebugBody headers: $loginResHeaders")
             error("no Location header")
         }
 
@@ -114,10 +118,10 @@ class TokenManager(private val sql: KSqlClient) {
         val tokenReq = Request.Builder().url(location).ua()
             .header("Cookie", withCookie("userId" to userId, "deviceId" to deviceId, "passToken" to passToken)).get()
             .build()
-        val tokenRes = client().newCall(tokenReq).execute()
-        throwIfNotSuccess(tokenRes.code)
-        val setCookies = tokenRes.headers("Set-Cookie")
-        tokenRes.close()
+        val setCookies = client().newCall(tokenReq).execute().use { res ->
+            throwIfNotSuccess(res.code)
+            res.headers("Set-Cookie")
+        }
 
         log.info("cookiesSize: ${setCookies.size}")
 

@@ -39,4 +39,5 @@ data class CrontabConfig(
 
     val fileTimeWorkers: Int = 2,
 
+    val downloadAudios: Boolean = true,
     )

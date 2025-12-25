@@ -30,7 +30,7 @@ dependencies {
     implementation("org.noear:solon-web-staticfiles")
     implementation("org.noear:solon-aot")
     implementation("org.noear:solon-logging-logback")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.3.0")
     implementation("cn.dev33:sa-token-solon-plugin:1.44.0")
     implementation("org.noear:solon-serialization-jackson")
     implementation("com.squareup.okhttp3:okhttp:5.1.0")
@@ -39,7 +39,7 @@ dependencies {
 
     implementation("org.flywaydb:flyway-core:11.13.1")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 
     implementation("org.babyfish.jimmer:jimmer-client:$jimmerVersion")
     implementation("org.babyfish.jimmer:jimmer-core:${jimmerVersion}")
