@@ -81,11 +81,11 @@ fun runExifTool(binPath: Path, args: List<String>): String {
     val finished = process.waitFor(120, TimeUnit.SECONDS)
     if (!finished) {
         process.destroyForcibly()
-        readerThread.join(1000)
+        readerThread.join(5000)
         throw RuntimeException("ExifTool timeout")
     }
 
-    readerThread.join(1000)
+    readerThread.join(5000)
 
     val exitCode = process.exitValue()
     val outputText = output.toString().trim()
