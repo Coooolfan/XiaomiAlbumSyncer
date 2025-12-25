@@ -52,10 +52,8 @@ async function logout() {
       <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-2">
-            <div
-              class="h-8 w-8 flex items-center justify-center"
-            >
-              <img src="/logo.avif" alt="Logo" class="w-full h-full object-contain">
+            <div class="h-8 w-8 flex items-center justify-center">
+              <img src="/logo.avif" alt="Logo" class="w-full h-full object-contain" />
             </div>
             <div class="font-semibold tracking-tight text-slate-700">Xiaomi Album Syncer</div>
           </div>
@@ -73,23 +71,15 @@ async function logout() {
 
         <div class="flex items-center gap-3">
           <div v-if="systemInfo" class="hidden md:flex items-center gap-2 text-xs text-slate-500">
-            <Chip
-              :label="`v${systemInfo.appVersion}`"
-              class="!text-xs !py-1 !px-2 bg-slate-100"
-            />
+            <Chip :label="`v${systemInfo.appVersion}`" class="!text-xs !py-1 !px-2 bg-slate-100" />
             <span class="text-slate-300">|</span>
-            <span v-if="systemInfo.nativeImage" class="font-medium text-emerald-600">
-              Native
-            </span>
-            <span v-else-if="systemInfo.aotRuntime" class="font-medium text-blue-600">
-              AOT
-            </span>
-            <span v-else class="font-medium text-amber-600">
-              JVM {{ systemInfo.jvmVersion }}
-            </span>
+            <span v-if="systemInfo.nativeImage" class="font-medium text-emerald-600"> Native </span>
+            <span v-else-if="systemInfo.aotRuntime" class="font-medium text-blue-600"> AOT </span>
+            <span v-else class="font-medium text-amber-600"> JVM {{ systemInfo.jvmVersion }} </span>
             <span class="text-slate-300">|</span>
-            <a href="https://github.com/coooolfan/xiaomialbumsyncer" target="_blank"><i
-              class="pi pi-github text-black"/></a>
+            <a href="https://github.com/coooolfan/xiaomialbumsyncer" target="_blank"
+              ><i class="pi pi-github text-black"
+            /></a>
           </div>
 
           <Button
@@ -105,13 +95,16 @@ async function logout() {
 
     <!-- Content -->
     <main class="max-w-7xl mx-auto px-4 py-8">
-      <router-view/>
+      <router-view />
     </main>
 
     <!-- Footer -->
     <footer class="my-2 text-center text-xs text-slate-500">
-      <p>{{ new Date().getFullYear() }} Xiaomi Album Syncer © <a
-        href="https://github.com/coooolfan/xiaomialbumsyncer" target="_blank">github.com/coooolfan/xiaomialbumsyncer</a>
+      <p>
+        {{ new Date().getFullYear() }} Xiaomi Album Syncer ©
+        <a href="https://github.com/coooolfan/xiaomialbumsyncer" target="_blank"
+          >github.com/coooolfan/xiaomialbumsyncer</a
+        >
       </p>
     </footer>
   </div>

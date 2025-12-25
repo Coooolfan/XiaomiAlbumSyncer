@@ -18,7 +18,7 @@ import InputNumber from 'primevue/inputnumber'
 import Message from 'primevue/message'
 import { useToast } from 'primevue/usetoast'
 import type { CrontabDto } from '@/__generated/model/dto'
-import SplitButton from 'primevue/splitbutton';
+import SplitButton from 'primevue/splitbutton'
 import type { CrontabCreateInput } from '@/__generated/model/static'
 
 type DataPoint = { timeStamp: number; count: number }
@@ -96,10 +96,11 @@ const cronForm = ref<CrontabCreateInput>({
 
 const formErrors = ref<Record<string, string>>({})
 const timeZones = ref<string[]>([])
-const albumOptions = computed(() =>
-  (albums.value || [])
-    .filter((a) => a.id !== undefined)
-    .map((a) => ({ label: a.name ?? `ID ${a.id}`, value: a.id as string })), // 这个 as 从逻辑上是多余的，但是不加编译器会报错
+const albumOptions = computed(
+  () =>
+    (albums.value || [])
+      .filter((a) => a.id !== undefined)
+      .map((a) => ({ label: a.name ?? `ID ${a.id}`, value: a.id as string })), // 这个 as 从逻辑上是多余的，但是不加编译器会报错
 )
 function onDayClick(payload: {
   date: Date
@@ -132,16 +133,14 @@ async function fetchTimeline() {
   try {
     const end = new Date(endDateStr.value)
     end.setHours(0, 0, 0, 0)
-    const start = new Date(
-      end.getTime() - (Math.max(1, rangeDaysNum.value) - 1) * 24 * 3600 * 1000,
-    )
+    const start = new Date(end.getTime() - (Math.max(1, rangeDaysNum.value) - 1) * 24 * 3600 * 1000)
     const startStr = formatDateInput(start)
 
     const albumIds = (albums.value || [])
       .map((a) => Number(a.id))
       .filter((id) => Number.isFinite(id)) as number[]
 
-    const resp = await api.albumsController.fetchDateMap( {
+    const resp = await api.albumsController.fetchDateMap({
       albumIds: albumIds.length > 0 ? albumIds : undefined,
       start: startStr,
       end: endDateStr.value,
@@ -213,12 +212,22 @@ async function fetchAlbums() {
 
 async function fetchLatestAlbums() {
   try {
-    toast.add({ severity: 'info', summary: '正在从远程更新相册列表', detail: "请暂时不要离开此页面，同步正在进行", life: 5000 })
+    toast.add({
+      severity: 'info',
+      summary: '正在从远程更新相册列表',
+      detail: '请暂时不要离开此页面，同步正在进行',
+      life: 5000,
+    })
     albums.value = await api.albumsController.refreshAlbums()
     toast.add({ severity: 'success', summary: '已更新', life: 1600 })
     await fetchTimeline()
   } catch (err) {
-    toast.add({ severity: 'error', summary: '更新失败', detail: "请确保您已配置有效的 passToken 与 UserId。\n并确保此已完成相册服务二次验证", life: 10000 })
+    toast.add({
+      severity: 'error',
+      summary: '更新失败',
+      detail: '请确保您已配置有效的 passToken 与 UserId。\n并确保此已完成相册服务二次验证',
+      life: 10000,
+    })
     console.error('获取最新相册列表失败', err)
   }
 }
@@ -329,7 +338,7 @@ function validateCronForm(): boolean {
   if (!cronForm.value.config.expression || cronForm.value.config.expression.trim() === '') {
     errors.expression = '必填'
   } else {
-    const crontabExpression = cronForm.value.config.expression.split(' ');
+    const crontabExpression = cronForm.value.config.expression.split(' ')
     if (crontabExpression.length < 6) {
       errors.expression = '看起来这不是一个有效的表达式'
     } else {
@@ -340,8 +349,10 @@ function validateCronForm(): boolean {
       }
     }
   }
-  if (!cronForm.value.config.timeZone || cronForm.value.config.timeZone.trim() === '') errors.timeZone = '必选'
-  if (!cronForm.value.config.targetPath || cronForm.value.config.targetPath.trim() === '') errors.targetPath = '必填'
+  if (!cronForm.value.config.timeZone || cronForm.value.config.timeZone.trim() === '')
+    errors.timeZone = '必选'
+  if (!cronForm.value.config.targetPath || cronForm.value.config.targetPath.trim() === '')
+    errors.targetPath = '必填'
   // if (cronForm.value.config.fetchFromDbSize > cronForm.value.config.downloaders) errors.concurrency = '必须小于资产下载'
   formErrors.value = errors
   return Object.keys(errors).length === 0
@@ -428,7 +439,12 @@ async function confirmExecute() {
     fetchCrontabs()
   } catch (err) {
     console.error('立即执行触发失败', err)
-    toast.add({ severity: 'error', summary: '触发失败', detail: err instanceof Error ? err.message : String(err), life: 2200 })
+    toast.add({
+      severity: 'error',
+      summary: '触发失败',
+      detail: err instanceof Error ? err.message : String(err),
+      life: 2200,
+    })
   } finally {
     executing.value = false
   }
@@ -525,7 +541,6 @@ const albumsRefreshModel = ref([
     command: fetchLatestAlbums,
   },
 ])
-
 </script>
 
 <template>
@@ -533,10 +548,18 @@ const albumsRefreshModel = ref([
     <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
       <template #content>
         <div class="w-full overflow-x-hidden">
-          <ContributionHeatmap :data="dataPoints" :label="labelText" :week-start="weekStartNum"
-            :range-days="rangeDaysNum" :end="endDateStr" @day-click="onDayClick" />
-          <div v-if="tip"
-            class="mt-3 inline-flex items-center rounded-md bg-slate-900/80 text-white text-xs px-2 py-1 shadow-md dark:bg-slate-100/10 dark:text-slate-100">
+          <ContributionHeatmap
+            :data="dataPoints"
+            :label="labelText"
+            :week-start="weekStartNum"
+            :range-days="rangeDaysNum"
+            :end="endDateStr"
+            @day-click="onDayClick"
+          />
+          <div
+            v-if="tip"
+            class="mt-3 inline-flex items-center rounded-md bg-slate-900/80 text-white text-xs px-2 py-1 shadow-md dark:bg-slate-100/10 dark:text-slate-100"
+          >
             {{ tip }}
           </div>
         </div>
@@ -558,13 +581,24 @@ const albumsRefreshModel = ref([
         <div class="space-y-3">
           <div v-if="loadingCrons" class="text-xs text-slate-500 py-6">加载中...</div>
           <div v-else>
-            <div v-if="!crontabs || crontabs.length === 0" class="text-xs text-slate-500 py-6">暂无计划任务</div>
+            <div v-if="!crontabs || crontabs.length === 0" class="text-xs text-slate-500 py-6">
+              暂无计划任务
+            </div>
             <div v-else class="grid grid-cols-1 gap-3">
-              <CrontabCard v-for="item in crontabs" :key="item.id" :crontab="item" :album-options="albumOptions"
-                :busy="updatingRow === item.id" @edit="openEditCron(item)" @delete="requestDelete(item)"
-                @toggle="toggleEnabled(item)" @execute="requestExecute(item)"
+              <CrontabCard
+                v-for="item in crontabs"
+                :key="item.id"
+                :crontab="item"
+                :album-options="albumOptions"
+                :busy="updatingRow === item.id"
+                @edit="openEditCron(item)"
+                @delete="requestDelete(item)"
+                @toggle="toggleEnabled(item)"
+                @execute="requestExecute(item)"
                 @execute-exif="requestExecuteExif(item)"
-                @execute-rewrite-fs-time="requestExecuteRewriteFs(item)" @refresh="fetchCrontabs" />
+                @execute-rewrite-fs-time="requestExecuteRewriteFs(item)"
+                @refresh="fetchCrontabs"
+              />
             </div>
           </div>
         </div>
@@ -574,22 +608,37 @@ const albumsRefreshModel = ref([
 
     <Panel header="相册" toggleable>
       <template #icons>
-        <SplitButton icon="pi pi-refresh" severity="secondary" outlined rounded @click="fetchAlbums"
-          :model="albumsRefreshModel" />
+        <SplitButton
+          icon="pi pi-refresh"
+          severity="secondary"
+          outlined
+          rounded
+          @click="fetchAlbums"
+          :model="albumsRefreshModel"
+        />
       </template>
 
       <div class="space-y-2">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          <AlbumCard v-for="a in albums" :key="a.id" :name="a.name" :asset-count="a.assetCount"
-            :last-update-time="a.lastUpdateTime" />
+          <AlbumCard
+            v-for="a in albums"
+            :key="a.id"
+            :name="a.name"
+            :asset-count="a.assetCount"
+            :last-update-time="a.lastUpdateTime"
+          />
           <div v-if="!albums || albums.length === 0" class="text-xs text-slate-500">暂无相册</div>
         </div>
       </div>
     </Panel>
 
     <!-- 创建/编辑 计划任务 -->
-    <Dialog v-model:visible="showCronDialog" modal :header="isEditing ? '编辑计划任务' : '创建计划任务'"
-      class="w-full sm:w-[520px]">
+    <Dialog
+      v-model:visible="showCronDialog"
+      modal
+      :header="isEditing ? '编辑计划任务' : '创建计划任务'"
+      class="w-full sm:w-[520px]"
+    >
       <div class="space-y-4">
         <div class="space-y-2">
           <label class="block text-xs font-medium text-slate-500">名称</label>
@@ -599,22 +648,39 @@ const albumsRefreshModel = ref([
 
         <div class="space-y-2">
           <label class="block text-xs font-medium text-slate-500">描述</label>
-          <Textarea v-model="cronForm.description" rows="2" autoResize placeholder="可选" class="w-full" />
+          <Textarea
+            v-model="cronForm.description"
+            rows="2"
+            autoResize
+            placeholder="可选"
+            class="w-full"
+          />
         </div>
 
         <div class="grid grid-cols-2 gap-4">
           <div class="space-y-2">
             <label class="block text-xs font-medium text-slate-500">Cron 表达式</label>
-            <InputText v-model="cronForm.config.expression" placeholder="0 0 23 * * ?" class="w-full" />
+            <InputText
+              v-model="cronForm.config.expression"
+              placeholder="0 0 23 * * ?"
+              class="w-full"
+            />
             <div v-if="formErrors.expression" class="text-xs text-red-500">
               {{ formErrors.expression }}
             </div>
-            <div class="text-[10px] text-slate-400">支持标准 6/7 字段 Cron 表达式<br />例：0 0 23 * * ? 表示每天 23 点执行</div>
+            <div class="text-[10px] text-slate-400">
+              支持标准 6/7 字段 Cron 表达式<br />例：0 0 23 * * ? 表示每天 23 点执行
+            </div>
           </div>
           <div class="space-y-2">
             <label class="block text-xs font-medium text-slate-500">时区</label>
-            <Dropdown v-model="cronForm.config.timeZone" :options="timeZones" placeholder="Asia/Shanghai" filter
-              class="w-full" />
+            <Dropdown
+              v-model="cronForm.config.timeZone"
+              :options="timeZones"
+              placeholder="Asia/Shanghai"
+              filter
+              class="w-full"
+            />
             <div v-if="formErrors.timeZone" class="text-xs text-red-500">
               {{ formErrors.timeZone }}
             </div>
@@ -624,8 +690,12 @@ const albumsRefreshModel = ref([
         <div class="space-y-2">
           <label class="block text-xs font-medium text-slate-500">保存路径</label>
           <InputText v-model="cronForm.config.targetPath" placeholder="./download" class="w-full" />
-          <div v-if="formErrors.targetPath" class="text-xs text-red-500">{{ formErrors.targetPath }}</div>
-          <div class="text-[10px] text-slate-400">如在容器环境下运行，请确保已将此路径映射到宿主机。程序将在此路径下创建相册各自的文件夹。</div>
+          <div v-if="formErrors.targetPath" class="text-xs text-red-500">
+            {{ formErrors.targetPath }}
+          </div>
+          <div class="text-[10px] text-slate-400">
+            如在容器环境下运行，请确保已将此路径映射到宿主机。程序将在此路径下创建相册各自的文件夹。
+          </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
@@ -643,18 +713,29 @@ const albumsRefreshModel = ref([
           </div>
         </div>
 
-
         <div class="space-y-2">
           <label class="block text-xs font-medium text-slate-500">关联相册</label>
-          <MultiSelect v-model="cronForm.albumIds" :options="albumOptions" display="chip" optionLabel="label"
-            optionValue="value" placeholder="选择相册" class="w-full" filter />
+          <MultiSelect
+            v-model="cronForm.albumIds"
+            :options="albumOptions"
+            display="chip"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="选择相册"
+            class="w-full"
+            filter
+          />
         </div>
 
         <Message severity="info" variant="simple" icon="pi pi-info-circle">
           <div class="text-[12px]">
-            不同计划任务的<span class="font-semibold">下载记录</span><span class="font-semibold">相互独立</span>，<span
-              class="font-semibold">互不影响</span>。即使是<span class="font-semibold">同一相册中的同一资产</span>，在不同计划任务中，其<span
-              class="font-semibold">已下载状态</span>也会<span class="font-semibold">分别判断</span>。
+            不同计划任务的<span class="font-semibold">下载记录</span
+            ><span class="font-semibold">相互独立</span>，<span class="font-semibold">互不影响</span
+            >。即使是<span class="font-semibold">同一相册中的同一资产</span
+            >，在不同计划任务中，其<span class="font-semibold">已下载状态</span>也会<span
+              class="font-semibold"
+              >分别判断</span
+            >。
           </div>
         </Message>
 
@@ -665,116 +746,179 @@ const albumsRefreshModel = ref([
                 <InputSwitch v-model="cronForm.config.diffByTimeline" />
                 <span>按时间线比对差异</span>
               </div>
-              <div class="text-[10px] text-slate-400">通过对比上一次同步的相册时间线，将相册资产的获取范围限定为存在变动的日期。</div>
+              <div class="text-[10px] text-slate-400">
+                通过对比上一次同步的相册时间线，将相册资产的获取范围限定为存在变动的日期。
+              </div>
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600">
                 <InputSwitch v-model="cronForm.config.rewriteExifTime" />
                 <span>填充 EXIF 时间</span>
               </div>
-              <div class="text-[10px] text-slate-400">将资产在小米云服务的时间写入 EXIF 时间，仅在资产不存在 EXIF 时间时生效。</div>
+              <div class="text-[10px] text-slate-400">
+                将资产在小米云服务的时间写入 EXIF 时间，仅在资产不存在 EXIF 时间时生效。
+              </div>
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600">
                 <InputSwitch v-model="cronForm.config.skipExistingFile" />
                 <span>跳过已存在文件</span>
               </div>
-              <div class="text-[10px] text-slate-400">若资产的目标文件路径已存在，将跳过下载。仅适用于保存路径中已有存量数据。</div>
+              <div class="text-[10px] text-slate-400">
+                若资产的目标文件路径已存在，将跳过下载。仅适用于保存路径中已有存量数据。
+              </div>
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600">
                 <InputSwitch v-model="cronForm.config.rewriteFileSystemTime" />
                 <span>重写文件时间</span>
               </div>
-              <div class="text-[10px] text-slate-400">同步完成后，将资产的文件系统时间修改为对应的小米云服务上的时间。</div>
+              <div class="text-[10px] text-slate-400">
+                同步完成后，将资产的文件系统时间修改为对应的小米云服务上的时间。
+              </div>
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600">
                 <InputSwitch v-model="cronForm.config.checkSha1" />
                 <span>校验 SHA1</span>
               </div>
-              <div class="text-[10px] text-slate-400">对下载的文件进行 SHA1 校验，失败则重新下载。<span class="font-bold">没必要开。</span></div>
+              <div class="text-[10px] text-slate-400">
+                对下载的文件进行 SHA1 校验，失败则重新下载。<span class="font-bold"
+                  >没必要开。</span
+                >
+              </div>
             </div>
           </div>
 
           <div v-if="cronForm.config.rewriteExifTime" class="space-y-2 mt-3">
             <label class="block text-xs font-medium text-slate-500">EXIF 时区</label>
-            <Dropdown v-model="cronForm.config.rewriteExifTimeZone" :options="timeZones" placeholder="Asia/Shanghai"
-              filter class="w-full" />
-            <div class="text-[10px] text-slate-400">用于写入 EXIF 的时区；仅在开启“填充 EXIF 时间”后生效。</div>
+            <Dropdown
+              v-model="cronForm.config.rewriteExifTimeZone"
+              :options="timeZones"
+              placeholder="Asia/Shanghai"
+              filter
+              class="w-full"
+            />
+            <div class="text-[10px] text-slate-400">
+              用于写入 EXIF 的时区；仅在开启“填充 EXIF 时间”后生效。
+            </div>
           </div>
 
-        <Panel header="并发与性能" toggleable collapsed class="mt-4">
-          <div class="text-[10px] text-slate-400 mb-4">除非你明确知道改动这些值的后果，否则不要改动</div>
+          <Panel header="并发与性能" toggleable collapsed class="mt-4">
+            <div class="text-[10px] text-slate-400 mb-4">
+              除非你明确知道改动这些值的后果，否则不要改动
+            </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-               <div class="space-y-2">
-                 <label class="block text-xs font-medium text-slate-500">数据库读批大小</label>
-                 <InputNumber v-model="cronForm.config.fetchFromDbSize" :min="1" :max="20" showButtons buttonLayout="horizontal" inputClass="w-12 text-center" class="w-full" >
-                   <template >
-                     <span class="pi pi-plus" />
-                   </template>
-                   <template>
-                     <span class="pi pi-minus" />
-                   </template>
-                 </InputNumber>
-                 <div class="text-[10px] text-slate-400">每次从数据库拉取的资产数量</div>
-                 <div v-if="formErrors.concurrency" class="text-xs text-red-500">{{ formErrors.concurrency }}</div>
-               </div>
-
-                <div class="space-y-2">
-                   <label class="block text-xs font-medium text-slate-500">资产下载</label>
-                   <InputNumber v-model="cronForm.config.downloaders" :min="1" :max="50" showButtons buttonLayout="horizontal" inputClass="w-12 text-center" class="w-full" >
-                      <template >
-                        <span class="pi pi-plus" />
-                      </template>
-                      <template>
-                        <span class="pi pi-minus" />
-                      </template>
-                   </InputNumber>
-                   <div class="text-[10px] text-slate-400">同时下载的资产数</div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div class="space-y-2">
+                <label class="block text-xs font-medium text-slate-500">数据库读批大小</label>
+                <InputNumber
+                  v-model="cronForm.config.fetchFromDbSize"
+                  :min="1"
+                  :max="20"
+                  showButtons
+                  buttonLayout="horizontal"
+                  inputClass="w-12 text-center"
+                  class="w-full"
+                >
+                  <template>
+                    <span class="pi pi-plus" />
+                  </template>
+                  <template>
+                    <span class="pi pi-minus" />
+                  </template>
+                </InputNumber>
+                <div class="text-[10px] text-slate-400">每次从数据库拉取的资产数量</div>
+                <div v-if="formErrors.concurrency" class="text-xs text-red-500">
+                  {{ formErrors.concurrency }}
                 </div>
+              </div>
 
-                <div class="space-y-2">
-                   <label class="block text-xs font-medium text-slate-500">文件系统时间重写</label>
-                   <InputNumber v-model="cronForm.config.fileTimeWorkers" :min="1" :max="50" showButtons buttonLayout="horizontal" inputClass="w-12 text-center" class="w-full" >
-                      <template >
-                        <span class="pi pi-plus" />
-                      </template>
-                      <template>
-                        <span class="pi pi-minus" />
-                      </template>
-                   </InputNumber>
-                   <div class="text-[10px] text-slate-400">文件系统时间重写并发数</div>
-                </div>
+              <div class="space-y-2">
+                <label class="block text-xs font-medium text-slate-500">资产下载</label>
+                <InputNumber
+                  v-model="cronForm.config.downloaders"
+                  :min="1"
+                  :max="50"
+                  showButtons
+                  buttonLayout="horizontal"
+                  inputClass="w-12 text-center"
+                  class="w-full"
+                >
+                  <template>
+                    <span class="pi pi-plus" />
+                  </template>
+                  <template>
+                    <span class="pi pi-minus" />
+                  </template>
+                </InputNumber>
+                <div class="text-[10px] text-slate-400">同时下载的资产数</div>
+              </div>
 
-                <div class="space-y-2">
-                   <label class="block text-xs font-medium text-slate-500">文件校验</label>
-                   <InputNumber v-model="cronForm.config.verifiers" :min="1" :max="50" showButtons buttonLayout="horizontal" inputClass="w-12 text-center" class="w-full" >
-                      <template >
-                        <span class="pi pi-plus" />
-                      </template>
-                      <template>
-                        <span class="pi pi-minus" />
-                      </template>
-                   </InputNumber>
-                   <div class="text-[10px] text-slate-400">SHA1 校验检查并发数</div>
-                </div>
+              <div class="space-y-2">
+                <label class="block text-xs font-medium text-slate-500">文件系统时间重写</label>
+                <InputNumber
+                  v-model="cronForm.config.fileTimeWorkers"
+                  :min="1"
+                  :max="50"
+                  showButtons
+                  buttonLayout="horizontal"
+                  inputClass="w-12 text-center"
+                  class="w-full"
+                >
+                  <template>
+                    <span class="pi pi-plus" />
+                  </template>
+                  <template>
+                    <span class="pi pi-minus" />
+                  </template>
+                </InputNumber>
+                <div class="text-[10px] text-slate-400">文件系统时间重写并发数</div>
+              </div>
 
-                <div class="space-y-2">
-                   <label class="block text-xs font-medium text-slate-500">EXIF 填充</label>
-                   <InputNumber v-model="cronForm.config.exifProcessors" :min="1" :max="50" showButtons buttonLayout="horizontal" inputClass="w-12 text-center" class="w-full" >
-                      <template >
-                        <span class="pi pi-plus" />
-                      </template>
-                      <template>
-                        <span class="pi pi-minus" />
-                      </template>
-                   </InputNumber>
-                   <div class="text-[10px] text-slate-400">EXIF 信息填充并发数</div>
-                </div>
-             </div>
-        </Panel>
+              <div class="space-y-2">
+                <label class="block text-xs font-medium text-slate-500">文件校验</label>
+                <InputNumber
+                  v-model="cronForm.config.verifiers"
+                  :min="1"
+                  :max="50"
+                  showButtons
+                  buttonLayout="horizontal"
+                  inputClass="w-12 text-center"
+                  class="w-full"
+                >
+                  <template>
+                    <span class="pi pi-plus" />
+                  </template>
+                  <template>
+                    <span class="pi pi-minus" />
+                  </template>
+                </InputNumber>
+                <div class="text-[10px] text-slate-400">SHA1 校验检查并发数</div>
+              </div>
+
+              <div class="space-y-2">
+                <label class="block text-xs font-medium text-slate-500">EXIF 填充</label>
+                <InputNumber
+                  v-model="cronForm.config.exifProcessors"
+                  :min="1"
+                  :max="50"
+                  showButtons
+                  buttonLayout="horizontal"
+                  inputClass="w-12 text-center"
+                  class="w-full"
+                >
+                  <template>
+                    <span class="pi pi-plus" />
+                  </template>
+                  <template>
+                    <span class="pi pi-minus" />
+                  </template>
+                </InputNumber>
+                <div class="text-[10px] text-slate-400">EXIF 信息填充并发数</div>
+              </div>
+            </div>
+          </Panel>
         </Panel>
 
         <div class="flex items-center justify-between pt-1">
@@ -791,71 +935,122 @@ const albumsRefreshModel = ref([
     </Dialog>
 
     <!-- 删除确认 -->
-    <Dialog v-model:visible="showDeleteVisible" modal header="删除计划任务" class="w-full sm:w-[420px]">
+    <Dialog
+      v-model:visible="showDeleteVisible"
+      modal
+      header="删除计划任务"
+      class="w-full sm:w-[420px]"
+    >
       <div class="text-sm text-slate-700">确定要删除该计划任务吗？该操作不可恢复。</div>
       <template #footer>
         <div class="flex items-center justify-end gap-2 w-full">
-          <Button label="取消" severity="secondary" text @click="
-            () => {
-              showDeleteId = null
-              showDeleteVisible = false
-            }
-          " />
+          <Button
+            label="取消"
+            severity="secondary"
+            text
+            @click="
+              () => {
+                showDeleteId = null
+                showDeleteVisible = false
+              }
+            "
+          />
           <Button label="删除" severity="danger" :loading="deleting" @click="confirmDelete" />
         </div>
       </template>
     </Dialog>
 
     <!-- 立即执行确认 -->
-    <Dialog v-model:visible="showExecuteVisible" modal header="立即执行" class="w-full sm:w-[420px]">
-      <div class="text-sm text-slate-700">确定要立即触发该计划任务的执行吗？该操作较为耗时，将在后台执行。</div>
+    <Dialog
+      v-model:visible="showExecuteVisible"
+      modal
+      header="立即执行"
+      class="w-full sm:w-[420px]"
+    >
+      <div class="text-sm text-slate-700">
+        确定要立即触发该计划任务的执行吗？该操作较为耗时，将在后台执行。
+      </div>
       <template #footer>
         <div class="flex items-center justify-end gap-2 w-full">
-          <Button label="取消" severity="secondary" text @click="
-            () => {
-              showExecuteId = null
-              showExecuteVisible = false
-            }
-          " />
+          <Button
+            label="取消"
+            severity="secondary"
+            text
+            @click="
+              () => {
+                showExecuteId = null
+                showExecuteVisible = false
+              }
+            "
+          />
           <Button label="执行" severity="warning" :loading="executing" @click="confirmExecute" />
         </div>
       </template>
     </Dialog>
 
     <!-- 立即执行 EXIF 填充 -->
-    <Dialog v-model:visible="showExecuteExifVisible" modal header="立即执行 EXIF 填充"
-      class="w-full sm:w-[420px]">
+    <Dialog
+      v-model:visible="showExecuteExifVisible"
+      modal
+      header="立即执行 EXIF 填充"
+      class="w-full sm:w-[420px]"
+    >
       <div class="text-sm text-slate-700">
-        确定要手动触发该计划任务的 EXIF 填充操作吗？该操作较为耗时，将在后台执行。可观察程序日志查看进度。<br/>会对此计划任务所有下载过的文件执行此操作。
+        确定要手动触发该计划任务的 EXIF
+        填充操作吗？该操作较为耗时，将在后台执行。可观察程序日志查看进度。<br />会对此计划任务所有下载过的文件执行此操作。
       </div>
       <template #footer>
         <div class="flex items-center justify-end gap-2 w-full">
-          <Button label="取消" severity="secondary" text @click="
-            () => {
-              showExecuteExifId = null
-              showExecuteExifVisible = false
-            }
-          " />
-          <Button label="执行" severity="info" :loading="executingExif" @click="confirmExecuteExif" />
+          <Button
+            label="取消"
+            severity="secondary"
+            text
+            @click="
+              () => {
+                showExecuteExifId = null
+                showExecuteExifVisible = false
+              }
+            "
+          />
+          <Button
+            label="执行"
+            severity="info"
+            :loading="executingExif"
+            @click="confirmExecuteExif"
+          />
         </div>
       </template>
     </Dialog>
 
     <!-- 立即执行文件系统时间重写 -->
-    <Dialog v-model:visible="showExecuteRewriteFsVisible" modal header="立即重写文件系统时间"
-      class="w-full sm:w-[420px]">
+    <Dialog
+      v-model:visible="showExecuteRewriteFsVisible"
+      modal
+      header="立即重写文件系统时间"
+      class="w-full sm:w-[420px]"
+    >
       <div class="text-sm text-slate-700">
-        确定要对该计划任务已下载的文件执行文件系统时间重写吗？该操作较为耗时，将在后台执行。可观察程序日志查看进度。<br/>会对此计划任务所有下载过的文件执行此操作。
+        确定要对该计划任务已下载的文件执行文件系统时间重写吗？该操作较为耗时，将在后台执行。可观察程序日志查看进度。<br />会对此计划任务所有下载过的文件执行此操作。
       </div>
       <template #footer>
         <div class="flex items-center justify-end gap-2 w-full">
-          <Button label="取消" severity="secondary" text @click="
-            () => {
-              showExecuteRewriteFsId = null
-              showExecuteRewriteFsVisible = false
-            }
-          " />
-          <Button label="执行" severity="info" :loading="executingRewriteFs" @click="confirmExecuteRewriteFs" />
+          <Button
+            label="取消"
+            severity="secondary"
+            text
+            @click="
+              () => {
+                showExecuteRewriteFsId = null
+                showExecuteRewriteFsVisible = false
+              }
+            "
+          />
+          <Button
+            label="执行"
+            severity="info"
+            :loading="executingRewriteFs"
+            @click="confirmExecuteRewriteFs"
+          />
         </div>
       </template>
     </Dialog>

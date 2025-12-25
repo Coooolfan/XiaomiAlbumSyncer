@@ -205,7 +205,12 @@ async function confirmImportFromV2() {
     const raw = e instanceof Error ? e.message : String(e)
     const isNotEmpty = raw?.includes('Current database is not empty, import aborted')
     const detail = isNotEmpty ? '数据库非空，已中止导入' : raw || '导入失败'
-    toast.add({ severity: isNotEmpty ? 'warn' : 'error', summary: isNotEmpty ? '非空库' : '错误', detail, life: 3200 })
+    toast.add({
+      severity: isNotEmpty ? 'warn' : 'error',
+      summary: isNotEmpty ? '非空库' : '错误',
+      detail,
+      life: 3200,
+    })
   } finally {
     importingFromV2.value = false
     showImportBlockingVisible.value = false
@@ -266,7 +271,12 @@ onMounted(() => {
         <div class="flex items-center justify-between">
           <span class="text-sm text-slate-600">背景</span>
           <div class="min-w-[160px]">
-            <SelectButton v-model="bgModeLocal" :options="bgOptions" optionLabel="label" optionValue="value" />
+            <SelectButton
+              v-model="bgModeLocal"
+              :options="bgOptions"
+              optionLabel="label"
+              optionValue="value"
+            />
           </div>
         </div>
         <p class="text-xs text-slate-400 mt-3">选择背景效果（单选），偏好将被本地保存。</p>
@@ -277,10 +287,17 @@ onMounted(() => {
               <span class="text-sm text-slate-600">热力图优化展示</span>
             </div>
             <div class="min-w-[160px]">
-              <SelectButton v-model="optimizeHeatmapLocal" :options="heatOptions" optionLabel="label" optionValue="value" />
+              <SelectButton
+                v-model="optimizeHeatmapLocal"
+                :options="heatOptions"
+                optionLabel="label"
+                optionValue="value"
+              />
             </div>
           </div>
-          <p class="text-xs text-slate-400 mt-3">开启后，颜色深度将基于近似上界（95%分位）映射，弱化极端离群值影响；偏好将被本地保存。</p>
+          <p class="text-xs text-slate-400 mt-3">
+            开启后，颜色深度将基于近似上界（95%分位）映射，弱化极端离群值影响；偏好将被本地保存。
+          </p>
         </div>
       </template>
     </Card>
@@ -407,7 +424,11 @@ onMounted(() => {
             label="取消"
             severity="secondary"
             text
-            @click="() => { showPasswordConfirmVisible = false }"
+            @click="
+              () => {
+                showPasswordConfirmVisible = false
+              }
+            "
           />
           <Button
             label="确定"
@@ -433,7 +454,16 @@ onMounted(() => {
       </div>
       <template #footer>
         <div class="flex items-center justify-end gap-2 w-full">
-          <Button label="取消" severity="secondary" text @click="() => { showImportConfirmVisible = false }" />
+          <Button
+            label="取消"
+            severity="secondary"
+            text
+            @click="
+              () => {
+                showImportConfirmVisible = false
+              }
+            "
+          />
           <Button label="确定" severity="warning" @click="confirmImportFromV2" />
         </div>
       </template>
