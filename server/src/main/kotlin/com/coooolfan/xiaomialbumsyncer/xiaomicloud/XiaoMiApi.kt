@@ -243,7 +243,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                     this.dateTaken = Instant.ofEpochMilli(jsonNode.get("create_time").asLong())
                     this.albumId = album.id
                     this.sha1 = jsonNode.get("sha1").asText()
-                    this.mimeType = Files.probeContentType(Path(fileName))
+                    this.mimeType = Files.probeContentType(Path(fileName)) ?: "application/octet-stream"
                     this.title = fileName.substringBeforeLast(".")
                     this.size = jsonNode.get("size").asLong()
                 }
