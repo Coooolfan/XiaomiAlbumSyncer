@@ -51,12 +51,24 @@ interface CrontabHistoryDetail {
                 this.crontabHistory = history
                 this.downloadTime = Instant.now()
                 this.asset = asset
-                this.filePath = Path(history.crontab.config.targetPath, asset.album.name, asset.fileName).toString()
+                this.filePath = genFilePath(history, asset)
                 this.downloadCompleted = false
                 this.sha1Verified = !crontabConfig.checkSha1
                 this.exifFilled = !crontabConfig.rewriteExifTime
                 this.fsTimeUpdated = !crontabConfig.rewriteFileSystemTime
             }
         }
+    }
+
+    fun genFilePath(history: CrontabHistory, asset: Asset): String {
+        return if (asset.type != AssetType.AUDIO)
+            Path(crontabHistory.crontab.config.targetPath, asset.album.name, asset.fileName).toString()
+        else
+        // 录音文件会有普遍的文件名重复，需要在文件名前加上 id 以避免冲突
+            Path(
+                crontabHistory.crontab.config.targetPath,
+                asset.album.name,
+                "${asset.id}_${asset.fileName}"
+            ).toString()
     }
 }
