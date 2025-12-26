@@ -1357,6 +1357,12 @@
           ]
         },
         {
+          "name": "getCrontabCurrentStats",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
           "name": "getService",
           "parameterTypes": []
         },
@@ -1383,7 +1389,33 @@
       "type": "com.coooolfan.xiaomialbumsyncer.controller.CrontabController$Companion"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.controller.CrontabCurrentStats"
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.CrontabCurrentStats",
+      "methods": [
+        {
+          "name": "getAssetCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDownloadCompletedCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getExifFilledCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getFsTimeUpdatedCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSha1VerifiedCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTs",
+          "parameterTypes": []
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.IsInitResponse",
@@ -2680,6 +2712,30 @@
           ]
         },
         {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
+            "boolean",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
+            "int",
+            "int",
+            "int",
+            "int",
+            "int",
+            "boolean",
+            "int",
+            "kotlin.jvm.internal.DefaultConstructorMarker"
+          ]
+        },
+        {
           "name": "getCheckSha1",
           "parameterTypes": []
         },
@@ -3290,6 +3346,9 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft$Builder"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft$DefaultImpls"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraftKt"

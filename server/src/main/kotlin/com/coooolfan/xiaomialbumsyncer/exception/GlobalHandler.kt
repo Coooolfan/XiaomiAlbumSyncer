@@ -21,14 +21,14 @@ class GlobalHandler : Filter {
         } catch (e: NotLoginException) {
             ctx.status(401)
             ctx.returnValue(
-                Result.failure<Object>(401, e.message)
+                Result.failure<Any>(401, e.message)
             )
         } catch (e: StatusException) {
             if (e.code == 404) {
                 log.warn(e.message)
                 ctx.status(404)
                 ctx.returnValue(
-                    Result.failure<Object>(404, e.message)
+                    Result.failure<Any>(404, e.message)
                 )
             }
             throw e
@@ -36,7 +36,7 @@ class GlobalHandler : Filter {
             e.printStackTrace()
             ctx.status(500)
             ctx.returnValue(
-                Result.failure<Object>(500, e.message)
+                Result.failure<Any>(500, e.message)
             )
         }
     }
