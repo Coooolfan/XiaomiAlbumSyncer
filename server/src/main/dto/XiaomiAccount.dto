@@ -1,0 +1,28 @@
+export com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount
+
+/**
+ * 创建账号请求
+ */
+input XiaomiAccountCreate {
+    nickname
+    passToken
+    userId
+}
+
+/**
+ * 更新账号请求
+ */
+input XiaomiAccountUpdate {
+    nickname
+    passToken
+    userId
+}
+
+/**
+ * 账号视图（不包含敏感信息 passToken）
+ */
+XiaomiAccountView {
+    id
+    nickname
+    userId
+}
