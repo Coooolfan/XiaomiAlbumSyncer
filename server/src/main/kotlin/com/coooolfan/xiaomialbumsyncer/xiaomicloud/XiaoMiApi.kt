@@ -121,12 +121,12 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             handler(pageAssets)
             totalCount += pageAssets.size
 
+
             // 检查是否还有更多页面
-            hasMorePages =
-                if (album.isAudioAlbum()) // 录音好像没有这种标记
-                    assetArrayJson.size() != 0
-                else
-                    !responseTree.at("/data/isLastPage").asBoolean()
+            hasMorePages = !responseTree.at("/data/isLastPage").asBoolean()
+
+            // 兜底，免得小米骗我。录音也用这个结束循环
+            if (assetArrayJson.isEmpty) break
 
             pageNum++
         }
