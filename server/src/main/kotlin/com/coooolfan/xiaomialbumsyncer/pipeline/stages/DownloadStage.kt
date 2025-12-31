@@ -36,7 +36,8 @@ class DownloadStage(
             log.info("跳过已存在文件 {}", targetPath)
         else {
             log.info("开始下载资源 {}", context.asset.id)
-            api.downloadAsset(context.asset, targetPath)
+            val accountId = context.crontabHistory.crontab.accountId
+            api.downloadAsset(accountId, context.asset, targetPath)
             log.info("下载资源 {} 完成", context.asset.id)
         }
 

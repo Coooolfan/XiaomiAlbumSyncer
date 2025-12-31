@@ -44,8 +44,16 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         crontabHistory: CrontabHistory,
         albumTimelinesHistory: Map<Long, AlbumTimeline>
     ) {
+        val accountId = crontab.accountId
+
+        // 获取相册列表（需要 remoteId）
+        val albums = sql.executeQuery(Album::class) {
+            where(table.id valueIn crontab.albumIds)
+            select(table)
+        }
+
         // 1. 获取这些相册最新的 timeline
-        val albumTimelinesLatest = fetchAlbumsTimelineSnapshot(crontab.albumIds)
+        val albumTimelinesLatest = fetchAlbumsTimelineSnapshot(accountId, albums)
         sql.executeUpdate(CrontabHistory::class) {
             set(table.timelineSnapshot, albumTimelinesLatest)
             where(table.id eq crontabHistory.id)
@@ -84,6 +92,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
     }
 
     fun refreshAssetsFull(crontab: Crontab, crontabHistory: CrontabHistory) {
+        val accountId = crontab.accountId
         val albums = sql.executeQuery(Album::class) {
             where(table.id valueIn crontab.albumIds)
             select(table)
@@ -108,7 +117,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             }.awaitAll()
         }
         sql.executeUpdate(CrontabHistory::class) {
-            set(table.timelineSnapshot, fetchAlbumsTimelineSnapshot(crontab.albumIds))
+            set(table.timelineSnapshot, fetchAlbumsTimelineSnapshot(accountId, albums))
             where(table.id eq crontabHistory.id)
         }
     }
@@ -151,10 +160,11 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }.limit(pageSize).execute()
     }
 
-    private fun fetchAlbumsTimelineSnapshot(albumIds: List<Long>): Map<Long, AlbumTimeline> {
+    private fun fetchAlbumsTimelineSnapshot(accountId: Long, albums: List<Album>): Map<Long, AlbumTimeline> {
         val albumTimelines = mutableMapOf<Long, AlbumTimeline>()
-        albumIds.forEach { albumId ->
-            albumTimelines[albumId] = api.fetchAlbumTimeline(albumId)
+        albums.forEach { album ->
+            // 使用本地 id 作为 key，remoteId 用于 API 调用
+            albumTimelines[album.id] = api.fetchAlbumTimeline(accountId, album.remoteId)
         }
         return albumTimelines
     }

@@ -16,5 +16,5 @@ fun String.toTimeZone(): TimeZone {
 }
 
 fun Album.isAudioAlbum(): Boolean {
-    return this.id == -1L
+    return this.remoteId == -1L
 }

@@ -23,7 +23,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
 
     private val log = LoggerFactory.getLogger(XiaoMiApi::class.java)
 
-    fun fetchAllAlbums(): List<Album> {
+    fun fetchAllAlbums(accountId: Long): List<Album> {
         val allAlbums = mutableListOf<Album>()
         var pageNum = 0
         var hasMorePages = true
@@ -32,7 +32,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             val req = Request.Builder()
                 .url("https://i.mi.com/gallery/user/album/list?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=10&isShared=false&numOfThumbnails=1")
                 .ua()
-                .authHeader(tokenManager.getAuthPair())
+                .authHeader(tokenManager.getAuthPair(accountId))
                 .get()
                 .build()
 
@@ -52,10 +52,11 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 else if (albumId == 2L) albumName = "屏幕截图"
 
                 allAlbums.add(Album {
-                    id = albumId
+                    remoteId = albumId
                     name = albumName ?: albumJson.get("name").asText()
                     assetCount = albumJson.get("mediaCount").asLong()
                     lastUpdateTime = Instant.ofEpochMilli(albumJson.get("lastUpdateTime")?.asLong() ?: 0L)
+                    this.accountId = accountId
                 })
             }
 
@@ -65,10 +66,11 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         }
 
         allAlbums.add(Album {
-            id = -1
+            remoteId = -1
             name = "录音"
             assetCount = 0
             lastUpdateTime = Instant.now()
+            this.accountId = accountId
         })
 
         return allAlbums.toList() // 返回不可变列表
@@ -92,13 +94,13 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 if (album.isAudioAlbum())
                     "https://i.mi.com/sfs/ns/recorder/dir/0/list?ts=${System.currentTimeMillis()}&limit=$pageSize&offset=${pageNum * pageSize}"
                 else
-                    "https://i.mi.com/gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.id}"
+                    "https://i.mi.com/gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.remoteId}"
 
 
             val req = Request.Builder()
                 .url(url + urlDayParams)
                 .ua()
-                .authHeader(tokenManager.getAuthPair())
+                .authHeader(tokenManager.getAuthPair(album.accountId))
                 .get()
                 .build()
 
@@ -112,7 +114,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 else
                     responseTree.at("/data/galleries")
 
-            log.info("解析相册 ${album.name} ID=${album.id}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
+            log.info("解析相册 ${album.name} ID=${album.remoteId}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
 
             // 处理当前页数据
             val pageAssets = assetArrayJson.map { parseJsonNode(it, album) }
@@ -145,11 +147,11 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         return allAssets.toList()
     }
 
-    fun fetchAlbumTimeline(albumId: Long): AlbumTimeline {
+    fun fetchAlbumTimeline(accountId: Long, albumId: Long): AlbumTimeline {
         val req = Request.Builder()
             .url("https://i.mi.com/gallery/user/timeline?ts=${System.currentTimeMillis()}&albumId=$albumId")
             .ua()
-            .authHeader(tokenManager.getAuthPair())
+            .authHeader(tokenManager.getAuthPair(accountId))
             .get()
             .build()
 
@@ -165,7 +167,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         return AlbumTimeline(indexHash, dayCountMap)
     }
 
-    fun downloadAsset(asset: Asset, targetPath: Path): Path {
+    fun downloadAsset(accountId: Long, asset: Asset, targetPath: Path): Path {
         val url =
             if (asset.type == AssetType.AUDIO)
                 "https://i.mi.com/sfs/ns/recorder/file/${asset.id}/cb/dl_sfs_cb_${System.currentTimeMillis()}_0/storage?ts=${System.currentTimeMillis()}"
@@ -177,7 +179,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         val fetchOssUrlReq = Request.Builder()
             .url(url)
             .ua()
-            .authHeader(tokenManager.getAuthPair())
+            .authHeader(tokenManager.getAuthPair(accountId))
             .get()
             .build()
         val fetchOssUrlJson = client().executeWithRetry(fetchOssUrlReq).use { resp ->

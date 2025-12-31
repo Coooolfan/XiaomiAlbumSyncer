@@ -183,6 +183,7 @@ class CrontabController(private val service: CrontabService) {
     companion object {
         private val DEFAULT_CRONTAB = newFetcher(Crontab::class).by {
             allScalarFields()
+            accountId()
             albumIds()
             running()
             histories {
@@ -194,6 +195,7 @@ class CrontabController(private val service: CrontabService) {
 
         val CRONTAB_WITH_ALBUM_IDS_FETCHER = newFetcher(Crontab::class).by {
             allScalarFields()
+            accountId()
             albumIds()
         }
     }

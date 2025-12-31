@@ -4,12 +4,6 @@ input SystemConfigInit {
     password
 }
 
-input SystemConfigPassTokenUpdate {
-    passToken
-
-    userId
-}
-
 input SystemConfigUpdate {
     exifToolPath
 }

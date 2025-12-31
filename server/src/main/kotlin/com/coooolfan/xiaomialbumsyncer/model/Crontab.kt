@@ -19,6 +19,12 @@ interface Crontab {
 
     val config: CrontabConfig
 
+    @ManyToOne
+    val account: XiaomiAccount    // 绑定的小米账号
+
+    @IdView("account")
+    val accountId: Long           // 账号ID视图
+
     @ManyToMany
     val albums: List<Album>
 

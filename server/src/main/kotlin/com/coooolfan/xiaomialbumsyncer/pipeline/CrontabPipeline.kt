@@ -1,9 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.pipeline
 
 import com.coooolfan.xiaomialbumsyncer.controller.SystemConfigController.Companion.NORMAL_SYSTEM_CONFIG
-import com.coooolfan.xiaomialbumsyncer.model.AlbumTimeline
-import com.coooolfan.xiaomialbumsyncer.model.Crontab
-import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
+import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.ExifProcessingStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage
@@ -13,6 +11,8 @@ import com.coooolfan.xiaomialbumsyncer.service.CrontabService
 import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import kotlin.collections.toSet
@@ -29,6 +29,7 @@ class CrontabPipeline(
     private val systemConfigService: SystemConfigService,
     private val assetService: AssetService,
     private val crontabService: CrontabService,
+    private val sql: KSqlClient,
 ) {
 
     private val log = LoggerFactory.getLogger(CrontabPipeline::class.java)
@@ -137,7 +138,12 @@ class CrontabPipeline(
         if (albumTimelinesHistory.keys != crontab.albumIds.toSet()) {
             return "相册列表有变更"
         }
-        if (crontab.albumIds.contains(-1L)) {
+        // 检查是否包含录音相册（remoteId == -1）
+        val hasAudioAlbum = sql.executeQuery(Album::class) {
+            where(table.id valueIn crontab.albumIds)
+            select(table.remoteId)
+        }.any { it == -1L }
+        if (hasAudioAlbum) {
             return "\"录音\"不支持时间线对比"
         }
         return null
