@@ -1,12 +1,10 @@
 package com.coooolfan.xiaomialbumsyncer.controller
 
 import cn.dev33.satoken.annotation.SaCheckLogin
-import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount
 import com.coooolfan.xiaomialbumsyncer.model.by
 import com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountCreate
 import com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountUpdate
-import com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountView
 import com.coooolfan.xiaomialbumsyncer.service.XiaomiAccountService
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.client.meta.Api
@@ -68,7 +66,7 @@ class XiaomiAccountController(private val service: XiaomiAccountService) {
 
 
     companion object {
-        private val DEFAULT_XIAOMI_ACCOUNT = newFetcher(XiaomiAccount::class).by {
+        val DEFAULT_XIAOMI_ACCOUNT = newFetcher(XiaomiAccount::class).by {
             nickname()
             userId()
         }

@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
+import com.coooolfan.xiaomialbumsyncer.controller.XiaomiAccountController.Companion.DEFAULT_XIAOMI_ACCOUNT
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import org.babyfish.jimmer.sql.kt.KSqlClient
@@ -26,7 +27,7 @@ class AlbumsService(
      */
     fun refreshAlbums(): List<Album> {
         val allAlbums = mutableListOf<Album>()
-        val accounts = accountService.listAll()
+        val accounts = accountService.listAll(DEFAULT_XIAOMI_ACCOUNT)
 
         for (account in accounts) {
             val albums = refreshAlbumsByAccount(account.id)
