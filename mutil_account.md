@@ -5,6 +5,7 @@
 将当前单账号设计重构为支持多个小米云账号，使用单一系统密码管理多个账号。
 
 ### 用户需求确认
+
 - **数据展示**: 合并展示 - 所有账号的相册/资产统一展示，但标记来源账号
 - **任务绑定**: 一对一绑定 - 每个 Crontab 任务绑定一个特定账号
 - **账号标识**: 支持自定义昵称
@@ -84,6 +85,7 @@ interface Album {
 ```
 
 **注意**: Album 的主键需要改为复合主键或使用自增ID，因为不同账号可能有相同的 albumId。建议改为：
+
 - 使用自增 `id` 作为主键
 - 添加 `remoteId` 字段存储小米云的原始 albumId
 
@@ -128,43 +130,55 @@ interface Crontab {
 
 ### 5. 数据库迁移脚本
 
-**文件**: `server/src/main/resources/db/migration/V0.9.0__multi_account.sql`
+**文件**: `server/src/main/resources/db/migration/V0.10.0__multi_account.sql`
 
 ```sql
 -- 1. 创建小米账号表
-CREATE TABLE xiaomi_account (
-    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    nickname TEXT NOT NULL,
-    pass_token TEXT NOT NULL,
-    user_id TEXT NOT NULL
+CREATE TABLE xiaomi_account
+(
+    id         INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    nickname   TEXT    NOT NULL,
+    pass_token TEXT    NOT NULL,
+    user_id    TEXT    NOT NULL
 );
 
 -- 2. 迁移现有账号数据（如果存在）
 INSERT INTO xiaomi_account (nickname, pass_token, user_id)
-SELECT '默认账号', pass_token, user_id FROM system_config WHERE id = 0 AND pass_token != '-';
+SELECT '默认账号', pass_token, user_id
+FROM system_config
+WHERE id = 0
+  AND pass_token != '-';
 
 -- 3. 为 album 表添加账号关联
 -- 先添加列（允许NULL用于迁移）
-ALTER TABLE album ADD COLUMN account_id INTEGER REFERENCES xiaomi_account(id);
+ALTER TABLE album
+    ADD COLUMN account_id INTEGER REFERENCES xiaomi_account (id);
 -- 关联现有数据到第一个账号
-UPDATE album SET account_id = (SELECT id FROM xiaomi_account LIMIT 1) WHERE account_id IS NULL;
+UPDATE album
+SET account_id = (SELECT id FROM xiaomi_account LIMIT 1)
+WHERE account_id IS NULL;
 
 -- 4. 为 crontab 表添加账号关联
-ALTER TABLE crontab ADD COLUMN account_id INTEGER REFERENCES xiaomi_account(id);
+ALTER TABLE crontab
+    ADD COLUMN account_id INTEGER REFERENCES xiaomi_account (id);
 -- 关联现有数据到第一个账号
-UPDATE crontab SET account_id = (SELECT id FROM xiaomi_account LIMIT 1) WHERE account_id IS NULL;
+UPDATE crontab
+SET account_id = (SELECT id FROM xiaomi_account LIMIT 1)
+WHERE account_id IS NULL;
 
 -- 5. 从 system_config 移除账号相关字段
 -- SQLite 不支持 DROP COLUMN，需要重建表
-CREATE TABLE system_config_new (
-    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    password TEXT NOT NULL,
-    exif_tool_path TEXT NOT NULL,
-    assets_date_map_time_zone TEXT NOT NULL
+CREATE TABLE system_config_new
+(
+    id                        INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    password                  TEXT    NOT NULL,
+    exif_tool_path            TEXT    NOT NULL,
+    assets_date_map_time_zone TEXT    NOT NULL
 );
 
 INSERT INTO system_config_new (id, password, exif_tool_path, assets_date_map_time_zone)
-SELECT id, password, exif_tool_path, assets_date_map_time_zone FROM system_config;
+SELECT id, password, exif_tool_path, assets_date_map_time_zone
+FROM system_config;
 
 DROP TABLE system_config;
 ALTER TABLE system_config_new RENAME TO system_config;
@@ -240,7 +254,12 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         // ...
     }
 
-    fun fetchAssetsByAlbumId(accountId: Long, album: Album, day: LocalDate? = null, handler: (List<Asset>) -> Unit): Long {
+    fun fetchAssetsByAlbumId(
+        accountId: Long,
+        album: Album,
+        day: LocalDate? = null,
+        handler: (List<Asset>) -> Unit
+    ): Long {
         // 使用 tokenManager.getAuthPair(accountId)
         // ...
     }
@@ -311,19 +330,29 @@ class XiaomiAccountService(private val sql: KSqlClient, private val tokenManager
 class XiaomiAccountController(private val service: XiaomiAccountService) {
 
     @Get
-    fun list(): List<XiaomiAccountView> { ... }
+    fun list(): List<XiaomiAccountView> {
+        ...
+    }
 
     @Get("/{id}")
-    fun get(@Path id: Long): XiaomiAccountView { ... }
+    fun get(@Path id: Long): XiaomiAccountView {
+        ...
+    }
 
     @Post
-    fun create(@Body request: XiaomiAccountCreate): XiaomiAccountView { ... }
+    fun create(@Body request: XiaomiAccountCreate): XiaomiAccountView {
+        ...
+    }
 
     @Put("/{id}")
-    fun update(@Path id: Long, @Body request: XiaomiAccountUpdate): XiaomiAccountView { ... }
+    fun update(@Path id: Long, @Body request: XiaomiAccountUpdate): XiaomiAccountView {
+        ...
+    }
 
     @Delete("/{id}")
-    fun delete(@Path id: Long) { ... }
+    fun delete(@Path id: Long) {
+        ...
+    }
 }
 ```
 
@@ -357,6 +386,7 @@ input XiaomiAccountUpdate {
 ### 11. 修改相关 Service 层
 
 需要修改的服务：
+
 - `AlbumService` - 查询时可按账号过滤，创建时关联账号
 - `CrontabService` - 创建/更新任务时绑定账号
 - `SyncService` - 同步时使用任务绑定的账号
@@ -365,22 +395,22 @@ input XiaomiAccountUpdate {
 
 ## 修改文件清单
 
-| 文件 | 操作 | 说明 |
-|------|------|------|
-| `model/XiaomiAccount.kt` | 新建 | 小米账号实体 |
-| `model/SystemConfig.kt` | 修改 | 移除 passToken/userId |
-| `model/Album.kt` | 修改 | 添加 account 关联 |
-| `model/Crontab.kt` | 修改 | 添加 account 关联 |
-| `dto/XiaomiAccount.dto` | 新建 | 账号 DTO |
-| `dto/SystemConfig.dto` | 修改 | 移除 passToken 相关 DTO |
-| `xiaomicloud/TokenManager.kt` | 重构 | 多账号 token 缓存 |
-| `xiaomicloud/XiaoMiApi.kt` | 修改 | 方法添加 accountId 参数 |
-| `service/XiaomiAccountService.kt` | 新建 | 账号管理服务 |
-| `service/AlbumService.kt` | 修改 | 支持多账号 |
-| `service/CrontabService.kt` | 修改 | 支持账号绑定 |
-| `service/SyncService.kt` | 修改 | 使用任务绑定的账号 |
-| `controller/XiaomiAccountController.kt` | 新建 | 账号管理 API |
-| `db/migration/V0.9.0__multi_account.sql` | 新建 | 数据库迁移 |
+| 文件                                        | 操作 | 说明                  |
+|-------------------------------------------|----|---------------------|
+| `model/XiaomiAccount.kt`                  | 新建 | 小米账号实体              |
+| `model/SystemConfig.kt`                   | 修改 | 移除 passToken/userId |
+| `model/Album.kt`                          | 修改 | 添加 account 关联       |
+| `model/Crontab.kt`                        | 修改 | 添加 account 关联       |
+| `dto/XiaomiAccount.dto`                   | 新建 | 账号 DTO              |
+| `dto/SystemConfig.dto`                    | 修改 | 移除 passToken 相关 DTO |
+| `xiaomicloud/TokenManager.kt`             | 重构 | 多账号 token 缓存        |
+| `xiaomicloud/XiaoMiApi.kt`                | 修改 | 方法添加 accountId 参数   |
+| `service/XiaomiAccountService.kt`         | 新建 | 账号管理服务              |
+| `service/AlbumService.kt`                 | 修改 | 支持多账号               |
+| `service/CrontabService.kt`               | 修改 | 支持账号绑定              |
+| `service/SyncService.kt`                  | 修改 | 使用任务绑定的账号           |
+| `controller/XiaomiAccountController.kt`   | 新建 | 账号管理 API            |
+| `db/migration/V0.10.0__multi_account.sql` | 新建 | 数据库迁移               |
 
 ---
 

@@ -11,6 +11,7 @@ interface Album {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long
 
+    @JsonConverter(LongToStringConverter::class)
     val remoteId: Long        // 小米云的原始 albumId
 
     val name: String
