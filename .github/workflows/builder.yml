@@ -23,7 +23,7 @@ jobs:
       - name: 设置 node 环境
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
 
       - name: 启用 Corepack 并激活 Yarn 4
         run: |

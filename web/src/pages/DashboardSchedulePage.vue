@@ -123,8 +123,11 @@ function formatDateInput(d: Date) {
 }
 
 function parseDateToLocalTimestamp(dateStr: string) {
-  const [y, m, d] = dateStr.split('-').map((n) => Number(n))
-  const dt = new Date(y, (m || 1) - 1, d || 1)
+  const parts = dateStr.split('-')
+  const y = Number(parts[0] ?? '1970')
+  const m = Number(parts[1] ?? '1')
+  const d = Number(parts[2] ?? '1')
+  const dt = new Date(y || 1970, (m || 1) - 1, d || 1)
   dt.setHours(0, 0, 0, 0)
   return dt.getTime()
 }
@@ -159,10 +162,12 @@ function quantile(values: number[], q: number): number {
   const pos = (arr.length - 1) * q
   const base = Math.floor(pos)
   const rest = pos - base
-  if (arr[base + 1] !== undefined) {
-    return arr[base] + rest * (arr[base + 1] - arr[base])
+  const v0 = arr[base] ?? 0
+  const v1 = arr[base + 1]
+  if (v1 !== undefined) {
+    return v0 + rest * (v1 - v0)
   }
-  return arr[base]
+  return v0
 }
 
 function rebuildHeatmapData() {

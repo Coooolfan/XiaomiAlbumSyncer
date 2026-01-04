@@ -27,7 +27,7 @@ export class CrontabController {
     readonly createCrontab: (options: CrontabControllerOptions['createCrontab']) => Promise<
         CrontabDto['CrontabController/DEFAULT_CRONTAB']
     > = async(options) => {
-        let _uri = '/api/crontab';
+        const _uri = '/api/crontab';
         return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<CrontabDto['CrontabController/DEFAULT_CRONTAB']>;
     }
     
@@ -138,7 +138,7 @@ export class CrontabController {
     readonly listCrontabs: () => Promise<
         ReadonlyArray<CrontabDto['CrontabController/DEFAULT_CRONTAB']>
     > = async() => {
-        let _uri = '/api/crontab';
+        const _uri = '/api/crontab';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<ReadonlyArray<CrontabDto['CrontabController/DEFAULT_CRONTAB']>>;
     }
     

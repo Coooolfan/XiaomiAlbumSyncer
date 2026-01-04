@@ -32,7 +32,7 @@ export class SystemConfigController {
     readonly getSystemConfig: () => Promise<
         SystemConfigDto['SystemConfigController/NORMAL_SYSTEM_CONFIG']
     > = async() => {
-        let _uri = '/api/system-config/normal';
+        const _uri = '/api/system-config/normal';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<SystemConfigDto['SystemConfigController/NORMAL_SYSTEM_CONFIG']>;
     }
     
@@ -48,7 +48,7 @@ export class SystemConfigController {
     readonly getSystemDebugInfo: () => Promise<
         string
     > = async() => {
-        let _uri = '/api/system-config/info/debug';
+        const _uri = '/api/system-config/info/debug';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<string>;
     }
     
@@ -64,7 +64,7 @@ export class SystemConfigController {
     readonly getSystemInfo: () => Promise<
         SystemInfoResponse
     > = async() => {
-        let _uri = '/api/system-config/info';
+        const _uri = '/api/system-config/info';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<SystemInfoResponse>;
     }
     
@@ -78,7 +78,7 @@ export class SystemConfigController {
     readonly importFromV2Db: () => Promise<
         void
     > = async() => {
-        let _uri = '/api/system-config/import-from-v2';
+        const _uri = '/api/system-config/import-from-v2';
         return (await this.executor({uri: _uri, method: 'POST'})) as Promise<void>;
     }
     
@@ -95,7 +95,7 @@ export class SystemConfigController {
     readonly initConfig: (options: SystemConfigControllerOptions['initConfig']) => Promise<
         void
     > = async(options) => {
-        let _uri = '/api/system-config';
+        const _uri = '/api/system-config';
         return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<void>;
     }
     
@@ -111,7 +111,7 @@ export class SystemConfigController {
     readonly isInit: () => Promise<
         IsInitResponse
     > = async() => {
-        let _uri = '/api/system-config';
+        const _uri = '/api/system-config';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<IsInitResponse>;
     }
     
@@ -128,7 +128,7 @@ export class SystemConfigController {
     readonly updatePassToken: (options: SystemConfigControllerOptions['updatePassToken']) => Promise<
         void
     > = async(options) => {
-        let _uri = '/api/system-config/pass-token';
+        const _uri = '/api/system-config/pass-token';
         return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<void>;
     }
     
@@ -145,7 +145,7 @@ export class SystemConfigController {
     readonly updatePassword: (options: SystemConfigControllerOptions['updatePassword']) => Promise<
         void
     > = async(options) => {
-        let _uri = '/api/system-config/password';
+        const _uri = '/api/system-config/password';
         return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<void>;
     }
     
@@ -162,7 +162,7 @@ export class SystemConfigController {
     readonly updateSystemConfig: (options: SystemConfigControllerOptions['updateSystemConfig']) => Promise<
         void
     > = async(options) => {
-        let _uri = '/api/system-config/normal';
+        const _uri = '/api/system-config/normal';
         return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<void>;
     }
 }

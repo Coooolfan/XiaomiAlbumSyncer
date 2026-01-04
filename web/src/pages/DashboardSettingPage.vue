@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject, computed, onMounted, watch, type Ref } from 'vue'
+import { ref, inject, onMounted, watch } from 'vue'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Textarea from 'primevue/textarea'
@@ -15,8 +15,6 @@ type BgMode = 'lightRays' | 'silk'
 const BG_KEY = 'app:bgMode'
 const HEAT_KEY = 'app:optimizeHeatmap'
 
-const backgroundMode = inject<Ref<BgMode>>('backgroundMode')
-const toggleBackground = inject<() => void>('toggleBackground')
 const setBackgroundMode = inject<(mode: BgMode) => void>('setBackgroundMode')
 
 const bgModeLocal = ref<BgMode>('lightRays')

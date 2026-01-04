@@ -13,7 +13,7 @@ const systemInfo = ref<SystemInfoResponse | null>(null)
 const tabs = [
   { label: '计划', to: '/dashboard/schedule' },
   { label: '设置', to: '/dashboard/setting' },
-]
+] as const
 
 onMounted(async () => {
   try {
