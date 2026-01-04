@@ -2,7 +2,7 @@
 import { onMounted, ref, computed, watch } from 'vue'
 import Card from 'primevue/card'
 import ContributionHeatmap from '@/components/ContributionHeatmap.vue'
-import AlbumCard from '@/components/AlbumCard.vue'
+import AlbumPanel from '@/components/AlbumPanel.vue'
 import CrontabCard from '@/components/CrontabCard.vue'
 import { api } from '@/ApiInstance'
 import type { Dynamic_Album } from '@/__generated/model/dynamic'
@@ -18,7 +18,6 @@ import InputNumber from 'primevue/inputnumber'
 import Message from 'primevue/message'
 import { useToast } from 'primevue/usetoast'
 import type { CrontabDto } from '@/__generated/model/dto'
-import SplitButton from 'primevue/splitbutton'
 import type { CrontabCreateInput } from '@/__generated/model/static'
 
 type DataPoint = { timeStamp: number; count: number }
@@ -202,39 +201,9 @@ function rebuildHeatmapData() {
   dataPoints.value = points
 }
 
-// function refresh() {
-//   generateRandomData()
-// }
-
-async function fetchAlbums() {
-  try {
-    albums.value = await api.albumsController.listAlbums()
-    await fetchTimeline()
-  } catch (err) {
-    console.error('获取相册列表失败', err)
-  }
-}
-
-async function fetchLatestAlbums() {
-  try {
-    toast.add({
-      severity: 'info',
-      summary: '正在从远程更新相册列表',
-      detail: '请暂时不要离开此页面，同步正在进行',
-      life: 5000,
-    })
-    albums.value = await api.albumsController.refreshAlbums()
-    toast.add({ severity: 'success', summary: '已更新', life: 1600 })
-    await fetchTimeline()
-  } catch (err) {
-    toast.add({
-      severity: 'error',
-      summary: '更新失败',
-      detail: '请确保您已配置有效的 passToken 与 UserId。\n并确保此已完成相册服务二次验证',
-      life: 10000,
-    })
-    console.error('获取最新相册列表失败', err)
-  }
+function onAlbumsUpdate(list: ReadonlyArray<Dynamic_Album>) {
+  albums.value = list
+  fetchTimeline()
 }
 
 // ==== 计划任务：逻辑 ====
@@ -530,7 +499,6 @@ onMounted(() => {
   } catch {
     optimizeHeatmap.value = true
   }
-  fetchAlbums()
   fetchCrontabs()
   buildTimeZones()
 })
@@ -538,14 +506,6 @@ onMounted(() => {
 watch(optimizeHeatmap, () => {
   rebuildHeatmapData()
 })
-
-const albumsRefreshModel = ref([
-  {
-    label: '从远程更新整个相册列表',
-    icon: 'pi pi-cloud-download',
-    command: fetchLatestAlbums,
-  },
-])
 </script>
 
 <template>
@@ -611,31 +571,7 @@ const albumsRefreshModel = ref([
       >
     </Card>
 
-    <Panel header="相册" toggleable>
-      <template #icons>
-        <SplitButton
-          icon="pi pi-refresh"
-          severity="secondary"
-          outlined
-          rounded
-          @click="fetchAlbums"
-          :model="albumsRefreshModel"
-        />
-      </template>
-
-      <div class="space-y-2">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          <AlbumCard
-            v-for="a in albums"
-            :key="a.id"
-            :name="a.name"
-            :asset-count="a.assetCount"
-            :last-update-time="a.lastUpdateTime"
-          />
-          <div v-if="!albums || albums.length === 0" class="text-xs text-slate-500">暂无相册</div>
-        </div>
-      </div>
-    </Panel>
+    <AlbumPanel @update:albums="onAlbumsUpdate" />
 
     <!-- 创建/编辑 计划任务 -->
     <Dialog
