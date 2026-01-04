@@ -1,8 +1,10 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
 import com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount
+import com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountCreate
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
+import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
@@ -17,9 +19,9 @@ class XiaomiAccountService(
     /**
      * 获取所有账号列表
      */
-    fun listAll(): List<XiaomiAccount> {
+    fun listAll(fetcher: Fetcher<XiaomiAccount>): List<XiaomiAccount> {
         return sql.executeQuery(XiaomiAccount::class) {
-            select(table)
+            select(table.fetch(fetcher))
         }
     }
 
@@ -33,20 +35,21 @@ class XiaomiAccountService(
     /**
      * 添加新账号
      */
-    fun create(account: XiaomiAccount): XiaomiAccount {
-        val result = sql.saveCommand(account, SaveMode.INSERT_ONLY).execute()
-        log.info("创建新小米账号: nickname={}, userId={}", account.nickname, account.userId)
-        return result.modifiedEntity
+    fun create(create: XiaomiAccountCreate): XiaomiAccount {
+        return sql.saveCommand(create, SaveMode.INSERT_ONLY).execute().modifiedEntity
     }
 
     /**
      * 更新账号信息
      */
-    fun update(account: XiaomiAccount): XiaomiAccount {
-        val result = sql.saveCommand(account, SaveMode.UPDATE_ONLY).execute()
+    fun update(account: XiaomiAccount, fetcher: Fetcher<XiaomiAccount>): XiaomiAccount {
+        // 验证账号存在
+        if (!exists(account.id))
+            throw IllegalArgumentException("账号不存在: $account.id")
+
+        val result = sql.saveCommand(account, SaveMode.UPDATE_ONLY).execute(fetcher)
         // 更新后清除该账号的 token 缓存
         tokenManager.invalidateToken(account.id)
-        log.info("更新小米账号: id={}, nickname={}", account.id, account.nickname)
         return result.modifiedEntity
     }
 
@@ -62,7 +65,6 @@ class XiaomiAccountService(
         if (rows == 0) {
             throw IllegalArgumentException("账号不存在: $id")
         }
-        log.info("删除小米账号: id={}", id)
     }
 
     /**
@@ -72,12 +74,4 @@ class XiaomiAccountService(
         return sql.findById(XiaomiAccount::class, id) != null
     }
 
-    /**
-     * 获取账号数量
-     */
-    fun count(): Long {
-        return sql.executeQuery(XiaomiAccount::class) {
-            selectCount()
-        }[0]
-    }
 }

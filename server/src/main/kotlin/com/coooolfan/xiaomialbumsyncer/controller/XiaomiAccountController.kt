@@ -1,12 +1,16 @@
 package com.coooolfan.xiaomialbumsyncer.controller
 
 import cn.dev33.satoken.annotation.SaCheckLogin
+import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount
+import com.coooolfan.xiaomialbumsyncer.model.by
 import com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountCreate
 import com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountView
 import com.coooolfan.xiaomialbumsyncer.service.XiaomiAccountService
+import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.client.meta.Api
+import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.noear.solon.annotation.*
 import org.noear.solon.core.handle.MethodType
 
@@ -28,20 +32,8 @@ class XiaomiAccountController(private val service: XiaomiAccountService) {
     @Api
     @Mapping(method = [MethodType.GET])
     @SaCheckLogin
-    fun listAll(): List<XiaomiAccountView> {
-        return service.listAll().map { XiaomiAccountView(it) }
-    }
-
-    /**
-     * 根据 ID 获取账号
-     */
-    @Api
-    @Mapping("/{id}", method = [MethodType.GET])
-    @SaCheckLogin
-    fun getById(@Path id: Long): XiaomiAccountView {
-        val account = service.getById(id)
-            ?: throw IllegalArgumentException("账号不存在: $id")
-        return XiaomiAccountView(account)
+    fun listAll(): List<@FetchBy("DEFAULT_XIAOMI_ACCOUNT") XiaomiAccount> {
+        return service.listAll(DEFAULT_XIAOMI_ACCOUNT)
     }
 
     /**
@@ -50,14 +42,8 @@ class XiaomiAccountController(private val service: XiaomiAccountService) {
     @Api
     @Mapping(method = [MethodType.POST])
     @SaCheckLogin
-    fun create(@Body create: XiaomiAccountCreate): XiaomiAccountView {
-        val account = XiaomiAccount {
-            nickname = create.nickname
-            passToken = create.passToken
-            userId = create.userId
-        }
-        val saved = service.create(account)
-        return XiaomiAccountView(saved)
+    fun create(@Body create: XiaomiAccountCreate): @FetchBy("DEFAULT_XIAOMI_ACCOUNT") XiaomiAccount {
+        return service.create(create)
     }
 
     /**
@@ -66,20 +52,8 @@ class XiaomiAccountController(private val service: XiaomiAccountService) {
     @Api
     @Mapping("/{id}", method = [MethodType.PUT])
     @SaCheckLogin
-    fun update(@Path id: Long, @Body update: XiaomiAccountUpdate): XiaomiAccountView {
-        // 验证账号存在
-        if (!service.exists(id)) {
-            throw IllegalArgumentException("账号不存在: $id")
-        }
-
-        val account = XiaomiAccount {
-            this.id = id
-            nickname = update.nickname
-            passToken = update.passToken
-            userId = update.userId
-        }
-        val saved = service.update(account)
-        return XiaomiAccountView(saved)
+    fun update(@Path id: Long, @Body update: XiaomiAccountUpdate): @FetchBy("DEFAULT_XIAOMI_ACCOUNT") XiaomiAccount {
+        return service.update(update.toEntity { this.id = id }, DEFAULT_XIAOMI_ACCOUNT)
     }
 
     /**
@@ -92,13 +66,11 @@ class XiaomiAccountController(private val service: XiaomiAccountService) {
         service.delete(id)
     }
 
-    /**
-     * 获取账号数量
-     */
-    @Api
-    @Mapping("/count", method = [MethodType.GET])
-    @SaCheckLogin
-    fun count(): Long {
-        return service.count()
+
+    companion object {
+        private val DEFAULT_XIAOMI_ACCOUNT = newFetcher(XiaomiAccount::class).by {
+            nickname()
+            userId()
+        }
     }
 }
