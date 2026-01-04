@@ -3,7 +3,6 @@ import type {SystemConfigDto} from '../model/dto/';
 import type {
     IsInitResponse, 
     SystemConfigInit, 
-    SystemConfigPassTokenUpdate, 
     SystemConfigPasswordUpdate, 
     SystemConfigUpdate, 
     SystemInfoResponse
@@ -32,7 +31,7 @@ export class SystemConfigController {
     readonly getSystemConfig: () => Promise<
         SystemConfigDto['SystemConfigController/NORMAL_SYSTEM_CONFIG']
     > = async() => {
-        const _uri = '/api/system-config/normal';
+        let _uri = '/api/system-config/normal';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<SystemConfigDto['SystemConfigController/NORMAL_SYSTEM_CONFIG']>;
     }
     
@@ -48,7 +47,7 @@ export class SystemConfigController {
     readonly getSystemDebugInfo: () => Promise<
         string
     > = async() => {
-        const _uri = '/api/system-config/info/debug';
+        let _uri = '/api/system-config/info/debug';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<string>;
     }
     
@@ -64,7 +63,7 @@ export class SystemConfigController {
     readonly getSystemInfo: () => Promise<
         SystemInfoResponse
     > = async() => {
-        const _uri = '/api/system-config/info';
+        let _uri = '/api/system-config/info';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<SystemInfoResponse>;
     }
     
@@ -78,7 +77,7 @@ export class SystemConfigController {
     readonly importFromV2Db: () => Promise<
         void
     > = async() => {
-        const _uri = '/api/system-config/import-from-v2';
+        let _uri = '/api/system-config/import-from-v2';
         return (await this.executor({uri: _uri, method: 'POST'})) as Promise<void>;
     }
     
@@ -95,7 +94,7 @@ export class SystemConfigController {
     readonly initConfig: (options: SystemConfigControllerOptions['initConfig']) => Promise<
         void
     > = async(options) => {
-        const _uri = '/api/system-config';
+        let _uri = '/api/system-config';
         return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<void>;
     }
     
@@ -111,25 +110,8 @@ export class SystemConfigController {
     readonly isInit: () => Promise<
         IsInitResponse
     > = async() => {
-        const _uri = '/api/system-config';
+        let _uri = '/api/system-config';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<IsInitResponse>;
-    }
-    
-    /**
-     * 更新密码令牌配置
-     * 
-     * 此接口用于更新系统的密码令牌相关配置
-     * 需要用户登录认证才能访问
-     * 
-     * @parameter {SystemConfigControllerOptions['updatePassToken']} options
-     * - update 密码令牌更新参数，包含新的密码令牌配置信息
-     * 
-     */
-    readonly updatePassToken: (options: SystemConfigControllerOptions['updatePassToken']) => Promise<
-        void
-    > = async(options) => {
-        const _uri = '/api/system-config/pass-token';
-        return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<void>;
     }
     
     /**
@@ -145,7 +127,7 @@ export class SystemConfigController {
     readonly updatePassword: (options: SystemConfigControllerOptions['updatePassword']) => Promise<
         void
     > = async(options) => {
-        const _uri = '/api/system-config/password';
+        let _uri = '/api/system-config/password';
         return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<void>;
     }
     
@@ -162,7 +144,7 @@ export class SystemConfigController {
     readonly updateSystemConfig: (options: SystemConfigControllerOptions['updateSystemConfig']) => Promise<
         void
     > = async(options) => {
-        const _uri = '/api/system-config/normal';
+        let _uri = '/api/system-config/normal';
         return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<void>;
     }
 }
@@ -175,13 +157,6 @@ export type SystemConfigControllerOptions = {
          * 
          */
         readonly body: SystemConfigInit
-    }, 
-    'updatePassToken': {
-        /**
-         * 密码令牌更新参数，包含新的密码令牌配置信息
-         * 
-         */
-        readonly body: SystemConfigPassTokenUpdate
     }, 
     'updateSystemConfig': {
         /**

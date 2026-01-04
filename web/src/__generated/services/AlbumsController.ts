@@ -69,7 +69,7 @@ export class AlbumsController {
     readonly listAlbums: () => Promise<
         ReadonlyArray<Dynamic_Album>
     > = async() => {
-        const _uri = '/api/album';
+        let _uri = '/api/album';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<ReadonlyArray<Dynamic_Album>>;
     }
     
@@ -85,7 +85,7 @@ export class AlbumsController {
     readonly refreshAlbums: () => Promise<
         ReadonlyArray<Dynamic_Album>
     > = async() => {
-        const _uri = '/api/album/lastest';
+        let _uri = '/api/album/lastest';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<ReadonlyArray<Dynamic_Album>>;
     }
 }

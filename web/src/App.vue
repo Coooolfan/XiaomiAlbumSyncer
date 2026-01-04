@@ -4,6 +4,7 @@ import { provide, ref, onMounted, watch } from 'vue'
 import Toast from 'primevue/toast'
 import Silk from '@/components/background/Silk.vue'
 import LightRays from '@/components/background/LightRays.vue'
+import ConfirmDialog from 'primevue/confirmdialog'
 
 type BgMode = 'lightRays' | 'silk'
 const BG_KEY = 'app:bgMode'
@@ -64,6 +65,7 @@ provide('setBackgroundMode', setBackgroundMode)
     />
   </div>
   <Toast position="bottom-right" />
+  <ConfirmDialog />
   <div class="min-h-screen text-slate-800">
     <RouterView />
   </div>

@@ -45,7 +45,7 @@ export class TokenController {
     readonly logout: () => Promise<
         void
     > = async() => {
-        const _uri = '/api/token';
+        let _uri = '/api/token';
         return (await this.executor({uri: _uri, method: 'DELETE'})) as Promise<void>;
     }
 }

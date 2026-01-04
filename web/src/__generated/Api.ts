@@ -4,7 +4,8 @@ import {
     AssetController, 
     CrontabController, 
     SystemConfigController, 
-    TokenController
+    TokenController, 
+    XiaomiAccountController
 } from './services/';
 
 export class Api {
@@ -19,11 +20,14 @@ export class Api {
     
     readonly tokenController: TokenController
     
+    readonly xiaomiAccountController: XiaomiAccountController
+    
     constructor(executor: Executor) {
         this.albumsController = new AlbumsController(executor);
         this.assetController = new AssetController(executor);
         this.crontabController = new CrontabController(executor);
         this.systemConfigController = new SystemConfigController(executor);
         this.tokenController = new TokenController(executor);
+        this.xiaomiAccountController = new XiaomiAccountController(executor);
     }
 }

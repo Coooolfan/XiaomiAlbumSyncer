@@ -7,6 +7,11 @@ export type CrontabDto = {
         readonly description: string;
         readonly enabled: boolean;
         readonly config: CrontabConfig;
+        readonly accountId: number;
+        readonly account: {
+            readonly id: number;
+            readonly nickname: string;
+        };
         readonly albumIds: ReadonlyArray<string>;
         readonly running: boolean;
         readonly histories: ReadonlyArray<{

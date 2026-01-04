@@ -195,7 +195,11 @@ onUnmounted(() => {
             {{ crontab.description }}
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="flex items-center gap-2">
+              <i class="pi pi-user text-slate-400" />
+              <span class="text-slate-600">{{ crontab.account?.nickname || '-' }}</span>
+            </div>
             <div class="flex items-center gap-2">
               <i class="pi pi-clock text-slate-400" />
               <span class="text-slate-600">{{ crontab.config?.expression }}</span>
