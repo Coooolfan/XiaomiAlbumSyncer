@@ -1,8 +1,9 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
-import com.coooolfan.xiaomialbumsyncer.controller.XiaomiAccountController.Companion.DEFAULT_XIAOMI_ACCOUNT
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
+import org.babyfish.jimmer.sql.ast.mutation.SaveMode
+import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.ast.expression.ge
@@ -17,22 +18,18 @@ import java.time.LocalDate
 @Managed
 class AlbumsService(
     private val sql: KSqlClient,
-    private val api: XiaoMiApi,
-    private val accountService: XiaomiAccountService
+    private val api: XiaoMiApi
 ) {
     private val log = LoggerFactory.getLogger(AlbumsService::class.java)
 
     /**
      * 刷新所有账号的相册
      */
-    fun refreshAlbums(): List<Album> {
+    fun refreshAlbums(accountId: Long, fetcher: Fetcher<Album>): List<Album> {
         val allAlbums = mutableListOf<Album>()
-        val accounts = accountService.listAll(DEFAULT_XIAOMI_ACCOUNT)
 
-        for (account in accounts) {
-            val albums = refreshAlbumsByAccount(account.id)
-            allAlbums.addAll(albums)
-        }
+        val albums = refreshAlbumsByAccount(accountId, fetcher)
+        allAlbums.addAll(albums)
 
         return allAlbums
     }
@@ -40,7 +37,7 @@ class AlbumsService(
     /**
      * 刷新指定账号的相册
      */
-    fun refreshAlbumsByAccount(accountId: Long): List<Album> {
+    fun refreshAlbumsByAccount(accountId: Long, fetcher: Fetcher<Album>): List<Album> {
         log.info("刷新账号 {} 的相册列表", accountId)
         val remoteAlbums = api.fetchAllAlbums(accountId)
 
@@ -63,33 +60,18 @@ class AlbumsService(
                 }
             } else {
                 // 插入新相册
-                sql.insert(remoteAlbum)
+                sql.save(remoteAlbum, SaveMode.INSERT_ONLY)
             }
         }
 
-        // 删除远程不存在的相册
-        val remoteIds = remoteAlbums.map { it.remoteId }.toSet()
-        val toDelete = existingAlbums.filter { it.remoteId !in remoteIds }
-        for (album in toDelete) {
-            sql.deleteById(Album::class, album.id)
-            log.info("删除不存在的相册: {} (remoteId={})", album.name, album.remoteId)
-        }
-
         return sql.executeQuery(Album::class) {
             where(table.accountId eq accountId)
-            select(table)
+            select(table.fetch(fetcher))
         }
     }
 
-    fun getAllAlbums(): List<Album> {
-        return sql.executeQuery(Album::class) { select(table) }
-    }
-
-    fun getAlbumsByAccount(accountId: Long): List<Album> {
-        return sql.executeQuery(Album::class) {
-            where(table.accountId eq accountId)
-            select(table)
-        }
+    fun getAllAlbums(fetcher: Fetcher<Album>): List<Album> {
+        return sql.executeQuery(Album::class) { select(table.fetch(fetcher)) }
     }
 
     fun fetchDateMap(albumIds: List<Long>, start: Instant, end: Instant): Map<LocalDate, Long> {

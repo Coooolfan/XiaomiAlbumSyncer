@@ -1,5 +1,5 @@
 import type {Executor} from '../';
-import type {Dynamic_Album} from '../model/dynamic/';
+import type {AlbumDto} from '../model/dto/';
 
 /**
  * 相册管理控制器
@@ -67,10 +67,10 @@ export class AlbumsController {
      * 
      */
     readonly listAlbums: () => Promise<
-        ReadonlyArray<Dynamic_Album>
+        ReadonlyArray<AlbumDto['AlbumsController/DEFAULT_ALBUM']>
     > = async() => {
         let _uri = '/api/album';
-        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<ReadonlyArray<Dynamic_Album>>;
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<ReadonlyArray<AlbumDto['AlbumsController/DEFAULT_ALBUM']>>;
     }
     
     /**
@@ -82,16 +82,19 @@ export class AlbumsController {
      * @return List<Album> 返回刷新后的相册列表，包含所有相册的基本信息
      * 
      */
-    readonly refreshAlbums: () => Promise<
-        ReadonlyArray<Dynamic_Album>
-    > = async() => {
-        let _uri = '/api/album/lastest';
-        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<ReadonlyArray<Dynamic_Album>>;
+    readonly refreshAlbums: (options: AlbumsControllerOptions['refreshAlbums']) => Promise<
+        ReadonlyArray<AlbumDto['AlbumsController/DEFAULT_ALBUM']>
+    > = async(options) => {
+        let _uri = '/api/album/lastest/';
+        _uri += encodeURIComponent(options.accountId);
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<ReadonlyArray<AlbumDto['AlbumsController/DEFAULT_ALBUM']>>;
     }
 }
 
 export type AlbumsControllerOptions = {
-    'refreshAlbums': {}, 
+    'refreshAlbums': {
+        readonly accountId: number
+    }, 
     'listAlbums': {}, 
     'fetchDateMap': {
         /**

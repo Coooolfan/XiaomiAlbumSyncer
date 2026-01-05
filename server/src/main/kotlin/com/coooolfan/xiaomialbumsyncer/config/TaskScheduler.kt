@@ -1,6 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.config
 
-import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CRONTAB_WITH_ALBUM_IDS_FETCHER
+import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CRONTAB_WITH_ALBUMS_FETCHER
 import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
@@ -43,7 +43,7 @@ class TaskScheduler(
     fun initJobs() {
         val crontabs = sql.executeQuery(Crontab::class) {
             where(table.enabled eq true)
-            select(table.fetch(CRONTAB_WITH_ALBUM_IDS_FETCHER))
+            select(table.fetch(CRONTAB_WITH_ALBUMS_FETCHER))
         }
         val registeredJobs = mutableListOf<Crontab>()
 

@@ -5,19 +5,18 @@ import ContributionHeatmap from '@/components/ContributionHeatmap.vue'
 import AlbumPanel from '@/components/AlbumPanel.vue'
 import CrontabCard from '@/components/CrontabCard.vue'
 import { api } from '@/ApiInstance'
-import type { Dynamic_Album } from '@/__generated/model/dynamic'
 import Panel from 'primevue/panel'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
-import InputSwitch from 'primevue/inputswitch'
-import Dropdown from 'primevue/dropdown'
+import ToggleSwitch from 'primevue/toggleswitch'
+import Select from 'primevue/select'
 import MultiSelect from 'primevue/multiselect'
 import InputNumber from 'primevue/inputnumber'
 import Message from 'primevue/message'
 import { useToast } from 'primevue/usetoast'
-import type { CrontabDto } from '@/__generated/model/dto'
+import type { CrontabDto, AlbumDto, XiaomiAccountDto } from '@/__generated/model/dto'
 import type { CrontabCreateInput } from '@/__generated/model/static'
 
 type DataPoint = { timeStamp: number; count: number }
@@ -29,7 +28,12 @@ const endDateStr = ref(formatDateInput(new Date()))
 const dataPoints = ref<DataPoint[]>([])
 const rawTimelineMap = ref<Record<string, number>>({})
 const optimizeHeatmap = ref(false)
-const albums = ref<ReadonlyArray<Dynamic_Album>>([])
+
+type Album = AlbumDto['AlbumsController/DEFAULT_ALBUM']
+type XiaomiAccount = XiaomiAccountDto['XiaomiAccountController/DEFAULT_XIAOMI_ACCOUNT']
+
+const albums = ref<ReadonlyArray<Album>>([])
+const accounts = ref<ReadonlyArray<XiaomiAccount>>([])
 const tip = ref('')
 let tipHideTimer: number | undefined
 
@@ -67,10 +71,16 @@ const defaultTz = (() => {
   }
 })()
 
-const cronForm = ref<CrontabCreateInput>({
+// 扩展 CreateInput 以适应本地表单绑定
+interface LocalCronForm extends Omit<CrontabCreateInput, 'albumIds'> {
+  albumIds: number[]
+}
+
+const cronForm = ref<LocalCronForm>({
   name: '',
   description: '',
   enabled: true,
+  accountId: 0,
   config: {
     expression: '0 0 23 * * ?',
     timeZone: defaultTz,
@@ -95,12 +105,27 @@ const cronForm = ref<CrontabCreateInput>({
 
 const formErrors = ref<Record<string, string>>({})
 const timeZones = ref<string[]>([])
-const albumOptions = computed(
-  () =>
-    (albums.value || [])
-      .filter((a) => a.id !== undefined)
-      .map((a) => ({ label: a.name ?? `ID ${a.id}`, value: a.id as string })), // 这个 as 从逻辑上是多余的，但是不加编译器会报错
+
+const accountOptions = computed(() =>
+  accounts.value.map((a) => ({ label: a.nickname || a.userId, value: a.id })),
 )
+
+// 所有相册选项，用于 CrontabCard 显示（value 为 string）
+const allAlbumOptions = computed(() =>
+  (albums.value || []).map((a) => ({
+    label: a.name ?? `ID ${a.id}`,
+    value: String(a.id),
+  })),
+)
+
+// 表单用相册选项，根据选中的 accountId 过滤（value 为 number）
+const formAlbumOptions = computed(() => {
+  if (!cronForm.value.accountId) return []
+  return (albums.value || [])
+    .filter((a) => a.account.id === cronForm.value.accountId)
+    .map((a) => ({ label: a.name ?? `ID ${a.id}`, value: a.id }))
+})
+
 function onDayClick(payload: {
   date: Date
   dateStr: string
@@ -201,7 +226,7 @@ function rebuildHeatmapData() {
   dataPoints.value = points
 }
 
-function onAlbumsUpdate(list: ReadonlyArray<Dynamic_Album>) {
+function onAlbumsUpdate(list: ReadonlyArray<Album>) {
   albums.value = list
   fetchTimeline()
 }
@@ -225,6 +250,14 @@ function buildTimeZones() {
   }
 }
 
+async function fetchAccounts() {
+  try {
+    accounts.value = await api.xiaomiAccountController.listAll()
+  } catch (err) {
+    console.error('获取账号列表失败', err)
+  }
+}
+
 async function fetchCrontabs() {
   loadingCrons.value = true
   try {
@@ -245,10 +278,13 @@ async function fetchCrontabs() {
 function openCreateCron() {
   isEditing.value = false
   editingId.value = null
+  // 默认选中第一个账号
+  const defaultAccountId = accounts.value[0]?.id ?? 0
   cronForm.value = {
     name: '',
     description: '',
     enabled: true,
+    accountId: defaultAccountId,
     config: {
       expression: '0 0 23 * * ?',
       timeZone: defaultTz,
@@ -281,6 +317,7 @@ function openEditCron(item: Crontab) {
     name: item.name,
     description: item.description,
     enabled: item.enabled,
+    accountId: item.accountId,
     config: {
       expression: item.config.expression,
       timeZone: item.config.timeZone,
@@ -300,7 +337,8 @@ function openEditCron(item: Crontab) {
       exifProcessors: item.config.exifProcessors ?? 2,
       fileTimeWorkers: item.config.fileTimeWorkers ?? 2,
     },
-    albumIds: [...item.albumIds],
+    // 将 string[] 转为 number[]
+    albumIds: item.albumIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id)),
   }
   formErrors.value = {}
   showCronDialog.value = true
@@ -327,7 +365,8 @@ function validateCronForm(): boolean {
     errors.timeZone = '必选'
   if (!cronForm.value.config.targetPath || cronForm.value.config.targetPath.trim() === '')
     errors.targetPath = '必填'
-  // if (cronForm.value.config.fetchFromDbSize > cronForm.value.config.downloaders) errors.concurrency = '必须小于资产下载'
+  if (!cronForm.value.accountId) errors.accountId = '必选'
+
   formErrors.value = errors
   return Object.keys(errors).length === 0
 }
@@ -337,9 +376,17 @@ async function submitCron() {
   saving.value = true
   try {
     if (isEditing.value && editingId.value !== null) {
+      // UpdateInput 没有 accountId 字段，通常不允许修改归属账号
+      // 但 albumIds 需要是 number[]
       await api.crontabController.updateCrontab({
         crontabId: editingId.value,
-        body: cronForm.value,
+        body: {
+          name: cronForm.value.name,
+          description: cronForm.value.description,
+          enabled: cronForm.value.enabled,
+          config: cronForm.value.config,
+          albumIds: cronForm.value.albumIds,
+        },
       })
       toast.add({ severity: 'success', summary: '已更新', life: 1600 })
     } else {
@@ -366,7 +413,8 @@ async function toggleEnabled(row: Crontab) {
         description: row.description,
         enabled: !row.enabled,
         config: row.config,
-        albumIds: row.albumIds,
+        // DTO 中 albumIds 是 string[], UpdateInput 需要 number[]
+        albumIds: row.albumIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id)),
       },
     })
     crontabs.value = crontabs.value.map((c) =>
@@ -499,6 +547,7 @@ onMounted(() => {
   } catch {
     optimizeHeatmap.value = true
   }
+  fetchAccounts()
   fetchCrontabs()
   buildTimeZones()
 })
@@ -506,6 +555,15 @@ onMounted(() => {
 watch(optimizeHeatmap, () => {
   rebuildHeatmapData()
 })
+
+watch(
+  () => cronForm.value.accountId,
+  () => {
+    if (!isEditing.value) {
+      cronForm.value.albumIds = []
+    }
+  },
+)
 </script>
 
 <template>
@@ -554,7 +612,7 @@ watch(optimizeHeatmap, () => {
                 v-for="item in crontabs"
                 :key="item.id"
                 :crontab="item"
-                :album-options="albumOptions"
+                :album-options="allAlbumOptions"
                 :busy="updatingRow === item.id"
                 @edit="openEditCron(item)"
                 @delete="requestDelete(item)"
@@ -598,6 +656,25 @@ watch(optimizeHeatmap, () => {
           />
         </div>
 
+        <div class="space-y-2">
+          <label class="block text-xs font-medium text-slate-500">归属账号</label>
+          <Select
+            v-model="cronForm.accountId"
+            :options="accountOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="选择小米账号"
+            class="w-full"
+            :disabled="isEditing"
+          />
+          <div v-if="formErrors.accountId" class="text-xs text-red-500">
+            {{ formErrors.accountId }}
+          </div>
+          <div v-if="isEditing" class="text-[10px] text-slate-400">
+            计划任务创建后无法更改归属账号
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
           <div class="space-y-2">
             <label class="block text-xs font-medium text-slate-500">Cron 表达式</label>
@@ -615,7 +692,7 @@ watch(optimizeHeatmap, () => {
           </div>
           <div class="space-y-2">
             <label class="block text-xs font-medium text-slate-500">时区</label>
-            <Dropdown
+            <Select
               v-model="cronForm.config.timeZone"
               :options="timeZones"
               placeholder="Asia/Shanghai"
@@ -641,15 +718,15 @@ watch(optimizeHeatmap, () => {
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
           <div class="flex items-center gap-2 text-xs text-slate-600">
-            <InputSwitch v-model="cronForm.config.downloadImages" />
+            <ToggleSwitch v-model="cronForm.config.downloadImages" />
             <span>下载照片</span>
           </div>
           <div class="flex items-center gap-2 text-xs text-slate-600">
-            <InputSwitch v-model="cronForm.config.downloadVideos" />
+            <ToggleSwitch v-model="cronForm.config.downloadVideos" />
             <span>下载视频</span>
           </div>
           <div class="flex items-center gap-2 text-xs text-slate-600">
-            <InputSwitch v-model="cronForm.config.downloadAudios" />
+            <ToggleSwitch v-model="cronForm.config.downloadAudios" />
             <span>下载录音</span>
           </div>
         </div>
@@ -658,7 +735,7 @@ watch(optimizeHeatmap, () => {
           <label class="block text-xs font-medium text-slate-500">关联相册</label>
           <MultiSelect
             v-model="cronForm.albumIds"
-            :options="albumOptions"
+            :options="formAlbumOptions"
             display="chip"
             optionLabel="label"
             optionValue="value"
@@ -684,7 +761,7 @@ watch(optimizeHeatmap, () => {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600">
-                <InputSwitch v-model="cronForm.config.diffByTimeline" />
+                <ToggleSwitch v-model="cronForm.config.diffByTimeline" />
                 <span>按时间线比对差异</span>
               </div>
               <div class="text-[10px] text-slate-400">
@@ -693,7 +770,7 @@ watch(optimizeHeatmap, () => {
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600">
-                <InputSwitch v-model="cronForm.config.rewriteExifTime" />
+                <ToggleSwitch v-model="cronForm.config.rewriteExifTime" />
                 <span>填充 EXIF 时间</span>
               </div>
               <div class="text-[10px] text-slate-400">
@@ -702,7 +779,7 @@ watch(optimizeHeatmap, () => {
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600">
-                <InputSwitch v-model="cronForm.config.skipExistingFile" />
+                <ToggleSwitch v-model="cronForm.config.skipExistingFile" />
                 <span>跳过已存在文件</span>
               </div>
               <div class="text-[10px] text-slate-400">
@@ -711,7 +788,7 @@ watch(optimizeHeatmap, () => {
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600">
-                <InputSwitch v-model="cronForm.config.rewriteFileSystemTime" />
+                <ToggleSwitch v-model="cronForm.config.rewriteFileSystemTime" />
                 <span>重写文件时间</span>
               </div>
               <div class="text-[10px] text-slate-400">
@@ -720,7 +797,7 @@ watch(optimizeHeatmap, () => {
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600">
-                <InputSwitch v-model="cronForm.config.checkSha1" />
+                <ToggleSwitch v-model="cronForm.config.checkSha1" />
                 <span>校验 SHA1</span>
               </div>
               <div class="text-[10px] text-slate-400">
@@ -733,7 +810,7 @@ watch(optimizeHeatmap, () => {
 
           <div v-if="cronForm.config.rewriteExifTime" class="space-y-2 mt-3">
             <label class="block text-xs font-medium text-slate-500">EXIF 时区</label>
-            <Dropdown
+            <Select
               v-model="cronForm.config.rewriteExifTimeZone"
               :options="timeZones"
               placeholder="Asia/Shanghai"
@@ -864,7 +941,7 @@ watch(optimizeHeatmap, () => {
 
         <div class="flex items-center justify-between pt-1">
           <div class="flex items-center gap-2 text-xs text-slate-600">
-            <InputSwitch v-model="cronForm.enabled" />
+            <ToggleSwitch v-model="cronForm.enabled" />
             <span>启用</span>
           </div>
           <div class="flex items-center gap-2">

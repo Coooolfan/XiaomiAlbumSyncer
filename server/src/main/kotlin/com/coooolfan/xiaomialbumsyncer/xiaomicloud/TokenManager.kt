@@ -19,7 +19,6 @@ class TokenManager(private val sql: KSqlClient) {
 
     private val log = org.slf4j.LoggerFactory.getLogger(TokenManager::class.java)
 
-    // 改为 Map 缓存，key 是账号 ID
     private val tokenCache = ConcurrentHashMap<Long, CachedToken>()
 
     data class CachedToken(
@@ -56,11 +55,6 @@ class TokenManager(private val sql: KSqlClient) {
     fun invalidateToken(accountId: Long) {
         tokenCache.remove(accountId)
         log.info("账号 {} 的 token 缓存已清除", accountId)
-    }
-
-    fun invalidateAllTokens() {
-        tokenCache.clear()
-        log.info("所有账号的 token 缓存已清除")
     }
 
     private fun needRefresh(lastFreshenTime: Instant): Boolean {

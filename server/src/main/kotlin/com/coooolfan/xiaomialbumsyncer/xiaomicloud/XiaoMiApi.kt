@@ -114,7 +114,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 else
                     responseTree.at("/data/galleries")
 
-            log.info("解析相册 ${album.name} ID=${album.remoteId}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
+            log.info("解析用户 ${album.accountId} 的相册 ${album.name} ID=${album.remoteId}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
 
             // 处理当前页数据
             val pageAssets = assetArrayJson.map { parseJsonNode(it, album) }

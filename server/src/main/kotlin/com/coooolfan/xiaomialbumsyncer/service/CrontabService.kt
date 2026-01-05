@@ -1,7 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
 import com.coooolfan.xiaomialbumsyncer.config.TaskScheduler
-import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CRONTAB_WITH_ALBUM_IDS_FETCHER
+import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CRONTAB_WITH_ALBUMS_FETCHER
 import com.coooolfan.xiaomialbumsyncer.controller.CrontabCurrentStats
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput
@@ -116,7 +116,7 @@ class CrontabService(private val sql: KSqlClient) {
     fun executeCrontab(crontabId: Long) {
         val crontab =
             sql.findById(
-                CRONTAB_WITH_ALBUM_IDS_FETCHER,
+                CRONTAB_WITH_ALBUMS_FETCHER,
                 crontabId
             ) ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
@@ -169,7 +169,10 @@ class CrontabService(private val sql: KSqlClient) {
                 allScalarFields()
                 crontabHistory {
                     allScalarFields()
-                    crontab { allScalarFields() }
+                    crontab {
+                        allScalarFields()
+                        accountId()
+                    }
                 }
                 asset { allScalarFields() }
             })
@@ -196,7 +199,7 @@ class CrontabService(private val sql: KSqlClient) {
 
         val crontab =
             sql.findById(
-                CRONTAB_WITH_ALBUM_IDS_FETCHER,
+                CRONTAB_WITH_ALBUMS_FETCHER,
                 crontabId
             ) ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
@@ -228,7 +231,7 @@ class CrontabService(private val sql: KSqlClient) {
     fun executeCrontabRewriteFileSystemTime(crontabId: Long) {
         val crontab =
             sql.findById(
-                CRONTAB_WITH_ALBUM_IDS_FETCHER,
+                CRONTAB_WITH_ALBUMS_FETCHER,
                 crontabId
             ) ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 

@@ -2,12 +2,12 @@ package com.coooolfan.xiaomialbumsyncer.controller
 
 import cn.dev33.satoken.annotation.SaCheckLogin
 import com.coooolfan.xiaomialbumsyncer.model.Album
+import com.coooolfan.xiaomialbumsyncer.model.by
 import com.coooolfan.xiaomialbumsyncer.service.AlbumsService
+import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.client.meta.Api
-import org.noear.solon.annotation.Controller
-import org.noear.solon.annotation.Managed
-import org.noear.solon.annotation.Mapping
-import org.noear.solon.annotation.Param
+import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
+import org.noear.solon.annotation.*
 import org.noear.solon.core.handle.MethodType
 import java.time.Instant
 import java.time.LocalDate
@@ -38,10 +38,10 @@ class AlbumsController(private val service: AlbumsService) {
      * @description 调用AlbumsService.refreshAlbums()方法获取最新相册数据
      */
     @Api
-    @Mapping("/lastest", method = [MethodType.GET])
+    @Mapping("/lastest/{accountId}", method = [MethodType.GET])
     @SaCheckLogin
-    fun refreshAlbums(): List<Album> {
-        return service.refreshAlbums()
+    fun refreshAlbums(@Path accountId: Long): List<@FetchBy("DEFAULT_ALBUM") Album> {
+        return service.refreshAlbums(accountId, DEFAULT_ALBUM)
     }
 
     /**
@@ -59,8 +59,8 @@ class AlbumsController(private val service: AlbumsService) {
     @Api
     @Mapping(method = [MethodType.GET])
     @SaCheckLogin
-    fun listAlbums(): List<Album> {
-        return service.getAllAlbums()
+    fun listAlbums(): List<@FetchBy("DEFAULT_ALBUM") Album> {
+        return service.getAllAlbums(DEFAULT_ALBUM)
     }
 
     /**
@@ -87,5 +87,13 @@ class AlbumsController(private val service: AlbumsService) {
         @Param(required = false) end: Instant?
     ): Map<LocalDate, Long> {
         return service.fetchDateMap(albumIds ?: emptyList(), start ?: Instant.EPOCH, end ?: Instant.now())
+    }
+
+
+    companion object {
+        private val DEFAULT_ALBUM = newFetcher(Album::class).by {
+            allScalarFields()
+            account { nickname() }
+        }
     }
 }
