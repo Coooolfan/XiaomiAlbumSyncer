@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import Card from 'primevue/card'
 import ContributionHeatmap from '@/components/ContributionHeatmap.vue'
 import AlbumPanel from '@/components/AlbumPanel.vue'
@@ -16,7 +16,7 @@ import MultiSelect from 'primevue/multiselect'
 import InputNumber from 'primevue/inputnumber'
 import Message from 'primevue/message'
 import { useToast } from 'primevue/usetoast'
-import type { CrontabDto, AlbumDto, XiaomiAccountDto } from '@/__generated/model/dto'
+import type { AlbumDto, CrontabDto, XiaomiAccountDto } from '@/__generated/model/dto'
 import type { CrontabCreateInput } from '@/__generated/model/static'
 
 type DataPoint = { timeStamp: number; count: number }
@@ -212,18 +212,15 @@ function rebuildHeatmapData() {
     upper = quantile(positiveValues, 0.95)
   }
 
-  const points: DataPoint[] = entries
+  dataPoints.value = entries
     .map(([dateStr, countRaw]) => {
-      const c = typeof countRaw === 'number' ? countRaw : 0
-      const count = upper > 0 ? Math.min(c, upper) : c
+      const count = upper > 0 ? Math.min(countRaw, upper) : countRaw
       return {
         timeStamp: parseDateToLocalTimestamp(dateStr),
         count,
       }
     })
     .sort((a, b) => a.timeStamp - b.timeStamp)
-
-  dataPoints.value = points
 }
 
 function onAlbumsUpdate(list: ReadonlyArray<Album>) {
@@ -636,7 +633,7 @@ watch(
       v-model:visible="showCronDialog"
       modal
       :header="isEditing ? '编辑计划任务' : '创建计划任务'"
-      class="w-full sm:w-[520px]"
+      class="w-full sm:w-130"
     >
       <div class="space-y-4">
         <div class="space-y-2">
@@ -957,7 +954,7 @@ watch(
       v-model:visible="showDeleteVisible"
       modal
       header="删除计划任务"
-      class="w-full sm:w-[420px]"
+      class="w-full sm:w-105"
     >
       <div class="text-sm text-slate-700">确定要删除该计划任务吗？该操作不可恢复。</div>
       <template #footer>
@@ -983,7 +980,7 @@ watch(
       v-model:visible="showExecuteVisible"
       modal
       header="立即执行"
-      class="w-full sm:w-[420px]"
+      class="w-full sm:w-105"
     >
       <div class="text-sm text-slate-700">
         确定要立即触发该计划任务的执行吗？该操作较为耗时，将在后台执行。
@@ -1011,7 +1008,7 @@ watch(
       v-model:visible="showExecuteExifVisible"
       modal
       header="立即执行 EXIF 填充"
-      class="w-full sm:w-[420px]"
+      class="w-full sm:w-105"
     >
       <div class="text-sm text-slate-700">
         确定要手动触发该计划任务的 EXIF
@@ -1045,7 +1042,7 @@ watch(
       v-model:visible="showExecuteRewriteFsVisible"
       modal
       header="立即重写文件系统时间"
-      class="w-full sm:w-[420px]"
+      class="w-full sm:w-105"
     >
       <div class="text-sm text-slate-700">
         确定要对该计划任务已下载的文件执行文件系统时间重写吗？该操作较为耗时，将在后台执行。可观察程序日志查看进度。<br />会对此计划任务所有下载过的文件执行此操作。
