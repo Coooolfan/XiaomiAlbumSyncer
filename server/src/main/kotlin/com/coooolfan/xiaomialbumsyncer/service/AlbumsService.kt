@@ -26,12 +26,7 @@ class AlbumsService(
      * 刷新所有账号的相册
      */
     fun refreshAlbums(accountId: Long, fetcher: Fetcher<Album>): List<Album> {
-        val allAlbums = mutableListOf<Album>()
-
-        val albums = refreshAlbumsByAccount(accountId, fetcher)
-        allAlbums.addAll(albums)
-
-        return allAlbums
+        return refreshAlbumsByAccount(accountId, fetcher)
     }
 
     /**

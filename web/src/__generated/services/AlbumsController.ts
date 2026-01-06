@@ -85,7 +85,7 @@ export class AlbumsController {
     readonly refreshAlbums: (options: AlbumsControllerOptions['refreshAlbums']) => Promise<
         ReadonlyArray<AlbumDto['AlbumsController/DEFAULT_ALBUM']>
     > = async(options) => {
-        let _uri = '/api/album/lastest/';
+        let _uri = '/api/album/latest/';
         _uri += encodeURIComponent(options.accountId);
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<ReadonlyArray<AlbumDto['AlbumsController/DEFAULT_ALBUM']>>;
     }

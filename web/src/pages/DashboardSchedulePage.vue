@@ -163,9 +163,7 @@ async function fetchTimeline() {
     const start = new Date(end.getTime() - (Math.max(1, rangeDaysNum.value) - 1) * 24 * 3600 * 1000)
     const startStr = formatDateInput(start)
 
-    const albumIds = (albums.value || [])
-      .map((a) => Number(a.id))
-      .filter((id) => Number.isFinite(id)) as number[]
+    const albumIds = albums.value.map((a) => a.id)
 
     const resp = await api.albumsController.fetchDateMap({
       albumIds: albumIds.length > 0 ? albumIds : undefined,
@@ -334,8 +332,7 @@ function openEditCron(item: Crontab) {
       exifProcessors: item.config.exifProcessors ?? 2,
       fileTimeWorkers: item.config.fileTimeWorkers ?? 2,
     },
-    // 将 string[] 转为 number[]
-    albumIds: item.albumIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id)),
+    albumIds: [...item.albumIds],
   }
   formErrors.value = {}
   showCronDialog.value = true
@@ -410,8 +407,7 @@ async function toggleEnabled(row: Crontab) {
         description: row.description,
         enabled: !row.enabled,
         config: row.config,
-        // DTO 中 albumIds 是 string[], UpdateInput 需要 number[]
-        albumIds: row.albumIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id)),
+        albumIds: row.albumIds,
       },
     })
     crontabs.value = crontabs.value.map((c) =>

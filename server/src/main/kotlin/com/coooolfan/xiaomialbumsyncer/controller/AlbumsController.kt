@@ -38,7 +38,7 @@ class AlbumsController(private val service: AlbumsService) {
      * @description 调用AlbumsService.refreshAlbums()方法获取最新相册数据
      */
     @Api
-    @Mapping("/lastest/{accountId}", method = [MethodType.GET])
+    @Mapping("/latest/{accountId}", method = [MethodType.GET])
     @SaCheckLogin
     fun refreshAlbums(@Path accountId: Long): List<@FetchBy("DEFAULT_ALBUM") Album> {
         return service.refreshAlbums(accountId, DEFAULT_ALBUM)
