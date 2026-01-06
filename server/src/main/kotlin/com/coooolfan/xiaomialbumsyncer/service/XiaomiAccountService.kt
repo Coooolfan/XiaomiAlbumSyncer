@@ -45,7 +45,7 @@ class XiaomiAccountService(
     fun update(account: XiaomiAccount, fetcher: Fetcher<XiaomiAccount>): XiaomiAccount {
         // 验证账号存在
         if (!exists(account.id))
-            throw IllegalArgumentException("账号不存在: $account.id")
+            throw IllegalArgumentException("账号不存在，ID: ${account.id}")
 
         val result = sql.saveCommand(account, SaveMode.UPDATE_ONLY).execute(fetcher)
         // 更新后清除该账号的 token 缓存
