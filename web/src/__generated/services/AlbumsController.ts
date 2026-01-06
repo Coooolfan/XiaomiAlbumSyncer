@@ -5,7 +5,7 @@ import type {AlbumDto} from '../model/dto/';
  * 相册管理控制器
  * 
  * 提供相册相关的API接口，包括刷新相册列表、获取相册信息、查询相册日期映射等功能
- * 所有接口均需要用户登录认证（通过类级别注解 @SaCheckLogin 控制）
+ * 所有接口均需要用户登录认证
  * 
  */
 export class AlbumsController {
@@ -74,11 +74,13 @@ export class AlbumsController {
     }
     
     /**
-     * 刷新相册列表
+     * 刷新指定账号的相册列表
      * 
-     * 此接口用于从远程服务获取最新的相册列表并更新到本地数据库
+     * 此接口用于从远程服务获取指定账号的最新相册列表并更新到本地数据库
      * 需要用户登录认证才能访问
      * 
+     * @parameter {AlbumsControllerOptions['refreshAlbums']} options
+     * - accountId 小米账号ID，用于指定要刷新哪个账号的相册
      * @return List<Album> 返回刷新后的相册列表，包含所有相册的基本信息
      * 
      */
@@ -93,6 +95,9 @@ export class AlbumsController {
 
 export type AlbumsControllerOptions = {
     'refreshAlbums': {
+        /**
+         * 小米账号ID，用于指定要刷新哪个账号的相册
+         */
         readonly accountId: number
     }, 
     'listAlbums': {}, 
