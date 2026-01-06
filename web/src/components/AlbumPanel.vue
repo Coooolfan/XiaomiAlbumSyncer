@@ -108,7 +108,7 @@ async function fetchLatestAlbums(accountId: number) {
     toast.add({
       severity: 'error',
       summary: '更新失败',
-      detail: '请确保您已配置有效的 passToken 与 UserId。\n并确保此已完成相册服务二次验证',
+      detail: '请确保您已配置有效的 passToken 与 UserId。\n并确保已完成相册服务的二次验证',
       life: 10000,
     })
     console.error('获取最新相册列表失败', err)

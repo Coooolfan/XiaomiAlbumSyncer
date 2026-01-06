@@ -950,12 +950,7 @@ watch(
     </Dialog>
 
     <!-- 删除确认 -->
-    <Dialog
-      v-model:visible="showDeleteVisible"
-      modal
-      header="删除计划任务"
-      class="w-full sm:w-105"
-    >
+    <Dialog v-model:visible="showDeleteVisible" modal header="删除计划任务" class="w-full sm:w-105">
       <div class="text-sm text-slate-700">确定要删除该计划任务吗？该操作不可恢复。</div>
       <template #footer>
         <div class="flex items-center justify-end gap-2 w-full">
@@ -976,12 +971,7 @@ watch(
     </Dialog>
 
     <!-- 立即执行确认 -->
-    <Dialog
-      v-model:visible="showExecuteVisible"
-      modal
-      header="立即执行"
-      class="w-full sm:w-105"
-    >
+    <Dialog v-model:visible="showExecuteVisible" modal header="立即执行" class="w-full sm:w-105">
       <div class="text-sm text-slate-700">
         确定要立即触发该计划任务的执行吗？该操作较为耗时，将在后台执行。
       </div>

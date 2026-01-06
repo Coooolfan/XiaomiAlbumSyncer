@@ -12,7 +12,7 @@ export type CrontabDto = {
             readonly id: number;
             readonly nickname: string;
         };
-        readonly albumIds: ReadonlyArray<string>;
+        readonly albumIds: ReadonlyArray<number>;
         readonly running: boolean;
         readonly histories: ReadonlyArray<{
             readonly id: number;
