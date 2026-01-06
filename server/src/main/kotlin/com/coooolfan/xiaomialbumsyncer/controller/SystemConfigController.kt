@@ -4,7 +4,6 @@ import cn.dev33.satoken.annotation.SaCheckLogin
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.by
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
-import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPassTokenUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate
 import com.coooolfan.xiaomialbumsyncer.service.DebugService
@@ -68,25 +67,6 @@ class SystemConfigController(private val service: SystemConfigService, private v
     @Mapping(method = [MethodType.POST])
     fun initConfig(@Body create: SystemConfigInit) {
         return service.initConfig(create)
-    }
-
-    /**
-     * 更新密码令牌配置
-     *
-     * 此接口用于更新系统的密码令牌相关配置
-     * 需要用户登录认证才能访问
-     *
-     * @param update 密码令牌更新参数，包含新的密码令牌配置信息
-     *
-     * @api POST /api/system-config/pass-token
-     * @permission 需要登录认证
-     * @description 调用SystemConfigService.updateConfig()方法更新密码令牌配置
-     */
-    @Api
-    @Mapping("/pass-token", method = [MethodType.POST])
-    @SaCheckLogin
-    fun updatePassToken(@Body update: SystemConfigPassTokenUpdate) {
-        return service.updateConfig(update.toEntity())
     }
 
     /**

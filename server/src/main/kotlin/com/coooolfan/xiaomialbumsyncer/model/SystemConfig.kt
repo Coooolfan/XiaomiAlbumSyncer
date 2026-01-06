@@ -13,10 +13,6 @@ interface SystemConfig {
 
     val password: String
 
-    val passToken: String
-
-    val userId: String
-
     val exifToolPath: String
 
     val assetsDateMapTimeZone: String

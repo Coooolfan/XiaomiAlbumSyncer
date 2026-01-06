@@ -15,7 +15,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
-import kotlin.collections.toSet
 
 /**
  * 计划任务流水线管理器
@@ -134,10 +133,12 @@ class CrontabPipeline(
         if (albumTimelinesHistory.isEmpty()) {
             return "该任务的最新执行记录无可用于对比的时间线数据"
         }
-        if (albumTimelinesHistory.keys != crontab.albumIds.toSet()) {
+
+        val crontabAlbumRemoteIds = crontab.albums.mapTo(mutableSetOf()) { it.remoteId }
+        if (albumTimelinesHistory.keys != crontabAlbumRemoteIds) {
             return "相册列表有变更"
         }
-        if (crontab.albumIds.contains(-1L)) {
+        if (crontabAlbumRemoteIds.contains(-1L)) {
             return "\"录音\"不支持时间线对比"
         }
         return null

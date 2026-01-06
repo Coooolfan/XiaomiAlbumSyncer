@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
@@ -13,7 +13,7 @@ const systemInfo = ref<SystemInfoResponse | null>(null)
 const tabs = [
   { label: '计划', to: '/dashboard/schedule' },
   { label: '设置', to: '/dashboard/setting' },
-]
+] as const
 
 onMounted(async () => {
   try {
@@ -44,6 +44,12 @@ async function logout() {
     window.location.href = '/'
   }
 }
+
+const versionTag = computed(() => {
+  const version = systemInfo.value?.appVersion
+  if (!version) return ''
+  return version === 'dev' ? version : `v${version}`
+})
 </script>
 <template>
   <div class="min-h-screen">
@@ -71,7 +77,7 @@ async function logout() {
 
         <div class="flex items-center gap-3">
           <div v-if="systemInfo" class="hidden md:flex items-center gap-2 text-xs text-slate-500">
-            <Chip :label="`v${systemInfo.appVersion}`" class="!text-xs !py-1 !px-2 bg-slate-100" />
+            <Chip :label="`${versionTag}`" class="!text-xs !py-1 !px-2 bg-slate-100" />
             <span class="text-slate-300">|</span>
             <span v-if="systemInfo.nativeImage" class="font-medium text-emerald-600"> Native </span>
             <span v-else-if="systemInfo.aotRuntime" class="font-medium text-blue-600"> AOT </span>

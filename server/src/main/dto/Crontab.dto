@@ -10,6 +10,8 @@ input CrontabCreateInput {
 
     config
 
+    id(account) as accountId
+
     id(albums) as albumIds
 }
 

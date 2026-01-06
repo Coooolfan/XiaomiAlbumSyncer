@@ -1,10 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 
 
-import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
-import com.coooolfan.xiaomialbumsyncer.model.id
-import com.coooolfan.xiaomialbumsyncer.model.passToken
-import com.coooolfan.xiaomialbumsyncer.model.userId
+import com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount
 import com.coooolfan.xiaomialbumsyncer.utils.client
 import com.coooolfan.xiaomialbumsyncer.utils.throwIfNotSuccess
 import com.coooolfan.xiaomialbumsyncer.utils.ua
@@ -12,69 +9,57 @@ import com.coooolfan.xiaomialbumsyncer.utils.withCookie
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import okhttp3.Request
 import org.babyfish.jimmer.sql.kt.KSqlClient
-import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 @Managed
 class TokenManager(private val sql: KSqlClient) {
 
     private val log = org.slf4j.LoggerFactory.getLogger(TokenManager::class.java)
 
-    @Volatile
-    private var serviceToken: String? = null
+    private val tokenCache = ConcurrentHashMap<Long, CachedToken>()
 
-    @Volatile
-    private var userId: Long? = null
+    data class CachedToken(
+        val serviceToken: String,
+        val userId: String,
+        val lastFreshenTime: Instant
+    )
 
-    @Volatile
-    private var lastFreshenTime: Instant? = null
-    fun getServiceToken(): String {
-        // 第一次检查（无锁）
-        if (needRefresh()) {
+    fun getAuthPair(accountId: Long): Pair<String, String> {
+        val cached = tokenCache[accountId]
+        if (cached != null && !needRefresh(cached.lastFreshenTime)) {
+            return cached.userId to cached.serviceToken
+        }
 
-            // 进入同步块
-            synchronized(this) {
-                // 第二次检查（有锁）
-                if (needRefresh()) {
-
-                    log.info("Service token 已过期或不存在，重新获取中...")
-
-                    val config = sql.executeQuery(SystemConfig::class) {
-                        where(table.id eq 0)
-                        select(table.passToken, table.userId)
-                    }.firstOrNull() ?: throw IllegalStateException("System is not initialized")
-
-                    serviceToken = genServiceToken(config._1, config._2)
-                    lastFreshenTime = Instant.now()
-                    userId = config._2.toLong()
-                }
+        synchronized(this) {
+            // 双重检查
+            val cachedAgain = tokenCache[accountId]
+            if (cachedAgain != null && !needRefresh(cachedAgain.lastFreshenTime)) {
+                return cachedAgain.userId to cachedAgain.serviceToken
             }
+
+            log.info("账号 {} 的 Service token 已过期或不存在，重新获取中...", accountId)
+
+            val account = sql.findById(XiaomiAccount::class, accountId)
+                ?: throw IllegalStateException("Account not found: $accountId")
+
+            val serviceToken = genServiceToken(account.passToken, account.userId)
+            tokenCache[accountId] = CachedToken(serviceToken, account.userId, Instant.now())
+
+            return account.userId to serviceToken
         }
-        return serviceToken!!
     }
 
-    private fun needRefresh(): Boolean {
-        return serviceToken == null || lastFreshenTime == null ||
-                // serviceToken 的过期时间非常短，10 分钟强制刷新
-                Instant.now().isAfter(lastFreshenTime!!.plusSeconds(60 * 10))
+    fun invalidateToken(accountId: Long) {
+        tokenCache.remove(accountId)
+        log.info("账号 {} 的 token 缓存已清除", accountId)
     }
 
-    @Synchronized
-    fun getUserId(): Long {
-        if (userId == null) {
-            val config = sql.executeQuery(SystemConfig::class) {
-                where(table.id eq 0)
-                select(table.userId)
-            }.firstOrNull() ?: throw IllegalStateException("System is not initialized")
-            userId = config.toLong()
-        }
-        return userId!!
-    }
-
-    fun getAuthPair(): Pair<String, String> {
-        return getUserId().toString() to getServiceToken()
+    private fun needRefresh(lastFreshenTime: Instant): Boolean {
+        // serviceToken 的过期时间非常短，10 分钟强制刷新
+        return Instant.now().isAfter(lastFreshenTime.plusSeconds(60 * 10))
     }
 
     private fun genServiceToken(passToken: String, userId: String): String {

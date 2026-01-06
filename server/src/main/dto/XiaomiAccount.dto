@@ -1,0 +1,13 @@
+export com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount
+
+input XiaomiAccountCreate {
+    nickname
+    passToken
+    userId
+}
+
+input XiaomiAccountUpdate {
+    nickname
+    passToken
+    userId
+}

@@ -154,7 +154,7 @@ class CrontabController(private val service: CrontabService) {
      *
      * @api POST /api/crontab/{crontabId}/fill-exif/executions
      * @permission 需要登录认证
-     * @description 调用CrontabService.executeCrontabFillExif()方法立即执行EXIF填充操作
+     * @description 调用CrontabService.executeCrontabExifTime()方法立即执行EXIF填充操作
      */
     @Api
     @Mapping("/{crontabId}/fill-exif/executions", method = [MethodType.POST])
@@ -183,6 +183,8 @@ class CrontabController(private val service: CrontabService) {
     companion object {
         private val DEFAULT_CRONTAB = newFetcher(Crontab::class).by {
             allScalarFields()
+            accountId()
+            account { nickname() }
             albumIds()
             running()
             histories {
@@ -192,9 +194,11 @@ class CrontabController(private val service: CrontabService) {
             }
         }
 
-        val CRONTAB_WITH_ALBUM_IDS_FETCHER = newFetcher(Crontab::class).by {
+        val CRONTAB_WITH_ALBUMS_FETCHER = newFetcher(Crontab::class).by {
             allScalarFields()
+            accountId()
             albumIds()
+            albums { allScalarFields() }
         }
     }
 }

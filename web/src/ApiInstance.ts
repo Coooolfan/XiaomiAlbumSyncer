@@ -2,9 +2,15 @@ import { Api } from './__generated'
 
 const BASE_URL = ''
 
+declare global {
+  interface Window {
+    __tenant?: string
+  }
+}
+
 // 导出全局变量`api`
 export const api = new Api(async ({ uri, method, headers, body }) => {
-  const tenant = (window as any).__tenant as string | undefined
+  const tenant = window.__tenant
   const isFormData = body instanceof FormData
   const fetchHeaders: HeadersInit = {
     ...headers,

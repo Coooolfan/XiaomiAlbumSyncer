@@ -197,7 +197,7 @@ const weeks = computed(() => {
     if (isWeekEnd) {
       if (week.days.length > 0) {
         // 月份标签逻辑，每月去重
-        const labelFirst = week.days[0].date
+        const labelFirst = week.days[0]!.date
         const firstKey = `${labelFirst.getFullYear()}-${labelFirst.getMonth()}`
         const firstOfMonthInWeek = week.days.find((dd) => dd.date.getDate() === 1)
         if (firstOfMonthInWeek) {
@@ -225,7 +225,7 @@ const weeks = computed(() => {
 
   // 如果有任何范围内的日期，推送尾随的部分周
   if (week.days.length > 0) {
-    const labelFirst = week.days[0].date
+    const labelFirst = week.days[0]!.date
     const firstKey = `${labelFirst.getFullYear()}-${labelFirst.getMonth()}`
     const firstOfMonthInWeek = week.days.find((dd) => dd.date.getDate() === 1)
     if (firstOfMonthInWeek) {

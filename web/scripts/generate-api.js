@@ -13,7 +13,7 @@ console.log('Downloading ' + sourceUrl + '...')
 
 const tmpFile = fs.createWriteStream(tmpFilePath)
 
-const request = http.get(sourceUrl, (response) => {
+http.get(sourceUrl, (response) => {
   response.pipe(tmpFile)
   tmpFile.on('finish', () => {
     tmpFile.close()

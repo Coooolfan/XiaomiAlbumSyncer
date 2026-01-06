@@ -3,7 +3,6 @@ import type {SystemConfigDto} from '../model/dto/';
 import type {
     IsInitResponse, 
     SystemConfigInit, 
-    SystemConfigPassTokenUpdate, 
     SystemConfigPasswordUpdate, 
     SystemConfigUpdate, 
     SystemInfoResponse
@@ -116,23 +115,6 @@ export class SystemConfigController {
     }
     
     /**
-     * 更新密码令牌配置
-     * 
-     * 此接口用于更新系统的密码令牌相关配置
-     * 需要用户登录认证才能访问
-     * 
-     * @parameter {SystemConfigControllerOptions['updatePassToken']} options
-     * - update 密码令牌更新参数，包含新的密码令牌配置信息
-     * 
-     */
-    readonly updatePassToken: (options: SystemConfigControllerOptions['updatePassToken']) => Promise<
-        void
-    > = async(options) => {
-        let _uri = '/api/system-config/pass-token';
-        return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<void>;
-    }
-    
-    /**
      * 更新用户密码
      * 
      * 此接口用于更新系统的用户登录密码
@@ -175,13 +157,6 @@ export type SystemConfigControllerOptions = {
          * 
          */
         readonly body: SystemConfigInit
-    }, 
-    'updatePassToken': {
-        /**
-         * 密码令牌更新参数，包含新的密码令牌配置信息
-         * 
-         */
-        readonly body: SystemConfigPassTokenUpdate
     }, 
     'updateSystemConfig': {
         /**

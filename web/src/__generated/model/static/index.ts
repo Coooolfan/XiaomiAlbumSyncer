@@ -1,11 +1,11 @@
-export type {AlbumTimeline} from './AlbumTimeline';
 export type {CrontabConfig} from './CrontabConfig';
 export type {CrontabCreateInput} from './CrontabCreateInput';
 export type {CrontabCurrentStats} from './CrontabCurrentStats';
 export type {CrontabUpdateInput} from './CrontabUpdateInput';
 export type {IsInitResponse} from './IsInitResponse';
 export type {SystemConfigInit} from './SystemConfigInit';
-export type {SystemConfigPassTokenUpdate} from './SystemConfigPassTokenUpdate';
 export type {SystemConfigPasswordUpdate} from './SystemConfigPasswordUpdate';
 export type {SystemConfigUpdate} from './SystemConfigUpdate';
 export type {SystemInfoResponse} from './SystemInfoResponse';
+export type {XiaomiAccountCreate} from './XiaomiAccountCreate';
+export type {XiaomiAccountUpdate} from './XiaomiAccountUpdate';

@@ -19,6 +19,7 @@ import org.babyfish.jimmer.sql.kt.ast.expression.notExists
 import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
+import java.time.Instant
 import java.time.LocalDate
 
 @Managed
@@ -44,35 +45,57 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         crontabHistory: CrontabHistory,
         albumTimelinesHistory: Map<Long, AlbumTimeline>
     ) {
+        val accountId = crontab.accountId
+
+        // 获取相册列表（需要 remoteId）
+        val albums = sql.executeQuery(Album::class) {
+            where(table.id valueIn crontab.albumIds)
+            select(table)
+        }
+
         // 1. 获取这些相册最新的 timeline
-        val albumTimelinesLatest = fetchAlbumsTimelineSnapshot(crontab.albumIds)
+        val albumTimelinesLatest = fetchAlbumsTimelineSnapshot(accountId, albums)
+        val storageTimelineStartAt = Instant.now()
         sql.executeUpdate(CrontabHistory::class) {
             set(table.timelineSnapshot, albumTimelinesLatest)
             where(table.id eq crontabHistory.id)
         }
+        log.info(
+            "持久化 CrontabHistory ${crontabHistory.id} 的 timelineSnapshot，耗时 {} ms",
+            Instant.now().toEpochMilli() - storageTimelineStartAt.toEpochMilli()
+        )
 
         // 2. 对比 timeline，找出有变更的日期
+        // remoteID -> AlbumTimeline
+        val compareDiffStartAt = Instant.now()
         val albumsDayCountNeedRefresh = mutableMapOf<Long, Set<LocalDate>>()
-        for ((albumId, timelineLatest) in albumTimelinesLatest) {
-            val timelineHistory = albumTimelinesHistory[albumId] ?: EMPTY_ALBUM_TIMELINE
-            albumsDayCountNeedRefresh[albumId] = (timelineLatest - timelineHistory).filter { it.value > 0 }.keys
+        for ((albumRemoteId, timelineLatest) in albumTimelinesLatest) {
+            val timelineHistory = albumTimelinesHistory[albumRemoteId] ?: EMPTY_ALBUM_TIMELINE
+            albumsDayCountNeedRefresh[albumRemoteId] = (timelineLatest - timelineHistory).filter { it.value > 0 }.keys
             sql.executeUpdate(Album::class) {
                 set(table.assetCount, timelineLatest.dayCount.values.sum())
-                where(table.id eq albumId)
+                where(table.id eq albumRemoteId)
             }
         }
+        log.info(
+            "对比 CrontabHistory ${crontabHistory.id} 的 timelineSnapshot，耗时 {} ms",
+            Instant.now().toEpochMilli() - compareDiffStartAt.toEpochMilli()
+        )
 
         // 3. 只刷新这些日期的 Asset（并发执行）
         runBlocking(Dispatchers.IO) {
             val semaphore = Semaphore(10)
-            albumsDayCountNeedRefresh.flatMap { (albumId, dayList) ->
-                val album =
-                    sql.findById(Album::class, albumId) ?: throw IllegalStateException("Cannot find album $albumId")
+            albumsDayCountNeedRefresh.flatMap { (albumRemoteId, dayList) ->
+                val album = sql.executeQuery(Album::class) {
+                    where(table.remoteId eq albumRemoteId)
+                    where(table.accountId eq accountId)
+                    select(table)
+                }.firstOrNull() ?: throw IllegalStateException("Cannot find album $albumRemoteId")
 
                 dayList.map { day ->
                     async {
                         semaphore.withPermit {
-                            log.info("开始刷新相册 {} 的 {} 日的 Asset", albumId, day)
+                            log.info("开始刷新相册 {} 的 {} 日的 Asset", albumRemoteId, day)
                             api.fetchAssetsByAlbumId(album, day) { assets ->
                                 sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
                             }
@@ -84,6 +107,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
     }
 
     fun refreshAssetsFull(crontab: Crontab, crontabHistory: CrontabHistory) {
+        val accountId = crontab.accountId
         val albums = sql.executeQuery(Album::class) {
             where(table.id valueIn crontab.albumIds)
             select(table)
@@ -108,7 +132,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             }.awaitAll()
         }
         sql.executeUpdate(CrontabHistory::class) {
-            set(table.timelineSnapshot, fetchAlbumsTimelineSnapshot(crontab.albumIds))
+            set(table.timelineSnapshot, fetchAlbumsTimelineSnapshot(accountId, albums))
             where(table.id eq crontabHistory.id)
         }
     }
@@ -151,10 +175,11 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }.limit(pageSize).execute()
     }
 
-    private fun fetchAlbumsTimelineSnapshot(albumIds: List<Long>): Map<Long, AlbumTimeline> {
+    private fun fetchAlbumsTimelineSnapshot(accountId: Long, albums: List<Album>): Map<Long, AlbumTimeline> {
         val albumTimelines = mutableMapOf<Long, AlbumTimeline>()
-        albumIds.forEach { albumId ->
-            albumTimelines[albumId] = api.fetchAlbumTimeline(albumId)
+        albums.forEach { album ->
+            // remoteID -> AlbumTimeline
+            albumTimelines[album.remoteId] = api.fetchAlbumTimeline(accountId, album.remoteId)
         }
         return albumTimelines
     }

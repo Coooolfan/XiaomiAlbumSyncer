@@ -10,7 +10,12 @@ type Props = {
 const props = defineProps<Props>()
 
 const displayName = computed(() => props.name ?? '未命名相册')
-const displayCount = computed(() => props.assetCount ?? 0)
+const displayCount = computed(() => {
+  if (props.assetCount === 0 && props.name === '录音') {
+    return '下载前不可见'
+  }
+  return (props.assetCount ?? 0) + ' 个项目'
+})
 const displayLastUpdate = computed(() => {
   if (!props.lastUpdateTime) return ''
 
@@ -58,7 +63,7 @@ const displayRelativeUpdate = computed(() => {
         {{ displayName }}
       </div>
       <div class="mt-1 flex items-center justify-between">
-        <div class="text-xs text-slate-600 dark:text-slate-300">{{ displayCount }} 个项目</div>
+        <div class="text-xs text-slate-600 dark:text-slate-300">{{ displayCount }}</div>
         <div v-if="displayLastUpdate" class="text-[11px] text-slate-400 dark:text-slate-500">
           上次更新于 {{ displayRelativeUpdate }}
         </div>

@@ -1,14 +1,26 @@
 package com.coooolfan.xiaomialbumsyncer.config
 
+import cn.dev33.satoken.config.SaTokenConfig
 import cn.dev33.satoken.`fun`.strategy.SaCorsHandleFunction
 import cn.dev33.satoken.router.SaHttpMethod
 import cn.dev33.satoken.router.SaRouter
 import cn.dev33.satoken.solon.integration.SaTokenInterceptor
 import org.noear.solon.annotation.Bean
 import org.noear.solon.annotation.Configuration
+import org.noear.solon.annotation.Inject
 
 @Configuration
 class SaToken {
+
+    @Bean
+    // 避免 cookie 被跨端口共享
+    fun configSaToken(@Inject config: SaTokenConfig) {
+        val randomSuffix = (1..6)
+            .map { "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".random() }
+            .joinToString("")
+        config.tokenName = "XIAOMI-ALBUM-SYNCER-$randomSuffix"
+    }
+
     @Bean
     fun saTokenInterceptor(): SaTokenInterceptor {
         return SaTokenInterceptor()

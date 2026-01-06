@@ -2,12 +2,12 @@ package com.coooolfan.xiaomialbumsyncer.controller
 
 import cn.dev33.satoken.annotation.SaCheckLogin
 import com.coooolfan.xiaomialbumsyncer.model.Album
+import com.coooolfan.xiaomialbumsyncer.model.by
 import com.coooolfan.xiaomialbumsyncer.service.AlbumsService
+import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.client.meta.Api
-import org.noear.solon.annotation.Controller
-import org.noear.solon.annotation.Managed
-import org.noear.solon.annotation.Mapping
-import org.noear.solon.annotation.Param
+import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
+import org.noear.solon.annotation.*
 import org.noear.solon.core.handle.MethodType
 import java.time.Instant
 import java.time.LocalDate
@@ -16,7 +16,7 @@ import java.time.LocalDate
  * 相册管理控制器
  *
  * 提供相册相关的API接口，包括刷新相册列表、获取相册信息、查询相册日期映射等功能
- * 所有接口均需要用户登录认证（通过类级别注解 @SaCheckLogin 控制）
+ * 所有接口均需要用户登录认证
  *
  * @property service 相册服务，用于处理相册相关的业务逻辑
  */
@@ -26,22 +26,23 @@ import java.time.LocalDate
 @Controller
 class AlbumsController(private val service: AlbumsService) {
     /**
-     * 刷新相册列表
+     * 刷新指定账号的相册列表
      *
-     * 此接口用于从远程服务获取最新的相册列表并更新到本地数据库
+     * 此接口用于从远程服务获取指定账号的最新相册列表并更新到本地数据库
      * 需要用户登录认证才能访问
      *
+     * @param accountId 小米账号ID，用于指定要刷新哪个账号的相册
      * @return List<Album> 返回刷新后的相册列表，包含所有相册的基本信息
      *
-     * @api GET /api/album/lastest
+     * @api GET /api/album/latest/{accountId}
      * @permission 需要登录认证
-     * @description 调用AlbumsService.refreshAlbums()方法获取最新相册数据
+     * @description 调用AlbumsService.refreshAlbums()方法获取指定账号的最新相册数据
      */
     @Api
-    @Mapping("/lastest", method = [MethodType.GET])
+    @Mapping("/latest/{accountId}", method = [MethodType.GET])
     @SaCheckLogin
-    fun refreshAlbums(): List<Album> {
-        return service.refreshAlbums()
+    fun refreshAlbums(@Path accountId: Long): List<@FetchBy("DEFAULT_ALBUM") Album> {
+        return service.refreshAlbums(accountId, DEFAULT_ALBUM)
     }
 
     /**
@@ -59,8 +60,8 @@ class AlbumsController(private val service: AlbumsService) {
     @Api
     @Mapping(method = [MethodType.GET])
     @SaCheckLogin
-    fun listAlbums(): List<Album> {
-        return service.getAllAlbums()
+    fun listAlbums(): List<@FetchBy("DEFAULT_ALBUM") Album> {
+        return service.getAllAlbums(DEFAULT_ALBUM)
     }
 
     /**
@@ -87,5 +88,13 @@ class AlbumsController(private val service: AlbumsService) {
         @Param(required = false) end: Instant?
     ): Map<LocalDate, Long> {
         return service.fetchDateMap(albumIds ?: emptyList(), start ?: Instant.EPOCH, end ?: Instant.now())
+    }
+
+
+    companion object {
+        private val DEFAULT_ALBUM = newFetcher(Album::class).by {
+            allScalarFields()
+            account { nickname() }
+        }
     }
 }

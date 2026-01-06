@@ -1,11 +1,13 @@
 <template>
   <div
     ref="containerRef"
-    :class="['w-full h-full relative pointer-events-none z-[3] overflow-hidden', className]"
+    :class="['w-full h-full relative pointer-events-none z-3 overflow-hidden', className]"
   />
 </template>
 
 <script setup lang="ts">
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { ref, onMounted, onUnmounted, watch, useTemplateRef, computed, nextTick } from 'vue'
 import { Renderer, Program, Triangle, Mesh } from 'ogl'
 
