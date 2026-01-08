@@ -23,7 +23,7 @@ class DataSource {
         val config = HikariConfig()
         config.jdbcUrl = buildSQLiteUrl(dbPath)
         config.driverClassName = "org.sqlite.JDBC"
-        config.maximumPoolSize = 1 // SQLite通常不需要太多连接
+        config.maximumPoolSize = 4 // SQLite通常不需要太多连接
         config.connectionTestQuery = "SELECT 1"
         config.poolName = "SQLitePool"
         return HikariDataSource(config)
