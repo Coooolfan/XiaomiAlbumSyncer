@@ -1,42 +1,14 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import { provide, ref, onMounted, watch } from 'vue'
 import Toast from 'primevue/toast'
 import Silk from '@/components/background/Silk.vue'
 import LightRays from '@/components/background/LightRays.vue'
 import ConfirmDialog from 'primevue/confirmdialog'
+import { storeToRefs } from 'pinia'
+import { usePreferencesStore } from '@/stores/preferences'
 
-type BgMode = 'lightRays' | 'silk'
-const BG_KEY = 'app:bgMode'
-
-const backgroundMode = ref<BgMode>('lightRays')
-
-onMounted(() => {
-  const saved = localStorage.getItem(BG_KEY) as BgMode | null
-  if (saved === 'silk' || saved === 'lightRays') {
-    backgroundMode.value = saved
-  }
-})
-
-watch(
-  backgroundMode,
-  (val) => {
-    localStorage.setItem(BG_KEY, val)
-  },
-  { immediate: false },
-)
-
-function toggleBackground() {
-  backgroundMode.value = backgroundMode.value === 'lightRays' ? 'silk' : 'lightRays'
-}
-
-function setBackgroundMode(mode: BgMode) {
-  backgroundMode.value = mode
-}
-
-provide('backgroundMode', backgroundMode)
-provide('toggleBackground', toggleBackground)
-provide('setBackgroundMode', setBackgroundMode)
+const preferencesStore = usePreferencesStore()
+const { backgroundMode } = storeToRefs(preferencesStore)
 </script>
 
 <template>

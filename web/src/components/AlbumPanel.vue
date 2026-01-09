@@ -1,24 +1,25 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { onMounted, computed } from 'vue'
 import Panel from 'primevue/panel'
 import SplitButton from 'primevue/splitbutton'
 import Button from 'primevue/button'
 import AlbumCard from '@/components/AlbumCard.vue'
-import { api } from '@/ApiInstance'
 import { useToast } from 'primevue/usetoast'
 import type { AlbumDto } from '@/__generated/model/dto/AlbumDto'
 import type { XiaomiAccountDto } from '@/__generated/model/dto/XiaomiAccountDto'
+import { storeToRefs } from 'pinia'
+import { useAlbumsStore } from '@/stores/albums'
+import { useAccountsStore } from '@/stores/accounts'
 
 type Album = AlbumDto['AlbumsController/DEFAULT_ALBUM']
 type XiaomiAccount = XiaomiAccountDto['XiaomiAccountController/DEFAULT_XIAOMI_ACCOUNT']
 
-const emit = defineEmits<{
-  (e: 'update:albums', albums: ReadonlyArray<Album>): void
-}>()
-
 const toast = useToast()
-const albums = ref<ReadonlyArray<Album>>([])
-const accounts = ref<ReadonlyArray<XiaomiAccount>>([])
+const albumsStore = useAlbumsStore()
+const accountsStore = useAccountsStore()
+
+const { albums } = storeToRefs(albumsStore)
+const { accounts } = storeToRefs(accountsStore)
 
 const groupedAlbums = computed(() => {
   const groups: Array<{ account: XiaomiAccount; albums: Album[] }> = []
@@ -64,15 +65,10 @@ function getRefreshModel(accountId: number) {
 
 async function fetchData() {
   try {
-    // 并行获取账号和相册列表
-    const [accountsList, albumsList] = await Promise.all([
-      api.xiaomiAccountController.listAll(),
-      api.albumsController.listAlbums(),
+    await Promise.all([
+      accountsStore.fetchAccounts({ force: true }),
+      albumsStore.fetchAlbums({ force: true }),
     ])
-
-    accounts.value = accountsList
-    albums.value = albumsList
-    emit('update:albums', albumsList)
   } catch (err) {
     console.error('获取数据失败', err)
     toast.add({
@@ -93,16 +89,11 @@ async function fetchLatestAlbums(accountId: number) {
       life: 5000,
     })
     // 刷新特定账号
-    const refreshedList = await api.albumsController.refreshAlbums({ accountId })
+    await albumsStore.refreshAlbumsForAccount(accountId)
 
     // 更新本地状态：移除该账号的旧相册并添加新相册
     // 假设 refreshedList 包含该账号目前数据库中的所有相册（同步后）。
 
-    const otherAccountAlbums = albums.value.filter((a) => a.account.id !== accountId)
-    const newAllAlbums = [...otherAccountAlbums, ...refreshedList]
-    albums.value = newAllAlbums
-
-    emit('update:albums', newAllAlbums)
     toast.add({ severity: 'success', summary: '已更新', life: 1600 })
   } catch (err) {
     toast.add({
@@ -116,7 +107,8 @@ async function fetchLatestAlbums(accountId: number) {
 }
 
 onMounted(() => {
-  fetchData()
+  accountsStore.fetchAccounts()
+  albumsStore.fetchAlbums()
 })
 </script>
 

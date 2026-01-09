@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import { ref, inject, onMounted, watch } from 'vue'
 import Card from 'primevue/card'
 import SelectButton from 'primevue/selectbutton'
+import { storeToRefs } from 'pinia'
+import { usePreferencesStore } from '@/stores/preferences'
 
 type BgMode = 'lightRays' | 'silk'
-const BG_KEY = 'app:bgMode'
-const HEAT_KEY = 'app:optimizeHeatmap'
 
-const setBackgroundMode = inject<(mode: BgMode) => void>('setBackgroundMode')
-
-const bgModeLocal = ref<BgMode>('lightRays')
-const optimizeHeatmapLocal = ref<boolean>(true)
+const preferencesStore = usePreferencesStore()
+const { backgroundMode, optimizeHeatmap } = storeToRefs(preferencesStore)
 
 const bgOptions: Array<{ label: string; value: BgMode }> = [
   { label: '光束', value: 'lightRays' },
@@ -21,40 +18,6 @@ const heatOptions: Array<{ label: string; value: boolean }> = [
   { label: '关闭', value: false },
   { label: '开启', value: true },
 ]
-
-onMounted(() => {
-  const saved = localStorage.getItem(BG_KEY) as BgMode | null
-  if (saved === 'silk' || saved === 'lightRays') {
-    bgModeLocal.value = saved
-    setBackgroundMode?.(saved)
-  } else {
-    localStorage.setItem(BG_KEY, bgModeLocal.value)
-    setBackgroundMode?.(bgModeLocal.value)
-  }
-  // 初始化热力图优化展示，默认开启
-  try {
-    const heatSaved = localStorage.getItem(HEAT_KEY)
-    if (heatSaved === null) {
-      localStorage.setItem(HEAT_KEY, '1')
-      optimizeHeatmapLocal.value = true
-    } else {
-      optimizeHeatmapLocal.value = !(heatSaved === '0' || heatSaved === 'false')
-    }
-  } catch {}
-})
-
-watch(bgModeLocal, (val) => {
-  try {
-    localStorage.setItem(BG_KEY, val)
-  } catch {}
-  setBackgroundMode?.(val)
-})
-
-watch(optimizeHeatmapLocal, (val) => {
-  try {
-    localStorage.setItem(HEAT_KEY, val ? '1' : '0')
-  } catch {}
-})
 </script>
 
 <template>
@@ -65,7 +28,7 @@ watch(optimizeHeatmapLocal, (val) => {
         <span class="text-sm text-slate-600">背景</span>
         <div class="min-w-[160px]">
           <SelectButton
-            v-model="bgModeLocal"
+            v-model="backgroundMode"
             :options="bgOptions"
             optionLabel="label"
             optionValue="value"
@@ -81,7 +44,7 @@ watch(optimizeHeatmapLocal, (val) => {
           </div>
           <div class="min-w-[160px]">
             <SelectButton
-              v-model="optimizeHeatmapLocal"
+              v-model="optimizeHeatmap"
               :options="heatOptions"
               optionLabel="label"
               optionValue="value"

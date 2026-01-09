@@ -9,14 +9,20 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import { api } from '@/ApiInstance'
 import type { XiaomiAccountDto } from '@/__generated/model/dto'
+import { storeToRefs } from 'pinia'
+import { useAccountsStore } from '@/stores/accounts'
+import { useAlbumsStore } from '@/stores/albums'
+import { useCrontabsStore } from '@/stores/crontabs'
 
 // 类型定义
 type Account = XiaomiAccountDto['XiaomiAccountController/DEFAULT_XIAOMI_ACCOUNT']
 
-const accounts = ref<ReadonlyArray<Account>>([])
-const loading = ref(false)
+const accountsStore = useAccountsStore()
+const albumsStore = useAlbumsStore()
+const crontabsStore = useCrontabsStore()
+
+const { accounts, loading } = storeToRefs(accountsStore)
 const saving = ref(false)
 const showDialog = ref(false)
 const isEditMode = ref(false)
@@ -39,20 +45,8 @@ onMounted(() => {
   } catch {
     isInsecureContext.value = false
   }
-  fetchAccounts()
+  accountsStore.fetchAccounts()
 })
-
-async function fetchAccounts() {
-  loading.value = true
-  try {
-    accounts.value = await api.xiaomiAccountController.listAll()
-  } catch (e) {
-    console.error('获取账号列表失败', e)
-    toast.add({ severity: 'error', summary: '获取失败', detail: '无法获取账号列表', life: 3000 })
-  } finally {
-    loading.value = false
-  }
-}
 
 function openCreateDialog() {
   isEditMode.value = false
@@ -87,27 +81,22 @@ async function onSave() {
   try {
     saving.value = true
     if (isEditMode.value) {
-      await api.xiaomiAccountController.update({
-        id: form.value.id,
-        body: {
-          userId: form.value.userId,
-          nickname: finalNickname,
-          passToken: form.value.passToken,
-        },
+      await accountsStore.updateAccount(form.value.id, {
+        userId: form.value.userId,
+        nickname: finalNickname,
+        passToken: form.value.passToken,
       })
       toast.add({ severity: 'success', summary: '成功', detail: '账号已更新', life: 2000 })
     } else {
-      await api.xiaomiAccountController.create({
-        body: {
-          userId: form.value.userId,
-          nickname: finalNickname,
-          passToken: form.value.passToken,
-        },
+      await accountsStore.createAccount({
+        userId: form.value.userId,
+        nickname: finalNickname,
+        passToken: form.value.passToken,
       })
       toast.add({ severity: 'success', summary: '成功', detail: '账号已添加', life: 2000 })
     }
     showDialog.value = false
-    await fetchAccounts()
+    await Promise.all([albumsStore.refreshAlbums(), crontabsStore.refreshCrontabs()])
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e) || '保存失败'
     toast.add({ severity: 'error', summary: '错误', detail, life: 3000 })
@@ -128,9 +117,9 @@ function confirmDelete(account: Account) {
     acceptClass: 'p-button-danger',
     accept: async () => {
       try {
-        await api.xiaomiAccountController.delete({ id: account.id })
+        await accountsStore.deleteAccount(account.id)
         toast.add({ severity: 'success', summary: '成功', detail: '账号已删除', life: 2000 })
-        await fetchAccounts()
+        await Promise.all([albumsStore.refreshAlbums(), crontabsStore.refreshCrontabs()])
       } catch (e) {
         const detail = e instanceof Error ? e.message : String(e) || '删除失败'
         toast.add({ severity: 'error', summary: '错误', detail, life: 3000 })

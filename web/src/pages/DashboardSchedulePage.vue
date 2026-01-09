@@ -16,8 +16,13 @@ import MultiSelect from 'primevue/multiselect'
 import InputNumber from 'primevue/inputnumber'
 import Message from 'primevue/message'
 import { useToast } from 'primevue/usetoast'
-import type { AlbumDto, CrontabDto, XiaomiAccountDto } from '@/__generated/model/dto'
+import type { CrontabDto } from '@/__generated/model/dto'
 import type { CrontabCreateInput } from '@/__generated/model/static'
+import { storeToRefs } from 'pinia'
+import { useAccountsStore } from '@/stores/accounts'
+import { useAlbumsStore } from '@/stores/albums'
+import { useCrontabsStore } from '@/stores/crontabs'
+import { usePreferencesStore } from '@/stores/preferences'
 
 type DataPoint = { timeStamp: number; count: number }
 
@@ -27,13 +32,17 @@ const rangeDaysNum = ref(365)
 const endDateStr = ref(formatDateInput(new Date()))
 const dataPoints = ref<DataPoint[]>([])
 const rawTimelineMap = ref<Record<string, number>>({})
-const optimizeHeatmap = ref(false)
 
-type Album = AlbumDto['AlbumsController/DEFAULT_ALBUM']
-type XiaomiAccount = XiaomiAccountDto['XiaomiAccountController/DEFAULT_XIAOMI_ACCOUNT']
+const accountsStore = useAccountsStore()
+const albumsStore = useAlbumsStore()
+const crontabsStore = useCrontabsStore()
+const preferencesStore = usePreferencesStore()
 
-const albums = ref<ReadonlyArray<Album>>([])
-const accounts = ref<ReadonlyArray<XiaomiAccount>>([])
+const { accounts } = storeToRefs(accountsStore)
+const { albums } = storeToRefs(albumsStore)
+const { crontabs, loading: loadingCrons } = storeToRefs(crontabsStore)
+const { optimizeHeatmap } = storeToRefs(preferencesStore)
+
 const tip = ref('')
 let tipHideTimer: number | undefined
 
@@ -43,8 +52,6 @@ const toast = useToast()
 // ==== 计划任务：类型与状态 ====
 type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
 
-const crontabs = ref<ReadonlyArray<Crontab>>([])
-const loadingCrons = ref(false)
 const showCronDialog = ref(false)
 const isEditing = ref(false)
 const editingId = ref<number | null>(null)
@@ -221,11 +228,6 @@ function rebuildHeatmapData() {
     .sort((a, b) => a.timeStamp - b.timeStamp)
 }
 
-function onAlbumsUpdate(list: ReadonlyArray<Album>) {
-  albums.value = list
-  fetchTimeline()
-}
-
 // ==== 计划任务：逻辑 ====
 function buildTimeZones() {
   const fallbackTimeZones = [
@@ -245,18 +247,9 @@ function buildTimeZones() {
   }
 }
 
-async function fetchAccounts() {
-  try {
-    accounts.value = await api.xiaomiAccountController.listAll()
-  } catch (err) {
-    console.error('获取账号列表失败', err)
-  }
-}
-
 async function fetchCrontabs() {
-  loadingCrons.value = true
   try {
-    crontabs.value = await api.crontabController.listCrontabs()
+    await crontabsStore.fetchCrontabs({ force: true })
   } catch (err) {
     console.error('获取计划任务失败', err)
     toast.add({
@@ -265,8 +258,6 @@ async function fetchCrontabs() {
       detail: '无法获取计划任务列表',
       life: 2000,
     })
-  } finally {
-    loadingCrons.value = false
   }
 }
 
@@ -372,19 +363,16 @@ async function submitCron() {
     if (isEditing.value && editingId.value !== null) {
       // UpdateInput 没有 accountId 字段，通常不允许修改归属账号
       // 但 albumIds 需要是 number[]
-      await api.crontabController.updateCrontab({
-        crontabId: editingId.value,
-        body: {
-          name: cronForm.value.name,
-          description: cronForm.value.description,
-          enabled: cronForm.value.enabled,
-          config: cronForm.value.config,
-          albumIds: cronForm.value.albumIds,
-        },
+      await crontabsStore.updateCrontab(editingId.value, {
+        name: cronForm.value.name,
+        description: cronForm.value.description,
+        enabled: cronForm.value.enabled,
+        config: cronForm.value.config,
+        albumIds: cronForm.value.albumIds,
       })
       toast.add({ severity: 'success', summary: '已更新', life: 1600 })
     } else {
-      await api.crontabController.createCrontab({ body: cronForm.value })
+      await crontabsStore.createCrontab(cronForm.value)
       toast.add({ severity: 'success', summary: '已创建', life: 1600 })
     }
     showCronDialog.value = false
@@ -400,19 +388,13 @@ async function submitCron() {
 async function toggleEnabled(row: Crontab) {
   updatingRow.value = row.id
   try {
-    await api.crontabController.updateCrontab({
-      crontabId: row.id,
-      body: {
-        name: row.name,
-        description: row.description,
-        enabled: !row.enabled,
-        config: row.config,
-        albumIds: row.albumIds,
-      },
+    await crontabsStore.updateCrontab(row.id, {
+      name: row.name,
+      description: row.description,
+      enabled: !row.enabled,
+      config: row.config,
+      albumIds: row.albumIds,
     })
-    crontabs.value = crontabs.value.map((c) =>
-      c.id === row.id ? { ...c, enabled: !row.enabled } : c,
-    )
     toast.add({ severity: 'success', summary: '已更新', life: 1600 })
   } catch (err) {
     console.error('更新启用状态失败', err)
@@ -446,7 +428,7 @@ async function confirmExecute() {
   if (showExecuteId.value === null) return
   executing.value = true
   try {
-    await api.crontabController.executeCrontab({ crontabId: showExecuteId.value })
+    await crontabsStore.executeCrontab(showExecuteId.value)
     toast.add({ severity: 'success', summary: '已触发', life: 2000 })
 
     showExecuteId.value = null
@@ -469,7 +451,7 @@ async function confirmExecuteExif() {
   if (showExecuteExifId.value === null) return
   executingExif.value = true
   try {
-    await api.crontabController.executeCrontabExifTime({ crontabId: showExecuteExifId.value })
+    await crontabsStore.executeCrontabExifTime(showExecuteExifId.value)
     toast.add({ severity: 'success', summary: '已触发 EXIF 填充', life: 2000 })
     showExecuteExifId.value = null
     showExecuteExifVisible.value = false
@@ -491,9 +473,7 @@ async function confirmExecuteRewriteFs() {
   if (showExecuteRewriteFsId.value === null) return
   executingRewriteFs.value = true
   try {
-    await api.crontabController.executeCrontabRewriteFileSystemTime({
-      crontabId: showExecuteRewriteFsId.value,
-    })
+    await crontabsStore.executeCrontabRewriteFileSystemTime(showExecuteRewriteFsId.value)
     toast.add({ severity: 'success', summary: '已触发文件时间重写', life: 2000 })
     showExecuteRewriteFsId.value = null
     showExecuteRewriteFsVisible.value = false
@@ -515,7 +495,7 @@ async function confirmDelete() {
   if (showDeleteId.value === null) return
   deleting.value = true
   try {
-    await api.crontabController.deleteCrontab({ crontabId: showDeleteId.value })
+    await crontabsStore.deleteCrontab(showDeleteId.value)
     toast.add({ severity: 'success', summary: '已删除', life: 1500 })
     showDeleteId.value = null
     showDeleteVisible.value = false
@@ -528,25 +508,20 @@ async function confirmDelete() {
   }
 }
 
-onMounted(() => {
-  // 读取本地设置，默认开启
-  try {
-    const saved = localStorage.getItem('app:optimizeHeatmap')
-    if (saved === null) {
-      optimizeHeatmap.value = true
-    } else {
-      optimizeHeatmap.value = !(saved === '0' || saved === 'false')
-    }
-  } catch {
-    optimizeHeatmap.value = true
-  }
-  fetchAccounts()
-  fetchCrontabs()
+onMounted(async () => {
+  await accountsStore.fetchAccounts()
+  await albumsStore.fetchAlbums()
+  await crontabsStore.fetchCrontabs()
+  fetchTimeline()
   buildTimeZones()
 })
 
 watch(optimizeHeatmap, () => {
   rebuildHeatmapData()
+})
+
+watch(albums, () => {
+  fetchTimeline()
 })
 
 watch(
@@ -622,7 +597,7 @@ watch(
       >
     </Card>
 
-    <AlbumPanel @update:albums="onAlbumsUpdate" />
+    <AlbumPanel />
 
     <!-- 创建/编辑 计划任务 -->
     <Dialog
