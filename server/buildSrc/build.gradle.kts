@@ -9,8 +9,8 @@ repositories {
 }
 
 dependencies {
-    implementation("org.graalvm.buildtools:native-gradle-plugin:0.11.0")
-    implementation("org.ow2.asm:asm:9.5")
+    implementation(libs.graalvm.native.plugin)
+    implementation(libs.asm)
     compileOnly(kotlin("gradle-plugin"))
 }
 

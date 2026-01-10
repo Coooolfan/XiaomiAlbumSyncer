@@ -4,8 +4,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     java
     application
-    kotlin("jvm") version "2.3.0"
-    id("com.google.devtools.ksp") version "2.3.4"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.ksp)
     id("org.graalvm.buildtools.native")
     id("org.noear.solon.native")
 }
@@ -19,39 +19,37 @@ group = "com.coooolfan"
 version = getGitVersion()
 description = "A tool to download albums from Xiaomi Cloud."
 
-val jimmerVersion = "0.9.117"
-
 dependencies {
-    implementation(platform("org.noear:solon-parent:3.6.4"))
-    implementation("org.noear:solon-web") {
+    implementation(platform(libs.solon.parent))
+    implementation(libs.solon.web) {
         exclude(group = "org.noear", module = "solon-serialization-snack3")
         exclude(group = "org.noear", module = "solon-sessionstate-local")
     }
-    implementation("org.noear:solon-web-staticfiles")
-    implementation("org.noear:solon-aot")
-    implementation("org.noear:solon-logging-logback")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.3.0")
-    implementation("cn.dev33:sa-token-solon-plugin:1.44.0")
-    implementation("org.noear:solon-serialization-jackson")
-    implementation("com.squareup.okhttp3:okhttp:5.1.0")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
-    implementation("org.noear:solon-scheduling-simple")
+    implementation(libs.solon.web.staticfiles)
+    implementation(libs.solon.aot)
+    implementation(libs.solon.logging.logback)
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.sa.token.solon)
+    implementation(libs.solon.serialization.jackson)
+    implementation(libs.okhttp)
+    implementation(libs.jackson.kotlin)
+    implementation(libs.solon.scheduling.simple)
 
-    implementation("org.flywaydb:flyway-core:11.13.1")
+    implementation(libs.flyway.core)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation(libs.coroutines.core)
 
-    implementation("org.babyfish.jimmer:jimmer-client:$jimmerVersion")
-    implementation("org.babyfish.jimmer:jimmer-core:${jimmerVersion}")
-    implementation("org.babyfish.jimmer:jimmer-core-kotlin:${jimmerVersion}")
-    implementation("org.babyfish.jimmer:jimmer-sql:${jimmerVersion}")
-    implementation("org.babyfish.jimmer:jimmer-sql-kotlin:${jimmerVersion}")
-    ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
+    implementation(libs.jimmer.client)
+    implementation(libs.jimmer.core)
+    implementation(libs.jimmer.core.kotlin)
+    implementation(libs.jimmer.sql)
+    implementation(libs.jimmer.sql.kotlin)
+    ksp(libs.jimmer.ksp)
 
-    implementation("com.zaxxer:HikariCP:7.0.2")
-    runtimeOnly("org.xerial:sqlite-jdbc:3.50.3.0")
+    implementation(libs.hikari)
+    runtimeOnly(libs.sqlite)
 
-    testImplementation("org.noear:solon-test")
+    testImplementation(libs.solon.test)
 }
 
 tasks.withType<JavaCompile> {
