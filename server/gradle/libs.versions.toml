@@ -16,14 +16,12 @@ asm = "9.5"
 [libraries]
 solon-parent = { module = "org.noear:solon-parent", version.ref = "solon" }
 solon-web = { module = "org.noear:solon-web" }
-solon-web-staticfiles = { module = "org.noear:solon-web-staticfiles" }
 solon-aot = { module = "org.noear:solon-aot" }
 solon-logging-logback = { module = "org.noear:solon-logging-logback" }
 solon-serialization-jackson = { module = "org.noear:solon-serialization-jackson" }
 solon-scheduling-simple = { module = "org.noear:solon-scheduling-simple" }
 solon-test = { module = "org.noear:solon-test" }
 
-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 sa-token-solon = { module = "cn.dev33:sa-token-solon-plugin", version.ref = "saToken" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jacksonKotlin" }
@@ -31,9 +29,6 @@ flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 
 jimmer-client = { module = "org.babyfish.jimmer:jimmer-client", version.ref = "jimmer" }
-jimmer-core = { module = "org.babyfish.jimmer:jimmer-core", version.ref = "jimmer" }
-jimmer-core-kotlin = { module = "org.babyfish.jimmer:jimmer-core-kotlin", version.ref = "jimmer" }
-jimmer-sql = { module = "org.babyfish.jimmer:jimmer-sql", version.ref = "jimmer" }
 jimmer-sql-kotlin = { module = "org.babyfish.jimmer:jimmer-sql-kotlin", version.ref = "jimmer" }
 jimmer-ksp = { module = "org.babyfish.jimmer:jimmer-ksp", version.ref = "jimmer" }
 

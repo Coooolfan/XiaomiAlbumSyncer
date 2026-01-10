@@ -25,10 +25,8 @@ dependencies {
         exclude(group = "org.noear", module = "solon-serialization-snack3")
         exclude(group = "org.noear", module = "solon-sessionstate-local")
     }
-    implementation(libs.solon.web.staticfiles)
     implementation(libs.solon.aot)
     implementation(libs.solon.logging.logback)
-    implementation(libs.kotlin.stdlib)
     implementation(libs.sa.token.solon)
     implementation(libs.solon.serialization.jackson)
     implementation(libs.okhttp)
@@ -40,9 +38,6 @@ dependencies {
     implementation(libs.coroutines.core)
 
     implementation(libs.jimmer.client)
-    implementation(libs.jimmer.core)
-    implementation(libs.jimmer.core.kotlin)
-    implementation(libs.jimmer.sql)
     implementation(libs.jimmer.sql.kotlin)
     ksp(libs.jimmer.ksp)
 
