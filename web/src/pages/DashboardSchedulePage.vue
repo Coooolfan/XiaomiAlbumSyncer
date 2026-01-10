@@ -4,7 +4,6 @@ import Card from 'primevue/card'
 import ContributionHeatmap from '@/components/ContributionHeatmap.vue'
 import AlbumPanel from '@/components/AlbumPanel.vue'
 import CrontabCard from '@/components/CrontabCard.vue'
-import { api } from '@/ApiInstance'
 import Panel from 'primevue/panel'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
@@ -17,21 +16,16 @@ import InputNumber from 'primevue/inputnumber'
 import Message from 'primevue/message'
 import { useToast } from 'primevue/usetoast'
 import type { CrontabDto } from '@/__generated/model/dto'
-import type { CrontabCreateInput } from '@/__generated/model/static'
 import { storeToRefs } from 'pinia'
 import { useAccountsStore } from '@/stores/accounts'
 import { useAlbumsStore } from '@/stores/albums'
 import { useCrontabsStore } from '@/stores/crontabs'
 import { usePreferencesStore } from '@/stores/preferences'
+import { useHeatmapTimeline } from '@/composables/useHeatmapTimeline'
+import { useActionDialog } from '@/composables/useActionDialog'
+import { createEmptyCronForm, mapCrontabToForm, type LocalCronForm } from '@/utils/crontabForm'
 
-type DataPoint = { timeStamp: number; count: number }
-
-const labelText = ref('一年活跃度')
-const weekStartNum = ref(1)
-const rangeDaysNum = ref(365)
-const endDateStr = ref(formatDateInput(new Date()))
-const dataPoints = ref<DataPoint[]>([])
-const rawTimelineMap = ref<Record<string, number>>({})
+type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
 
 const accountsStore = useAccountsStore()
 const albumsStore = useAlbumsStore()
@@ -43,32 +37,44 @@ const { albums } = storeToRefs(albumsStore)
 const { crontabs, loading: loadingCrons } = storeToRefs(crontabsStore)
 const { optimizeHeatmap } = storeToRefs(preferencesStore)
 
-const tip = ref('')
-let tipHideTimer: number | undefined
-
-// Toast
 const toast = useToast()
 
-// ==== 计划任务：类型与状态 ====
-type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
+const albumIds = computed(() => albums.value.map((a) => a.id))
+const {
+  labelText,
+  weekStartNum,
+  rangeDaysNum,
+  endDateStr,
+  dataPoints,
+  tip,
+  onDayClick,
+  fetchTimeline,
+  scheduleFetch,
+} = useHeatmapTimeline({
+  albumIds: () => albumIds.value,
+  optimizeHeatmap: () => optimizeHeatmap.value,
+})
 
 const showCronDialog = ref(false)
 const isEditing = ref(false)
 const editingId = ref<number | null>(null)
 const saving = ref(false)
 const updatingRow = ref<number | null>(null)
-const showDeleteId = ref<number | null>(null)
-const showDeleteVisible = ref(false)
-const deleting = ref(false)
-const showExecuteId = ref<number | null>(null)
-const showExecuteVisible = ref(false)
-const executing = ref(false)
-const showExecuteExifId = ref<number | null>(null)
-const showExecuteExifVisible = ref(false)
-const executingExif = ref(false)
-const showExecuteRewriteFsId = ref<number | null>(null)
-const showExecuteRewriteFsVisible = ref(false)
-const executingRewriteFs = ref(false)
+
+const deleteDialog = useActionDialog()
+const executeDialog = useActionDialog()
+const executeExifDialog = useActionDialog()
+const executeRewriteFsDialog = useActionDialog()
+
+const { targetId: showDeleteId, visible: showDeleteVisible, loading: deleting } = deleteDialog
+const { targetId: showExecuteId, visible: showExecuteVisible, loading: executing } = executeDialog
+const { targetId: showExecuteExifId, visible: showExecuteExifVisible, loading: executingExif } =
+  executeExifDialog
+const {
+  targetId: showExecuteRewriteFsId,
+  visible: showExecuteRewriteFsVisible,
+  loading: executingRewriteFs,
+} = executeRewriteFsDialog
 
 const defaultTz = (() => {
   try {
@@ -78,38 +84,7 @@ const defaultTz = (() => {
   }
 })()
 
-// 扩展 CreateInput 以适应本地表单绑定
-interface LocalCronForm extends Omit<CrontabCreateInput, 'albumIds'> {
-  albumIds: number[]
-}
-
-const cronForm = ref<LocalCronForm>({
-  name: '',
-  description: '',
-  enabled: true,
-  accountId: 0,
-  config: {
-    expression: '0 0 23 * * ?',
-    timeZone: defaultTz,
-    targetPath: '',
-    downloadImages: true,
-    downloadVideos: false,
-    downloadAudios: true,
-    diffByTimeline: false,
-    rewriteExifTime: false,
-    rewriteExifTimeZone: defaultTz,
-    skipExistingFile: true,
-    rewriteFileSystemTime: false,
-    checkSha1: false,
-    fetchFromDbSize: 2,
-    downloaders: 8,
-    verifiers: 2,
-    exifProcessors: 2,
-    fileTimeWorkers: 2,
-  },
-  albumIds: [],
-})
-
+const cronForm = ref<LocalCronForm>(createEmptyCronForm(defaultTz, 0))
 const formErrors = ref<Record<string, string>>({})
 const timeZones = ref<string[]>([])
 
@@ -117,7 +92,6 @@ const accountOptions = computed(() =>
   accounts.value.map((a) => ({ label: a.nickname || a.userId, value: a.id })),
 )
 
-// 所有相册选项，用于 CrontabCard 显示（value 为 string）
 const allAlbumOptions = computed(() =>
   (albums.value || []).map((a) => ({
     label: a.name ?? `ID ${a.id}`,
@@ -125,7 +99,6 @@ const allAlbumOptions = computed(() =>
   })),
 )
 
-// 表单用相册选项，根据选中的 accountId 过滤（value 为 number）
 const formAlbumOptions = computed(() => {
   if (!cronForm.value.accountId) return []
   return (albums.value || [])
@@ -133,102 +106,6 @@ const formAlbumOptions = computed(() => {
     .map((a) => ({ label: a.name ?? `ID ${a.id}`, value: a.id }))
 })
 
-function onDayClick(payload: {
-  date: Date
-  dateStr: string
-  count: number
-  level: 0 | 1 | 2 | 3 | 4
-}) {
-  tip.value = `${payload.dateStr} · ${payload.count}`
-  if (tipHideTimer) window.clearTimeout(tipHideTimer)
-  tipHideTimer = window.setTimeout(() => {
-    tip.value = ''
-  }, 2500)
-}
-
-function formatDateInput(d: Date) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
-function parseDateToLocalTimestamp(dateStr: string) {
-  const parts = dateStr.split('-')
-  const y = Number(parts[0] ?? '1970')
-  const m = Number(parts[1] ?? '1')
-  const d = Number(parts[2] ?? '1')
-  const dt = new Date(y || 1970, (m || 1) - 1, d || 1)
-  dt.setHours(0, 0, 0, 0)
-  return dt.getTime()
-}
-
-async function fetchTimeline() {
-  try {
-    const end = new Date(endDateStr.value)
-    end.setHours(0, 0, 0, 0)
-    const start = new Date(end.getTime() - (Math.max(1, rangeDaysNum.value) - 1) * 24 * 3600 * 1000)
-    const startStr = formatDateInput(start)
-
-    const albumIds = albums.value.map((a) => a.id)
-
-    const resp = await api.albumsController.fetchDateMap({
-      albumIds: albumIds.length > 0 ? albumIds : undefined,
-      start: startStr,
-      end: endDateStr.value,
-    })
-
-    rawTimelineMap.value = resp as Record<string, number>
-    rebuildHeatmapData()
-  } catch (err) {
-    console.error('获取时间线数据失败', err)
-  }
-}
-
-function quantile(values: number[], q: number): number {
-  if (!values || values.length === 0) return 0
-  const arr = [...values].sort((a, b) => a - b)
-  const pos = (arr.length - 1) * q
-  const base = Math.floor(pos)
-  const rest = pos - base
-  const v0 = arr[base] ?? 0
-  const v1 = arr[base + 1]
-  if (v1 !== undefined) {
-    return v0 + rest * (v1 - v0)
-  }
-  return v0
-}
-
-function rebuildHeatmapData() {
-  const entries = Object.entries(rawTimelineMap.value || {})
-  if (entries.length === 0) {
-    dataPoints.value = []
-    return
-  }
-
-  // 仅考虑正数值用于分位数估计，避免零值影响上界判断
-  const positiveValues = entries
-    .map(([, v]) => (Number.isFinite(v) ? Number(v) : 0))
-    .filter((v) => v > 0)
-
-  let upper = 0
-  if (optimizeHeatmap.value && positiveValues.length >= 5) {
-    // 95分位作为上界，削弱极端大值影响
-    upper = quantile(positiveValues, 0.95)
-  }
-
-  dataPoints.value = entries
-    .map(([dateStr, countRaw]) => {
-      const count = upper > 0 ? Math.min(countRaw, upper) : countRaw
-      return {
-        timeStamp: parseDateToLocalTimestamp(dateStr),
-        count,
-      }
-    })
-    .sort((a, b) => a.timeStamp - b.timeStamp)
-}
-
-// ==== 计划任务：逻辑 ====
 function buildTimeZones() {
   const fallbackTimeZones = [
     'UTC',
@@ -264,34 +141,8 @@ async function fetchCrontabs() {
 function openCreateCron() {
   isEditing.value = false
   editingId.value = null
-  // 默认选中第一个账号
   const defaultAccountId = accounts.value[0]?.id ?? 0
-  cronForm.value = {
-    name: '',
-    description: '',
-    enabled: true,
-    accountId: defaultAccountId,
-    config: {
-      expression: '0 0 23 * * ?',
-      timeZone: defaultTz,
-      targetPath: './download',
-      downloadImages: true,
-      downloadVideos: false,
-      downloadAudios: true,
-      diffByTimeline: false,
-      rewriteExifTime: false,
-      rewriteExifTimeZone: defaultTz,
-      skipExistingFile: true,
-      rewriteFileSystemTime: false,
-      checkSha1: false,
-      fetchFromDbSize: 2,
-      downloaders: 8,
-      verifiers: 2,
-      exifProcessors: 2,
-      fileTimeWorkers: 2,
-    },
-    albumIds: [],
-  }
+  cronForm.value = createEmptyCronForm(defaultTz, defaultAccountId)
   formErrors.value = {}
   showCronDialog.value = true
 }
@@ -299,32 +150,7 @@ function openCreateCron() {
 function openEditCron(item: Crontab) {
   isEditing.value = true
   editingId.value = item.id
-  cronForm.value = {
-    name: item.name,
-    description: item.description,
-    enabled: item.enabled,
-    accountId: item.accountId,
-    config: {
-      expression: item.config.expression,
-      timeZone: item.config.timeZone,
-      targetPath: item.config.targetPath,
-      downloadImages: item.config.downloadImages,
-      downloadVideos: item.config.downloadVideos,
-      downloadAudios: item.config.downloadAudios,
-      diffByTimeline: item.config.diffByTimeline,
-      rewriteExifTime: item.config.rewriteExifTime,
-      rewriteExifTimeZone: item.config.rewriteExifTimeZone ?? item.config.timeZone,
-      skipExistingFile: item.config.skipExistingFile ?? true,
-      rewriteFileSystemTime: item.config.rewriteFileSystemTime ?? false,
-      checkSha1: item.config.checkSha1 ?? false,
-      fetchFromDbSize: item.config.fetchFromDbSize ?? 2,
-      downloaders: item.config.downloaders ?? 8,
-      verifiers: item.config.verifiers ?? 2,
-      exifProcessors: item.config.exifProcessors ?? 2,
-      fileTimeWorkers: item.config.fileTimeWorkers ?? 2,
-    },
-    albumIds: [...item.albumIds],
-  }
+  cronForm.value = mapCrontabToForm(item, defaultTz)
   formErrors.value = {}
   showCronDialog.value = true
 }
@@ -361,8 +187,6 @@ async function submitCron() {
   saving.value = true
   try {
     if (isEditing.value && editingId.value !== null) {
-      // UpdateInput 没有 accountId 字段，通常不允许修改归属账号
-      // 但 albumIds 需要是 number[]
       await crontabsStore.updateCrontab(editingId.value, {
         name: cronForm.value.name,
         description: cronForm.value.description,
@@ -405,23 +229,19 @@ async function toggleEnabled(row: Crontab) {
 }
 
 function requestDelete(row: Crontab) {
-  showDeleteId.value = row.id
-  showDeleteVisible.value = true
+  deleteDialog.open(row.id)
 }
 
 function requestExecute(row: Crontab) {
-  showExecuteId.value = row.id
-  showExecuteVisible.value = true
+  executeDialog.open(row.id)
 }
 
 function requestExecuteExif(row: Crontab) {
-  showExecuteExifId.value = row.id
-  showExecuteExifVisible.value = true
+  executeExifDialog.open(row.id)
 }
 
 function requestExecuteRewriteFs(row: Crontab) {
-  showExecuteRewriteFsId.value = row.id
-  showExecuteRewriteFsVisible.value = true
+  executeRewriteFsDialog.open(row.id)
 }
 
 async function confirmExecute() {
@@ -430,9 +250,7 @@ async function confirmExecute() {
   try {
     await crontabsStore.executeCrontab(showExecuteId.value)
     toast.add({ severity: 'success', summary: '已触发', life: 2000 })
-
-    showExecuteId.value = null
-    showExecuteVisible.value = false
+    executeDialog.close()
     fetchCrontabs()
   } catch (err) {
     console.error('立即执行触发失败', err)
@@ -453,8 +271,7 @@ async function confirmExecuteExif() {
   try {
     await crontabsStore.executeCrontabExifTime(showExecuteExifId.value)
     toast.add({ severity: 'success', summary: '已触发 EXIF 填充', life: 2000 })
-    showExecuteExifId.value = null
-    showExecuteExifVisible.value = false
+    executeExifDialog.close()
     fetchCrontabs()
   } catch (err) {
     console.error('立即执行 EXIF 填充失败', err)
@@ -475,8 +292,7 @@ async function confirmExecuteRewriteFs() {
   try {
     await crontabsStore.executeCrontabRewriteFileSystemTime(showExecuteRewriteFsId.value)
     toast.add({ severity: 'success', summary: '已触发文件时间重写', life: 2000 })
-    showExecuteRewriteFsId.value = null
-    showExecuteRewriteFsVisible.value = false
+    executeRewriteFsDialog.close()
     fetchCrontabs()
   } catch (err) {
     console.error('立即执行文件系统时间重写失败', err)
@@ -497,8 +313,7 @@ async function confirmDelete() {
   try {
     await crontabsStore.deleteCrontab(showDeleteId.value)
     toast.add({ severity: 'success', summary: '已删除', life: 1500 })
-    showDeleteId.value = null
-    showDeleteVisible.value = false
+    deleteDialog.close()
     await fetchCrontabs()
   } catch (err) {
     console.error('删除计划任务失败', err)
@@ -509,19 +324,19 @@ async function confirmDelete() {
 }
 
 onMounted(async () => {
-  await accountsStore.fetchAccounts()
-  await albumsStore.fetchAlbums()
-  await crontabsStore.fetchCrontabs()
-  fetchTimeline()
+  await Promise.all([
+    accountsStore.fetchAccounts(),
+    albumsStore.fetchAlbums(),
+    crontabsStore.fetchCrontabs(),
+  ])
+  await fetchTimeline().catch((err) => {
+    console.error('获取时间线数据失败', err)
+  })
   buildTimeZones()
 })
 
-watch(optimizeHeatmap, () => {
-  rebuildHeatmapData()
-})
-
 watch(albums, () => {
-  fetchTimeline()
+  scheduleFetch()
 })
 
 watch(
@@ -594,7 +409,6 @@ watch(
           </div>
         </div>
       </template>
-      >
     </Card>
 
     <AlbumPanel />
@@ -925,17 +739,7 @@ watch(
       <div class="text-sm text-slate-700">确定要删除该计划任务吗？该操作不可恢复。</div>
       <template #footer>
         <div class="flex items-center justify-end gap-2 w-full">
-          <Button
-            label="取消"
-            severity="secondary"
-            text
-            @click="
-              () => {
-                showDeleteId = null
-                showDeleteVisible = false
-              }
-            "
-          />
+          <Button label="取消" severity="secondary" text @click="deleteDialog.close()" />
           <Button label="删除" severity="danger" :loading="deleting" @click="confirmDelete" />
         </div>
       </template>
@@ -948,17 +752,7 @@ watch(
       </div>
       <template #footer>
         <div class="flex items-center justify-end gap-2 w-full">
-          <Button
-            label="取消"
-            severity="secondary"
-            text
-            @click="
-              () => {
-                showExecuteId = null
-                showExecuteVisible = false
-              }
-            "
-          />
+          <Button label="取消" severity="secondary" text @click="executeDialog.close()" />
           <Button label="执行" severity="warning" :loading="executing" @click="confirmExecute" />
         </div>
       </template>
@@ -977,17 +771,7 @@ watch(
       </div>
       <template #footer>
         <div class="flex items-center justify-end gap-2 w-full">
-          <Button
-            label="取消"
-            severity="secondary"
-            text
-            @click="
-              () => {
-                showExecuteExifId = null
-                showExecuteExifVisible = false
-              }
-            "
-          />
+          <Button label="取消" severity="secondary" text @click="executeExifDialog.close()" />
           <Button
             label="执行"
             severity="info"
@@ -1014,12 +798,7 @@ watch(
             label="取消"
             severity="secondary"
             text
-            @click="
-              () => {
-                showExecuteRewriteFsId = null
-                showExecuteRewriteFsVisible = false
-              }
-            "
+            @click="executeRewriteFsDialog.close()"
           />
           <Button
             label="执行"
