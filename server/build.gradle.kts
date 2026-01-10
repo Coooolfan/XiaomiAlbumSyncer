@@ -6,6 +6,7 @@ plugins {
     application
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.benManesVersions)
     id("org.graalvm.buildtools.native")
     id("org.noear.solon.native")
 }
@@ -22,7 +23,7 @@ description = "A tool to download albums from Xiaomi Cloud."
 dependencies {
     implementation(platform(libs.solon.parent))
     implementation(libs.solon.web) {
-        exclude(group = "org.noear", module = "solon-serialization-snack3")
+        exclude(group = "org.noear", module = "solon-serialization-snack4")
         exclude(group = "org.noear", module = "solon-sessionstate-local")
     }
     implementation(libs.solon.aot)

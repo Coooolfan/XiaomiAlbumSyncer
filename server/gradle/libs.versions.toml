@@ -1,17 +1,18 @@
 [versions]
 kotlin = "2.3.0"
 ksp = "2.3.4"
-solon = "3.6.4"
-jimmer = "0.9.117"
+solon = "3.8.0"
+jimmer = "0.9.120"
 saToken = "1.44.0"
-okhttp = "5.1.0"
-jacksonKotlin = "2.15.2"
-flyway = "11.13.1"
+okhttp = "5.3.2"
+jacksonKotlin = "2.19.2"
+flyway = "11.20.1"
 coroutines = "1.10.2"
 hikari = "7.0.2"
-sqlite = "3.50.3.0"
-graalvmNativePlugin = "0.11.0"
+sqlite = "3.51.1.0"
+graalvmNativePlugin = "0.11.3"
 asm = "9.5"
+benManesVersions = "0.53.0"
 
 [libraries]
 solon-parent = { module = "org.noear:solon-parent", version.ref = "solon" }
@@ -41,3 +42,4 @@ asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
 [plugins]
 "kotlin-jvm" = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 "ksp" = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+benManesVersions = { id = "com.github.ben-manes.versions", version.ref = "benManesVersions" }

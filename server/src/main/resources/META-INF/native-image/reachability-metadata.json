@@ -206,7 +206,15 @@
           "parameterTypes": []
         },
         {
+          "name": "getActivityTimeout",
+          "parameterTypes": []
+        },
+        {
           "name": "getAutoRenew",
+          "parameterTypes": []
+        },
+        {
+          "name": "getBasic",
           "parameterTypes": []
         },
         {
@@ -356,9 +364,21 @@
           ]
         },
         {
+          "name": "setActivityTimeout",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
           "name": "setAutoRenew",
           "parameterTypes": [
             "java.lang.Boolean"
+          ]
+        },
+        {
+          "name": "setBasic",
+          "parameterTypes": [
+            "java.lang.String"
           ]
         },
         {
@@ -570,6 +590,10 @@
           "parameterTypes": [
             "java.lang.String"
           ]
+        },
+        {
+          "name": "toString",
+          "parameterTypes": []
         }
       ]
     },
@@ -604,6 +628,60 @@
           ]
         },
         {
+          "name": "setSaHttpBasicTemplate",
+          "parameterTypes": [
+            "cn.dev33.satoken.httpauth.basic.SaHttpBasicTemplate"
+          ]
+        },
+        {
+          "name": "setSaHttpDigestTemplate",
+          "parameterTypes": [
+            "cn.dev33.satoken.httpauth.digest.SaHttpDigestTemplate"
+          ]
+        },
+        {
+          "name": "setSaHttpTemplate",
+          "parameterTypes": [
+            "cn.dev33.satoken.http.SaHttpTemplate"
+          ]
+        },
+        {
+          "name": "setSaIdTemplate",
+          "parameterTypes": [
+            "cn.dev33.satoken.same.SaSameTemplate"
+          ]
+        },
+        {
+          "name": "setSaJsonTemplate",
+          "parameterTypes": [
+            "cn.dev33.satoken.json.SaJsonTemplate"
+          ]
+        },
+        {
+          "name": "setSaSerializerTemplate",
+          "parameterTypes": [
+            "cn.dev33.satoken.serializer.SaSerializerTemplate"
+          ]
+        },
+        {
+          "name": "setSaTempTemplate",
+          "parameterTypes": [
+            "cn.dev33.satoken.temp.SaTempTemplate"
+          ]
+        },
+        {
+          "name": "setSaTokenContext",
+          "parameterTypes": [
+            "cn.dev33.satoken.context.SaTokenContext"
+          ]
+        },
+        {
+          "name": "setSaTokenDao",
+          "parameterTypes": [
+            "cn.dev33.satoken.dao.SaTokenDao"
+          ]
+        },
+        {
           "name": "setSaTokenListener",
           "parameterTypes": [
             "java.util.List"
@@ -613,6 +691,24 @@
           "name": "setSaTokenPluginList",
           "parameterTypes": [
             "java.util.List"
+          ]
+        },
+        {
+          "name": "setSaTotpTemplate",
+          "parameterTypes": [
+            "cn.dev33.satoken.secure.totp.SaTotpTemplate"
+          ]
+        },
+        {
+          "name": "setStpInterface",
+          "parameterTypes": [
+            "cn.dev33.satoken.stp.StpInterface"
+          ]
+        },
+        {
+          "name": "setStpLogic",
+          "parameterTypes": [
+            "cn.dev33.satoken.stp.StpLogic"
           ]
         }
       ]
@@ -656,20 +752,67 @@
     },
     {
       "type": "cn.dev33.satoken.solon.integration.SaFirewallCheckFilterForSolon",
-      "allDeclaredFields": true
+      "allDeclaredFields": true,
+      "methods": [
+        {
+          "name": "doFilter",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "org.noear.solon.core.handle.FilterChain"
+          ]
+        }
+      ]
     },
     {
       "type": "cn.dev33.satoken.solon.integration.SaTokenContextFilterForSolon",
-      "allDeclaredFields": true
+      "allDeclaredFields": true,
+      "methods": [
+        {
+          "name": "doFilter",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "org.noear.solon.core.handle.FilterChain"
+          ]
+        }
+      ]
     },
     {
       "type": "cn.dev33.satoken.solon.integration.SaTokenCorsFilterForSolon",
-      "allDeclaredFields": true
+      "allDeclaredFields": true,
+      "methods": [
+        {
+          "name": "doFilter",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "org.noear.solon.core.handle.FilterChain"
+          ]
+        }
+      ]
     },
     {
       "type": "cn.dev33.satoken.solon.integration.SaTokenInterceptor",
       "allDeclaredFields": true,
       "methods": [
+        {
+          "name": "addExclude",
+          "parameterTypes": [
+            "java.lang.String[]"
+          ]
+        },
+        {
+          "name": "addInclude",
+          "parameterTypes": [
+            "java.lang.String[]"
+          ]
+        },
+        {
+          "name": "doIntercept",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "org.noear.solon.core.handle.Handler",
+            "org.noear.solon.core.route.RouterInterceptorChain"
+          ]
+        },
         {
           "name": "getAuth",
           "parameterTypes": []
@@ -842,6 +985,13 @@
           "parameterTypes": []
         },
         {
+          "name": "register",
+          "parameterTypes": [
+            "org.noear.solon.core.AppContext",
+            "org.noear.solon.aot.RuntimeNativeMetadata"
+          ]
+        },
+        {
           "name": "setLog",
           "parameterTypes": [
             "org.slf4j.Logger"
@@ -904,6 +1054,73 @@
             "org.babyfish.jimmer.sql.kt.KSqlClient",
             "com.coooolfan.xiaomialbumsyncer.utils.TaskActuators",
             "com.coooolfan.xiaomialbumsyncer.config.ThreadExecutor"
+          ]
+        },
+        {
+          "name": "access$getPipeline$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"
+          ]
+        },
+        {
+          "name": "checkIsRunning",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "executeCrontab",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.Crontab",
+            "boolean"
+          ]
+        },
+        {
+          "name": "executeCrontab$default",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.config.TaskScheduler",
+            "com.coooolfan.xiaomialbumsyncer.model.Crontab",
+            "boolean",
+            "int",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "executeCrontabExifTime",
+          "parameterTypes": [
+            "boolean",
+            "java.util.Map",
+            "com.coooolfan.xiaomialbumsyncer.model.SystemConfig",
+            "java.util.TimeZone"
+          ]
+        },
+        {
+          "name": "executeCrontabExifTime$default",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.config.TaskScheduler",
+            "boolean",
+            "java.util.Map",
+            "com.coooolfan.xiaomialbumsyncer.model.SystemConfig",
+            "java.util.TimeZone",
+            "int",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "executeCrontabRewriteFileSystemTime",
+          "parameterTypes": [
+            "boolean",
+            "java.util.Map"
+          ]
+        },
+        {
+          "name": "executeCrontabRewriteFileSystemTime$default",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.config.TaskScheduler",
+            "boolean",
+            "java.util.Map",
+            "int",
+            "java.lang.Object"
           ]
         },
         {
@@ -1169,6 +1386,12 @@
           ]
         },
         {
+          "name": "access$getProperties$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.config.jimmer.OpenApiController"
+          ]
+        },
+        {
           "name": "download",
           "parameterTypes": [
             "java.lang.String",
@@ -1198,6 +1421,13 @@
           "name": "<init>",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.config.jimmer.JimmerProperties"
+          ]
+        },
+        {
+          "name": "download",
+          "parameterTypes": [
+            "java.lang.String",
+            "org.noear.solon.core.handle.Context"
           ]
         },
         {
@@ -1358,6 +1588,10 @@
           ]
         },
         {
+          "name": "access$getCRONTAB_WITH_ALBUMS_FETCHER$cp",
+          "parameterTypes": []
+        },
+        {
           "name": "createCrontab",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput"
@@ -1483,6 +1717,10 @@
             "com.coooolfan.xiaomialbumsyncer.service.SystemConfigService",
             "com.coooolfan.xiaomialbumsyncer.service.DebugService"
           ]
+        },
+        {
+          "name": "access$getNORMAL_SYSTEM_CONFIG$cp",
+          "parameterTypes": []
         },
         {
           "name": "getDebugService",
@@ -1634,6 +1872,10 @@
           ]
         },
         {
+          "name": "access$getDEFAULT_XIAOMI_ACCOUNT$cp",
+          "parameterTypes": []
+        },
+        {
           "name": "create",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountCreate"
@@ -1668,6 +1910,13 @@
         {
           "name": "<init>",
           "parameterTypes": []
+        },
+        {
+          "name": "doFilter",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "org.noear.solon.core.handle.FilterChain"
+          ]
         },
         {
           "name": "getLog",
@@ -4605,6 +4854,55 @@
           ]
         },
         {
+          "name": "access$getAssetService$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline"
+          ]
+        },
+        {
+          "name": "access$getCrontabService$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline"
+          ]
+        },
+        {
+          "name": "access$getDownloadStage$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline"
+          ]
+        },
+        {
+          "name": "access$getExifProcessingStage$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline"
+          ]
+        },
+        {
+          "name": "access$getFileTimeStage$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline"
+          ]
+        },
+        {
+          "name": "access$getLog$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline"
+          ]
+        },
+        {
+          "name": "access$getVerificationStage$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline"
+          ]
+        },
+        {
+          "name": "execute",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.Crontab",
+            "kotlin.coroutines.Continuation"
+          ]
+        },
+        {
           "name": "getAssetService",
           "parameterTypes": []
         },
@@ -4767,6 +5065,12 @@
           "parameterTypes": []
         },
         {
+          "name": "process",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail"
+          ]
+        },
+        {
           "name": "setApi",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"
@@ -4805,6 +5109,13 @@
           "parameterTypes": []
         },
         {
+          "name": "process",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail",
+            "com.coooolfan.xiaomialbumsyncer.model.SystemConfig"
+          ]
+        },
+        {
           "name": "setLog",
           "parameterTypes": [
             "org.slf4j.Logger"
@@ -4835,6 +5146,12 @@
         {
           "name": "getSql",
           "parameterTypes": []
+        },
+        {
+          "name": "process",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail"
+          ]
         },
         {
           "name": "setLog",
@@ -4869,6 +5186,12 @@
           "parameterTypes": []
         },
         {
+          "name": "process",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail"
+          ]
+        },
+        {
           "name": "setLog",
           "parameterTypes": [
             "org.slf4j.Logger"
@@ -4894,12 +5217,40 @@
           ]
         },
         {
+          "name": "fetchDateMap",
+          "parameterTypes": [
+            "java.util.List",
+            "java.time.Instant",
+            "java.time.Instant"
+          ]
+        },
+        {
+          "name": "getAllAlbums",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.fetcher.Fetcher"
+          ]
+        },
+        {
           "name": "getApi",
           "parameterTypes": []
         },
         {
           "name": "getSql",
           "parameterTypes": []
+        },
+        {
+          "name": "refreshAlbums",
+          "parameterTypes": [
+            "long",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher"
+          ]
+        },
+        {
+          "name": "refreshAlbumsByAccount",
+          "parameterTypes": [
+            "long",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher"
+          ]
         },
         {
           "name": "setApi",
@@ -4927,8 +5278,41 @@
           ]
         },
         {
+          "name": "access$getApi$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.AssetService"
+          ]
+        },
+        {
+          "name": "access$getLog$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.AssetService"
+          ]
+        },
+        {
+          "name": "access$getSql$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.AssetService"
+          ]
+        },
+        {
           "name": "getApi",
           "parameterTypes": []
+        },
+        {
+          "name": "getAssets",
+          "parameterTypes": [
+            "long",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher"
+          ]
+        },
+        {
+          "name": "getAssetsUndownloadByCrontab",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.Crontab",
+            "int",
+            "long"
+          ]
         },
         {
           "name": "getLog",
@@ -4937,6 +5321,28 @@
         {
           "name": "getSql",
           "parameterTypes": []
+        },
+        {
+          "name": "refreshAssets",
+          "parameterTypes": [
+            "long",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher"
+          ]
+        },
+        {
+          "name": "refreshAssetsByDiffTimeline",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.Crontab",
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabHistory",
+            "java.util.Map"
+          ]
+        },
+        {
+          "name": "refreshAssetsFull",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.Crontab",
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabHistory"
+          ]
         },
         {
           "name": "setApi",
@@ -4988,6 +5394,67 @@
           ]
         },
         {
+          "name": "createCrontab",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher"
+          ]
+        },
+        {
+          "name": "createCrontabHistory",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.Crontab"
+          ]
+        },
+        {
+          "name": "deleteCrontab",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "executeCrontab",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "executeCrontabExifTime",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "executeCrontabRewriteFileSystemTime",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "finishCrontabHistory",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabHistory"
+          ]
+        },
+        {
+          "name": "finishCrontabHistoryFetchedAllAssets",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabHistory"
+          ]
+        },
+        {
+          "name": "getAlbumTimelinesHistory",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabHistory"
+          ]
+        },
+        {
+          "name": "getCrontabCurrentStats",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
           "name": "getLog",
           "parameterTypes": []
         },
@@ -4998,6 +5465,18 @@
         {
           "name": "getTaskScheduler",
           "parameterTypes": []
+        },
+        {
+          "name": "insertCrontabHistoryDetails",
+          "parameterTypes": [
+            "java.util.List"
+          ]
+        },
+        {
+          "name": "queryCrontab",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.fetcher.Fetcher"
+          ]
         },
         {
           "name": "setLog",
@@ -5016,6 +5495,13 @@
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"
           ]
+        },
+        {
+          "name": "updateCrontab",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.Crontab",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher"
+          ]
         }
       ]
     },
@@ -5025,6 +5511,10 @@
       "methods": [
         {
           "name": "<init>",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDebugInfo",
           "parameterTypes": []
         }
       ]
@@ -5041,6 +5531,12 @@
           ]
         },
         {
+          "name": "getConfig",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.fetcher.Fetcher"
+          ]
+        },
+        {
           "name": "getConfigCache",
           "parameterTypes": []
         },
@@ -5051,6 +5547,26 @@
         {
           "name": "getSql",
           "parameterTypes": []
+        },
+        {
+          "name": "importFromV2Db",
+          "parameterTypes": []
+        },
+        {
+          "name": "initConfig",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit"
+          ]
+        },
+        {
+          "name": "isInit",
+          "parameterTypes": []
+        },
+        {
+          "name": "login",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.controller.LoginRequest"
+          ]
         },
         {
           "name": "setConfigCache",
@@ -5069,6 +5585,18 @@
           "parameterTypes": [
             "org.babyfish.jimmer.sql.kt.KSqlClient"
           ]
+        },
+        {
+          "name": "updateConfig",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.SystemConfig"
+          ]
+        },
+        {
+          "name": "updatePassword",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate"
+          ]
         }
       ]
     },
@@ -5080,6 +5608,43 @@
           "parameterTypes": [
             "org.babyfish.jimmer.sql.kt.KSqlClient",
             "com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager"
+          ]
+        },
+        {
+          "name": "create",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountCreate"
+          ]
+        },
+        {
+          "name": "delete",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "exists",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "getById",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "listAll",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.fetcher.Fetcher"
+          ]
+        },
+        {
+          "name": "update",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher"
           ]
         }
       ]
@@ -5099,6 +5664,12 @@
           "parameterTypes": []
         },
         {
+          "name": "resolve",
+          "parameterTypes": [
+            "java.util.Collection"
+          ]
+        },
+        {
           "name": "setTaskScheduler",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"
@@ -5115,6 +5686,10 @@
           "parameterTypes": [
             "org.babyfish.jimmer.sql.kt.KSqlClient"
           ]
+        },
+        {
+          "name": "exec",
+          "parameterTypes": []
         },
         {
           "name": "getLog",
@@ -5178,8 +5753,22 @@
           "parameterTypes": []
         },
         {
+          "name": "fillExifTime",
+          "parameterTypes": [
+            "java.util.Map",
+            "com.coooolfan.xiaomialbumsyncer.model.SystemConfig",
+            "java.util.TimeZone"
+          ]
+        },
+        {
           "name": "getLog",
           "parameterTypes": []
+        },
+        {
+          "name": "rewriteFileSystemTime",
+          "parameterTypes": [
+            "java.util.Map"
+          ]
         },
         {
           "name": "setLog",
@@ -5243,6 +5832,12 @@
           ]
         },
         {
+          "name": "getAuthPair",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
           "name": "getLastFreshenTime",
           "parameterTypes": []
         },
@@ -5261,6 +5856,12 @@
         {
           "name": "getUserId",
           "parameterTypes": []
+        },
+        {
+          "name": "invalidateToken",
+          "parameterTypes": [
+            "long"
+          ]
         },
         {
           "name": "setLastFreshenTime",
@@ -5308,6 +5909,63 @@
           ]
         },
         {
+          "name": "downloadAsset",
+          "parameterTypes": [
+            "long",
+            "com.coooolfan.xiaomialbumsyncer.model.Asset",
+            "java.nio.file.Path"
+          ]
+        },
+        {
+          "name": "fetchAlbumTimeline",
+          "parameterTypes": [
+            "long",
+            "long"
+          ]
+        },
+        {
+          "name": "fetchAllAlbums",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "fetchAllAssetsByAlbumId",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.Album",
+            "java.time.LocalDate"
+          ]
+        },
+        {
+          "name": "fetchAllAssetsByAlbumId$default",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi",
+            "com.coooolfan.xiaomialbumsyncer.model.Album",
+            "java.time.LocalDate",
+            "int",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "fetchAssetsByAlbumId",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.Album",
+            "java.time.LocalDate",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "fetchAssetsByAlbumId$default",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi",
+            "com.coooolfan.xiaomialbumsyncer.model.Album",
+            "java.time.LocalDate",
+            "kotlin.jvm.functions.Function1",
+            "int",
+            "java.lang.Object"
+          ]
+        },
+        {
           "name": "getLog",
           "parameterTypes": []
         },
@@ -5328,6 +5986,9 @@
           ]
         }
       ]
+    },
+    {
+      "type": "com.fasterxml.jackson.databind.ObjectMapper"
     },
     {
       "type": "com.fasterxml.jackson.databind.deser.BeanDeserializerModifier[]"
@@ -5471,6 +6132,26 @@
       "type": "com.zaxxer.hikari.HikariConfig",
       "allDeclaredFields": true,
       "methods": [
+        {
+          "name": "addDataSourceProperty",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "addHealthCheckProperty",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "copyStateTo",
+          "parameterTypes": [
+            "com.zaxxer.hikari.HikariConfig"
+          ]
+        },
         {
           "name": "getAllowPoolSuspension",
           "parameterTypes": []
@@ -5886,6 +6567,10 @@
           "parameterTypes": [
             "long"
           ]
+        },
+        {
+          "name": "validate",
+          "parameterTypes": []
         }
       ]
     },
@@ -5894,11 +6579,40 @@
       "allDeclaredFields": true,
       "methods": [
         {
+          "name": "close",
+          "parameterTypes": []
+        },
+        {
+          "name": "evictConnection",
+          "parameterTypes": [
+            "java.sql.Connection"
+          ]
+        },
+        {
+          "name": "getConnection",
+          "parameterTypes": []
+        },
+        {
+          "name": "getConnection",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        },
+        {
           "name": "getDataSourceJndiName",
           "parameterTypes": []
         },
         {
           "name": "getFastPathPool",
+          "parameterTypes": []
+        },
+        {
+          "name": "getHikariConfigMXBean",
+          "parameterTypes": []
+        },
+        {
+          "name": "getHikariPoolMXBean",
           "parameterTypes": []
         },
         {
@@ -5926,11 +6640,23 @@
           "parameterTypes": []
         },
         {
+          "name": "getLogWriter",
+          "parameterTypes": []
+        },
+        {
+          "name": "getLoginTimeout",
+          "parameterTypes": []
+        },
+        {
           "name": "getMaxPoolSize",
           "parameterTypes": []
         },
         {
           "name": "getMinIdle",
+          "parameterTypes": []
+        },
+        {
+          "name": "getParentLogger",
           "parameterTypes": []
         },
         {
@@ -5944,6 +6670,20 @@
         {
           "name": "getTransactionIsolationName",
           "parameterTypes": []
+        },
+        {
+          "name": "isClosed",
+          "parameterTypes": []
+        },
+        {
+          "name": "isRunning",
+          "parameterTypes": []
+        },
+        {
+          "name": "isWrapperFor",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
         },
         {
           "name": "setCredentials",
@@ -6006,6 +6746,18 @@
           ]
         },
         {
+          "name": "setLogWriter",
+          "parameterTypes": [
+            "java.io.PrintWriter"
+          ]
+        },
+        {
+          "name": "setLoginTimeout",
+          "parameterTypes": [
+            "int"
+          ]
+        },
+        {
           "name": "setMaxPoolSize",
           "parameterTypes": [
             "int"
@@ -6045,6 +6797,16 @@
           "name": "setTransactionIsolationName",
           "parameterTypes": [
             "java.lang.String"
+          ]
+        },
+        {
+          "name": "toString",
+          "parameterTypes": []
+        },
+        {
+          "name": "unwrap",
+          "parameterTypes": [
+            "java.lang.Class"
           ]
         }
       ]
@@ -6245,6 +7007,9 @@
       "type": "java.lang.Object[]"
     },
     {
+      "type": "java.lang.Record"
+    },
+    {
       "type": "java.lang.RuntimePermission"
     },
     {
@@ -6406,6 +7171,12 @@
       "type": "java.security.SecurityPermission"
     },
     {
+      "type": "java.security.interfaces.ECPrivateKey"
+    },
+    {
+      "type": "java.security.interfaces.ECPublicKey"
+    },
+    {
       "type": "java.security.interfaces.RSAPrivateKey"
     },
     {
@@ -6477,6 +7248,12 @@
       "type": "java.util.Date"
     },
     {
+      "type": "java.util.Dictionary"
+    },
+    {
+      "type": "java.util.Hashtable"
+    },
+    {
       "type": "java.util.List"
     },
     {
@@ -6485,6 +7262,266 @@
     },
     {
       "type": "java.util.Optional"
+    },
+    {
+      "type": "java.util.Properties",
+      "methods": [
+        {
+          "name": "clear",
+          "parameterTypes": []
+        },
+        {
+          "name": "clone",
+          "parameterTypes": []
+        },
+        {
+          "name": "compute",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.util.function.BiFunction"
+          ]
+        },
+        {
+          "name": "computeIfAbsent",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.util.function.Function"
+          ]
+        },
+        {
+          "name": "computeIfPresent",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.util.function.BiFunction"
+          ]
+        },
+        {
+          "name": "contains",
+          "parameterTypes": [
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "containsKey",
+          "parameterTypes": [
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "containsValue",
+          "parameterTypes": [
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "elements",
+          "parameterTypes": []
+        },
+        {
+          "name": "entrySet",
+          "parameterTypes": []
+        },
+        {
+          "name": "equals",
+          "parameterTypes": [
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "get",
+          "parameterTypes": [
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "getOrDefault",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "getProperty",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getProperty",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "hashCode",
+          "parameterTypes": []
+        },
+        {
+          "name": "isEmpty",
+          "parameterTypes": []
+        },
+        {
+          "name": "keySet",
+          "parameterTypes": []
+        },
+        {
+          "name": "keys",
+          "parameterTypes": []
+        },
+        {
+          "name": "list",
+          "parameterTypes": [
+            "java.io.PrintStream"
+          ]
+        },
+        {
+          "name": "list",
+          "parameterTypes": [
+            "java.io.PrintWriter"
+          ]
+        },
+        {
+          "name": "load",
+          "parameterTypes": [
+            "java.io.InputStream"
+          ]
+        },
+        {
+          "name": "load",
+          "parameterTypes": [
+            "java.io.Reader"
+          ]
+        },
+        {
+          "name": "loadFromXML",
+          "parameterTypes": [
+            "java.io.InputStream"
+          ]
+        },
+        {
+          "name": "merge",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.lang.Object",
+            "java.util.function.BiFunction"
+          ]
+        },
+        {
+          "name": "propertyNames",
+          "parameterTypes": []
+        },
+        {
+          "name": "putAll",
+          "parameterTypes": [
+            "java.util.Map"
+          ]
+        },
+        {
+          "name": "putIfAbsent",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "remove",
+          "parameterTypes": [
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "remove",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "replace",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "replace",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.lang.Object",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "replaceAll",
+          "parameterTypes": [
+            "java.util.function.BiFunction"
+          ]
+        },
+        {
+          "name": "save",
+          "parameterTypes": [
+            "java.io.OutputStream",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "setProperty",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "store",
+          "parameterTypes": [
+            "java.io.OutputStream",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "store",
+          "parameterTypes": [
+            "java.io.Writer",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "storeToXML",
+          "parameterTypes": [
+            "java.io.OutputStream",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "storeToXML",
+          "parameterTypes": [
+            "java.io.OutputStream",
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "storeToXML",
+          "parameterTypes": [
+            "java.io.OutputStream",
+            "java.lang.String",
+            "java.nio.charset.Charset"
+          ]
+        },
+        {
+          "name": "stringPropertyNames",
+          "parameterTypes": []
+        },
+        {
+          "name": "toString",
+          "parameterTypes": []
+        },
+        {
+          "name": "values",
+          "parameterTypes": []
+        }
+      ]
     },
     {
       "type": "java.util.PropertyPermission"
@@ -6497,7 +7534,65 @@
     },
     {
       "type": "java.util.concurrent.AbstractExecutorService",
-      "allDeclaredFields": true
+      "allDeclaredFields": true,
+      "methods": [
+        {
+          "name": "invokeAll",
+          "parameterTypes": [
+            "java.util.Collection"
+          ]
+        },
+        {
+          "name": "invokeAll",
+          "parameterTypes": [
+            "java.util.Collection",
+            "long",
+            "java.util.concurrent.TimeUnit"
+          ]
+        },
+        {
+          "name": "invokeAny",
+          "parameterTypes": [
+            "java.util.Collection"
+          ]
+        },
+        {
+          "name": "invokeAny",
+          "parameterTypes": [
+            "java.util.Collection",
+            "long",
+            "java.util.concurrent.TimeUnit"
+          ]
+        },
+        {
+          "name": "submit",
+          "parameterTypes": [
+            "java.lang.Runnable"
+          ]
+        },
+        {
+          "name": "submit",
+          "parameterTypes": [
+            "java.lang.Runnable",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "submit",
+          "parameterTypes": [
+            "java.util.concurrent.Callable"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "java.util.concurrent.ExecutorService",
+      "methods": [
+        {
+          "name": "close",
+          "parameterTypes": []
+        }
+      ]
     },
     {
       "type": "java.util.concurrent.Executors",
@@ -6527,6 +7622,33 @@
       "allDeclaredFields": true,
       "methods": [
         {
+          "name": "allowCoreThreadTimeOut",
+          "parameterTypes": [
+            "boolean"
+          ]
+        },
+        {
+          "name": "allowsCoreThreadTimeOut",
+          "parameterTypes": []
+        },
+        {
+          "name": "awaitTermination",
+          "parameterTypes": [
+            "long",
+            "java.util.concurrent.TimeUnit"
+          ]
+        },
+        {
+          "name": "execute",
+          "parameterTypes": [
+            "java.lang.Runnable"
+          ]
+        },
+        {
+          "name": "getActiveCount",
+          "parameterTypes": []
+        },
+        {
           "name": "getAllowCoreThreadTimeOut",
           "parameterTypes": []
         },
@@ -6555,6 +7677,12 @@
           "parameterTypes": []
         },
         {
+          "name": "getKeepAliveTime",
+          "parameterTypes": [
+            "java.util.concurrent.TimeUnit"
+          ]
+        },
+        {
           "name": "getLargestPoolSize",
           "parameterTypes": []
         },
@@ -6564,6 +7692,22 @@
         },
         {
           "name": "getMaximumPoolSize",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPoolSize",
+          "parameterTypes": []
+        },
+        {
+          "name": "getQueue",
+          "parameterTypes": []
+        },
+        {
+          "name": "getRejectedExecutionHandler",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTaskCount",
           "parameterTypes": []
         },
         {
@@ -6581,6 +7725,36 @@
         {
           "name": "getWorkers",
           "parameterTypes": []
+        },
+        {
+          "name": "isShutdown",
+          "parameterTypes": []
+        },
+        {
+          "name": "isTerminated",
+          "parameterTypes": []
+        },
+        {
+          "name": "isTerminating",
+          "parameterTypes": []
+        },
+        {
+          "name": "prestartAllCoreThreads",
+          "parameterTypes": []
+        },
+        {
+          "name": "prestartCoreThread",
+          "parameterTypes": []
+        },
+        {
+          "name": "purge",
+          "parameterTypes": []
+        },
+        {
+          "name": "remove",
+          "parameterTypes": [
+            "java.lang.Runnable"
+          ]
         },
         {
           "name": "setAllowCoreThreadTimeOut",
@@ -6625,6 +7799,13 @@
           ]
         },
         {
+          "name": "setKeepAliveTime",
+          "parameterTypes": [
+            "long",
+            "java.util.concurrent.TimeUnit"
+          ]
+        },
+        {
           "name": "setLargestPoolSize",
           "parameterTypes": [
             "int"
@@ -6640,6 +7821,12 @@
           "name": "setMaximumPoolSize",
           "parameterTypes": [
             "int"
+          ]
+        },
+        {
+          "name": "setRejectedExecutionHandler",
+          "parameterTypes": [
+            "java.util.concurrent.RejectedExecutionHandler"
           ]
         },
         {
@@ -6665,6 +7852,18 @@
           "parameterTypes": [
             "java.util.HashSet"
           ]
+        },
+        {
+          "name": "shutdown",
+          "parameterTypes": []
+        },
+        {
+          "name": "shutdownNow",
+          "parameterTypes": []
+        },
+        {
+          "name": "toString",
+          "parameterTypes": []
         }
       ]
     },
@@ -6722,6 +7921,24 @@
     },
     {
       "type": "javax.smartcardio.CardPermission"
+    },
+    {
+      "type": "javax.sql.CommonDataSource",
+      "methods": [
+        {
+          "name": "createShardingKeyBuilder",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "javax.sql.DataSource",
+      "methods": [
+        {
+          "name": "createConnectionBuilder",
+          "parameterTypes": []
+        }
+      ]
     },
     {
       "type": "jdk.internal.ValueBased"
@@ -7511,7 +8728,588 @@
       "type": "org.babyfish.jimmer.sql.collection.IdViewList"
     },
     {
-      "type": "org.babyfish.jimmer.sql.kt.KSqlClient"
+      "type": "org.babyfish.jimmer.sql.kt.KSqlClient",
+      "methods": [
+        {
+          "name": "deleteById",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.lang.Object",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "deleteById",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.lang.Object",
+            "org.babyfish.jimmer.sql.ast.mutation.DeleteMode"
+          ]
+        },
+        {
+          "name": "deleteByIds",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.lang.Iterable",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "deleteByIds",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.DeleteMode"
+          ]
+        },
+        {
+          "name": "executeDelete",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.sql.Connection",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "executeQuery",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.lang.Integer",
+            "java.sql.Connection",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "executeUpdate",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.sql.Connection",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "findAll",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.lang.Integer",
+            "java.sql.Connection",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "findAll",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "java.lang.Integer",
+            "java.sql.Connection",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "findById",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "findById",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "findByIds",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.lang.Iterable"
+          ]
+        },
+        {
+          "name": "findByIds",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "java.lang.Iterable"
+          ]
+        },
+        {
+          "name": "findMapByIds",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.lang.Iterable"
+          ]
+        },
+        {
+          "name": "findMapByIds",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "java.lang.Iterable"
+          ]
+        },
+        {
+          "name": "findOne",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.sql.Connection",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "findOne",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "java.sql.Connection",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "findOneById",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "findOneById",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "findOneOrNull",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "java.sql.Connection",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "findOneOrNull",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "java.sql.Connection",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveCommand",
+          "parameterTypes": [
+            "java.lang.Object",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveEntitiesCommand",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "kotlin.jvm.functions.Function1"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.sql.kt.ast.mutation.KDeprecatedMoreSaveOperations",
+      "methods": [
+        {
+          "name": "save",
+          "parameterTypes": [
+            "java.lang.Object",
+            "kotlin.reflect.KClass",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "save",
+          "parameterTypes": [
+            "java.lang.Object",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.reflect.KClass",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "save",
+          "parameterTypes": [
+            "java.lang.Object",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "save",
+          "parameterTypes": [
+            "java.lang.Object",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "save",
+          "parameterTypes": [
+            "org.babyfish.jimmer.Input",
+            "kotlin.reflect.KClass",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "save",
+          "parameterTypes": [
+            "org.babyfish.jimmer.Input",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.reflect.KClass",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "save",
+          "parameterTypes": [
+            "org.babyfish.jimmer.Input",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "save",
+          "parameterTypes": [
+            "org.babyfish.jimmer.Input",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveEntities",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "kotlin.reflect.KClass",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveEntities",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.reflect.KClass",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveEntities",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveEntities",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveInputs",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "kotlin.reflect.KClass",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveInputs",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.reflect.KClass",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveInputs",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveInputs",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher",
+            "kotlin.jvm.functions.Function1"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.sql.kt.ast.mutation.KDeprecatedSaveOperations",
+      "methods": [
+        {
+          "name": "insert",
+          "parameterTypes": [
+            "java.lang.Object",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "insert",
+          "parameterTypes": [
+            "org.babyfish.jimmer.Input",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "insertEntities",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "insertEntitiesIfAbsent",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "insertIfAbsent",
+          "parameterTypes": [
+            "java.lang.Object",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "insertIfAbsent",
+          "parameterTypes": [
+            "org.babyfish.jimmer.Input",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "insertInputs",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "insertInputsIfAbsent",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "merge",
+          "parameterTypes": [
+            "java.lang.Object",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "merge",
+          "parameterTypes": [
+            "org.babyfish.jimmer.Input",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "mergeEntities",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "mergeInputs",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "update",
+          "parameterTypes": [
+            "java.lang.Object",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "update",
+          "parameterTypes": [
+            "org.babyfish.jimmer.Input",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "updateEntities",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "updateInputs",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.sql.kt.ast.mutation.KSaveCommandCreator",
+      "methods": [
+        {
+          "name": "saveCommand",
+          "parameterTypes": [
+            "java.lang.Object",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveCommand",
+          "parameterTypes": [
+            "org.babyfish.jimmer.Input",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveCommand",
+          "parameterTypes": [
+            "org.babyfish.jimmer.Input",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveEntitiesCommand",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveInputsCommand",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveInputsCommand",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.sql.kt.ast.mutation.KSaveOperations",
+      "methods": [
+        {
+          "name": "save",
+          "parameterTypes": [
+            "java.lang.Object",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "save",
+          "parameterTypes": [
+            "java.lang.Object",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "save",
+          "parameterTypes": [
+            "org.babyfish.jimmer.Input",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "save",
+          "parameterTypes": [
+            "org.babyfish.jimmer.Input",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveEntities",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveEntities",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveInputs",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "saveInputs",
+          "parameterTypes": [
+            "java.lang.Iterable",
+            "org.babyfish.jimmer.sql.ast.mutation.SaveMode",
+            "org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode",
+            "kotlin.jvm.functions.Function1"
+          ]
+        }
+      ]
     },
     {
       "type": "org.babyfish.jimmer.sql.kt.impl.KSqlClientImpl",
@@ -7524,11 +9322,112 @@
           ]
         },
         {
+          "name": "caches",
+          "parameterTypes": [
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "createBaseQuery",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "createBaseQuery",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "org.babyfish.jimmer.sql.kt.ast.table.KRecursiveRef",
+            "kotlin.reflect.KClass",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "createBaseQuery",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "org.babyfish.jimmer.sql.kt.ast.table.KRecursiveRef",
+            "org.babyfish.jimmer.sql.kt.ast.table.KPropsWeakJoinFun",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "createDelete",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "createQuery",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "createQuery",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.ast.table.KBaseTableSymbol",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "createUpdate",
+          "parameterTypes": [
+            "kotlin.reflect.KClass",
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "disableSlaveConnectionManager",
+          "parameterTypes": []
+        },
+        {
+          "name": "executor",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.runtime.Executor"
+          ]
+        },
+        {
+          "name": "filters",
+          "parameterTypes": [
+            "kotlin.jvm.functions.Function1"
+          ]
+        },
+        {
+          "name": "getAssociations",
+          "parameterTypes": [
+            "kotlin.reflect.KProperty1"
+          ]
+        },
+        {
+          "name": "getBinLog",
+          "parameterTypes": []
+        },
+        {
+          "name": "getCaches",
+          "parameterTypes": []
+        },
+        {
           "name": "getCaches$delegate",
           "parameterTypes": []
         },
         {
+          "name": "getEntities",
+          "parameterTypes": []
+        },
+        {
           "name": "getEntities$delegate",
+          "parameterTypes": []
+        },
+        {
+          "name": "getEntityManager",
+          "parameterTypes": []
+        },
+        {
+          "name": "getFilters",
           "parameterTypes": []
         },
         {
@@ -7540,12 +9439,30 @@
           "parameterTypes": []
         },
         {
+          "name": "getLoaders",
+          "parameterTypes": []
+        },
+        {
           "name": "getLoaders$delegate",
+          "parameterTypes": []
+        },
+        {
+          "name": "getQueries",
           "parameterTypes": []
         },
         {
           "name": "getQueries$delegate",
           "parameterTypes": []
+        },
+        {
+          "name": "getTriggers",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTriggers",
+          "parameterTypes": [
+            "boolean"
+          ]
         },
         {
           "name": "getTriggers$delegate",
@@ -7592,6 +9509,17 @@
           "parameterTypes": [
             "kotlin.Lazy"
           ]
+        },
+        {
+          "name": "transaction",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.transaction.Propagation",
+            "kotlin.jvm.functions.Function0"
+          ]
+        },
+        {
+          "name": "validateDatabase",
+          "parameterTypes": []
         }
       ]
     },
@@ -7600,8 +9528,32 @@
       "allDeclaredFields": true,
       "methods": [
         {
+          "name": "baseline",
+          "parameterTypes": []
+        },
+        {
+          "name": "clean",
+          "parameterTypes": []
+        },
+        {
+          "name": "configure",
+          "parameterTypes": []
+        },
+        {
+          "name": "configure",
+          "parameterTypes": [
+            "java.lang.ClassLoader"
+          ]
+        },
+        {
           "name": "getConfiguration",
           "parameterTypes": []
+        },
+        {
+          "name": "getConfigurationExtension",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
         },
         {
           "name": "getFlywayExecutor",
@@ -7609,6 +9561,18 @@
         },
         {
           "name": "getFlywayTelemetryManager",
+          "parameterTypes": []
+        },
+        {
+          "name": "info",
+          "parameterTypes": []
+        },
+        {
+          "name": "migrate",
+          "parameterTypes": []
+        },
+        {
+          "name": "repair",
           "parameterTypes": []
         },
         {
@@ -7628,6 +9592,18 @@
           "parameterTypes": [
             "org.flywaydb.core.FlywayTelemetryManager"
           ]
+        },
+        {
+          "name": "undo",
+          "parameterTypes": []
+        },
+        {
+          "name": "validate",
+          "parameterTypes": []
+        },
+        {
+          "name": "validateWithResult",
+          "parameterTypes": []
         }
       ]
     },
@@ -7803,6 +9779,9 @@
       "type": "org.flywaydb.core.internal.proprietaryStubs.ModelCommandExtensionStub"
     },
     {
+      "type": "org.flywaydb.core.internal.proprietaryStubs.OfflinePermitConfigurationExtensionStub"
+    },
+    {
       "type": "org.flywaydb.core.internal.proprietaryStubs.PATTokenConfigurationExtensionStub",
       "allDeclaredFields": true
     },
@@ -7846,18 +9825,328 @@
       "type": "org.flywaydb.core.internal.resource.CoreResourceTypeProvider"
     },
     {
+      "type": "org.flywaydb.core.internal.scanner.classpath.ClasspathLocationHandlerImpl"
+    },
+    {
+      "type": "org.flywaydb.core.internal.scanner.filesystem.FilesystemLocationHandler"
+    },
+    {
       "type": "org.flywaydb.core.internal.schemahistory.BaseAppliedMigration"
     },
     {
       "type": "org.noear.solon.annotation.Note"
     },
     {
+      "type": "org.noear.solon.core.Lifecycle",
+      "methods": [
+        {
+          "name": "preStop",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.noear.solon.core.Props",
+      "methods": [
+        {
+          "name": "addAll",
+          "parameterTypes": [
+            "java.lang.Iterable"
+          ]
+        },
+        {
+          "name": "addAll",
+          "parameterTypes": [
+            "java.util.Map"
+          ]
+        },
+        {
+          "name": "addAll",
+          "parameterTypes": [
+            "java.util.Properties"
+          ]
+        },
+        {
+          "name": "bindTo",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "bindTo",
+          "parameterTypes": [
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "complete",
+          "parameterTypes": []
+        },
+        {
+          "name": "find",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.util.function.BiConsumer"
+          ]
+        },
+        {
+          "name": "forEach",
+          "parameterTypes": [
+            "java.util.function.BiConsumer"
+          ]
+        },
+        {
+          "name": "from",
+          "parameterTypes": [
+            "java.util.Properties"
+          ]
+        },
+        {
+          "name": "get",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "get",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getBean",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "getBean",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "getBool",
+          "parameterTypes": [
+            "java.lang.String",
+            "boolean"
+          ]
+        },
+        {
+          "name": "getByExpr",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getByKeys",
+          "parameterTypes": [
+            "java.lang.String[]"
+          ]
+        },
+        {
+          "name": "getByTmpl",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getDouble",
+          "parameterTypes": [
+            "java.lang.String",
+            "double"
+          ]
+        },
+        {
+          "name": "getGroupedProp",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getInt",
+          "parameterTypes": [
+            "java.lang.String",
+            "int"
+          ]
+        },
+        {
+          "name": "getList",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getListedProp",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getLong",
+          "parameterTypes": [
+            "java.lang.String",
+            "long"
+          ]
+        },
+        {
+          "name": "getMap",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getOrDefault",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.Object",
+            "java.util.function.Function"
+          ]
+        },
+        {
+          "name": "getProp",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getPropByExpr",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "loadAdd",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "loadAdd",
+          "parameterTypes": [
+            "java.net.URL"
+          ]
+        },
+        {
+          "name": "loadAdd",
+          "parameterTypes": [
+            "java.util.Properties"
+          ]
+        },
+        {
+          "name": "loadAdd",
+          "parameterTypes": [
+            "org.noear.solon.annotation.Import"
+          ]
+        },
+        {
+          "name": "loadAddIfAbsent",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "loadAddIfAbsent",
+          "parameterTypes": [
+            "java.net.URL"
+          ]
+        },
+        {
+          "name": "loadAddIfAbsent",
+          "parameterTypes": [
+            "java.util.Properties"
+          ]
+        },
+        {
+          "name": "onChange",
+          "parameterTypes": [
+            "java.util.function.BiConsumer"
+          ]
+        },
+        {
+          "name": "put",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "putIfNotNull",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "revise",
+          "parameterTypes": []
+        },
+        {
+          "name": "size",
+          "parameterTypes": []
+        },
+        {
+          "name": "toBean",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "toBean",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.Class"
+          ]
+        }
+      ]
+    },
+    {
       "type": "org.noear.solon.core.handle.AbstractEntityConverter",
-      "allDeclaredFields": true
+      "allDeclaredFields": true,
+      "methods": [
+        {
+          "name": "read",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "java.lang.Object",
+            "org.noear.solon.core.wrap.MethodWrap"
+          ]
+        }
+      ]
     },
     {
       "type": "org.noear.solon.core.handle.AbstractEntityReader",
       "allDeclaredFields": true
+    },
+    {
+      "type": "org.noear.solon.core.handle.ActionExecuteHandler",
+      "methods": [
+        {
+          "name": "executeHandle",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "java.lang.Object",
+            "org.noear.solon.core.wrap.MethodWrap"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.noear.solon.core.handle.EntityConverter",
+      "methods": [
+        {
+          "name": "isInstance",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "name",
+          "parameterTypes": []
+        }
+      ]
     },
     {
       "type": "org.noear.solon.core.handle.Result",
@@ -7878,9 +10167,69 @@
       ]
     },
     {
+      "type": "org.noear.solon.core.route.RouterInterceptor",
+      "methods": [
+        {
+          "name": "pathPatterns",
+          "parameterTypes": []
+        },
+        {
+          "name": "postArguments",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "org.noear.solon.core.wrap.ParamWrap[]",
+            "java.lang.Object[]"
+          ]
+        },
+        {
+          "name": "postResult",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "java.lang.Object"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.noear.solon.data.cache.CacheService",
+      "methods": [
+        {
+          "name": "get",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "getOrStore",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.reflect.Type",
+            "int",
+            "java.util.function.Supplier"
+          ]
+        }
+      ]
+    },
+    {
       "type": "org.noear.solon.data.cache.LocalCacheService",
       "allDeclaredFields": true,
       "methods": [
+        {
+          "name": "clear",
+          "parameterTypes": []
+        },
+        {
+          "name": "get",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.reflect.Type"
+          ]
+        },
+        {
+          "name": "getDefalutSeconds",
+          "parameterTypes": []
+        },
         {
           "name": "getSYNC_LOCK",
           "parameterTypes": []
@@ -7892,6 +10241,12 @@
         {
           "name": "get_defaultSeconds",
           "parameterTypes": []
+        },
+        {
+          "name": "remove",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
         },
         {
           "name": "setSYNC_LOCK",
@@ -7908,6 +10263,14 @@
         {
           "name": "set_defaultSeconds",
           "parameterTypes": [
+            "int"
+          ]
+        },
+        {
+          "name": "store",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.Object",
             "int"
           ]
         }
@@ -7971,6 +10334,15 @@
       ]
     },
     {
+      "type": "org.noear.solon.extend.impl.RuntimeServiceExt",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.noear.solon.extend.impl.ScannerExt",
       "methods": [
         {
@@ -8002,6 +10374,38 @@
       "allDeclaredFields": true,
       "methods": [
         {
+          "name": "after",
+          "parameterTypes": [
+            "org.noear.solon.net.websocket.WebSocketListener"
+          ]
+        },
+        {
+          "name": "afterIfAbsent",
+          "parameterTypes": [
+            "org.noear.solon.net.websocket.WebSocketListener"
+          ]
+        },
+        {
+          "name": "before",
+          "parameterTypes": [
+            "org.noear.solon.net.websocket.WebSocketListener"
+          ]
+        },
+        {
+          "name": "beforeIfAbsent",
+          "parameterTypes": [
+            "org.noear.solon.net.websocket.WebSocketListener"
+          ]
+        },
+        {
+          "name": "getInstance",
+          "parameterTypes": []
+        },
+        {
+          "name": "getListener",
+          "parameterTypes": []
+        },
+        {
           "name": "getPathListener",
           "parameterTypes": []
         },
@@ -8012,6 +10416,25 @@
         {
           "name": "getRootListener",
           "parameterTypes": []
+        },
+        {
+          "name": "getSubProtocol",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "matching",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "of",
+          "parameterTypes": [
+            "java.lang.String",
+            "org.noear.solon.net.websocket.WebSocketListener"
+          ]
         },
         {
           "name": "setPathListener",
@@ -8038,8 +10461,35 @@
       "allDeclaredFields": true,
       "methods": [
         {
+          "name": "execute",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "executeAll",
+          "parameterTypes": []
+        },
+        {
+          "name": "exists",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
           "name": "getExecutorMap",
           "parameterTypes": []
+        },
+        {
+          "name": "getInstance",
+          "parameterTypes": []
+        },
+        {
+          "name": "register",
+          "parameterTypes": [
+            "java.lang.String",
+            "org.noear.solon.scheduling.command.CommandExecutor"
+          ]
         },
         {
           "name": "setExecutorMap",
@@ -8060,12 +10510,76 @@
     },
     {
       "type": "org.noear.solon.scheduling.scheduled.manager.AbstractJobManager",
-      "allDeclaredFields": true
+      "allDeclaredFields": true,
+      "methods": [
+        {
+          "name": "addJobInterceptor",
+          "parameterTypes": [
+            "int",
+            "org.noear.solon.scheduling.scheduled.JobInterceptor"
+          ]
+        },
+        {
+          "name": "getJobInterceptors",
+          "parameterTypes": []
+        },
+        {
+          "name": "hasJobInterceptor",
+          "parameterTypes": []
+        },
+        {
+          "name": "isStarted",
+          "parameterTypes": []
+        },
+        {
+          "name": "jobAdd",
+          "parameterTypes": [
+            "java.lang.String",
+            "org.noear.solon.scheduling.annotation.Scheduled",
+            "org.noear.solon.scheduling.scheduled.JobHandler"
+          ]
+        },
+        {
+          "name": "jobAdd",
+          "parameterTypes": [
+            "java.lang.String",
+            "org.noear.solon.scheduling.annotation.Scheduled",
+            "org.noear.solon.scheduling.scheduled.JobHandler",
+            "java.util.Map"
+          ]
+        },
+        {
+          "name": "jobExists",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "jobGet",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "jobGetAll",
+          "parameterTypes": []
+        },
+        {
+          "name": "jobRemove",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
     },
     {
       "type": "org.noear.solon.scheduling.simple.JobManager",
       "allDeclaredFields": true,
       "methods": [
+        {
+          "name": "getInstance",
+          "parameterTypes": []
+        },
         {
           "name": "getIsStarted",
           "parameterTypes": []
@@ -8076,6 +10590,23 @@
         },
         {
           "name": "getJobMap",
+          "parameterTypes": []
+        },
+        {
+          "name": "jobStart",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.util.Map"
+          ]
+        },
+        {
+          "name": "jobStop",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "postStart",
           "parameterTypes": []
         },
         {
@@ -8095,6 +10626,14 @@
           "parameterTypes": [
             "java.util.Map"
           ]
+        },
+        {
+          "name": "start",
+          "parameterTypes": []
+        },
+        {
+          "name": "stop",
+          "parameterTypes": []
         }
       ]
     },
@@ -8112,8 +10651,59 @@
       "allDeclaredFields": true,
       "methods": [
         {
+          "name": "allowRead",
+          "parameterTypes": []
+        },
+        {
+          "name": "allowWrite",
+          "parameterTypes": []
+        },
+        {
+          "name": "canRead",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "canWrite",
+          "parameterTypes": [
+            "java.lang.String",
+            "org.noear.solon.core.handle.Context"
+          ]
+        },
+        {
           "name": "getSerializer",
           "parameterTypes": []
+        },
+        {
+          "name": "write",
+          "parameterTypes": [
+            "java.lang.Object",
+            "org.noear.solon.core.handle.Context"
+          ]
+        },
+        {
+          "name": "writeAndReturn",
+          "parameterTypes": [
+            "java.lang.Object",
+            "org.noear.solon.core.handle.Context"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.noear.solon.serialization.EntitySerializer",
+      "methods": [
+        {
+          "name": "bodyRequired",
+          "parameterTypes": []
+        },
+        {
+          "name": "deserializeFromBody",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context"
+          ]
         }
       ]
     },
@@ -8122,8 +10712,50 @@
       "allDeclaredFields": true,
       "methods": [
         {
+          "name": "addDeserializer",
+          "parameterTypes": [
+            "java.lang.Class",
+            "com.fasterxml.jackson.databind.JsonDeserializer"
+          ]
+        },
+        {
+          "name": "config",
+          "parameterTypes": []
+        },
+        {
+          "name": "config",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.ObjectMapper"
+          ]
+        },
+        {
           "name": "getEntityConverter",
           "parameterTypes": []
+        },
+        {
+          "name": "getSerializer",
+          "parameterTypes": []
+        },
+        {
+          "name": "matched",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "newMapper",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.Module[]"
+          ]
+        },
+        {
+          "name": "resolveArguments",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "java.lang.Object",
+            "org.noear.solon.core.wrap.MethodWrap"
+          ]
         },
         {
           "name": "setEntityConverter",
@@ -8138,6 +10770,16 @@
       "allDeclaredFields": true,
       "methods": [
         {
+          "name": "mappings",
+          "parameterTypes": []
+        },
+        {
+          "name": "newMapper",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.Module[]"
+          ]
+        },
+        {
           "name": "setSerializer",
           "parameterTypes": [
             "org.noear.solon.serialization.EntitySerializer"
@@ -8149,6 +10791,32 @@
       "type": "org.noear.solon.serialization.jackson.JacksonRenderFactory",
       "allDeclaredFields": true,
       "methods": [
+        {
+          "name": "addFeatures",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.SerializationFeature[]"
+          ]
+        },
+        {
+          "name": "create",
+          "parameterTypes": []
+        },
+        {
+          "name": "mappings",
+          "parameterTypes": []
+        },
+        {
+          "name": "removeFeatures",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.SerializationFeature[]"
+          ]
+        },
+        {
+          "name": "setFeatures",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.SerializationFeature[]"
+          ]
+        },
         {
           "name": "setSerializer",
           "parameterTypes": [
@@ -8162,6 +10830,24 @@
       "allDeclaredFields": true,
       "methods": [
         {
+          "name": "addConvertor",
+          "parameterTypes": [
+            "java.lang.Class",
+            "org.noear.solon.core.convert.Converter"
+          ]
+        },
+        {
+          "name": "addEncoder",
+          "parameterTypes": [
+            "java.lang.Class",
+            "com.fasterxml.jackson.databind.JsonSerializer"
+          ]
+        },
+        {
+          "name": "config",
+          "parameterTypes": []
+        },
+        {
           "name": "getSerializer",
           "parameterTypes": []
         }
@@ -8171,6 +10857,14 @@
       "type": "org.noear.solon.serialization.jackson.JacksonRenderTypedFactory",
       "allDeclaredFields": true,
       "methods": [
+        {
+          "name": "create",
+          "parameterTypes": []
+        },
+        {
+          "name": "mappings",
+          "parameterTypes": []
+        },
         {
           "name": "setSerializer",
           "parameterTypes": [
@@ -8184,6 +10878,42 @@
       "allDeclaredFields": true,
       "methods": [
         {
+          "name": "addEncoder",
+          "parameterTypes": [
+            "java.lang.Class",
+            "com.fasterxml.jackson.databind.JsonSerializer"
+          ]
+        },
+        {
+          "name": "addEncoder",
+          "parameterTypes": [
+            "java.lang.Class",
+            "org.noear.solon.core.convert.Converter"
+          ]
+        },
+        {
+          "name": "dataType",
+          "parameterTypes": []
+        },
+        {
+          "name": "deserialize",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.reflect.Type"
+          ]
+        },
+        {
+          "name": "deserializeFromBody",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "java.lang.reflect.Type"
+          ]
+        },
+        {
+          "name": "getDefault",
+          "parameterTypes": []
+        },
+        {
           "name": "getDeserializeConfig",
           "parameterTypes": []
         },
@@ -8194,6 +10924,38 @@
         {
           "name": "getSerializeConfig",
           "parameterTypes": []
+        },
+        {
+          "name": "matched",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "mimeType",
+          "parameterTypes": []
+        },
+        {
+          "name": "name",
+          "parameterTypes": []
+        },
+        {
+          "name": "refresh",
+          "parameterTypes": []
+        },
+        {
+          "name": "serialize",
+          "parameterTypes": [
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "serializeToBody",
+          "parameterTypes": [
+            "org.noear.solon.core.handle.Context",
+            "java.lang.Object"
+          ]
         },
         {
           "name": "setDeserializeConfig",
@@ -8249,6 +11011,9 @@
           "parameterTypes": []
         }
       ]
+    },
+    {
+      "type": "org.noear.solon.server.tomcat.integration.TomcatPlugin"
     },
     {
       "type": "org.noear.solon.server.undertow.integration.UndertowPlugin"
@@ -8695,6 +11460,15 @@
       ]
     },
     {
+      "type": "sun.security.rsa.RSASignature$SHA512withRSA",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "sun.security.ssl.SSLContextImpl$TLSContext",
       "methods": [
         {
@@ -8895,7 +11669,17 @@
             "cn.dev33.satoken.fun.strategy.SaCorsHandleFunction"
           ]
         }
-      }
+      },
+      "methods": [
+        {
+          "name": "execute",
+          "parameterTypes": [
+            "cn.dev33.satoken.context.model.SaRequest",
+            "cn.dev33.satoken.context.model.SaResponse",
+            "cn.dev33.satoken.context.model.SaStorage"
+          ]
+        }
+      ]
     }
   ]
 }
