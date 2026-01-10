@@ -68,8 +68,11 @@ const executeRewriteFsDialog = useActionDialog()
 
 const { targetId: showDeleteId, visible: showDeleteVisible, loading: deleting } = deleteDialog
 const { targetId: showExecuteId, visible: showExecuteVisible, loading: executing } = executeDialog
-const { targetId: showExecuteExifId, visible: showExecuteExifVisible, loading: executingExif } =
-  executeExifDialog
+const {
+  targetId: showExecuteExifId,
+  visible: showExecuteExifVisible,
+  loading: executingExif,
+} = executeExifDialog
 const {
   targetId: showExecuteRewriteFsId,
   visible: showExecuteRewriteFsVisible,
@@ -794,12 +797,7 @@ watch(
       </div>
       <template #footer>
         <div class="flex items-center justify-end gap-2 w-full">
-          <Button
-            label="取消"
-            severity="secondary"
-            text
-            @click="executeRewriteFsDialog.close()"
-          />
+          <Button label="取消" severity="secondary" text @click="executeRewriteFsDialog.close()" />
           <Button
             label="执行"
             severity="info"

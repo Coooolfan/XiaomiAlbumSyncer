@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import { api } from '../ApiInstance'
-import type { SystemInfoResponse } from '../__generated/model/static'
+import type { SystemInfoResponse } from '@/__generated/model/static'
 
 const route = useRoute()
 const loggingOut = ref(false)

@@ -26,7 +26,7 @@ const heatOptions: Array<{ label: string; value: boolean }> = [
     <template #content>
       <div class="flex items-center justify-between">
         <span class="text-sm text-slate-600">背景</span>
-        <div class="min-w-[160px]">
+        <div class="min-w-40">
           <SelectButton
             v-model="backgroundMode"
             :options="bgOptions"
@@ -42,7 +42,7 @@ const heatOptions: Array<{ label: string; value: boolean }> = [
           <div class="flex items-center gap-2">
             <span class="text-sm text-slate-600">热力图优化展示</span>
           </div>
-          <div class="min-w-[160px]">
+          <div class="min-w-40">
             <SelectButton
               v-model="optimizeHeatmap"
               :options="heatOptions"

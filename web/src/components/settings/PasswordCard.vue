@@ -102,7 +102,7 @@ async function confirmUpdatePassword() {
     v-model:visible="showPasswordConfirmVisible"
     modal
     header="更新密码"
-    class="w-full sm:w-[420px]"
+    class="w-full sm:w-105"
   >
     <div class="text-sm text-slate-700">
       确定要更新密码吗？

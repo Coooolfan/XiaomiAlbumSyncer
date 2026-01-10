@@ -64,7 +64,7 @@ async function confirmImportFromV2() {
     v-model:visible="showImportConfirmVisible"
     modal
     header="从 V2 导入数据"
-    class="w-full sm:w-[460px]"
+    class="w-full sm:w-115"
   >
     <div class="text-sm text-slate-700">
       确定要从 V2 导入数据吗？
@@ -96,7 +96,7 @@ async function confirmImportFromV2() {
     :closable="false"
     :dismissable-mask="false"
     header="正在导入"
-    class="w-full sm:w-[420px]"
+    class="w-full sm:w-105"
   >
     <div class="flex items-center gap-3 text-sm text-slate-700">
       <i class="pi pi-spin pi-spinner text-slate-500"></i>

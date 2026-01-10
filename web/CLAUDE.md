@@ -6,6 +6,11 @@
 
 Xiaomi Album Syncer Web 是一个基于 Vue 3 的前端应用程序，提供用于管理小米云相册同步的 Web 界面。具有认证、仪表板导航和背景动画组件等功能。
 
+## 环境要求
+
+- **Node.js**: 24.x
+- **包管理器**: Yarn 4
+
 ## 架构
 
 - **框架**: Vue 3 with Composition API and TypeScript
@@ -29,32 +34,32 @@ Xiaomi Album Syncer Web 是一个基于 Vue 3 的前端应用程序，提供用�
 
 **运行开发服务器:**
 ```bash
-npm run dev
+yarn dev
 ```
 
 **构建生产版本:**
 ```bash
-npm run build
+yarn build
 ```
 
 **类型检查:**
 ```bash
-npm run type-check
+yarn type-check
 ```
 
 **代码检查:**
 ```bash
-npm run lint
+yarn lint
 ```
 
 **代码格式化:**
 ```bash
-npm run format
+yarn format
 ```
 
 **API 代码生成:**
 ```bash
-npm run api
+yarn api
 ```
 
 ## API 集成
