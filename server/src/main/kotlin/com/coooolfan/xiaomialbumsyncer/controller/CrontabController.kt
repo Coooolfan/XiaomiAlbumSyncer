@@ -5,15 +5,13 @@ import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.by
 import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput
 import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabUpdateInput
+import com.coooolfan.xiaomialbumsyncer.model.startTime
 import com.coooolfan.xiaomialbumsyncer.service.CrontabService
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.client.meta.Api
+import org.babyfish.jimmer.sql.kt.ast.expression.desc
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
-import org.noear.solon.annotation.Body
-import org.noear.solon.annotation.Controller
-import org.noear.solon.annotation.Managed
-import org.noear.solon.annotation.Mapping
-import org.noear.solon.annotation.Path
+import org.noear.solon.annotation.*
 import org.noear.solon.core.handle.MethodType
 import java.time.Instant
 
@@ -187,9 +185,14 @@ class CrontabController(private val service: CrontabService) {
             account { nickname() }
             albumIds()
             running()
-            histories {
+            histories({
+                filter { orderBy(table.startTime.desc()) }
+                batch(1)
+                limit(5)
+            }) {
                 allScalarFields()
                 isCompleted()
+                detailsCount()
                 timelineSnapshot(false)
             }
         }

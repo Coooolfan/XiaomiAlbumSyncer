@@ -3845,6 +3845,10 @@
           "parameterTypes": []
         },
         {
+          "name": "getDetailsCount",
+          "parameterTypes": []
+        },
+        {
           "name": "getDummyPropForJacksonError__",
           "parameterTypes": []
         },
@@ -4018,6 +4022,9 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$DETAILS$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$DETAILS_COUNT$1"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$END_TIME$1"
@@ -5645,6 +5652,23 @@
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount",
             "org.babyfish.jimmer.sql.fetcher.Fetcher"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.utils.CrontabHistoryDetailsCountResolver",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.KSqlClient"
+          ]
+        },
+        {
+          "name": "resolve",
+          "parameterTypes": [
+            "java.util.Collection"
           ]
         }
       ]

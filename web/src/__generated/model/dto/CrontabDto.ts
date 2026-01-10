@@ -20,6 +20,7 @@ export type CrontabDto = {
             readonly endTime?: string | undefined;
             readonly fetchedAllAssets: boolean;
             readonly isCompleted: boolean;
+            readonly detailsCount: number;
         }>;
     }
 }

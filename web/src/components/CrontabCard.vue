@@ -50,7 +50,7 @@ function formatTime(t?: string) {
 const recentHistories = computed(() => {
   const list = [...(props.crontab.histories || [])]
   list.sort((a, b) => (a.startTime < b.startTime ? 1 : -1))
-  return list.slice(0, 3)
+  return list.slice(0, 5)
 })
 
 const manualActionOptions = computed(() => {
@@ -405,16 +405,21 @@ onUnmounted(() => {
                     >{{ formatTime(h.startTime) }} → {{ formatTime(h.endTime) }}</span
                   >
                 </div>
-                <Tag
-                  v-if="index === 0 && crontab.running"
-                  :severity="h.isCompleted ? 'success' : 'info'"
-                  :value="h.isCompleted ? '完成' : '进行中'"
-                />
-                <Tag
-                  v-else
-                  :severity="h.isCompleted ? 'success' : 'warn'"
-                  :value="h.isCompleted ? '完成' : '终止'"
-                />
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-slate-400" v-if="h.detailsCount !== undefined">
+                    {{ h.detailsCount }} 个资产
+                  </span>
+                  <Tag
+                    v-if="index === 0 && crontab.running"
+                    :severity="h.isCompleted ? 'success' : 'info'"
+                    :value="h.isCompleted ? '完成' : '进行中'"
+                  />
+                  <Tag
+                    v-else
+                    :severity="h.isCompleted ? 'success' : 'warn'"
+                    :value="h.isCompleted ? '完成' : '终止'"
+                  />
+                </div>
               </li>
             </ul>
           </div>

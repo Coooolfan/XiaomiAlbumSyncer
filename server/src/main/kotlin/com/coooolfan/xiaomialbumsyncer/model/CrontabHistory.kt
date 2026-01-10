@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.model
 
+import com.coooolfan.xiaomialbumsyncer.utils.CrontabHistoryDetailsCountResolver
 import org.babyfish.jimmer.Formula
 import org.babyfish.jimmer.sql.*
 import java.time.Instant
@@ -29,5 +30,8 @@ interface CrontabHistory {
 
     @OneToMany(mappedBy = "crontabHistory")
     val details: List<CrontabHistoryDetail>
+
+    @Transient(CrontabHistoryDetailsCountResolver::class)
+    val detailsCount: Long
 
 }
