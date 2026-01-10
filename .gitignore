@@ -8,6 +8,7 @@
 /web/node_modules
 /web/dist
 /web/.idea
+/web/package-lock.json
 
 /server/.idea
 /server/.kotlin
