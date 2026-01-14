@@ -107,7 +107,7 @@ async function onSave() {
 
 function confirmDelete(account: Account) {
   const confirmMessage =
-    '确定要删除账号' +
+    '确定要删除账号 ' +
     (account.nickname || account.userId) +
     ' 吗？所有与此账号相关的数据会被一并删除'
 
@@ -115,6 +115,8 @@ function confirmDelete(account: Account) {
     message: confirmMessage,
     header: '删除确认',
     acceptClass: 'p-button-danger',
+    rejectLabel: '取消',
+    acceptLabel: '确认删除',
     accept: async () => {
       try {
         await accountsStore.deleteAccount(account.id)

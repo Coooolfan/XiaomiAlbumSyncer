@@ -18,6 +18,7 @@ interface Crontab {
     val config: CrontabConfig
 
     @ManyToOne
+    @OnDissociate(DissociateAction.DELETE)
     val account: XiaomiAccount    // 绑定的小米账号
 
     @IdView("account")

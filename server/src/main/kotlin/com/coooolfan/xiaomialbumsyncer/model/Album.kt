@@ -22,6 +22,7 @@ interface Album {
     val lastUpdateTime: Instant
 
     @ManyToOne
+    @OnDissociate(DissociateAction.DELETE)
     val account: XiaomiAccount    // 关联的小米账号
 
     @IdView("account")
