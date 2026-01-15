@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.3.0"
 ksp = "2.3.4"
-solon = "3.8.0"
+solon = "3.8.3"
 jimmer = "0.9.120"
 saToken = "1.44.0"
 okhttp = "5.3.2"

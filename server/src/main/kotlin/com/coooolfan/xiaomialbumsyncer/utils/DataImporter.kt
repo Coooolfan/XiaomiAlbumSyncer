@@ -87,7 +87,8 @@ class DataImporter(private val sql: KSqlClient) {
                 downloadImages = true,
                 downloadVideos = true,
                 rewriteExifTime = true,
-                rewriteExifTimeZone = "Asia/Shanghai"
+                rewriteExifTimeZone = "Asia/Shanghai",
+                expressionTargetPath = ""
             )
             albumIds = selectedAlbums
         }
