@@ -1,0 +1,107 @@
+import { ref, watch } from 'vue'
+import type { CrontabDto } from '@/__generated/model/dto'
+import { createEmptyCronForm, mapCrontabToForm, type LocalCronForm } from '@/utils/crontabForm'
+
+type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
+
+function resolveDefaultTimeZone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  } catch {
+    return 'UTC'
+  }
+}
+
+export function useCronForm(getDefaultAccountId: () => number) {
+  const defaultTz = resolveDefaultTimeZone()
+  const showCronDialog = ref(false)
+  const isEditing = ref(false)
+  const editingId = ref<number | null>(null)
+  const cronForm = ref<LocalCronForm>(createEmptyCronForm(defaultTz, 0))
+  const formErrors = ref<Record<string, string>>({})
+  const timeZones = ref<string[]>([])
+
+  function openCreateCron() {
+    isEditing.value = false
+    editingId.value = null
+    const accountId = getDefaultAccountId()
+    cronForm.value = createEmptyCronForm(defaultTz, accountId)
+    formErrors.value = {}
+    showCronDialog.value = true
+  }
+
+  function openEditCron(item: Crontab) {
+    isEditing.value = true
+    editingId.value = item.id
+    cronForm.value = mapCrontabToForm(item, defaultTz)
+    formErrors.value = {}
+    showCronDialog.value = true
+  }
+
+  function validateCronForm(): boolean {
+    const errors: Record<string, string> = {}
+    if (!cronForm.value.name || cronForm.value.name.trim() === '') errors.name = '必填'
+    if (!cronForm.value.config.expression || cronForm.value.config.expression.trim() === '') {
+      errors.expression = '必填'
+    } else {
+      const crontabExpression = cronForm.value.config.expression.split(' ')
+      if (crontabExpression.length < 6) {
+        errors.expression = '看起来这不是一个有效的表达式'
+      } else {
+        if (crontabExpression[0] === '*') {
+          errors.expression = '每秒运行一次似乎有点太高频了'
+        } else if (crontabExpression[1] === '*') {
+          errors.expression = '每分钟运行一次似乎有点太高频了'
+        }
+      }
+    }
+    if (!cronForm.value.config.timeZone || cronForm.value.config.timeZone.trim() === '')
+      errors.timeZone = '必选'
+    if (!cronForm.value.config.targetPath || cronForm.value.config.targetPath.trim() === '')
+      errors.targetPath = '必填'
+    if (!cronForm.value.accountId) errors.accountId = '必选'
+
+    formErrors.value = errors
+    return Object.keys(errors).length === 0
+  }
+
+  function buildTimeZones() {
+    const fallbackTimeZones = [
+      'UTC',
+      'Asia/Shanghai',
+      'Asia/Tokyo',
+      'Europe/Berlin',
+      'America/New_York',
+    ]
+
+    try {
+      const intl = Intl as unknown as { supportedValuesOf?: (key: 'timeZone') => string[] }
+      const list = intl.supportedValuesOf?.('timeZone')
+      timeZones.value = list && list.length > 0 ? list : fallbackTimeZones
+    } catch {
+      timeZones.value = fallbackTimeZones
+    }
+  }
+
+  watch(
+    () => cronForm.value.accountId,
+    () => {
+      if (!isEditing.value) {
+        cronForm.value.albumIds = []
+      }
+    },
+  )
+
+  return {
+    showCronDialog,
+    isEditing,
+    editingId,
+    cronForm,
+    formErrors,
+    timeZones,
+    openCreateCron,
+    openEditCron,
+    validateCronForm,
+    buildTimeZones,
+  }
+}
