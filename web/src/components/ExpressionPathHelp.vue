@@ -90,14 +90,6 @@
               <div class="text-slate-500 text-[10px]">下载时间格式化 (如 ${download_yyyyMMdd})</div>
             </div>
             <div class="p-2 bg-slate-50 rounded border border-slate-100">
-              <div class="font-mono text-blue-600 mb-0.5">${taken}</div>
-              <div class="text-slate-500 text-[10px]">拍摄时间(ISO)</div>
-            </div>
-            <div class="p-2 bg-slate-50 rounded border border-slate-100">
-              <div class="font-mono text-blue-600 mb-0.5">${downloadTime}</div>
-              <div class="text-slate-500 text-[10px]">下载时间(ISO)</div>
-            </div>
-            <div class="p-2 bg-slate-50 rounded border border-slate-100">
               <div class="font-mono text-blue-600 mb-0.5">${takenEpochMillis}</div>
               <div class="text-slate-500 text-[10px]">拍摄毫秒戳</div>
             </div>

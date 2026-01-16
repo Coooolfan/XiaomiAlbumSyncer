@@ -71,7 +71,7 @@ interface CrontabHistoryDetail {
      */
     fun genFilePath(history: CrontabHistory, asset: Asset): String {
         val config = history.crontab.config
-        val expression = config.expressionTargetPath?.trim()?.takeIf { it.isNotEmpty() }
+        val expression = config.expressionTargetPath.trim().takeIf { it.isNotEmpty() }
 
         if (expression == null) {
             return legacyFilePath(history, asset)
@@ -101,8 +101,6 @@ interface CrontabHistoryDetail {
             put("sha1", asset.sha1)
             put("title", sanitizeSegment(asset.title))
             put("size", asset.size.toString())
-            put("downloadTime", DateTimeFormatter.ISO_INSTANT.format(downloadTime))
-            put("taken", DateTimeFormatter.ISO_INSTANT.format(takenTime))
             put("downloadEpochMillis", downloadTime.toEpochMilli().toString())
             put("takenEpochMillis", takenTime.toEpochMilli().toString())
             put("downloadEpochSeconds", downloadTime.epochSecond.toString())
