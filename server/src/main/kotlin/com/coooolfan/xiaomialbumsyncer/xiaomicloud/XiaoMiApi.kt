@@ -220,16 +220,20 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
 
     private fun parseJsonNode(jsonNode: JsonNode, album: Album): Asset {
         return when (album.isAudioAlbum()) {
-            false -> Asset {
-                id = jsonNode.get("id").asLong()
-                fileName = jsonNode.get("fileName").asText()
-                type = AssetType.valueOf(jsonNode.get("type").asText().uppercase())
-                dateTaken = Instant.ofEpochMilli(jsonNode.get("dateTaken").asLong())
-                albumId = album.id
-                sha1 = jsonNode.get("sha1").asText()
-                mimeType = jsonNode.get("mimeType").asText()
-                title = jsonNode.get("title").asText()
-                size = jsonNode.get("size").asLong()
+            false -> {
+                val fullFileName = jsonNode.get("fileName").asText()
+
+                Asset {
+                    id = jsonNode.get("id").asLong()
+                    fileName = fullFileName
+                    type = AssetType.valueOf(jsonNode.get("type").asText().uppercase())
+                    dateTaken = Instant.ofEpochMilli(jsonNode.get("dateTaken").asLong())
+                    albumId = album.id
+                    sha1 = jsonNode.get("sha1").asText()
+                    mimeType = jsonNode.get("mimeType").asText()
+                    title = jsonNode.get("title").asText(fullFileName.substringBeforeLast('.'))
+                    size = jsonNode.get("size").asLong(0L)
+                }
             }
 
             true -> {
