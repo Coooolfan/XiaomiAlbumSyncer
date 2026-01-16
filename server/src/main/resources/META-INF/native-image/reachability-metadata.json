@@ -3075,6 +3075,29 @@
           ]
         },
         {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
+            "boolean",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
+            "int",
+            "int",
+            "int",
+            "int",
+            "int",
+            "boolean",
+            "java.lang.String"
+          ]
+        },
+        {
           "name": "getCheckSha1",
           "parameterTypes": []
         },
@@ -3104,6 +3127,10 @@
         },
         {
           "name": "getExpression",
+          "parameterTypes": []
+        },
+        {
+          "name": "getExpressionTargetPath",
           "parameterTypes": []
         },
         {
@@ -7210,6 +7237,9 @@
       "type": "java.sql.Date"
     },
     {
+      "type": "java.sql.SQLException"
+    },
+    {
       "type": "java.sql.Statement[]"
     },
     {
@@ -7221,6 +7251,9 @@
     {
       "type": "java.time.LocalDate",
       "allDeclaredFields": true
+    },
+    {
+      "type": "java.time.ZoneId"
     },
     {
       "type": "java.time.chrono.ChronoLocalDate"

@@ -94,7 +94,7 @@ onBeforeUnmount(() => {
     :header="props.isEditing ? '编辑计划任务' : '创建计划任务'"
     :class="[
       'transition-all duration-300',
-      showExpressionHelp || showCronHelp ? 'w-full sm:w-[1000px]' : 'w-full sm:w-130',
+      showExpressionHelp || showCronHelp ? 'w-full sm:w-250' : 'w-full sm:w-130',
     ]"
     :dismissableMask="true"
   >
@@ -198,7 +198,7 @@ onBeforeUnmount(() => {
               severity="secondary"
               rounded
               size="small"
-              class="!w-6 !h-6"
+              class="w-6! h-6!"
               @click="toggleExpressionHelp"
             />
           </div>
