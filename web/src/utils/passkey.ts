@@ -1,23 +1,21 @@
-import {
-  startRegistration,
-  startAuthentication,
-  browserSupportsWebAuthn,
-} from '@simplewebauthn/browser'
 import type {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
+} from '@simplewebauthn/browser'
+import {
+  browserSupportsWebAuthn,
+  startAuthentication,
+  startRegistration,
 } from '@simplewebauthn/browser'
 import { api } from '@/ApiInstance'
 import type { PasskeyCredentialInfo } from '@/__generated/model/static'
 
 export type { PasskeyCredentialInfo }
 
-// Check if browser supports WebAuthn
 export function isWebAuthnSupported(): boolean {
   return browserSupportsWebAuthn()
 }
 
-// Check if any Passkeys are available
 export async function hasAvailablePasskeys(): Promise<boolean> {
   try {
     const resp = await api.passkeyController.hasPasskeys()
@@ -27,17 +25,17 @@ export async function hasAvailablePasskeys(): Promise<boolean> {
   }
 }
 
-// Register a new Passkey
+// 注册新的 Passkey
 export async function registerPasskey(
   password: string,
   credentialName: string,
 ): Promise<PasskeyCredentialInfo> {
-  // 1. Get registration options from server
+  // 1. 从服务端获取注册参数
   const startResp = await api.passkeyController.startRegistration({
     body: { password, credentialName },
   })
 
-  // 2. Convert to SimpleWebAuthn format
+  // 2. 转换为 SimpleWebAuthn 格式
   const options: PublicKeyCredentialCreationOptionsJSON = {
     challenge: startResp.challenge,
     rp: {
@@ -70,11 +68,12 @@ export async function registerPasskey(
     })),
   }
 
-  // 3. Call browser WebAuthn API
+  // 3. 调用浏览器 WebAuthn API
   const credential = await startRegistration({ optionsJSON: options })
 
-  // 4. Submit registration result to server
-  const finishResp = await api.passkeyController.finishRegistration({
+  // 4. 提交注册结果到服务端
+
+  return await api.passkeyController.finishRegistration({
     body: {
       sessionId: startResp.sessionId,
       credentialName,
@@ -89,16 +88,14 @@ export async function registerPasskey(
       authenticatorAttachment: credential.authenticatorAttachment ?? undefined,
     },
   })
-
-  return finishResp
 }
 
-// Authenticate with Passkey
+// 使用 Passkey 进行认证
 export async function authenticateWithPasskey(): Promise<void> {
-  // 1. Get authentication options from server
+  // 1. 从服务端获取认证参数
   const startResp = await api.passkeyController.startAuthentication()
 
-  // 2. Convert to SimpleWebAuthn format
+  // 2. 转换为 SimpleWebAuthn 格式
   const options: PublicKeyCredentialRequestOptionsJSON = {
     challenge: startResp.challenge,
     rpId: startResp.rpId,
@@ -111,10 +108,10 @@ export async function authenticateWithPasskey(): Promise<void> {
     })),
   }
 
-  // 3. Call browser WebAuthn API
+  // 3. 调用浏览器 WebAuthn API
   const credential = await startAuthentication({ optionsJSON: options })
 
-  // 4. Submit authentication result to server
+  // 4. 提交认证结果到服务端
   await api.passkeyController.finishAuthentication({
     body: {
       sessionId: startResp.sessionId,

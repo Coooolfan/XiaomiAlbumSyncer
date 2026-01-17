@@ -10,7 +10,7 @@ interface WebAuthnChallenge {
 
     val challenge: String
 
-    val type: String  // "registration" | "authentication"
+    val type: String  // 取值: registration（注册）或 authentication（认证）
 
     val createdAt: Long
 

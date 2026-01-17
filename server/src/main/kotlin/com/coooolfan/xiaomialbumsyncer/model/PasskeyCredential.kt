@@ -6,7 +6,7 @@ import org.babyfish.jimmer.sql.Id
 @Entity
 interface PasskeyCredential {
     @Id
-    val id: String  // credential ID (base64url)
+    val id: String  // 凭据 ID（base64url）
 
     val name: String
 
@@ -14,7 +14,7 @@ interface PasskeyCredential {
 
     val signCount: Long
 
-    val transports: String?  // JSON array
+    val transports: String?  // JSON 数组
 
     val attestationFmt: String
 

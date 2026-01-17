@@ -15,6 +15,7 @@ import com.webauthn4j.data.RegistrationRequest
 import com.webauthn4j.data.client.Origin
 import com.webauthn4j.data.client.challenge.DefaultChallenge
 import com.webauthn4j.server.ServerProperty
+import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.desc
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
@@ -30,13 +31,13 @@ class PasskeyService(
     private val sql: KSqlClient,
     private val systemConfigService: SystemConfigService
 ) {
-    @Inject("\${solon.app.webauthn.rpId:localhost}")
+    @Inject($$"${solon.app.webauthn.rpId:localhost}")
     private lateinit var rpId: String
 
-    @Inject("\${solon.app.webauthn.rpName:XiaomiAlbumSyncer}")
+    @Inject($$"${solon.app.webauthn.rpName:XiaomiAlbumSyncer}")
     private lateinit var rpName: String
 
-    @Inject("\${solon.app.webauthn.origin:}")
+    @Inject($$"${solon.app.webauthn.origin:}")
     private lateinit var configuredOrigin: String
 
     private val webAuthnManager = WebAuthnManager.createNonStrictWebAuthnManager()
@@ -46,38 +47,38 @@ class PasskeyService(
     private val attestedCredentialDataConverter = AttestedCredentialDataConverter(objectConverter)
 
     companion object {
-        private const val CHALLENGE_TIMEOUT_MS = 5 * 60 * 1000L  // 5 minutes
+        private const val CHALLENGE_TIMEOUT_MS = 5 * 60 * 1000L  // 5 分钟
         private const val USER_ID = "xiaomi-album-syncer-user"
     }
 
-    // ==================== Registration Flow ====================
+    // ==================== 注册流程 ====================
 
-    fun startRegistration(password: String, credentialName: String): PasskeyRegisterStartResponse {
-        // 1. Verify password
+    fun startRegistration(password: String): PasskeyRegisterStartResponse {
+        // 1. 校验密码
         systemConfigService.login(LoginRequest(password))
 
-        // 2. Clean expired challenges
+        // 2. 清理过期挑战
         cleanExpiredChallenges()
 
-        // 3. Generate challenge
+        // 3. 生成挑战
         val challengeBytes = ByteArray(32)
         secureRandom.nextBytes(challengeBytes)
         val challenge = Base64.getUrlEncoder().withoutPadding().encodeToString(challengeBytes)
 
-        // 4. Generate session ID
+        // 4. 生成会话 ID
         val sessionId = UUID.randomUUID().toString()
 
-        // 5. Save challenge
+        // 5. 保存挑战
         val now = System.currentTimeMillis()
-        sql.insert(WebAuthnChallenge {
+        sql.saveCommand(WebAuthnChallenge {
             id = sessionId
             this.challenge = challenge
             type = "registration"
             createdAt = now
             expiresAt = now + CHALLENGE_TIMEOUT_MS
-        })
+        }, SaveMode.INSERT_ONLY).execute()
 
-        // 6. Get existing credential IDs (for exclusion)
+        // 6. 获取已有凭据 ID（用于排除）
         val existingCredentials = sql.executeQuery(PasskeyCredential::class) {
             select(table)
         }.map { cred ->
@@ -97,8 +98,8 @@ class PasskeyService(
             userName = "admin",
             userDisplayName = "System Admin",
             pubKeyCredParams = listOf(
-                PubKeyCredParam("public-key", -7),   // ES256
-                PubKeyCredParam("public-key", -257)  // RS256
+                PubKeyCredParam("public-key", -7),   // ES256 算法
+                PubKeyCredParam("public-key", -257)  // RS256 算法
             ),
             authenticatorSelection = AuthenticatorSelection(
                 authenticatorAttachment = null,
@@ -112,7 +113,7 @@ class PasskeyService(
     }
 
     fun finishRegistration(request: PasskeyRegisterFinishRequest): PasskeyCredentialInfo {
-        // 1. Get and validate challenge
+        // 1. 获取并校验挑战
         val challengeRecord = sql.findById(WebAuthnChallenge::class, request.sessionId)
             ?: throw IllegalStateException("Session expired or invalid")
 
@@ -125,11 +126,11 @@ class PasskeyService(
             throw IllegalStateException("Session type mismatch")
         }
 
-        // 2. Parse attestation response
+        // 2. 解析证明响应
         val clientDataJSON = Base64.getUrlDecoder().decode(request.response.clientDataJSON)
         val attestationObject = Base64.getUrlDecoder().decode(request.response.attestationObject)
 
-        // 3. Validate using webauthn4j
+        // 3. 使用 webauthn4j 校验
         val registrationRequest = RegistrationRequest(
             attestationObject,
             clientDataJSON,
@@ -150,7 +151,7 @@ class PasskeyService(
         val registrationData = webAuthnManager.parse(registrationRequest)
         webAuthnManager.validate(registrationData, registrationParameters)
 
-        // 4. Save credential
+        // 4. 保存凭据
         val attestedCredentialData = registrationData.attestationObject!!
             .authenticatorData.attestedCredentialData!!
 
@@ -159,19 +160,19 @@ class PasskeyService(
 
         val now = System.currentTimeMillis()
 
-        sql.insert(PasskeyCredential {
+        sql.saveCommand(PasskeyCredential {
             id = credentialId
             name = request.credentialName
             publicKeyCose = attestedCredentialDataConverter.convert(attestedCredentialData)
             signCount = registrationData.attestationObject!!.authenticatorData.signCount
             transports = request.response.transports?.let { objectMapper.writeValueAsString(it) }
             attestationFmt = registrationData.attestationObject!!.attestationStatement.format
-            aaguid = attestedCredentialData.aaguid?.value?.toString()
+            aaguid = attestedCredentialData.aaguid.value?.toString()
             createdAt = now
             lastUsedAt = null
-        })
+        }, SaveMode.INSERT_ONLY).execute()
 
-        // 5. Delete used challenge
+        // 5. 删除已使用的挑战
         sql.deleteById(WebAuthnChallenge::class, request.sessionId)
 
         return PasskeyCredentialInfo(
@@ -183,13 +184,13 @@ class PasskeyService(
         )
     }
 
-    // ==================== Authentication Flow ====================
+    // ==================== 认证流程 ====================
 
     fun startAuthentication(): PasskeyAuthStartResponse {
-        // 1. Clean expired challenges
+        // 1. 清理过期挑战
         cleanExpiredChallenges()
 
-        // 2. Get all registered credentials
+        // 2. 获取全部已注册凭据
         val credentials = sql.executeQuery(PasskeyCredential::class) {
             select(table)
         }.map { cred ->
@@ -204,22 +205,22 @@ class PasskeyService(
             throw IllegalStateException("No Passkey registered")
         }
 
-        // 3. Generate challenge
+        // 3. 生成挑战
         val challengeBytes = ByteArray(32)
         secureRandom.nextBytes(challengeBytes)
         val challenge = Base64.getUrlEncoder().withoutPadding().encodeToString(challengeBytes)
 
-        // 4. Generate session ID and save
+        // 4. 生成会话 ID 并保存
         val sessionId = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
 
-        sql.insert(WebAuthnChallenge {
+        sql.saveCommand(WebAuthnChallenge {
             id = sessionId
             this.challenge = challenge
             type = "authentication"
             createdAt = now
             expiresAt = now + CHALLENGE_TIMEOUT_MS
-        })
+        }, SaveMode.INSERT_ONLY).execute()
 
         return PasskeyAuthStartResponse(
             sessionId = sessionId,
@@ -232,7 +233,7 @@ class PasskeyService(
     }
 
     fun finishAuthentication(request: PasskeyAuthFinishRequest) {
-        // 1. Get and validate challenge
+        // 1. 获取并校验挑战
         val challengeRecord = sql.findById(WebAuthnChallenge::class, request.sessionId)
             ?: throw IllegalStateException("Session expired or invalid")
 
@@ -245,17 +246,17 @@ class PasskeyService(
             throw IllegalStateException("Session type mismatch")
         }
 
-        // 2. Find credential
+        // 2. 查找凭据
         val credential = sql.findById(PasskeyCredential::class, request.id)
             ?: throw IllegalStateException("Credential not found")
 
-        // 3. Parse authentication response
+        // 3. 解析认证响应
         val credentialId = Base64.getUrlDecoder().decode(request.id)
         val clientDataJSON = Base64.getUrlDecoder().decode(request.response.clientDataJSON)
         val authenticatorData = Base64.getUrlDecoder().decode(request.response.authenticatorData)
         val signature = Base64.getUrlDecoder().decode(request.response.signature)
 
-        // 4. Validate using webauthn4j
+        // 4. 使用 webauthn4j 校验
         val authenticationRequest = AuthenticationRequest(
             credentialId,
             request.response.userHandle?.let { Base64.getUrlDecoder().decode(it) },
@@ -274,7 +275,7 @@ class PasskeyService(
             null
         )
 
-        // Rebuild authenticator from stored data
+        // 基于存储数据重建验证器
         val attestedCredentialData = attestedCredentialDataConverter.convert(credential.publicKeyCose)
         val authenticator = AuthenticatorImpl(
             attestedCredentialData,
@@ -292,7 +293,7 @@ class PasskeyService(
         val authenticationData = webAuthnManager.parse(authenticationRequest)
         webAuthnManager.validate(authenticationData, authenticationParameters)
 
-        // 5. Update sign count and last used time
+        // 5. 更新计数器与最后使用时间
         val now = System.currentTimeMillis()
         sql.createUpdate(PasskeyCredential::class) {
             set(table.signCount, authenticationData.authenticatorData!!.signCount)
@@ -300,11 +301,11 @@ class PasskeyService(
             where(table.id eq request.id)
         }.execute()
 
-        // 6. Delete used challenge
+        // 6. 删除已使用的挑战
         sql.deleteById(WebAuthnChallenge::class, request.sessionId)
     }
 
-    // ==================== Management ====================
+    // ==================== 管理 ====================
 
     fun listCredentials(): List<PasskeyCredentialInfo> {
         return sql.createQuery(PasskeyCredential::class) {
@@ -363,7 +364,7 @@ class PasskeyService(
     }
 }
 
-// ==================== DTOs ====================
+// ==================== DTO 定义 ====================
 
 data class PasskeyRegisterStartResponse(
     val sessionId: String,

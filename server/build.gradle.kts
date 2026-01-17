@@ -78,7 +78,7 @@ extensions.configure(org.noear.solon.gradle.dsl.SolonExtension::class.java) {
     mainClass.set("com.coooolfan.xiaomialbumsyncer.App")
 }
 
-// avoid sqlite warnings
+// 避免 SQLite 警告
 tasks.withType<JavaExec> {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 }

@@ -20,13 +20,11 @@ const loading = ref(false)
 const webAuthnSupported = ref(false)
 const isInsecureContext = ref(false)
 
-// Register dialog
 const showRegisterDialog = ref(false)
 const registerPassword = ref('')
 const registerName = ref('')
 const registering = ref(false)
 
-// Rename dialog
 const showRenameDialog = ref(false)
 const renameCredentialId = ref('')
 const renameName = ref('')
@@ -67,7 +65,6 @@ function formatDate(timestamp: number | null | undefined): string {
   })
 }
 
-// Register
 function openRegisterDialog() {
   registerPassword.value = ''
   registerName.value = ''
@@ -110,7 +107,6 @@ async function doRegister() {
   }
 }
 
-// Rename
 function openRenameDialog(cred: PasskeyCredentialInfo) {
   renameCredentialId.value = cred.id
   renameName.value = cred.name
@@ -140,7 +136,6 @@ async function doRename() {
   }
 }
 
-// Delete
 function confirmDelete(cred: PasskeyCredentialInfo) {
   if (isLastCredential.value) {
     toast.add({

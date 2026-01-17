@@ -28,15 +28,15 @@ const submitLabel = computed(() => {
   return passkeyAvailable.value ? '使用密码登录' : '登录'
 })
 
-// 是否处于安全上下文（Secure Context）
-const isSecureCtx = computed(() => typeof window !== 'undefined' && window.isSecureContext === true)
+// 是否处于安全上下文
+const isSecureCtx = computed(() => typeof window !== 'undefined' && window.isSecureContext)
 
 async function checkInit() {
   checkingInit.value = true
   errorMsg.value = null
   try {
     const resp = await api.systemConfigController.isInit()
-    isInit.value = !!resp.init
+    isInit.value = resp.init
 
     // 检查 WebAuthn 支持和可用性
     if (isInit.value) {

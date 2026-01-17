@@ -11,16 +11,25 @@ import type {
 } from '../model/static/';
 
 /**
- * Passkey (WebAuthn) Controller
+ * Passkey 管理控制器
  * 
- * Provides APIs for Passkey registration, authentication, and management.
+ * 提供 Passkey 注册、认证与管理相关的API接口
+ * 注册与管理接口需要用户登录认证；认证接口为公开接口
+ * 
  */
 export class PasskeyController {
     
     constructor(private executor: Executor) {}
     
     /**
-     * Delete a Passkey
+     * 删除 Passkey 接口
+     * 
+     * 此接口用于删除指定 Passkey
+     * 需要用户登录认证才能访问
+     * 
+     * @parameter {PasskeyControllerOptions['deleteCredential']} options
+     * - credentialId Passkey 凭据ID
+     * 
      */
     readonly deleteCredential: (options: PasskeyControllerOptions['deleteCredential']) => Promise<
         void
@@ -31,10 +40,14 @@ export class PasskeyController {
     }
     
     /**
-     * Finish Passkey authentication
+     * 完成 Passkey 认证接口
      * 
-     * Validates the assertion and logs in the user.
-     * Public API, no login required.
+     * 此接口用于验证 Passkey 认证结果并登录用户
+     * 无需登录认证即可访问（公开接口）
+     * 
+     * @parameter {PasskeyControllerOptions['finishAuthentication']} options
+     * - request Passkey 认证完成请求参数
+     * 
      */
     readonly finishAuthentication: (options: PasskeyControllerOptions['finishAuthentication']) => Promise<
         void
@@ -44,9 +57,15 @@ export class PasskeyController {
     }
     
     /**
-     * Finish Passkey registration
+     * 完成 Passkey 注册接口
      * 
-     * Validates the credential and saves it to the database.
+     * 此接口用于提交注册结果并保存 Passkey 凭据
+     * 需要用户登录认证才能访问
+     * 
+     * @parameter {PasskeyControllerOptions['finishRegistration']} options
+     * - request Passkey 注册完成请求参数
+     * @return PasskeyCredentialInfo 返回已保存的 Passkey 信息
+     * 
      */
     readonly finishRegistration: (options: PasskeyControllerOptions['finishRegistration']) => Promise<
         PasskeyCredentialInfo
@@ -56,9 +75,13 @@ export class PasskeyController {
     }
     
     /**
-     * Check if any Passkeys are registered
+     * 检查是否已注册 Passkey 接口
      * 
-     * Public API for login page to determine available login methods.
+     * 此接口用于判断当前系统是否已注册 Passkey
+     * 无需登录认证即可访问（公开接口）
+     * 
+     * @return HasPasskeysResponse 返回是否存在 Passkey 的标记
+     * 
      */
     readonly hasPasskeys: () => Promise<
         HasPasskeysResponse
@@ -68,7 +91,13 @@ export class PasskeyController {
     }
     
     /**
-     * Get registered Passkey list
+     * 获取已注册的 Passkey 列表接口
+     * 
+     * 此接口用于查询当前系统已注册的 Passkey 列表
+     * 需要用户登录认证才能访问
+     * 
+     * @return List<PasskeyCredentialInfo> 返回已注册的 Passkey 列表
+     * 
      */
     readonly listCredentials: () => Promise<
         ReadonlyArray<PasskeyCredentialInfo>
@@ -78,10 +107,13 @@ export class PasskeyController {
     }
     
     /**
-     * Start Passkey authentication
+     * 开始 Passkey 认证接口
      * 
-     * Returns WebAuthn options for the browser to authenticate.
-     * Public API, no login required.
+     * 此接口用于发起 Passkey 认证，返回浏览器所需的 WebAuthn 选项
+     * 无需登录认证即可访问（公开接口）
+     * 
+     * @return PasskeyAuthStartResponse 返回认证选项与会话信息
+     * 
      */
     readonly startAuthentication: () => Promise<
         PasskeyAuthStartResponse
@@ -91,10 +123,15 @@ export class PasskeyController {
     }
     
     /**
-     * Start Passkey registration
+     * 开始 Passkey 注册接口
      * 
-     * Requires login and password verification.
-     * Returns WebAuthn options for the browser to create a new credential.
+     * 此接口用于发起 Passkey 注册，验证密码后生成注册挑战与选项
+     * 需要用户登录认证才能访问
+     * 
+     * @parameter {PasskeyControllerOptions['startRegistration']} options
+     * - request Passkey 注册请求参数，包含密码与凭据名称
+     * @return PasskeyRegisterStartResponse 返回注册选项与会话信息
+     * 
      */
     readonly startRegistration: (options: PasskeyControllerOptions['startRegistration']) => Promise<
         PasskeyRegisterStartResponse
@@ -104,7 +141,15 @@ export class PasskeyController {
     }
     
     /**
-     * Update Passkey name
+     * 更新 Passkey 名称接口
+     * 
+     * 此接口用于更新指定 Passkey 的名称
+     * 需要用户登录认证才能访问
+     * 
+     * @parameter {PasskeyControllerOptions['updateCredentialName']} options
+     * - credentialId Passkey 凭据ID
+     * - request Passkey 名称更新请求参数
+     * 
      */
     readonly updateCredentialName: (options: PasskeyControllerOptions['updateCredentialName']) => Promise<
         void
@@ -118,21 +163,42 @@ export class PasskeyController {
 
 export type PasskeyControllerOptions = {
     'startRegistration': {
+        /**
+         * Passkey 注册请求参数，包含密码与凭据名称
+         */
         readonly body: PasskeyRegisterStartRequest
     }, 
     'finishRegistration': {
+        /**
+         * Passkey 注册完成请求参数
+         */
         readonly body: PasskeyRegisterFinishRequest
     }, 
     'startAuthentication': {}, 
     'finishAuthentication': {
+        /**
+         * Passkey 认证完成请求参数
+         * 
+         */
         readonly body: PasskeyAuthFinishRequest
     }, 
     'listCredentials': {}, 
     'deleteCredential': {
+        /**
+         * Passkey 凭据ID
+         * 
+         */
         readonly credentialId: string
     }, 
     'updateCredentialName': {
+        /**
+         * Passkey 凭据ID
+         */
         readonly credentialId: string, 
+        /**
+         * Passkey 名称更新请求参数
+         * 
+         */
         readonly body: PasskeyUpdateNameRequest
     }, 
     'hasPasskeys': {}
