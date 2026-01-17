@@ -36,6 +36,17 @@ export async function registerPasskey(
   })
 
   // 2. 转换为 SimpleWebAuthn 格式
+  const authenticatorSelection: PublicKeyCredentialCreationOptionsJSON['authenticatorSelection'] = {
+    residentKey: startResp.authenticatorSelection.residentKey as ResidentKeyRequirement,
+    userVerification: startResp.authenticatorSelection
+      .userVerification as UserVerificationRequirement,
+  }
+  const authenticatorAttachment = startResp.authenticatorSelection.authenticatorAttachment
+  if (authenticatorAttachment != null) {
+    authenticatorSelection.authenticatorAttachment =
+      authenticatorAttachment as AuthenticatorAttachment
+  }
+
   const options: PublicKeyCredentialCreationOptionsJSON = {
     challenge: startResp.challenge,
     rp: {
@@ -53,14 +64,7 @@ export async function registerPasskey(
     })),
     timeout: startResp.timeout,
     attestation: startResp.attestation as AttestationConveyancePreference,
-    authenticatorSelection: {
-      authenticatorAttachment: startResp.authenticatorSelection.authenticatorAttachment as
-        | AuthenticatorAttachment
-        | undefined,
-      residentKey: startResp.authenticatorSelection.residentKey as ResidentKeyRequirement,
-      userVerification: startResp.authenticatorSelection
-        .userVerification as UserVerificationRequirement,
-    },
+    authenticatorSelection,
     excludeCredentials: startResp.excludeCredentials.map((c) => ({
       id: c.id,
       type: c.type as 'public-key',
