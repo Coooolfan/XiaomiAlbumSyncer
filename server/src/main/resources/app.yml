@@ -6,7 +6,11 @@ solon:
     name: 'XiaomiAlbumSyncer'
     group: 'com.coooolfan'
     db: './db/xiaomialbumsyncer.db'
-    jimmer-log: false
+    jimmer-log: true
+    webauthn:
+      rpId: ${WEBAUTHN_RP_ID:localhost}
+      rpName: ${WEBAUTHN_RP_NAME:XiaomiAlbumSyncer}
+      origin: ${WEBAUTHN_ORIGIN:}
   logging:
     appender:
       console:

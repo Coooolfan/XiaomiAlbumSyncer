@@ -42,6 +42,8 @@ dependencies {
     implementation(libs.jimmer.sql.kotlin)
     ksp(libs.jimmer.ksp)
 
+    implementation(libs.webauthn4j.core)
+
     implementation(libs.hikari)
     runtimeOnly(libs.sqlite)
 
