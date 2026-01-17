@@ -32,7 +32,6 @@ const renameCredentialId = ref('')
 const renameName = ref('')
 const renaming = ref(false)
 
-const hasCredentials = computed(() => credentials.value.length > 0)
 const isLastCredential = computed(() => credentials.value.length === 1)
 
 onMounted(async () => {
@@ -48,7 +47,7 @@ onMounted(async () => {
 async function loadCredentials() {
   loading.value = true
   try {
-    credentials.value = await api.passkeyController.listCredentials() as PasskeyCredentialInfo[]
+    credentials.value = (await api.passkeyController.listCredentials()) as PasskeyCredentialInfo[]
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e)
     toast.add({ severity: 'error', summary: '加载失败', detail, life: 3000 })
@@ -97,7 +96,12 @@ async function doRegister() {
     if (msg.includes('Auth failed')) {
       toast.add({ severity: 'error', summary: '错误', detail: '密码错误', life: 3000 })
     } else if (msg.includes('The operation either timed out or was not allowed')) {
-      toast.add({ severity: 'warn', summary: '已取消', detail: 'Passkey 注册被取消或超时', life: 3000 })
+      toast.add({
+        severity: 'warn',
+        summary: '已取消',
+        detail: 'Passkey 注册被取消或超时',
+        life: 3000,
+      })
     } else {
       toast.add({ severity: 'error', summary: '注册失败', detail: msg, life: 3000 })
     }
@@ -173,7 +177,10 @@ async function doDelete(credentialId: string) {
 </script>
 
 <template>
-  <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mt-6" pt:footer:class="text-right">
+  <Card
+    class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mt-6"
+    pt:footer:class="text-right"
+  >
     <template #title>
       <div class="flex items-center gap-2">
         <span>Passkey 管理</span>
@@ -187,7 +194,8 @@ async function doDelete(credentialId: string) {
         class="mb-4 rounded-md bg-amber-50 text-amber-700 text-sm px-3 py-2 ring-1 ring-amber-200"
       >
         <i class="pi pi-exclamation-triangle mr-2"></i>
-        当前浏览器不支持 Passkey（WebAuthn）。请使用支持的现代浏览器（Chrome、Safari、Firefox、Edge）。
+        当前浏览器不支持
+        Passkey（WebAuthn）。请使用支持的现代浏览器（Chrome、Safari、Firefox、Edge）。
       </div>
 
       <!-- 不安全上下文警告 -->

@@ -30,11 +30,11 @@ export async function hasAvailablePasskeys(): Promise<boolean> {
 // Register a new Passkey
 export async function registerPasskey(
   password: string,
-  credentialName: string
+  credentialName: string,
 ): Promise<PasskeyCredentialInfo> {
   // 1. Get registration options from server
   const startResp = await api.passkeyController.startRegistration({
-    body: { password, credentialName }
+    body: { password, credentialName },
   })
 
   // 2. Convert to SimpleWebAuthn format
@@ -49,21 +49,24 @@ export async function registerPasskey(
       name: startResp.userName,
       displayName: startResp.userDisplayName,
     },
-    pubKeyCredParams: startResp.pubKeyCredParams.map(p => ({
+    pubKeyCredParams: startResp.pubKeyCredParams.map((p) => ({
       type: p.type as 'public-key',
       alg: p.alg,
     })),
     timeout: startResp.timeout,
     attestation: startResp.attestation as AttestationConveyancePreference,
     authenticatorSelection: {
-      authenticatorAttachment: startResp.authenticatorSelection.authenticatorAttachment as AuthenticatorAttachment | undefined,
+      authenticatorAttachment: startResp.authenticatorSelection.authenticatorAttachment as
+        | AuthenticatorAttachment
+        | undefined,
       residentKey: startResp.authenticatorSelection.residentKey as ResidentKeyRequirement,
-      userVerification: startResp.authenticatorSelection.userVerification as UserVerificationRequirement,
+      userVerification: startResp.authenticatorSelection
+        .userVerification as UserVerificationRequirement,
     },
-    excludeCredentials: startResp.excludeCredentials.map(c => ({
+    excludeCredentials: startResp.excludeCredentials.map((c) => ({
       id: c.id,
       type: c.type as 'public-key',
-      transports: c.transports as AuthenticatorTransport[] | undefined,
+      transports: c.transports?.map((t) => t as AuthenticatorTransport),
     })),
   }
 
@@ -84,8 +87,7 @@ export async function registerPasskey(
         transports: credential.response.transports as string[] | undefined,
       },
       authenticatorAttachment: credential.authenticatorAttachment ?? undefined,
-      clientExtensionResults: credential.clientExtensionResults as Record<string, unknown> | undefined,
-    }
+    },
   })
 
   return finishResp
@@ -102,10 +104,10 @@ export async function authenticateWithPasskey(): Promise<void> {
     rpId: startResp.rpId,
     timeout: startResp.timeout,
     userVerification: startResp.userVerification as UserVerificationRequirement,
-    allowCredentials: startResp.allowCredentials.map(c => ({
+    allowCredentials: startResp.allowCredentials.map((c) => ({
       id: c.id,
       type: c.type as 'public-key',
-      transports: c.transports as AuthenticatorTransport[] | undefined,
+      transports: c.transports?.map((t) => t as AuthenticatorTransport),
     })),
   }
 
@@ -126,7 +128,6 @@ export async function authenticateWithPasskey(): Promise<void> {
         userHandle: credential.response.userHandle ?? undefined,
       },
       authenticatorAttachment: credential.authenticatorAttachment ?? undefined,
-      clientExtensionResults: credential.clientExtensionResults as Record<string, unknown> | undefined,
-    }
+    },
   })
 }

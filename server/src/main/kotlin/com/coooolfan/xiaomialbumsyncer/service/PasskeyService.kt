@@ -8,9 +8,10 @@ import com.webauthn4j.WebAuthnManager
 import com.webauthn4j.authenticator.AuthenticatorImpl
 import com.webauthn4j.converter.AttestedCredentialDataConverter
 import com.webauthn4j.converter.util.ObjectConverter
-import com.webauthn4j.data.*
-import com.webauthn4j.data.attestation.authenticator.AttestedCredentialData
-import com.webauthn4j.data.attestation.authenticator.COSEKey
+import com.webauthn4j.data.AuthenticationParameters
+import com.webauthn4j.data.AuthenticationRequest
+import com.webauthn4j.data.RegistrationParameters
+import com.webauthn4j.data.RegistrationRequest
 import com.webauthn4j.data.client.Origin
 import com.webauthn4j.data.client.challenge.DefaultChallenge
 import com.webauthn4j.server.ServerProperty
@@ -20,6 +21,7 @@ import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.ast.expression.lt
 import org.noear.solon.annotation.Inject
 import org.noear.solon.annotation.Managed
+import org.noear.solon.core.handle.Context
 import java.security.SecureRandom
 import java.util.*
 
@@ -134,11 +136,7 @@ class PasskeyService(
             request.clientExtensionResults?.keys?.toSet() ?: emptySet()
         )
 
-        val origin = if (configuredOrigin.isNotBlank()) {
-            Origin(configuredOrigin)
-        } else {
-            Origin("https://$rpId")
-        }
+        val origin = resolveOrigin()
 
         val serverProperty = ServerProperty(
             origin,
@@ -147,12 +145,7 @@ class PasskeyService(
             null
         )
 
-        val registrationParameters = RegistrationParameters(
-            serverProperty,
-            null,
-            false,
-            false
-        )
+        val registrationParameters = RegistrationParameters(serverProperty, true)
 
         val registrationData = webAuthnManager.parse(registrationRequest)
         webAuthnManager.validate(registrationData, registrationParameters)
@@ -272,11 +265,7 @@ class PasskeyService(
             signature
         )
 
-        val origin = if (configuredOrigin.isNotBlank()) {
-            Origin(configuredOrigin)
-        } else {
-            Origin("https://$rpId")
-        }
+        val origin = resolveOrigin()
 
         val serverProperty = ServerProperty(
             origin,
@@ -297,8 +286,7 @@ class PasskeyService(
             serverProperty,
             authenticator,
             listOf(credentialId),
-            false,
-            false
+            true
         )
 
         val authenticationData = webAuthnManager.parse(authenticationRequest)
@@ -357,6 +345,21 @@ class PasskeyService(
         sql.createDelete(WebAuthnChallenge::class) {
             where(table.expiresAt lt now)
         }.execute()
+    }
+
+    private fun resolveOrigin(): Origin {
+        if (configuredOrigin.isNotBlank()) {
+            return Origin(configuredOrigin)
+        }
+        val ctx = Context.current()
+        val headerOrigin = ctx?.header("Origin")
+        if (!headerOrigin.isNullOrBlank() && headerOrigin != "null") {
+            return Origin(headerOrigin)
+        }
+        val scheme = ctx?.uri()?.scheme
+            ?: if (ctx?.isSecure == true) "https" else if (ctx != null) "http" else "https"
+        val host = ctx?.header("Host") ?: rpId
+        return Origin("$scheme://$host")
     }
 }
 
