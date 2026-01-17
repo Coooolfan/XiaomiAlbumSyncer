@@ -3098,6 +3098,31 @@
           ]
         },
         {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
+            "boolean",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
+            "int",
+            "int",
+            "int",
+            "int",
+            "int",
+            "boolean",
+            "java.lang.String",
+            "int",
+            "kotlin.jvm.internal.DefaultConstructorMarker"
+          ]
+        },
+        {
           "name": "getCheckSha1",
           "parameterTypes": []
         },
