@@ -1,5 +1,8 @@
 server:
   port: 8080
+  ssl:
+    keyStore: ${SSL_KEYSTORE:}
+    keyStorePassword: ${SSL_KEYSTORE_PASSWORD:}
 
 solon:
   app:
