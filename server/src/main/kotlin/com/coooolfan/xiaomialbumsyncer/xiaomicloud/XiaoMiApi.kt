@@ -231,8 +231,8 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                     albumId = album.id
                     sha1 = jsonNode.get("sha1").asText()
                     mimeType = jsonNode.get("mimeType").asText()
-                    title = jsonNode.get("title").asText(fullFileName.substringBeforeLast('.'))
-                    size = jsonNode.get("size").asLong(0L)
+                    title = jsonNode.get("title")?.asText() ?: fullFileName.substringBeforeLast('.')
+                    size = jsonNode.get("size")?.asLong() ?: 0L
                 }
             }
 
