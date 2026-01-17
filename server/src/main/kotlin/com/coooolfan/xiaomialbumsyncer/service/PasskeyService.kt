@@ -5,13 +5,17 @@ import com.coooolfan.xiaomialbumsyncer.model.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.webauthn4j.WebAuthnManager
-import com.webauthn4j.authenticator.AuthenticatorImpl
 import com.webauthn4j.converter.AttestedCredentialDataConverter
 import com.webauthn4j.converter.util.ObjectConverter
+import com.webauthn4j.credential.CredentialRecordImpl
+import com.webauthn4j.data.AuthenticatorTransport
 import com.webauthn4j.data.AuthenticationParameters
 import com.webauthn4j.data.AuthenticationRequest
+import com.webauthn4j.data.PublicKeyCredentialParameters
+import com.webauthn4j.data.PublicKeyCredentialType
 import com.webauthn4j.data.RegistrationParameters
 import com.webauthn4j.data.RegistrationRequest
+import com.webauthn4j.data.attestation.statement.COSEAlgorithmIdentifier
 import com.webauthn4j.data.client.Origin
 import com.webauthn4j.data.client.challenge.DefaultChallenge
 import com.webauthn4j.server.ServerProperty
@@ -45,6 +49,16 @@ class PasskeyService(
     private val secureRandom = SecureRandom()
     private val objectConverter = ObjectConverter()
     private val attestedCredentialDataConverter = AttestedCredentialDataConverter(objectConverter)
+    private val supportedCoseAlgs = listOf(
+        COSEAlgorithmIdentifier.ES256,
+        COSEAlgorithmIdentifier.RS256
+    )
+    private val supportedPubKeyCredParams = supportedCoseAlgs.map {
+        PublicKeyCredentialParameters(PublicKeyCredentialType.PUBLIC_KEY, it)
+    }
+    private val supportedPubKeyCredParamsResponse = supportedCoseAlgs.map {
+        PubKeyCredParam("public-key", it.value.toInt())
+    }
 
     companion object {
         private const val CHALLENGE_TIMEOUT_MS = 5 * 60 * 1000L  // 5 分钟
@@ -97,10 +111,7 @@ class PasskeyService(
             userId = Base64.getUrlEncoder().withoutPadding().encodeToString(USER_ID.toByteArray()),
             userName = "admin",
             userDisplayName = "System Admin",
-            pubKeyCredParams = listOf(
-                PubKeyCredParam("public-key", -7),   // ES256 算法
-                PubKeyCredParam("public-key", -257)  // RS256 算法
-            ),
+            pubKeyCredParams = supportedPubKeyCredParamsResponse,
             authenticatorSelection = AuthenticatorSelection(
                 authenticatorAttachment = null,
                 residentKey = "preferred",
@@ -139,17 +150,20 @@ class PasskeyService(
 
         val origin = resolveOrigin()
 
-        val serverProperty = ServerProperty(
-            origin,
-            rpId,
-            DefaultChallenge(Base64.getUrlDecoder().decode(challengeRecord.challenge)),
-            null
+        val serverProperty = ServerProperty.builder()
+            .origin(origin)
+            .rpId(rpId)
+            .challenge(DefaultChallenge(Base64.getUrlDecoder().decode(challengeRecord.challenge)))
+            .build()
+
+        val registrationParameters = RegistrationParameters(
+            serverProperty,
+            supportedPubKeyCredParams,
+            true,
+            true
         )
 
-        val registrationParameters = RegistrationParameters(serverProperty, true)
-
-        val registrationData = webAuthnManager.parse(registrationRequest)
-        webAuthnManager.validate(registrationData, registrationParameters)
+        val registrationData = webAuthnManager.verify(registrationRequest, registrationParameters)
 
         // 4. 保存凭据
         val attestedCredentialData = registrationData.attestationObject!!
@@ -268,30 +282,40 @@ class PasskeyService(
 
         val origin = resolveOrigin()
 
-        val serverProperty = ServerProperty(
-            origin,
-            rpId,
-            DefaultChallenge(Base64.getUrlDecoder().decode(challengeRecord.challenge)),
-            null
-        )
+        val serverProperty = ServerProperty.builder()
+            .origin(origin)
+            .rpId(rpId)
+            .challenge(DefaultChallenge(Base64.getUrlDecoder().decode(challengeRecord.challenge)))
+            .build()
 
         // 基于存储数据重建验证器
         val attestedCredentialData = attestedCredentialDataConverter.convert(credential.publicKeyCose)
-        val authenticator = AuthenticatorImpl(
+        val transports = credential.transports?.let { objectMapper.readValue<List<String>>(it) }
+            ?.map { AuthenticatorTransport.create(it) }
+            ?.toSet()
+
+        val credentialRecord = CredentialRecordImpl(
+            null,
+            null,
+            null,
+            null,
+            credential.signCount,
             attestedCredentialData,
             null,
-            credential.signCount
+            null,
+            null,
+            transports
         )
 
         val authenticationParameters = AuthenticationParameters(
             serverProperty,
-            authenticator,
+            credentialRecord,
             listOf(credentialId),
+            true,
             true
         )
 
-        val authenticationData = webAuthnManager.parse(authenticationRequest)
-        webAuthnManager.validate(authenticationData, authenticationParameters)
+        val authenticationData = webAuthnManager.verify(authenticationRequest, authenticationParameters)
 
         // 5. 更新计数器与最后使用时间
         val now = System.currentTimeMillis()
