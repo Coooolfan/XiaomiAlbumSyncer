@@ -44,6 +44,8 @@ docker run -d \
   -p 8232:8080 \
   -e SSL_KEYSTORE=/certs/demo.pfx \
   -e SSL_KEYSTORE_PASSWORD=demo \
+  -v ~/xiaomi-album-syncer/download:/app/download \
+  -v ~/xiaomi-album-syncer/db:/app/db \
   -v /local/certs:/certs:ro \
   --name xiaomi-album-syncer \
   coooolfan/xiaomi-album-syncer:latest
@@ -51,17 +53,25 @@ docker run -d \
 
 ### Docker Compose
 
+以下示例在 `docker/docker-compose.yml` 基础上补充 SSL 参数与证书挂载路径：
+
 ```yaml
+name: xiaomi-album-syncer
+
 services:
-  xiaomi-album-syncer:
-    image: coooolfan/xiaomi-album-syncer:latest
+  app:
+    image: coolfan1024/xiaomi-album-syncer:latest
+    container_name: xiaomi-album-syncer
     ports:
       - "8232:8080"
     environment:
       SSL_KEYSTORE: /certs/demo.pfx
       SSL_KEYSTORE_PASSWORD: demo
     volumes:
-      - /local/certs:/certs:ro
+      - ~/xiaomi-album-syncer/download:/app/download
+      - ~/xiaomi-album-syncer/db:/app/db
+      - ~/xiaomi-album-syncer/certs:/certs:ro
+    restart: unless-stopped
 ```
 
 ## Solon 文档参考
