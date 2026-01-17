@@ -13,7 +13,7 @@ server:
     keyStorePassword: ${SSL_KEYSTORE_PASSWORD:}
 ```
 
-说明：
+环境变量说明：
 
 - `SSL_KEYSTORE`: 证书库路径
   
