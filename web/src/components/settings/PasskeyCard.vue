@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import InputText from 'primevue/inputtext'
@@ -29,8 +29,6 @@ const showRenameDialog = ref(false)
 const renameCredentialId = ref('')
 const renameName = ref('')
 const renaming = ref(false)
-
-const isLastCredential = computed(() => credentials.value.length === 1)
 
 onMounted(async () => {
   webAuthnSupported.value = isWebAuthnSupported()
@@ -137,16 +135,6 @@ async function doRename() {
 }
 
 function confirmDelete(cred: PasskeyCredentialInfo) {
-  if (isLastCredential.value) {
-    toast.add({
-      severity: 'warn',
-      summary: '无法删除',
-      detail: '这是最后一个 Passkey，无法删除。请确保至少保留一种登录方式。',
-      life: 4000,
-    })
-    return
-  }
-
   confirm.require({
     message: `确定要删除 Passkey "${cred.name}" 吗？此操作不可撤销。`,
     header: '确认删除',
@@ -252,8 +240,7 @@ async function doDelete(credentialId: string) {
                 text
                 rounded
                 size="small"
-                v-tooltip.top="isLastCredential ? '无法删除最后一个' : '删除'"
-                :disabled="isLastCredential"
+                v-tooltip.top="'删除'"
                 @click="confirmDelete(data)"
               />
             </div>

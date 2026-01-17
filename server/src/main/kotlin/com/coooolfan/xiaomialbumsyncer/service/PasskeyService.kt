@@ -323,10 +323,6 @@ class PasskeyService(
     }
 
     fun deleteCredential(credentialId: String) {
-        val count = sql.executeQuery(PasskeyCredential::class) { selectCount() }[0]
-        if (count <= 1) {
-            throw IllegalStateException("Cannot delete the last Passkey. Please ensure you have at least one login method.")
-        }
         sql.deleteById(PasskeyCredential::class, credentialId)
     }
 
