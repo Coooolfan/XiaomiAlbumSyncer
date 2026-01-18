@@ -100,8 +100,8 @@ class PasskeyService(
             rpId = rpId,
             rpName = rpName,
             userId = Base64.getUrlEncoder().withoutPadding().encodeToString(USER_ID.toByteArray()),
-            userName = "admin",
-            userDisplayName = "System Admin",
+            userName = "XiaomiAlbumSyncer",
+            userDisplayName = "XiaomiAlbumSyncer",
             pubKeyCredParams = supportedPubKeyCredParamsResponse,
             authenticatorSelection = AuthenticatorSelection(
                 authenticatorAttachment = null,
