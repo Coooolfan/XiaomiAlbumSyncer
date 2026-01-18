@@ -36,9 +36,6 @@ class PasskeyService(
     @Inject($$"${solon.app.webauthn.rpName:XiaomiAlbumSyncer}")
     private lateinit var rpName: String
 
-    @Inject($$"${solon.app.webauthn.origin:}")
-    private lateinit var configuredOrigin: String
-
     private val webAuthnManager = WebAuthnManager.createNonStrictWebAuthnManager()
     private val secureRandom = SecureRandom()
     private val objectConverter = ObjectConverter()
@@ -363,9 +360,6 @@ class PasskeyService(
     }
 
     private fun resolveOrigin(): Origin {
-        if (configuredOrigin.isNotBlank()) {
-            return Origin(configuredOrigin)
-        }
         val ctx = Context.current()
         val headerOrigin = ctx?.header("Origin")
         if (!headerOrigin.isNullOrBlank() && headerOrigin != "null") {
