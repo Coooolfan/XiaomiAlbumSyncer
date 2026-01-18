@@ -3,6 +3,7 @@ package com.coooolfan.xiaomialbumsyncer.config
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.babyfish.jimmer.jackson.ImmutableModule
 import org.noear.solon.annotation.Bean
@@ -18,20 +19,25 @@ class Jackson {
     private val log = LoggerFactory.getLogger(Jackson::class.java)
 
     @Bean
-    fun registerJimmerJacksonModule(serializer: JacksonStringSerializer) {
-        log.info("注册适用于 Jimmer 实体的 Jackson module...")
-        serializer.serializeConfig.mapper.registerModule(ImmutableModule())
-        serializer.serializeConfig.mapper.registerModule(KotlinModule.Builder().build())
-        serializer.deserializeConfig.mapper.registerModule(ImmutableModule())
-        serializer.deserializeConfig.mapper.registerModule(KotlinModule.Builder().build())
+    fun objectMapper(serializer: JacksonStringSerializer): ObjectMapper {
+        log.info("配置 Jackson 并注册全局 ObjectMapper Bean...")
 
-        // 注册 Instant 序列化
+        val immutableModule = ImmutableModule()
+        val kotlinModule = KotlinModule.Builder().build()
+
+        serializer.serializeConfig.mapper.registerModule(immutableModule)
+        serializer.serializeConfig.mapper.registerModule(kotlinModule)
+
+        serializer.deserializeConfig.mapper.registerModule(immutableModule)
+        serializer.deserializeConfig.mapper.registerModule(kotlinModule)
+
         serializer.addEncoder(Instant::class.java) { it.toString() }
         serializer.addDecoder(Instant::class.java) { Instant.parse(it) }
+
+        return serializer.serializeConfig.mapper
     }
 }
 
-// string -> T
 fun <T> JacksonStringSerializer.addDecoder(clz: Class<T>, converter: Converter<String, T>) {
     deserializeConfig.customModule.addDeserializer(
         clz,

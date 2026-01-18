@@ -3,6 +3,7 @@ import {
     AlbumsController, 
     AssetController, 
     CrontabController, 
+    PasskeyController, 
     SystemConfigController, 
     TokenController, 
     XiaomiAccountController
@@ -16,6 +17,8 @@ export class Api {
     
     readonly crontabController: CrontabController
     
+    readonly passkeyController: PasskeyController
+    
     readonly systemConfigController: SystemConfigController
     
     readonly tokenController: TokenController
@@ -26,6 +29,7 @@ export class Api {
         this.albumsController = new AlbumsController(executor);
         this.assetController = new AssetController(executor);
         this.crontabController = new CrontabController(executor);
+        this.passkeyController = new PasskeyController(executor);
         this.systemConfigController = new SystemConfigController(executor);
         this.tokenController = new TokenController(executor);
         this.xiaomiAccountController = new XiaomiAccountController(executor);

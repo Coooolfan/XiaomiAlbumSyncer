@@ -42,6 +42,8 @@ dependencies {
     implementation(libs.jimmer.sql.kotlin)
     ksp(libs.jimmer.ksp)
 
+    implementation(libs.webauthn4j.core)
+
     implementation(libs.hikari)
     runtimeOnly(libs.sqlite)
 
@@ -76,7 +78,7 @@ extensions.configure(org.noear.solon.gradle.dsl.SolonExtension::class.java) {
     mainClass.set("com.coooolfan.xiaomialbumsyncer.App")
 }
 
-// avoid sqlite warnings
+// 避免 SQLite 警告
 tasks.withType<JavaExec> {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 }

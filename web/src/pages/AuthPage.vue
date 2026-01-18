@@ -6,6 +6,7 @@ import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Divider from 'primevue/divider'
 import { api } from '../ApiInstance'
+import { isWebAuthnSupported, hasAvailablePasskeys, authenticateWithPasskey } from '@/utils/passkey'
 
 const router = useRouter()
 
@@ -16,18 +17,34 @@ const confirmPassword = ref('')
 const submitting = ref(false)
 const errorMsg = ref<string | null>(null)
 
-const modeTitle = computed(() => (isInit.value ? '登录' : '初始化 / 注册'))
-const submitLabel = computed(() => (isInit.value ? '登录' : '设置密码并进入'))
+// Passkey 相关状态
+const webAuthnSupported = ref(false)
+const passkeyAvailable = ref(false)
+const passkeyLoading = ref(false)
 
-// 是否处于安全上下文（Secure Context）
-const isSecureCtx = computed(() => typeof window !== 'undefined' && window.isSecureContext === true)
+const modeTitle = computed(() => (isInit.value ? '登录' : '初始化 / 注册'))
+const submitLabel = computed(() => {
+  if (!isInit.value) return '设置密码并进入'
+  return passkeyAvailable.value ? '使用密码登录' : '登录'
+})
+
+// 是否处于安全上下文
+const isSecureCtx = computed(() => typeof window !== 'undefined' && window.isSecureContext)
 
 async function checkInit() {
   checkingInit.value = true
   errorMsg.value = null
   try {
     const resp = await api.systemConfigController.isInit()
-    isInit.value = !!resp.init
+    isInit.value = resp.init
+
+    // 检查 WebAuthn 支持和可用性
+    if (isInit.value) {
+      webAuthnSupported.value = isWebAuthnSupported()
+      if (webAuthnSupported.value) {
+        passkeyAvailable.value = await hasAvailablePasskeys()
+      }
+    }
   } catch (e) {
     // 后端未准备好或接口异常时，默认为未初始化，允许用户设置密码
     isInit.value = false
@@ -37,7 +54,7 @@ async function checkInit() {
   }
 }
 
-async function handleSubmit() {
+async function handlePasswordSubmit() {
   errorMsg.value = null
 
   if (!password.value || (!isInit.value && !confirmPassword.value)) {
@@ -77,6 +94,28 @@ async function handleSubmit() {
   }
 }
 
+async function handlePasskeyLogin() {
+  errorMsg.value = null
+  passkeyLoading.value = true
+
+  try {
+    await authenticateWithPasskey()
+    router.replace('/dashboard/schedule')
+  } catch (e) {
+    console.error('Passkey auth error:', e)
+    const msg = e instanceof Error ? e.message : String(e)
+    if (msg.includes('The operation either timed out or was not allowed')) {
+      errorMsg.value = 'Passkey 验证被取消或超时'
+    } else if (msg.includes('No Passkey registered')) {
+      errorMsg.value = '尚未注册任何 Passkey'
+    } else {
+      errorMsg.value = msg
+    }
+  } finally {
+    passkeyLoading.value = false
+  }
+}
+
 onMounted(() => {
   checkInit()
 })
@@ -101,6 +140,21 @@ onMounted(() => {
 
         <template #content>
           <div class="space-y-6">
+            <!-- Passkey 登录按钮（仅在已初始化且支持时显示） -->
+            <div v-if="isInit && webAuthnSupported && passkeyAvailable">
+              <Button
+                label="使用 Passkey 登录"
+                icon="pi pi-shield"
+                class="w-full !py-3 !text-base !font-semibold"
+                :loading="passkeyLoading"
+                @click="handlePasskeyLogin"
+              />
+
+              <Divider>
+                <span class="text-xs text-slate-400">或使用密码</span>
+              </Divider>
+            </div>
+
             <div v-if="!isInit" class="text-sm text-slate-500">
               首次使用，请设置登录密码。该密码仅保存在后端。
             </div>
@@ -114,7 +168,7 @@ onMounted(() => {
                 :input-class="'w-full p-inputtext p-component'"
                 class="w-full"
                 placeholder="请输入密码"
-                @keyup.enter="handleSubmit"
+                @keyup.enter="handlePasswordSubmit"
               />
             </div>
 
@@ -127,7 +181,7 @@ onMounted(() => {
                 :input-class="'w-full p-inputtext p-component'"
                 class="w-full"
                 placeholder="请再次输入密码"
-                @keyup.enter="handleSubmit"
+                @keyup.enter="handlePasswordSubmit"
               />
             </div>
 
@@ -151,12 +205,17 @@ onMounted(() => {
               :label="submitLabel"
               class="w-full !py-3 !text-base !font-semibold transition-transform hover:scale-[1.01] active:scale-[0.99]"
               :loading="submitting"
-              @click="handleSubmit"
+              :severity="isInit && passkeyAvailable ? 'secondary' : undefined"
+              @click="handlePasswordSubmit"
             />
 
-            <Divider>
-              <span class="text-xs text-slate-400">或</span>
-            </Divider>
+            <!-- WebAuthn 不支持提示 -->
+            <div
+              v-if="isInit && !webAuthnSupported"
+              class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2"
+            >
+              当前浏览器不支持 Passkey（WebAuthn）登录
+            </div>
 
             <div
               v-if="!isSecureCtx"

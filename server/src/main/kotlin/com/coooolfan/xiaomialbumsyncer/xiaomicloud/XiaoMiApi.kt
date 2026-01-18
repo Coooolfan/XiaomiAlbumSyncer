@@ -6,9 +6,9 @@ import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.AssetType
 import com.coooolfan.xiaomialbumsyncer.utils.*
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import okhttp3.FormBody
 import okhttp3.Request
+import org.noear.solon.Solon
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
@@ -38,7 +38,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
 
             val responseTree = client().executeWithRetry(req).use { res ->
                 throwIfNotSuccess(res.code)
-                jacksonObjectMapper().readTree(res.body.string())
+                Solon.context().objectMapper.readTree(res.body.string())
             }
             val albumArrayJson = responseTree.at("/data/albums")
 
@@ -106,7 +106,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
 
             val responseTree = client().executeWithRetry(req).use { res ->
                 throwIfNotSuccess(res.code)
-                jacksonObjectMapper().readTree(res.body.string())
+                Solon.context().objectMapper.readTree(res.body.string())
             }
             val assetArrayJson =
                 if (album.isAudioAlbum())
@@ -157,7 +157,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
 
         val responseTree = client().executeWithRetry(req).use { res ->
             throwIfNotSuccess(res.code)
-            jacksonObjectMapper().readTree(res.body.string())
+            Solon.context().objectMapper.readTree(res.body.string())
         }
         val indexHash = responseTree.at("/data/indexHash").asText()
         val dayCountMap = responseTree.at("/data/dayCount").properties().asSequence().map {
@@ -184,7 +184,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             .build()
         val fetchOssUrlJson = client().executeWithRetry(fetchOssUrlReq).use { resp ->
             throwIfNotSuccess(resp.code)
-            jacksonObjectMapper().readTree(resp.body.string())
+            Solon.context().objectMapper.readTree(resp.body.string())
         }
 
         // 文件已经被删掉了，直接返回一个无效值，避免后续反复请求
@@ -199,7 +199,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         val fetchSignedUrlReq = Request.Builder().url(ossUrl).ua().get().build()
         val fetchSignedUrlJson = client().executeWithRetry(fetchSignedUrlReq).use { resp ->
             throwIfNotSuccess(resp.code)
-            jacksonObjectMapper().readTree(resp.body.string().substringAfter('(').substringBefore(')'))
+            Solon.context().objectMapper.readTree(resp.body.string().substringAfter('(').substringBefore(')'))
         }
 
         // 3. 下载文件

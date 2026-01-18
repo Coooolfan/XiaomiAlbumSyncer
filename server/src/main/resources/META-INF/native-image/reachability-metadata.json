@@ -946,6 +946,12 @@
           "parameterTypes": []
         },
         {
+          "name": "objectMapper",
+          "parameterTypes": [
+            "org.noear.solon.serialization.jackson.JacksonStringSerializer"
+          ]
+        },
+        {
           "name": "registerJimmerJacksonModule",
           "parameterTypes": [
             "org.noear.solon.serialization.jackson.JacksonRenderFactory",
@@ -1700,6 +1706,72 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.LoginRequest"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.PasskeyController",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.PasskeyService"
+          ]
+        },
+        {
+          "name": "deleteCredential",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "finishAuthentication",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.PasskeyAuthFinishRequest"
+          ]
+        },
+        {
+          "name": "finishRegistration",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.PasskeyRegisterFinishRequest"
+          ]
+        },
+        {
+          "name": "hasPasskeys",
+          "parameterTypes": []
+        },
+        {
+          "name": "listCredentials",
+          "parameterTypes": []
+        },
+        {
+          "name": "startAuthentication",
+          "parameterTypes": []
+        },
+        {
+          "name": "startRegistration",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.controller.PasskeyRegisterStartRequest"
+          ]
+        },
+        {
+          "name": "updateCredentialName",
+          "parameterTypes": [
+            "java.lang.String",
+            "com.coooolfan.xiaomialbumsyncer.service.PasskeyUpdateNameRequest"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.PasskeyRegisterStartRequest",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.SystemConfigController",
@@ -4139,6 +4211,86 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabPropsKt"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredential"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredential$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialDraft"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialDraft$$",
+      "fields": [
+        {
+          "name": "INSTANCE"
+        }
+      ],
+      "methods": [
+        {
+          "name": "getType",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialDraft$$$DraftImpl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialDraft$$$Impl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialDraft$$$Implementor"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialDraft$$$Implementor$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialDraft$Builder"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialDraftKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialFetcherDsl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialFetcherKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialProps"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialProps$AAGUID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialProps$ATTESTATION_FMT$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialProps$CREATED_AT$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialProps$ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialProps$LAST_USED_AT$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialProps$NAME$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialProps$PUBLIC_KEY_COSE$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialProps$SIGN_COUNT$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialProps$TRANSPORTS$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialPropsKt"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.model.SystemConfig",
       "methods": [
         {
@@ -4475,6 +4627,74 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigPropsKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallenge"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallenge$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeDraft"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeDraft$$",
+      "fields": [
+        {
+          "name": "INSTANCE"
+        }
+      ],
+      "methods": [
+        {
+          "name": "getType",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeDraft$$$DraftImpl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeDraft$$$Impl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeDraft$$$Implementor"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeDraft$$$Implementor$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeDraft$Builder"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeDraftKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeFetcherDsl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeFetcherKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeProps"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeProps$CHALLENGE$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeProps$CREATED_AT$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeProps$EXPIRES_AT$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeProps$ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengeProps$TYPE$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.WebAuthnChallengePropsKt"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount"
@@ -5436,6 +5656,67 @@
       "type": "com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsFull$1$1$1"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.AuthenticatorAssertionResponse",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.AuthenticatorAttestationResponse",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.util.List"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.AuthenticatorSelection",
+      "methods": [
+        {
+          "name": "getAuthenticatorAttachment",
+          "parameterTypes": []
+        },
+        {
+          "name": "getResidentKey",
+          "parameterTypes": []
+        },
+        {
+          "name": "getUserVerification",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.CredentialDescriptor",
+      "methods": [
+        {
+          "name": "getId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTransports",
+          "parameterTypes": []
+        },
+        {
+          "name": "getType",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.service.CrontabService",
       "allDeclaredFields": true,
       "methods": [
@@ -5574,6 +5855,259 @@
         },
         {
           "name": "getDebugInfo",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.HasPasskeysResponse",
+      "methods": [
+        {
+          "name": "getAvailable",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyAuthFinishRequest",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "com.coooolfan.xiaomialbumsyncer.service.AuthenticatorAssertionResponse",
+            "java.lang.String",
+            "java.util.Map"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyAuthStartResponse",
+      "methods": [
+        {
+          "name": "getAllowCredentials",
+          "parameterTypes": []
+        },
+        {
+          "name": "getChallenge",
+          "parameterTypes": []
+        },
+        {
+          "name": "getRpId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSessionId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTimeout",
+          "parameterTypes": []
+        },
+        {
+          "name": "getUserVerification",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyCredentialInfo",
+      "methods": [
+        {
+          "name": "getCreatedAt",
+          "parameterTypes": []
+        },
+        {
+          "name": "getId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getLastUsedAt",
+          "parameterTypes": []
+        },
+        {
+          "name": "getName",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTransports",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyRegisterFinishRequest",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "com.coooolfan.xiaomialbumsyncer.service.AuthenticatorAttestationResponse",
+            "java.lang.String",
+            "java.util.Map"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyRegisterStartResponse",
+      "methods": [
+        {
+          "name": "getAttestation",
+          "parameterTypes": []
+        },
+        {
+          "name": "getAuthenticatorSelection",
+          "parameterTypes": []
+        },
+        {
+          "name": "getChallenge",
+          "parameterTypes": []
+        },
+        {
+          "name": "getExcludeCredentials",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPubKeyCredParams",
+          "parameterTypes": []
+        },
+        {
+          "name": "getRpId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getRpName",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSessionId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTimeout",
+          "parameterTypes": []
+        },
+        {
+          "name": "getUserDisplayName",
+          "parameterTypes": []
+        },
+        {
+          "name": "getUserId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getUserName",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyService",
+      "fields": [
+        {
+          "name": "rpId"
+        },
+        {
+          "name": "rpName"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.KSqlClient",
+            "com.coooolfan.xiaomialbumsyncer.service.SystemConfigService"
+          ]
+        },
+        {
+          "name": "deleteCredential",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "finishAuthentication",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.PasskeyAuthFinishRequest"
+          ]
+        },
+        {
+          "name": "finishRegistration",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.PasskeyRegisterFinishRequest"
+          ]
+        },
+        {
+          "name": "hasPasskeys",
+          "parameterTypes": []
+        },
+        {
+          "name": "listCredentials",
+          "parameterTypes": []
+        },
+        {
+          "name": "startAuthentication",
+          "parameterTypes": []
+        },
+        {
+          "name": "startRegistration",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "updateCredentialName",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyService$Companion"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyService$finishAuthentication$lambda$1$$inlined$readValue$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyService$listCredentials$lambda$1$0$$inlined$readValue$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyService$startAuthentication$lambda$1$0$$inlined$readValue$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyService$startRegistration$lambda$2$0$$inlined$readValue$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyUpdateNameRequest",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.PubKeyCredParam",
+      "methods": [
+        {
+          "name": "getAlg",
+          "parameterTypes": []
+        },
+        {
+          "name": "getType",
           "parameterTypes": []
         }
       ]
@@ -6064,7 +6598,1524 @@
       ]
     },
     {
-      "type": "com.fasterxml.jackson.databind.ObjectMapper"
+      "type": "com.fasterxml.jackson.core.ObjectCodec",
+      "methods": [
+        {
+          "name": "createArrayNode",
+          "parameterTypes": []
+        },
+        {
+          "name": "createObjectNode",
+          "parameterTypes": []
+        },
+        {
+          "name": "getJsonFactory",
+          "parameterTypes": []
+        },
+        {
+          "name": "readValues",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser",
+            "com.fasterxml.jackson.core.type.ResolvedType"
+          ]
+        },
+        {
+          "name": "readValues",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser",
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "readValues",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser",
+            "java.lang.Class"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.fasterxml.jackson.core.TreeCodec",
+      "methods": [
+        {
+          "name": "missingNode",
+          "parameterTypes": []
+        },
+        {
+          "name": "nullNode",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.fasterxml.jackson.databind.ObjectMapper",
+      "methods": [
+        {
+          "name": "acceptJsonFormatVisitor",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.JavaType",
+            "com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper"
+          ]
+        },
+        {
+          "name": "acceptJsonFormatVisitor",
+          "parameterTypes": [
+            "java.lang.Class",
+            "com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper"
+          ]
+        },
+        {
+          "name": "activateDefaultTyping",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator"
+          ]
+        },
+        {
+          "name": "activateDefaultTyping",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator",
+            "com.fasterxml.jackson.databind.ObjectMapper$DefaultTyping"
+          ]
+        },
+        {
+          "name": "activateDefaultTyping",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator",
+            "com.fasterxml.jackson.databind.ObjectMapper$DefaultTyping",
+            "com.fasterxml.jackson.annotation.JsonTypeInfo$As"
+          ]
+        },
+        {
+          "name": "activateDefaultTypingAsProperty",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator",
+            "com.fasterxml.jackson.databind.ObjectMapper$DefaultTyping",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "addHandler",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.deser.DeserializationProblemHandler"
+          ]
+        },
+        {
+          "name": "addMixIn",
+          "parameterTypes": [
+            "java.lang.Class",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "addMixInAnnotations",
+          "parameterTypes": [
+            "java.lang.Class",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "canDeserialize",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "canDeserialize",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.JavaType",
+            "java.util.concurrent.atomic.AtomicReference"
+          ]
+        },
+        {
+          "name": "canSerialize",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "canSerialize",
+          "parameterTypes": [
+            "java.lang.Class",
+            "java.util.concurrent.atomic.AtomicReference"
+          ]
+        },
+        {
+          "name": "clearCaches",
+          "parameterTypes": []
+        },
+        {
+          "name": "clearProblemHandlers",
+          "parameterTypes": []
+        },
+        {
+          "name": "coercionConfigDefaults",
+          "parameterTypes": []
+        },
+        {
+          "name": "coercionConfigFor",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.type.LogicalType"
+          ]
+        },
+        {
+          "name": "coercionConfigFor",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "configOverride",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "configure",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonGenerator$Feature",
+            "boolean"
+          ]
+        },
+        {
+          "name": "configure",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser$Feature",
+            "boolean"
+          ]
+        },
+        {
+          "name": "configure",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.DeserializationFeature",
+            "boolean"
+          ]
+        },
+        {
+          "name": "configure",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.MapperFeature",
+            "boolean"
+          ]
+        },
+        {
+          "name": "configure",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.SerializationFeature",
+            "boolean"
+          ]
+        },
+        {
+          "name": "configure",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.cfg.DatatypeFeature",
+            "boolean"
+          ]
+        },
+        {
+          "name": "constructType",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "constructType",
+          "parameterTypes": [
+            "java.lang.reflect.Type"
+          ]
+        },
+        {
+          "name": "convertValue",
+          "parameterTypes": [
+            "java.lang.Object",
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "convertValue",
+          "parameterTypes": [
+            "java.lang.Object",
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "convertValue",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "copy",
+          "parameterTypes": []
+        },
+        {
+          "name": "copyWith",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonFactory"
+          ]
+        },
+        {
+          "name": "createArrayNode",
+          "parameterTypes": []
+        },
+        {
+          "name": "createGenerator",
+          "parameterTypes": [
+            "java.io.DataOutput"
+          ]
+        },
+        {
+          "name": "createGenerator",
+          "parameterTypes": [
+            "java.io.File",
+            "com.fasterxml.jackson.core.JsonEncoding"
+          ]
+        },
+        {
+          "name": "createGenerator",
+          "parameterTypes": [
+            "java.io.OutputStream"
+          ]
+        },
+        {
+          "name": "createGenerator",
+          "parameterTypes": [
+            "java.io.OutputStream",
+            "com.fasterxml.jackson.core.JsonEncoding"
+          ]
+        },
+        {
+          "name": "createGenerator",
+          "parameterTypes": [
+            "java.io.Writer"
+          ]
+        },
+        {
+          "name": "createNonBlockingByteArrayParser",
+          "parameterTypes": []
+        },
+        {
+          "name": "createObjectNode",
+          "parameterTypes": []
+        },
+        {
+          "name": "createParser",
+          "parameterTypes": [
+            "java.io.DataInput"
+          ]
+        },
+        {
+          "name": "createParser",
+          "parameterTypes": [
+            "java.io.File"
+          ]
+        },
+        {
+          "name": "createParser",
+          "parameterTypes": [
+            "java.io.InputStream"
+          ]
+        },
+        {
+          "name": "createParser",
+          "parameterTypes": [
+            "java.io.Reader"
+          ]
+        },
+        {
+          "name": "createParser",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "createParser",
+          "parameterTypes": [
+            "java.net.URL"
+          ]
+        },
+        {
+          "name": "createParser",
+          "parameterTypes": [
+            "byte[]"
+          ]
+        },
+        {
+          "name": "createParser",
+          "parameterTypes": [
+            "byte[]",
+            "int",
+            "int"
+          ]
+        },
+        {
+          "name": "createParser",
+          "parameterTypes": [
+            "char[]"
+          ]
+        },
+        {
+          "name": "createParser",
+          "parameterTypes": [
+            "char[]",
+            "int",
+            "int"
+          ]
+        },
+        {
+          "name": "deactivateDefaultTyping",
+          "parameterTypes": []
+        },
+        {
+          "name": "disable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.DeserializationFeature"
+          ]
+        },
+        {
+          "name": "disable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.DeserializationFeature",
+            "com.fasterxml.jackson.databind.DeserializationFeature[]"
+          ]
+        },
+        {
+          "name": "disable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.SerializationFeature"
+          ]
+        },
+        {
+          "name": "disable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.SerializationFeature",
+            "com.fasterxml.jackson.databind.SerializationFeature[]"
+          ]
+        },
+        {
+          "name": "disable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonGenerator$Feature[]"
+          ]
+        },
+        {
+          "name": "disable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser$Feature[]"
+          ]
+        },
+        {
+          "name": "disable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.MapperFeature[]"
+          ]
+        },
+        {
+          "name": "disableDefaultTyping",
+          "parameterTypes": []
+        },
+        {
+          "name": "enable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.DeserializationFeature"
+          ]
+        },
+        {
+          "name": "enable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.DeserializationFeature",
+            "com.fasterxml.jackson.databind.DeserializationFeature[]"
+          ]
+        },
+        {
+          "name": "enable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.SerializationFeature"
+          ]
+        },
+        {
+          "name": "enable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.SerializationFeature",
+            "com.fasterxml.jackson.databind.SerializationFeature[]"
+          ]
+        },
+        {
+          "name": "enable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonGenerator$Feature[]"
+          ]
+        },
+        {
+          "name": "enable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser$Feature[]"
+          ]
+        },
+        {
+          "name": "enable",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.MapperFeature[]"
+          ]
+        },
+        {
+          "name": "enableDefaultTyping",
+          "parameterTypes": []
+        },
+        {
+          "name": "enableDefaultTyping",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.ObjectMapper$DefaultTyping"
+          ]
+        },
+        {
+          "name": "enableDefaultTyping",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.ObjectMapper$DefaultTyping",
+            "com.fasterxml.jackson.annotation.JsonTypeInfo$As"
+          ]
+        },
+        {
+          "name": "enableDefaultTypingAsProperty",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.ObjectMapper$DefaultTyping",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "findAndRegisterModules",
+          "parameterTypes": []
+        },
+        {
+          "name": "findMixInClassFor",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "findModules",
+          "parameterTypes": []
+        },
+        {
+          "name": "findModules",
+          "parameterTypes": [
+            "java.lang.ClassLoader"
+          ]
+        },
+        {
+          "name": "generateJsonSchema",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "getDateFormat",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDeserializationConfig",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDeserializationContext",
+          "parameterTypes": []
+        },
+        {
+          "name": "getEnumNamingStrategy",
+          "parameterTypes": []
+        },
+        {
+          "name": "getFactory",
+          "parameterTypes": []
+        },
+        {
+          "name": "getInjectableValues",
+          "parameterTypes": []
+        },
+        {
+          "name": "getNodeFactory",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPolymorphicTypeValidator",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPropertyNamingStrategy",
+          "parameterTypes": []
+        },
+        {
+          "name": "getRegisteredModuleIds",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSerializationConfig",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSerializerFactory",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSerializerProvider",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSerializerProviderInstance",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSubtypeResolver",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTypeFactory",
+          "parameterTypes": []
+        },
+        {
+          "name": "getVisibilityChecker",
+          "parameterTypes": []
+        },
+        {
+          "name": "isEnabled",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonFactory$Feature"
+          ]
+        },
+        {
+          "name": "isEnabled",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonGenerator$Feature"
+          ]
+        },
+        {
+          "name": "isEnabled",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser$Feature"
+          ]
+        },
+        {
+          "name": "isEnabled",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.StreamReadFeature"
+          ]
+        },
+        {
+          "name": "isEnabled",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.StreamWriteFeature"
+          ]
+        },
+        {
+          "name": "isEnabled",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.DeserializationFeature"
+          ]
+        },
+        {
+          "name": "isEnabled",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.MapperFeature"
+          ]
+        },
+        {
+          "name": "isEnabled",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.SerializationFeature"
+          ]
+        },
+        {
+          "name": "missingNode",
+          "parameterTypes": []
+        },
+        {
+          "name": "mixInCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "nullNode",
+          "parameterTypes": []
+        },
+        {
+          "name": "readTree",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser"
+          ]
+        },
+        {
+          "name": "readTree",
+          "parameterTypes": [
+            "java.io.File"
+          ]
+        },
+        {
+          "name": "readTree",
+          "parameterTypes": [
+            "java.io.InputStream"
+          ]
+        },
+        {
+          "name": "readTree",
+          "parameterTypes": [
+            "java.io.Reader"
+          ]
+        },
+        {
+          "name": "readTree",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "readTree",
+          "parameterTypes": [
+            "java.net.URL"
+          ]
+        },
+        {
+          "name": "readTree",
+          "parameterTypes": [
+            "byte[]"
+          ]
+        },
+        {
+          "name": "readTree",
+          "parameterTypes": [
+            "byte[]",
+            "int",
+            "int"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser",
+            "com.fasterxml.jackson.core.type.ResolvedType"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser",
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser",
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.io.DataInput",
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.io.DataInput",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.io.File",
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.io.File",
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.io.File",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.io.InputStream",
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.io.InputStream",
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.io.InputStream",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.io.Reader",
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.io.Reader",
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.io.Reader",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.lang.String",
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.lang.String",
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.net.URL",
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.net.URL",
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "java.net.URL",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "byte[]",
+            "int",
+            "int",
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "byte[]",
+            "int",
+            "int",
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "byte[]",
+            "int",
+            "int",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "byte[]",
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "byte[]",
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "readValue",
+          "parameterTypes": [
+            "byte[]",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readValues",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser",
+            "com.fasterxml.jackson.core.type.ResolvedType"
+          ]
+        },
+        {
+          "name": "readValues",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser",
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "readValues",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser",
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "readValues",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonParser",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "reader",
+          "parameterTypes": []
+        },
+        {
+          "name": "reader",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.Base64Variant"
+          ]
+        },
+        {
+          "name": "reader",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.FormatSchema"
+          ]
+        },
+        {
+          "name": "reader",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "reader",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.DeserializationFeature"
+          ]
+        },
+        {
+          "name": "reader",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.DeserializationFeature",
+            "com.fasterxml.jackson.databind.DeserializationFeature[]"
+          ]
+        },
+        {
+          "name": "reader",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.InjectableValues"
+          ]
+        },
+        {
+          "name": "reader",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "reader",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.cfg.ContextAttributes"
+          ]
+        },
+        {
+          "name": "reader",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.node.JsonNodeFactory"
+          ]
+        },
+        {
+          "name": "reader",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readerFor",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "readerFor",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "readerFor",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readerForArrayOf",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readerForListOf",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readerForMapOf",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "readerForUpdating",
+          "parameterTypes": [
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "readerWithView",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "registerModule",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.Module"
+          ]
+        },
+        {
+          "name": "registerModules",
+          "parameterTypes": [
+            "java.lang.Iterable"
+          ]
+        },
+        {
+          "name": "registerModules",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.Module[]"
+          ]
+        },
+        {
+          "name": "registerSubtypes",
+          "parameterTypes": [
+            "java.util.Collection"
+          ]
+        },
+        {
+          "name": "registerSubtypes",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.jsontype.NamedType[]"
+          ]
+        },
+        {
+          "name": "registerSubtypes",
+          "parameterTypes": [
+            "java.lang.Class[]"
+          ]
+        },
+        {
+          "name": "setAccessorNaming",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.introspect.AccessorNamingStrategy$Provider"
+          ]
+        },
+        {
+          "name": "setAnnotationIntrospector",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.AnnotationIntrospector"
+          ]
+        },
+        {
+          "name": "setAnnotationIntrospectors",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.AnnotationIntrospector",
+            "com.fasterxml.jackson.databind.AnnotationIntrospector"
+          ]
+        },
+        {
+          "name": "setBase64Variant",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.Base64Variant"
+          ]
+        },
+        {
+          "name": "setCacheProvider",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.cfg.CacheProvider"
+          ]
+        },
+        {
+          "name": "setConfig",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.DeserializationConfig"
+          ]
+        },
+        {
+          "name": "setConfig",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.SerializationConfig"
+          ]
+        },
+        {
+          "name": "setConstructorDetector",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.cfg.ConstructorDetector"
+          ]
+        },
+        {
+          "name": "setDateFormat",
+          "parameterTypes": [
+            "java.text.DateFormat"
+          ]
+        },
+        {
+          "name": "setDefaultAttributes",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.cfg.ContextAttributes"
+          ]
+        },
+        {
+          "name": "setDefaultLeniency",
+          "parameterTypes": [
+            "java.lang.Boolean"
+          ]
+        },
+        {
+          "name": "setDefaultMergeable",
+          "parameterTypes": [
+            "java.lang.Boolean"
+          ]
+        },
+        {
+          "name": "setDefaultPrettyPrinter",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.PrettyPrinter"
+          ]
+        },
+        {
+          "name": "setDefaultPropertyInclusion",
+          "parameterTypes": [
+            "com.fasterxml.jackson.annotation.JsonInclude$Include"
+          ]
+        },
+        {
+          "name": "setDefaultPropertyInclusion",
+          "parameterTypes": [
+            "com.fasterxml.jackson.annotation.JsonInclude$Value"
+          ]
+        },
+        {
+          "name": "setDefaultSetterInfo",
+          "parameterTypes": [
+            "com.fasterxml.jackson.annotation.JsonSetter$Value"
+          ]
+        },
+        {
+          "name": "setDefaultTyping",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.jsontype.TypeResolverBuilder"
+          ]
+        },
+        {
+          "name": "setDefaultVisibility",
+          "parameterTypes": [
+            "com.fasterxml.jackson.annotation.JsonAutoDetect$Value"
+          ]
+        },
+        {
+          "name": "setEnumNamingStrategy",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.EnumNamingStrategy"
+          ]
+        },
+        {
+          "name": "setFilterProvider",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.ser.FilterProvider"
+          ]
+        },
+        {
+          "name": "setFilters",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.ser.FilterProvider"
+          ]
+        },
+        {
+          "name": "setHandlerInstantiator",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.cfg.HandlerInstantiator"
+          ]
+        },
+        {
+          "name": "setInjectableValues",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.InjectableValues"
+          ]
+        },
+        {
+          "name": "setLocale",
+          "parameterTypes": [
+            "java.util.Locale"
+          ]
+        },
+        {
+          "name": "setMixInAnnotations",
+          "parameterTypes": [
+            "java.util.Map"
+          ]
+        },
+        {
+          "name": "setMixInResolver",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.introspect.ClassIntrospector$MixInResolver"
+          ]
+        },
+        {
+          "name": "setMixIns",
+          "parameterTypes": [
+            "java.util.Map"
+          ]
+        },
+        {
+          "name": "setNodeFactory",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.node.JsonNodeFactory"
+          ]
+        },
+        {
+          "name": "setPolymorphicTypeValidator",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator"
+          ]
+        },
+        {
+          "name": "setPropertyInclusion",
+          "parameterTypes": [
+            "com.fasterxml.jackson.annotation.JsonInclude$Value"
+          ]
+        },
+        {
+          "name": "setPropertyNamingStrategy",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.PropertyNamingStrategy"
+          ]
+        },
+        {
+          "name": "setSerializationInclusion",
+          "parameterTypes": [
+            "com.fasterxml.jackson.annotation.JsonInclude$Include"
+          ]
+        },
+        {
+          "name": "setSerializerFactory",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.ser.SerializerFactory"
+          ]
+        },
+        {
+          "name": "setSerializerProvider",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.ser.DefaultSerializerProvider"
+          ]
+        },
+        {
+          "name": "setSubtypeResolver",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.jsontype.SubtypeResolver"
+          ]
+        },
+        {
+          "name": "setTimeZone",
+          "parameterTypes": [
+            "java.util.TimeZone"
+          ]
+        },
+        {
+          "name": "setTypeFactory",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.type.TypeFactory"
+          ]
+        },
+        {
+          "name": "setVisibility",
+          "parameterTypes": [
+            "com.fasterxml.jackson.annotation.PropertyAccessor",
+            "com.fasterxml.jackson.annotation.JsonAutoDetect$Visibility"
+          ]
+        },
+        {
+          "name": "setVisibility",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.introspect.VisibilityChecker"
+          ]
+        },
+        {
+          "name": "setVisibilityChecker",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.introspect.VisibilityChecker"
+          ]
+        },
+        {
+          "name": "tokenStreamFactory",
+          "parameterTypes": []
+        },
+        {
+          "name": "treeAsTokens",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.TreeNode"
+          ]
+        },
+        {
+          "name": "treeToValue",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.TreeNode",
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "treeToValue",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.TreeNode",
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "treeToValue",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.TreeNode",
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "updateValue",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "valueToTree",
+          "parameterTypes": [
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "version",
+          "parameterTypes": []
+        },
+        {
+          "name": "writeTree",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonGenerator",
+            "com.fasterxml.jackson.core.TreeNode"
+          ]
+        },
+        {
+          "name": "writeTree",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonGenerator",
+            "com.fasterxml.jackson.databind.JsonNode"
+          ]
+        },
+        {
+          "name": "writeValue",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.JsonGenerator",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "writeValue",
+          "parameterTypes": [
+            "java.io.DataOutput",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "writeValue",
+          "parameterTypes": [
+            "java.io.File",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "writeValue",
+          "parameterTypes": [
+            "java.io.OutputStream",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "writeValue",
+          "parameterTypes": [
+            "java.io.Writer",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "writeValueAsBytes",
+          "parameterTypes": [
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "writeValueAsString",
+          "parameterTypes": [
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "writer",
+          "parameterTypes": []
+        },
+        {
+          "name": "writer",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.Base64Variant"
+          ]
+        },
+        {
+          "name": "writer",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.FormatSchema"
+          ]
+        },
+        {
+          "name": "writer",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.PrettyPrinter"
+          ]
+        },
+        {
+          "name": "writer",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.io.CharacterEscapes"
+          ]
+        },
+        {
+          "name": "writer",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.SerializationFeature"
+          ]
+        },
+        {
+          "name": "writer",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.SerializationFeature",
+            "com.fasterxml.jackson.databind.SerializationFeature[]"
+          ]
+        },
+        {
+          "name": "writer",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.cfg.ContextAttributes"
+          ]
+        },
+        {
+          "name": "writer",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.ser.FilterProvider"
+          ]
+        },
+        {
+          "name": "writer",
+          "parameterTypes": [
+            "java.text.DateFormat"
+          ]
+        },
+        {
+          "name": "writerFor",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "writerFor",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "writerFor",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "writerWithDefaultPrettyPrinter",
+          "parameterTypes": []
+        },
+        {
+          "name": "writerWithType",
+          "parameterTypes": [
+            "com.fasterxml.jackson.core.type.TypeReference"
+          ]
+        },
+        {
+          "name": "writerWithType",
+          "parameterTypes": [
+            "com.fasterxml.jackson.databind.JavaType"
+          ]
+        },
+        {
+          "name": "writerWithType",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        },
+        {
+          "name": "writerWithView",
+          "parameterTypes": [
+            "java.lang.Class"
+          ]
+        }
+      ]
     },
     {
       "type": "com.fasterxml.jackson.databind.deser.BeanDeserializerModifier[]"
@@ -6277,6 +8328,145 @@
           "parameterTypes": []
         }
       ]
+    },
+    {
+      "type": "com.webauthn4j.data.attestation.AttestationObject",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "com.webauthn4j.data.attestation.authenticator.AuthenticatorData",
+            "com.webauthn4j.data.attestation.statement.AttestationStatement"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.webauthn4j.data.attestation.authenticator.AbstractCOSEKey"
+    },
+    {
+      "type": "com.webauthn4j.data.attestation.authenticator.COSEKey"
+    },
+    {
+      "type": "com.webauthn4j.data.attestation.authenticator.Curve",
+      "methods": [
+        {
+          "name": "deserialize",
+          "parameterTypes": [
+            "int"
+          ]
+        },
+        {
+          "name": "getValue",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.webauthn4j.data.attestation.authenticator.EC2COSEKey",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "byte[]",
+            "com.webauthn4j.data.attestation.statement.COSEAlgorithmIdentifier",
+            "java.util.List",
+            "com.webauthn4j.data.attestation.authenticator.Curve",
+            "byte[]",
+            "byte[]",
+            "byte[]"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.webauthn4j.data.attestation.statement.AttestationStatement"
+    },
+    {
+      "type": "com.webauthn4j.data.attestation.statement.COSEAlgorithmIdentifier",
+      "methods": [
+        {
+          "name": "deserialize",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "getValue",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.webauthn4j.data.attestation.statement.COSEKeyOperation",
+      "methods": [
+        {
+          "name": "getValue",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.webauthn4j.data.attestation.statement.COSEKeyType",
+      "methods": [
+        {
+          "name": "getValue",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.webauthn4j.data.attestation.statement.NoneAttestationStatement",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.webauthn4j.data.client.ClientDataType",
+      "methods": [
+        {
+          "name": "create",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.webauthn4j.data.client.CollectedClientData",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "com.webauthn4j.data.client.ClientDataType",
+            "com.webauthn4j.data.client.challenge.Challenge",
+            "com.webauthn4j.data.client.Origin",
+            "java.lang.Boolean",
+            "com.webauthn4j.data.client.Origin",
+            "com.webauthn4j.data.client.TokenBinding"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.webauthn4j.data.client.Origin",
+      "methods": [
+        {
+          "name": "deserialize",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.webauthn4j.data.client.TokenBinding"
+    },
+    {
+      "type": "com.webauthn4j.data.client.TokenBindingStatus"
     },
     {
       "type": "com.zaxxer.hikari.HikariConfig",
@@ -8116,6 +10306,9 @@
     },
     {
       "type": "kotlin.Boolean"
+    },
+    {
+      "type": "kotlin.ByteArray"
     },
     {
       "type": "kotlin.Cloneable"
