@@ -2,16 +2,13 @@ package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 
 
 import com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount
-import com.coooolfan.xiaomialbumsyncer.utils.client
-import com.coooolfan.xiaomialbumsyncer.utils.throwIfNotSuccess
-import com.coooolfan.xiaomialbumsyncer.utils.ua
-import com.coooolfan.xiaomialbumsyncer.utils.withCookie
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.coooolfan.xiaomialbumsyncer.utils.*
 import okhttp3.Request
 import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.noear.solon.Solon
 import org.noear.solon.annotation.Managed
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 @Managed
@@ -76,7 +73,7 @@ class TokenManager(private val sql: KSqlClient) {
             throwIfNotSuccess(res.code)
             res.body.string()
         }
-        val loginUrl = jacksonObjectMapper()
+        val loginUrl = Solon.context().objectMapper
             .readTree(preLoginBodyString)
             .at("/data/loginUrl")
             .asText()

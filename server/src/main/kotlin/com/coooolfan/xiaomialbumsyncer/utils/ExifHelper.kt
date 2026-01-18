@@ -2,13 +2,13 @@ package com.coooolfan.xiaomialbumsyncer.utils
 
 import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.AssetType
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.noear.solon.Solon
 import java.nio.file.Path
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 fun rewriteExifTime(asset: Asset, path: Path, config: ExifRewriteConfig) {
@@ -24,7 +24,7 @@ fun rewriteExifTime(asset: Asset, path: Path, config: ExifRewriteConfig) {
 
 fun rewriteImageExifTime(asset: Asset, path: Path, config: ExifRewriteConfig) {
     val imageExistTagJson =
-        jacksonObjectMapper().readTree(runExifTool(config.exifToolPath, listOf("-j", "-G", path.toString())))[0]
+        Solon.context().objectMapper.readTree(runExifTool(config.exifToolPath, listOf("-j", "-G", path.toString())))[0]
     val tagValue = imageExistTagJson.get(IMAGE_DATA_TAG)?.asText()
 
     if (tagValue != null && !tagValue.startsWith("0000:00:00 00:00:00")) return
@@ -46,7 +46,7 @@ fun rewriteImageExifTime(asset: Asset, path: Path, config: ExifRewriteConfig) {
 
 fun rewriteVideoExifTime(asset: Asset, path: Path, config: ExifRewriteConfig) {
     val videoExistTagJson =
-        jacksonObjectMapper().readTree(runExifTool(config.exifToolPath, listOf("-j", "-G", path.toString())))[0]
+        Solon.context().objectMapper.readTree(runExifTool(config.exifToolPath, listOf("-j", "-G", path.toString())))[0]
     val needRewriteTags = VIDEO_DATA_TAG.filter {
         val tagValue = videoExistTagJson.get(it)?.asText()
         tagValue == null || tagValue.startsWith("0000:00:00 00:00:00")

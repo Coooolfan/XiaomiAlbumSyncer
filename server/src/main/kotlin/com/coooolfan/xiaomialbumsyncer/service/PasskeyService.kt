@@ -2,19 +2,13 @@ package com.coooolfan.xiaomialbumsyncer.service
 
 import com.coooolfan.xiaomialbumsyncer.controller.LoginRequest
 import com.coooolfan.xiaomialbumsyncer.model.*
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.coooolfan.xiaomialbumsyncer.utils.objectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.webauthn4j.WebAuthnManager
 import com.webauthn4j.converter.AttestedCredentialDataConverter
 import com.webauthn4j.converter.util.ObjectConverter
 import com.webauthn4j.credential.CredentialRecordImpl
-import com.webauthn4j.data.AuthenticatorTransport
-import com.webauthn4j.data.AuthenticationParameters
-import com.webauthn4j.data.AuthenticationRequest
-import com.webauthn4j.data.PublicKeyCredentialParameters
-import com.webauthn4j.data.PublicKeyCredentialType
-import com.webauthn4j.data.RegistrationParameters
-import com.webauthn4j.data.RegistrationRequest
+import com.webauthn4j.data.*
 import com.webauthn4j.data.attestation.statement.COSEAlgorithmIdentifier
 import com.webauthn4j.data.client.Origin
 import com.webauthn4j.data.client.challenge.DefaultChallenge
@@ -24,6 +18,7 @@ import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.desc
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.ast.expression.lt
+import org.noear.solon.Solon
 import org.noear.solon.annotation.Inject
 import org.noear.solon.annotation.Managed
 import org.noear.solon.core.handle.Context
@@ -45,7 +40,6 @@ class PasskeyService(
     private lateinit var configuredOrigin: String
 
     private val webAuthnManager = WebAuthnManager.createNonStrictWebAuthnManager()
-    private val objectMapper = jacksonObjectMapper()
     private val secureRandom = SecureRandom()
     private val objectConverter = ObjectConverter()
     private val attestedCredentialDataConverter = AttestedCredentialDataConverter(objectConverter)
@@ -99,7 +93,7 @@ class PasskeyService(
             CredentialDescriptor(
                 type = "public-key",
                 id = cred.id,
-                transports = cred.transports?.let { objectMapper.readValue<List<String>>(it) }
+                transports = cred.transports?.let { Solon.context().objectMapper.readValue<List<String>>(it) }
             )
         }
 
@@ -179,7 +173,7 @@ class PasskeyService(
             name = request.credentialName
             publicKeyCose = attestedCredentialDataConverter.convert(attestedCredentialData)
             signCount = registrationData.attestationObject!!.authenticatorData.signCount
-            transports = request.response.transports?.let { objectMapper.writeValueAsString(it) }
+            transports = request.response.transports?.let { Solon.context().objectMapper.writeValueAsString(it) }
             attestationFmt = registrationData.attestationObject!!.attestationStatement.format
             aaguid = attestedCredentialData.aaguid.value?.toString()
             createdAt = now
@@ -211,7 +205,7 @@ class PasskeyService(
             CredentialDescriptor(
                 type = "public-key",
                 id = cred.id,
-                transports = cred.transports?.let { objectMapper.readValue<List<String>>(it) }
+                transports = cred.transports?.let { Solon.context().objectMapper.readValue<List<String>>(it) }
             )
         }
 
@@ -290,7 +284,7 @@ class PasskeyService(
 
         // 基于存储数据重建验证器
         val attestedCredentialData = attestedCredentialDataConverter.convert(credential.publicKeyCose)
-        val transports = credential.transports?.let { objectMapper.readValue<List<String>>(it) }
+        val transports = credential.transports?.let { Solon.context().objectMapper.readValue<List<String>>(it) }
             ?.map { AuthenticatorTransport.create(it) }
             ?.toSet()
 
@@ -341,7 +335,7 @@ class PasskeyService(
                 name = cred.name,
                 createdAt = cred.createdAt,
                 lastUsedAt = cred.lastUsedAt,
-                transports = cred.transports?.let { objectMapper.readValue<List<String>>(it) }
+                transports = cred.transports?.let { Solon.context().objectMapper.readValue<List<String>>(it) }
             )
         }
     }
