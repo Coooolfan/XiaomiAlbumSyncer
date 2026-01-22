@@ -146,7 +146,7 @@
 
 ### 设置 PassToken 与 UserId
 
-访问 `http://localhost:8232/dashboard/setting` ，设置 PassToken 与 UserId。
+访问 `http://localhost:8232/#/dashboard/setting` ，设置 PassToken 与 UserId。
 
 ### 获取所有相册
 
