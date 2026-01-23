@@ -11,8 +11,12 @@ import com.coooolfan.xiaomialbumsyncer.pipeline.stages.VerificationStage
 import com.coooolfan.xiaomialbumsyncer.service.AssetService
 import com.coooolfan.xiaomialbumsyncer.service.CrontabService
 import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
+import com.coooolfan.xiaomialbumsyncer.service.NotifyService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 
@@ -28,6 +32,7 @@ class CrontabPipeline(
     private val systemConfigService: SystemConfigService,
     private val assetService: AssetService,
     private val crontabService: CrontabService,
+    private val notifyService: NotifyService,
 ) {
 
     private val log = LoggerFactory.getLogger(CrontabPipeline::class.java)
@@ -121,6 +126,9 @@ class CrontabPipeline(
         }.collect()
 
         crontabService.finishCrontabHistory(crontabHistory)
+
+        // 异步发送通知
+        CoroutineScope(Dispatchers.IO).launch { notifyService.send(crontab, success, total) }
 
         log.info("Crontab {} 的流水线执行完毕, 成功 {}/{}", crontab.id, success, total)
     }

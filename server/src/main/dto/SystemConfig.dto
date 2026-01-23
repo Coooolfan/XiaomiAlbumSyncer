@@ -9,7 +9,11 @@ input SystemConfigUpdate {
 }
 
 input SystemConfigPasswordUpdate {
-    oldPassword:String
+    oldPassword: String
 
     password
+}
+
+input SystemConfigFtqqKeyUpdate {
+    ftqqKey
 }

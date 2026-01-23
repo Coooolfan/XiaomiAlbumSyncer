@@ -16,4 +16,6 @@ interface SystemConfig {
     val exifToolPath: String
 
     val assetsDateMapTimeZone: String
+
+    val ftqqKey: String
 }

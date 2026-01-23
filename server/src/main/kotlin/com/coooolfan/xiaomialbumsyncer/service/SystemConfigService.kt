@@ -2,7 +2,9 @@ package com.coooolfan.xiaomialbumsyncer.service
 
 import cn.dev33.satoken.stp.StpUtil
 import com.coooolfan.xiaomialbumsyncer.controller.LoginRequest
+import com.coooolfan.xiaomialbumsyncer.controller.SystemConfigFtqqKeyIsInitResponse
 import com.coooolfan.xiaomialbumsyncer.model.*
+import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigFtqqKeyUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate
 import com.coooolfan.xiaomialbumsyncer.utils.DataImporter
@@ -12,12 +14,9 @@ import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
 import java.security.MessageDigest
-import java.util.concurrent.ConcurrentHashMap
 
 @Managed
 class SystemConfigService(private val sql: KSqlClient, private val dataImporter: DataImporter) {
-
-    private val configCache = ConcurrentHashMap<Fetcher<SystemConfig>, SystemConfig>()
 
     fun isInit(): Boolean {
         return sql.executeQuery(SystemConfig::class) {
@@ -29,7 +28,7 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
         if (isInit()) throw IllegalStateException("System is already initialized")
 
         sql.saveCommand(SystemConfig {
-            id = 0
+            id = CONFIG_ID
             password = hashPwd(create.password)
             exifToolPath = "exiftool"
             assetsDateMapTimeZone = "Asia/Shanghai"
@@ -40,7 +39,7 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
         if (!isInit()) throw IllegalStateException("System is not initialized")
 
         val lng = sql.executeQuery(SystemConfig::class) {
-            where(table.id eq 0)
+            where(table.id eq CONFIG_ID)
             where(table.password eq hashPwd(login.password))
             selectCount()
         }[0]
@@ -53,13 +52,8 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
 
     fun updateConfig(update: SystemConfig) {
         sql.saveCommand(SystemConfig(update) {
-            id = 0
+            id = CONFIG_ID
         }, SaveMode.UPDATE_ONLY).execute()
-        invalidateConfigCache()
-    }
-
-    fun getConfig(fetcher: Fetcher<SystemConfig>): SystemConfig {
-        return configCache.computeIfAbsent(fetcher) { loadConfig(it) }
     }
 
     fun updatePassword(update: SystemConfigPasswordUpdate) {
@@ -67,7 +61,7 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
 
         val rows = sql.executeUpdate(SystemConfig::class) {
             set(table.password, hashPwd(update.password))
-            where(table.id eq 0)
+            where(table.id eq CONFIG_ID)
             where(table.password eq hashPwd(update.oldPassword))
         }
 
@@ -99,12 +93,24 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
         dataImporter.exec()
     }
 
-    private fun loadConfig(fetcher: Fetcher<SystemConfig>): SystemConfig {
-        return sql.findById(fetcher, 0) ?: throw IllegalStateException("System is not initialized")
+    fun getConfig(fetcher: Fetcher<SystemConfig>): SystemConfig {
+        return sql.findById(fetcher, CONFIG_ID) ?: throw IllegalStateException("System is not initialized")
     }
 
-    private fun invalidateConfigCache() {
-        configCache.clear()
+    fun updateFtqqKey(update: SystemConfigFtqqKeyUpdate) {
+        sql.saveCommand(SystemConfig {
+            id = CONFIG_ID
+            ftqqKey = update.ftqqKey
+        }, SaveMode.UPDATE_ONLY).execute()
+    }
+
+    fun ftqqKeyIsInit(): SystemConfigFtqqKeyIsInitResponse {
+        val config = sql.findOneById(SystemConfig::class, CONFIG_ID)
+        return SystemConfigFtqqKeyIsInitResponse(config.ftqqKey.length > 1)
+    }
+
+    companion object {
+        const val CONFIG_ID = 0L
     }
 }
 

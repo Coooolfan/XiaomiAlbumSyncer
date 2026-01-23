@@ -16,6 +16,8 @@ export type {PasskeyRegisterStartRequest} from './PasskeyRegisterStartRequest';
 export type {PasskeyRegisterStartResponse} from './PasskeyRegisterStartResponse';
 export type {PasskeyUpdateNameRequest} from './PasskeyUpdateNameRequest';
 export type {PubKeyCredParam} from './PubKeyCredParam';
+export type {SystemConfigFtqqKeyIsInitResponse} from './SystemConfigFtqqKeyIsInitResponse';
+export type {SystemConfigFtqqKeyUpdate} from './SystemConfigFtqqKeyUpdate';
 export type {SystemConfigInit} from './SystemConfigInit';
 export type {SystemConfigPasswordUpdate} from './SystemConfigPasswordUpdate';
 export type {SystemConfigUpdate} from './SystemConfigUpdate';

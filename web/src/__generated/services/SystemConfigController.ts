@@ -2,6 +2,8 @@ import type {Executor} from '../';
 import type {SystemConfigDto} from '../model/dto/';
 import type {
     IsInitResponse, 
+    SystemConfigFtqqKeyIsInitResponse, 
+    SystemConfigFtqqKeyUpdate, 
     SystemConfigInit, 
     SystemConfigPasswordUpdate, 
     SystemConfigUpdate, 
@@ -18,6 +20,22 @@ import type {
 export class SystemConfigController {
     
     constructor(private executor: Executor) {}
+    
+    /**
+     * 获取 Server酱（FTQQ）推送Key初始化状态
+     * 
+     * 此接口用于检查是否已配置 Server酱（FTQQ）推送Key
+     * 需要用户登录认证才能访问
+     * 
+     * @return SystemConfigFtqqKeyIsInitResponse 返回初始化状态，包含布尔值表示是否已配置
+     * 
+     */
+    readonly ftqqKeyIsInitd: () => Promise<
+        SystemConfigFtqqKeyIsInitResponse
+    > = async() => {
+        let _uri = '/api/system-config/ftqq-key';
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<SystemConfigFtqqKeyIsInitResponse>;
+    }
     
     /**
      * 获取普通系统配置
@@ -115,6 +133,23 @@ export class SystemConfigController {
     }
     
     /**
+     * 更新 Server酱（FTQQ）推送Key
+     * 
+     * 此接口用于更新/设置 Server酱（FTQQ）推送Key
+     * 需要用户登录认证才能访问
+     * 
+     * @parameter {SystemConfigControllerOptions['updateFtqqKey']} options
+     * - update 推送Key更新参数，包含新的推送Key信息
+     * 
+     */
+    readonly updateFtqqKey: (options: SystemConfigControllerOptions['updateFtqqKey']) => Promise<
+        void
+    > = async(options) => {
+        let _uri = '/api/system-config/ftqq-key';
+        return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<void>;
+    }
+    
+    /**
      * 更新用户密码
      * 
      * 此接口用于更新系统的用户登录密码
@@ -175,5 +210,13 @@ export type SystemConfigControllerOptions = {
     }, 
     'getSystemInfo': {}, 
     'getSystemDebugInfo': {}, 
-    'importFromV2Db': {}
+    'importFromV2Db': {}, 
+    'ftqqKeyIsInitd': {}, 
+    'updateFtqqKey': {
+        /**
+         * 推送Key更新参数，包含新的推送Key信息
+         * 
+         */
+        readonly body: SystemConfigFtqqKeyUpdate
+    }
 }

@@ -3,10 +3,13 @@ import { ref, onMounted } from 'vue'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import InputText from 'primevue/inputtext'
+import Tag from 'primevue/tag'
 import { useToast } from 'primevue/usetoast'
 import { api } from '@/ApiInstance'
 
 const exifToolPath = ref('')
+const ftqqKey = ref('')
+const isFtqqKeySet = ref(false)
 const loadingConfig = ref(false)
 const savingConfig = ref(false)
 const toast = useToast()
@@ -14,8 +17,12 @@ const toast = useToast()
 async function fetchSystemConfig() {
   loadingConfig.value = true
   try {
-    const cfg = await api.systemConfigController.getSystemConfig()
+    const [cfg, ftqqStatus] = await Promise.all([
+      api.systemConfigController.getSystemConfig(),
+      api.systemConfigController.ftqqKeyIsInitd(),
+    ])
     exifToolPath.value = cfg?.exifToolPath ?? ''
+    isFtqqKeySet.value = ftqqStatus.ftqqKey
   } catch (e) {
     console.error('获取系统配置失败', e)
     toast.add({ severity: 'error', summary: '获取失败', detail: '无法获取系统配置', life: 2200 })
@@ -31,9 +38,29 @@ async function onUpdateSystemConfig() {
   }
   try {
     savingConfig.value = true
-    await api.systemConfigController.updateSystemConfig({
-      body: { exifToolPath: exifToolPath.value },
-    })
+    const promises: Promise<void>[] = [
+      api.systemConfigController.updateSystemConfig({
+        body: { exifToolPath: exifToolPath.value },
+      }),
+    ]
+
+    if (ftqqKey.value && ftqqKey.value.trim() !== '') {
+      promises.push(
+        api.systemConfigController.updateFtqqKey({
+          body: { ftqqKey: ftqqKey.value },
+        }),
+      )
+    }
+
+    await Promise.all(promises)
+
+    // Refresh status if key was updated
+    if (ftqqKey.value && ftqqKey.value.trim() !== '') {
+      const status = await api.systemConfigController.ftqqKeyIsInitd()
+      isFtqqKeySet.value = status.ftqqKey
+      ftqqKey.value = '' // Clear input after successful save
+    }
+
     toast.add({ severity: 'success', summary: '成功', detail: '系统配置已保存', life: 2000 })
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e) || '保存失败'
@@ -60,18 +87,42 @@ onMounted(() => {
       </div>
     </template>
     <template #content>
-      <div class="space-y-2">
-        <span class="text-sm text-slate-600">exiftool 路径</span>
-        <InputText
-          v-model="exifToolPath"
-          :disabled="loadingConfig"
-          placeholder="输入 exiftool 可执行文件路径"
-          class="w-full"
-        />
-        <p class="text-xs text-slate-400">
-          如果您使用 Docker 部署此项目，请不要改动此配置。如果您使用其他方式部署此项目，请输入
-          exiftool 可执行文件路径。
-        </p>
+      <div class="space-y-6">
+        <!-- ExifTool Config -->
+        <div class="space-y-2">
+          <span class="text-sm text-slate-600 font-medium">ExifTool 路径</span>
+          <InputText
+            v-model="exifToolPath"
+            :disabled="loadingConfig"
+            placeholder="输入 exiftool 可执行文件路径"
+            class="w-full"
+          />
+          <p class="text-xs text-slate-400">
+            如果您使用 Docker 部署此项目，请不要改动此配置。如果您使用其他方式部署此项目，请输入
+            exiftool 可执行文件路径。
+          </p>
+        </div>
+
+        <!-- FTQQ Config -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-slate-600 font-medium">Server酱推送 SendKey</span>
+            <Tag
+              :severity="isFtqqKeySet ? 'success' : 'secondary'"
+              :value="isFtqqKeySet ? '已配置' : '未配置'"
+            />
+          </div>
+          <InputText
+            v-model="ftqqKey"
+            :disabled="loadingConfig"
+            placeholder="输入 SendKey 以设置或更新"
+            class="w-full"
+            type="password"
+          />
+          <p class="text-xs text-slate-400">
+            用于发送系统通知到指定通知渠道。同时支持 Server酱 Turbo 与 Server酱<sup>3</sup>。
+          </p>
+        </div>
       </div>
     </template>
     <template #footer>
