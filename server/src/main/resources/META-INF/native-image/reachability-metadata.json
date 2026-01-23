@@ -1795,6 +1795,10 @@
           "parameterTypes": []
         },
         {
+          "name": "ftqqKeyIsInitd",
+          "parameterTypes": []
+        },
+        {
           "name": "getDebugService",
           "parameterTypes": []
         },
@@ -1841,6 +1845,12 @@
           ]
         },
         {
+          "name": "updateFtqqKey",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigFtqqKeyUpdate"
+          ]
+        },
+        {
           "name": "updatePassToken",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPassTokenUpdate"
@@ -1865,6 +1875,15 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.SystemConfigControllerKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.SystemConfigFtqqKeyIsInitResponse",
+      "methods": [
+        {
+          "name": "getFtqqKey",
+          "parameterTypes": []
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.SystemInfoResponse",
@@ -4614,6 +4633,9 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$EXIF_TOOL_PATH$1"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$FTQQ_KEY$1"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$ID$1"
     },
     {
@@ -4891,6 +4913,37 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.CrontabUpdateInputKt"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigFtqqKeyUpdate"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigFtqqKeyUpdate$Builder",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        },
+        {
+          "name": "build",
+          "parameterTypes": []
+        },
+        {
+          "name": "ftqqKey",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigFtqqKeyUpdate$Companion"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigFtqqKeyUpdate$toEntity$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigFtqqKeyUpdateKt"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit"
     },
     {
@@ -5133,6 +5186,19 @@
           ]
         },
         {
+          "name": "<init>",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage",
+            "com.coooolfan.xiaomialbumsyncer.pipeline.stages.VerificationStage",
+            "com.coooolfan.xiaomialbumsyncer.pipeline.stages.ExifProcessingStage",
+            "com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage",
+            "com.coooolfan.xiaomialbumsyncer.service.SystemConfigService",
+            "com.coooolfan.xiaomialbumsyncer.service.AssetService",
+            "com.coooolfan.xiaomialbumsyncer.service.CrontabService",
+            "com.coooolfan.xiaomialbumsyncer.service.NotifyService"
+          ]
+        },
+        {
           "name": "access$getAssetService$p",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline"
@@ -5164,6 +5230,12 @@
         },
         {
           "name": "access$getLog$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline"
+          ]
+        },
+        {
+          "name": "access$getNotifyService$p",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline"
           ]
@@ -5319,6 +5391,9 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$8"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$9"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage",
@@ -5869,6 +5944,25 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.NotifyService",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.KSqlClient"
+          ]
+        },
+        {
+          "name": "send",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.Crontab",
+            "int",
+            "int"
+          ]
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyAuthFinishRequest",
       "methods": [
         {
@@ -6124,6 +6218,10 @@
           ]
         },
         {
+          "name": "ftqqKeyIsInit",
+          "parameterTypes": []
+        },
+        {
           "name": "getConfig",
           "parameterTypes": [
             "org.babyfish.jimmer.sql.fetcher.Fetcher"
@@ -6186,12 +6284,21 @@
           ]
         },
         {
+          "name": "updateFtqqKey",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigFtqqKeyUpdate"
+          ]
+        },
+        {
           "name": "updatePassword",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate"
           ]
         }
       ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.SystemConfigService$Companion"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.service.XiaomiAccountService",
@@ -8220,6 +8327,17 @@
       ]
     },
     {
+      "type": "com.sun.crypto.provider.HKDFKeyDerivation$HKDFSHA256",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "javax.crypto.KDFParameters"
+          ]
+        }
+      ]
+    },
+    {
       "type": "com.sun.crypto.provider.HKDFKeyDerivation$HKDFSHA384",
       "methods": [
         {
@@ -8227,6 +8345,15 @@
           "parameterTypes": [
             "javax.crypto.KDFParameters"
           ]
+        }
+      ]
+    },
+    {
+      "type": "com.sun.crypto.provider.HmacCore$HmacSHA256",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
         }
       ]
     },
