@@ -2,6 +2,7 @@
 *.db
 .db-shm
 .db-wal
+.log
 
 .idea/
 **/__pycache__
