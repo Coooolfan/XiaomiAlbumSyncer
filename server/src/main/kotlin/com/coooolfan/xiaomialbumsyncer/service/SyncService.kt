@@ -88,6 +88,8 @@ class SyncService(
 
         // 获取同步文件夹中的实际文件列表
         val syncFolderAssets = mutableListOf<Asset>()
+        val orphanFiles = mutableListOf<Path>() // 记录孤儿文件（在文件系统中存在但数据库中没有记录）
+        
         crontab.albums.forEach { album ->
             val albumFolder = Path(syncFolder.toString(), album.name)
             log.info("检查相册文件夹: $albumFolder")
@@ -108,7 +110,8 @@ class SyncService(
                             syncFolderAssets.add(asset)
                             log.debug("找到匹配的资产: ${asset.fileName}")
                         } else {
-                            log.warn("文件 $fileName 在数据库中找不到对应的资产记录")
+                            log.warn("文件 $fileName 在数据库中找不到对应的资产记录，标记为孤儿文件")
+                            orphanFiles.add(filePath)
                         }
                     }
                 }
@@ -116,7 +119,24 @@ class SyncService(
                 log.info("相册文件夹不存在或不是目录: $albumFolder")
             }
         }
+        
+        // 清理孤儿文件
+        if (orphanFiles.isNotEmpty()) {
+            log.info("发现 ${orphanFiles.size} 个孤儿文件，开始清理...")
+            orphanFiles.forEach { orphanFile ->
+                try {
+                    fileService.deleteFile(orphanFile)
+                    log.info("已删除孤儿文件: ${orphanFile.fileName}")
+                } catch (e: Exception) {
+                    log.error("删除孤儿文件失败: ${orphanFile.fileName}", e)
+                }
+            }
+        }
+        
         log.info("同步文件夹资产总数: ${syncFolderAssets.size}")
+        if (orphanFiles.isNotEmpty()) {
+            log.info("已清理 ${orphanFiles.size} 个孤儿文件，这些文件对应的云端资产将被重新下载")
+        }
 
         // 比较两个列表
         val cloudAssetMap = cloudAssets.associateBy { it.id }
