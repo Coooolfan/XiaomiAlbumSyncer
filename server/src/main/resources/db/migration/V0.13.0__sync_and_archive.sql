@@ -5,7 +5,7 @@
 -- 同步记录主表
 CREATE TABLE sync_record
 (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    id            INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     crontab_id    INTEGER NOT NULL,                    -- 关联的定时任务 ID
     sync_time     INTEGER NOT NULL,                    -- 同步时间（Unix 时间戳，毫秒）
     added_count   INTEGER NOT NULL DEFAULT 0,          -- 新增文件数
@@ -19,7 +19,7 @@ CREATE TABLE sync_record
 -- 同步记录详情表
 CREATE TABLE sync_record_detail
 (
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    id             INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     sync_record_id INTEGER NOT NULL,                   -- 关联的同步记录 ID
     asset_id       INTEGER,                            -- 关联的资产 ID（删除操作时可能为 NULL）
     operation      TEXT    NOT NULL,                   -- 操作类型：ADD, DELETE, UPDATE
@@ -35,7 +35,7 @@ CREATE TABLE sync_record_detail
 -- 归档记录主表
 CREATE TABLE archive_record
 (
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    id                  INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     crontab_id          INTEGER NOT NULL,                       -- 关联的定时任务 ID
     archive_time        INTEGER NOT NULL,                       -- 归档时间（Unix 时间戳，毫秒）
     archive_mode        TEXT    NOT NULL,                       -- 归档模式：TIME, SPACE
@@ -50,7 +50,7 @@ CREATE TABLE archive_record
 -- 归档详情表
 CREATE TABLE archive_detail
 (
-    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    id                      INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     archive_record_id       INTEGER NOT NULL,                   -- 关联的归档记录 ID
     asset_id                INTEGER NOT NULL,                   -- 关联的资产 ID
     source_path             TEXT    NOT NULL,                   -- 原路径（sync）
