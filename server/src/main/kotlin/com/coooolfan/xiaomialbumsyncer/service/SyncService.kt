@@ -34,6 +34,9 @@ class SyncService(
     @Inject
     private lateinit var assetService: AssetService
 
+    @Inject
+    private lateinit var crontabService: CrontabService
+
     private val log = LoggerFactory.getLogger(this.javaClass)
 
     /**
@@ -238,6 +241,9 @@ class SyncService(
         // 记录同步模式
         log.info("同步模式: ${crontab.config.syncMode}")
 
+        // 创建 CrontabHistory 记录（用于前端显示）
+        val crontabHistory = crontabService.createCrontabHistory(crontab)
+        
         // 创建同步记录
         val syncRecord = createSyncRecord(crontab)
 
@@ -335,12 +341,19 @@ class SyncService(
                 null
             )
 
+            // 完成 CrontabHistory 记录
+            crontabService.finishCrontabHistory(crontabHistory)
+
             log.info("同步任务完成，同步记录 ID=${syncRecord.id}，模式=${crontab.config.syncMode}，新增=${changes.addedAssets.size}，删除=${actualDeletedCount}，修改=${actualUpdatedCount}")
 
             return syncRecord.id
         } catch (e: Exception) {
             log.error("同步任务失败", e)
             updateSyncRecord(syncRecord.id, SyncStatus.FAILED, 0, 0, 0, e.message)
+            
+            // 完成 CrontabHistory 记录（即使失败也要完成）
+            crontabService.finishCrontabHistory(crontabHistory)
+            
             throw e
         }
     }
