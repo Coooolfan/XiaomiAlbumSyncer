@@ -250,7 +250,7 @@ class SyncService(
             // 处理新增（两种模式都需要处理）
             changes.addedAssets.forEach { asset ->
                 try {
-                    // 找到对应的相册信息
+                    // 使用 asset.album.id 来查找相册
                     val album = crontab.albums.find { it.id == asset.album.id }
                         ?: throw IllegalStateException("找不到资产对应的相册: ${asset.album.id}")
                     
@@ -258,6 +258,7 @@ class SyncService(
                     recordSyncDetail(syncRecord.id, asset, album, SyncOperation.ADD, syncFolder, true, null)
                 } catch (e: Exception) {
                     log.error("下载新增资产失败: ${asset.fileName}", e)
+                    // 使用 asset.album.id 来查找相册
                     val album = crontab.albums.find { it.id == asset.album.id }
                     if (album != null) {
                         recordSyncDetail(syncRecord.id, asset, album, SyncOperation.ADD, syncFolder, false, e.message)
@@ -438,6 +439,10 @@ class SyncService(
     private fun downloadToSync(asset: Asset, album: Album, syncFolder: Path, accountId: Long) {
         val targetPath = Path(syncFolder.toString(), album.name, asset.fileName)
         xiaoMiApi.downloadAsset(accountId, asset, targetPath)
+        
+        // 将 Asset 记录保存到数据库中，以便下次同步时能够找到
+        sql.saveCommand(asset, SaveMode.UPSERT).execute()
+        
         log.debug("下载到 sync 文件夹: ${asset.fileName}")
     }
 
@@ -450,5 +455,8 @@ class SyncService(
             fileService.deleteFile(filePath)
             log.debug("从 sync 文件夹删除: ${asset.fileName}")
         }
+        
+        // 从数据库中删除对应的 Asset 记录
+        sql.deleteById(Asset::class, asset.id)
     }
 }

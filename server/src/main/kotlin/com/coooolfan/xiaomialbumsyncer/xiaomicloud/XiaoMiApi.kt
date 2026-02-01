@@ -336,7 +336,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                     fileName = fullFileName
                     type = AssetType.valueOf(jsonNode.get("type").asText().uppercase())
                     dateTaken = Instant.ofEpochMilli(jsonNode.get("dateTaken").asLong())
-                    albumId = album.id
+                    this.album = Album { id = album.id }
                     sha1 = jsonNode.get("sha1").asText()
                     mimeType = jsonNode.get("mimeType").asText()
                     title = jsonNode.get("title")?.asText() ?: fullFileName.substringBeforeLast('.')
@@ -355,7 +355,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                     this.fileName = fileName
                     this.type = AssetType.AUDIO
                     this.dateTaken = Instant.ofEpochMilli(jsonNode.get("create_time").asLong())
-                    this.albumId = album.id
+                    this.album = Album { id = album.id }
                     this.sha1 = jsonNode.get("sha1").asText()
                     this.mimeType = Files.probeContentType(Path(fileName)) ?: "application/octet-stream"
                     this.title = fileName.substringBeforeLast(".")
