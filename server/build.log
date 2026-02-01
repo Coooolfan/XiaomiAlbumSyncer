@@ -1,0 +1,156 @@
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+> Task :buildSrc:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :buildSrc:compileKotlin NO-SOURCE
+> Task :buildSrc:compileJava UP-TO-DATE
+> Task :buildSrc:compileGroovy NO-SOURCE
+> Task :buildSrc:pluginDescriptors UP-TO-DATE
+> Task :buildSrc:processResources UP-TO-DATE
+> Task :buildSrc:classes UP-TO-DATE
+> Task :buildSrc:jar UP-TO-DATE
+> Task :clean
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :generateVersionProperties
+> Task :kspKotlin
+> Task :processResources
+> Task :compileKotlin
+> Task :compileJava NO-SOURCE
+> Task :classes
+> Task :resolveMainClassName
+
+> Task :processAot
+14:04:33.821 [main] INFO org.noear.solon.aot.SolonAotProcessor -- Aot processor start, args: [com.coooolfan.xiaomialbumsyncer.App, /Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/build/generated/aotClasses, /Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/build/generated/aotSources, com.coooolfan, XiaomiAlbumSyncer, ]
+2026-02-01 14:04:34.118 [34mINFO [0;39m [36mSolon              [0;39m : App: Start loading
+2026-02-01 14:04:34.481 [34mINFO [0;39m [36mHikariDataSource   [0;39m : SQLitePool - Starting...
+2026-02-01 14:04:34.826 [34mINFO [0;39m [36mHikariPool         [0;39m : SQLitePool - Added connection org.sqlite.jdbc4.JDBC4Connection@4a8a60bc
+2026-02-01 14:04:34.827 [34mINFO [0;39m [36mHikariDataSource   [0;39m : SQLitePool - Start completed.
+2026-02-01 14:04:34.831 [34mINFO [0;39m [36mJackson            [0;39m : 配置 Jackson 并注册全局 ObjectMapper Bean...
+2026-02-01 14:04:34.868 [34mINFO [0;39m [36mDatabaseMigration  [0;39m : 似乎正在 native-image 环境中运行，使用 IndexedResourceProvider 进行资源加载
+2026-02-01 14:04:34.957 [34mINFO [0;39m [36mFlywayExecutor     [0;39m : Database: jdbc:sqlite:/Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/./db/xiaomialbumsyncer.db?journal_mode=WAL&synchronous=NORMAL&cache_size=10000&temp_store=memory&mmap_size=268435456 (SQLite 3.51)
+2026-02-01 14:04:35.020 [34mINFO [0;39m [36mDatabaseMigration  [0;39m : 发现迁移: 版本: 0.0.1, 描述: init, 状态: SUCCESS
+2026-02-01 14:04:35.020 [34mINFO [0;39m [36mDatabaseMigration  [0;39m : 发现迁移: 版本: 0.4.0, 描述: timeline, 状态: SUCCESS
+2026-02-01 14:04:35.020 [34mINFO [0;39m [36mDatabaseMigration  [0;39m : 发现迁移: 版本: 0.4.1, 描述: timeline map, 状态: SUCCESS
+2026-02-01 14:04:35.020 [34mINFO [0;39m [36mDatabaseMigration  [0;39m : 发现迁移: 版本: 0.8.0, 描述: concurrency, 状态: SUCCESS
+2026-02-01 14:04:35.020 [34mINFO [0;39m [36mDatabaseMigration  [0;39m : 发现迁移: 版本: 0.10.0, 描述: multi account, 状态: SUCCESS
+2026-02-01 14:04:35.020 [34mINFO [0;39m [36mDatabaseMigration  [0;39m : 发现迁移: 版本: 0.11.0, 描述: passkey, 状态: SUCCESS
+2026-02-01 14:04:35.020 [34mINFO [0;39m [36mDatabaseMigration  [0;39m : 发现迁移: 版本: 0.12.0, 描述: notify, 状态: SUCCESS
+2026-02-01 14:04:35.020 [34mINFO [0;39m [36mDatabaseMigration  [0;39m : 发现迁移: 版本: 0.13.0, 描述: sync and archive, 状态: SUCCESS
+2026-02-01 14:04:35.020 [34mINFO [0;39m [36mDatabaseMigration  [0;39m : 开始数据库迁移...
+2026-02-01 14:04:35.022 [34mINFO [0;39m [36mFlywayExecutor     [0;39m : Database: jdbc:sqlite:/Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/./db/xiaomialbumsyncer.db?journal_mode=WAL&synchronous=NORMAL&cache_size=10000&temp_store=memory&mmap_size=268435456 (SQLite 3.51)
+2026-02-01 14:04:35.042 [34mINFO [0;39m [36mDbValidate         [0;39m : Successfully validated 8 migrations (execution time 00:00.010s)
+2026-02-01 14:04:35.044 [34mINFO [0;39m [36mDbMigrate          [0;39m : Current version of schema "main": 0.13.0
+2026-02-01 14:04:35.046 [34mINFO [0;39m [36mDbMigrate          [0;39m : Schema "main" is up to date. No migration necessary.
+2026-02-01 14:04:35.047 [34mINFO [0;39m [36mDatabaseMigration  [0;39m : 成功执行了 0 个迁移
+2026-02-01 14:04:35.056 [34mINFO [0;39m [36mJimmerStarter      [0;39m : 初始化 kSqlClient 并校验表结构
+2026-02-01 14:04:35.473 [34mINFO [0;39m [36mTaskScheduler      [0;39m : 载入定时任务完成，共注册 0 个任务
+2026-02-01 14:04:35.476 [34mINFO [0;39m [36mJobManager         [0;39m : JobManager started, job.size=0
+2026-02-01 14:04:35.477 [34mINFO [0;39m [36mSolon              [0;39m : App: End loading elapsed=1529ms pid=6575 v=3.8.3
+2026-02-01 14:04:35.488 [34mINFO [0;39m [36miveProcessorDefault[0;39m : Aot process bean, bean size: 58
+2026-02-01 14:04:35.489 [34mINFO [0;39m [36mNativeImageRegister[0;39m : 注册 Native Image 配置
+2026-02-01 14:04:35.491 [34mINFO [0;39m [36mSolonAotProcessor  [0;39m : create file: /Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/build/generated/aotClasses/META-INF/native-image/com/coooolfan/xiaomialbumsyncer/native-image.properties
+2026-02-01 14:04:35.500 [34mINFO [0;39m [36mSolonAotProcessor  [0;39m : create file: /Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/build/generated/aotClasses/META-INF/native-image/com/coooolfan/xiaomialbumsyncer/solon-resource.json
+2026-02-01 14:04:35.501 [34mINFO [0;39m [36mSolonAotProcessor  [0;39m : create file: /Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/build/generated/aotClasses/META-INF/native-image/com/coooolfan/xiaomialbumsyncer/resource-config.json
+2026-02-01 14:04:35.502 [34mINFO [0;39m [36mSolonAotProcessor  [0;39m : create file: /Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/build/generated/aotClasses/META-INF/native-image/com/coooolfan/xiaomialbumsyncer/reflect-config.json
+2026-02-01 14:04:35.507 [34mINFO [0;39m [36mSolonAotProcessor  [0;39m : create file: /Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/build/generated/aotClasses/META-INF/native-image/com/coooolfan/xiaomialbumsyncer/serialization-config.json
+2026-02-01 14:04:35.507 [34mINFO [0;39m [36mSolonAotProcessor  [0;39m : Aot processor end.
+2026-02-01 14:04:35.508 [34mINFO [0;39m [36mJobManager         [0;39m : JobManager stopped
+2026-02-01 14:04:35.508 [34mINFO [0;39m [36mHikariDataSource   [0;39m : SQLitePool - Shutdown initiated...
+2026-02-01 14:04:35.509 [34mINFO [0;39m [36mHikariDataSource   [0;39m : SQLitePool - Shutdown completed.
+2026-02-01 14:04:35.509 [34mINFO [0;39m [36mSolon              [0;39m : App: Stopped
+
+> Task :kspAotKotlin NO-SOURCE
+> Task :compileAotKotlin NO-SOURCE
+> Task :compileAotJava NO-SOURCE
+> Task :processAotResources NO-SOURCE
+> Task :aotClasses UP-TO-DATE
+> Task :jar
+
+> Task :generateResourcesConfigFile
+[native-image-plugin] Resources configuration written into /Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/build/native/generated/generateResourcesConfigFile/resource-config.json
+
+> Task :nativeCompile
+[native-image-plugin] GraalVM Toolchain detection is disabled
+[native-image-plugin] GraalVM location read from environment variable: JAVA_HOME
+[native-image-plugin] Native Image executable path: /Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home/lib/svm/bin/native-image
+Warning: Using a deprecated option --report-unsupported-elements-at-runtime from 'META-INF/native-image/okhttp/okhttp/native-image.properties' in 'file:///Users/acckion/.gradle/caches/modules-2/files-2.1/com.squareup.okhttp3/okhttp-jvm/5.3.2/f31e8de27feebe1e56d6c9d354a0986b65be0e1d/okhttp-jvm-5.3.2.jar'. The option is deprecated and will be removed in the future. The use of unsupported elements is always reported at run time.
+Warning: Using a deprecated option --install-exit-handlers from 'META-INF/native-image/com/coooolfan/xiaomialbumsyncer/native-image.properties' in 'file:///Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/build/generated/aotClasses/'. --install-exit-handlers is enabled by default for executables and it can likely be removed. To use this option for the shared libraries, please use -H:+InstallExitHandlers.
+Warning: Using a deprecated option --report-unsupported-elements-at-runtime from 'META-INF/native-image/com/coooolfan/xiaomialbumsyncer/native-image.properties' in 'file:///Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/build/generated/aotClasses/'. The option is deprecated and will be removed in the future. The use of unsupported elements is always reported at run time.
+Warning: Option 'DynamicProxyConfigurationResources' is deprecated and might be removed in a future release: This can be caused by a proxy-config.json file in your META-INF directory. Consider including proxy configuration in the reflection section of reachability-metadata.md instead.. Please refer to the GraalVM release notes.
+========================================================================================================================
+GraalVM Native Image: Generating 'XiaomiAlbumSyncer' (executable)...
+========================================================================================================================
+For detailed information and explanations on the build output, visit:
+https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/BuildOutput.md
+------------------------------------------------------------------------------------------------------------------------
+[1/8] Initializing...                                                                                    (5.1s @ 0.23GB)
+ Java version: 25.0.2+10-LTS, vendor version: Oracle GraalVM 25.0.2+10.1
+ Graal compiler: optimization level: 2, target machine: compatibility, PGO: ML-inferred
+ C compiler: cc (apple, arm64, 17.0.0)
+ Garbage collector: Serial GC (max heap size: 80% of RAM)
+ 3 user-specific feature(s):
+ - com.oracle.svm.thirdparty.gson.GsonFeature
+ - okhttp3.internal.graal.OkHttpFeature
+ - org.sqlite.nativeimage.SqliteJdbcFeature
+------------------------------------------------------------------------------------------------------------------------
+Build resources:
+ - 12.98GB of memory (75.6% of system memory, less than 8GB of memory available)
+ - 10 thread(s) (100.0% of 10 available processor(s), determined at start)
+[2/8] Performing analysis...  [******]                                                                  (24.4s @ 2.06GB)
+   19,881 types,  28,286 fields, and 103,717 methods found reachable
+    6,995 types,   2,621 fields, and  13,845 methods registered for reflection
+       90 types,     199 fields, and     159 methods registered for JNI access
+        0 downcalls and 0 upcalls registered for foreign access
+        5 native libraries: -framework CoreServices, -framework Foundation, dl, pthread, z
+[3/8] Building universe...                                                                               (3.8s @ 2.36GB)
+[4/8] Parsing methods...      [***]                                                                     (10.1s @ 2.70GB)
+[5/8] Inlining methods...     [***]                                                                      (1.4s @ 2.87GB)
+[6/8] Compiling methods...    [********]                                                                (61.4s @ 3.62GB)
+[7/8] Laying out methods...   [***]                                                                      (9.4s @ 3.48GB)
+[8/8] Creating image...       [***]                                                                      (5.8s @ 3.72GB)
+  48.84MB (50.02%) for code area:    58,872 compilation units
+  47.64MB (48.80%) for image heap:  479,759 objects and 672 resources
+   1.16MB ( 1.18%) for other data
+  97.64MB in total image size, 97.64MB in total file size
+------------------------------------------------------------------------------------------------------------------------
+Top 10 origins of code area:                                Top 10 object types in image heap:
+  15.54MB java.base                                           13.76MB byte[] for code metadata
+   5.68MB svm.jar (Native Image)                               7.69MB byte[] for java.lang.String
+   3.99MB kotlin-reflect-2.1.20.jar                            4.86MB byte[] for general heap data
+   3.67MB java.xml                                             4.61MB char[]
+   2.41MB jackson-databind-2.20.1.jar                          3.36MB java.lang.String
+   1.64MB jimmer-sql-0.9.120.jar                               2.79MB java.lang.Class
+   1.52MB XiaomiAlbumSyncer-dev-plain.jar                      2.07MB com.oracle.svm.core.hub.DynamicHubCompanion
+   1.26MB flyway-core-11.20.1.jar                              1.54MB byte[] for reflection metadata
+ 849.34kB jackson-core-2.20.1.jar                            622.46kB heap alignment
+ 670.14kB solon-3.8.3.jar                                    569.31kB c.o.svm.core.hub.DynamicHub$ReflectionMetadata
+  11.25MB for 77 more packages                                 5.78MB for 4325 more object types
+                            Use '--emit build-report' to create a report with more details.
+------------------------------------------------------------------------------------------------------------------------
+Security report:
+ - Binary includes Java deserialization.
+ - CycloneDX SBOM with 61 component(s) is embedded in binary (2.83kB). 576 type(s) could not be associated to a component.
+ - Advanced obfuscation not enabled; enable with '-H:AdvancedObfuscation=""' (experimental support).
+------------------------------------------------------------------------------------------------------------------------
+Recommendations:
+ PGO:  Use Profile-Guided Optimizations ('--pgo') for improved throughput.
+ FUTR: Use '--future-defaults=all' to prepare for future releases.
+ HEAP: Set max heap for improved and more predictable memory usage.
+ QBM:  Use the quick build mode ('-Ob') to speed up builds during development.
+------------------------------------------------------------------------------------------------------------------------
+                      12.7s (10.2% of total time) in 2477 GCs | Peak RSS: 3.53GB | CPU load: 6.48
+------------------------------------------------------------------------------------------------------------------------
+Build artifacts:
+ /Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/build/native/nativeCompile/XiaomiAlbumSyncer (executable)
+========================================================================================================================
+Finished generating 'XiaomiAlbumSyncer' in 2m 4s.
+[native-image-plugin] Native Image written to: /Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/build/native/nativeCompile
+
+[Incubating] Problems report is available at: file:///Users/acckion/Desktop/XiaomiAlbumSyncer-main/XiaomiAlbumSyncer/server/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.3.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 5m 22s
+14 actionable tasks: 10 executed, 4 up-to-date
