@@ -40,6 +40,8 @@ export function useCronForm(getDefaultAccountId: () => number) {
 
   function validateCronForm(): boolean {
     const errors: Record<string, string> = {}
+    
+    // 基本字段验证
     if (!cronForm.value.name || cronForm.value.name.trim() === '') errors.name = '必填'
     if (!cronForm.value.config.expression || cronForm.value.config.expression.trim() === '') {
       errors.expression = '必填'
@@ -60,6 +62,24 @@ export function useCronForm(getDefaultAccountId: () => number) {
     if (!cronForm.value.config.targetPath || cronForm.value.config.targetPath.trim() === '')
       errors.targetPath = '必填'
     if (!cronForm.value.accountId) errors.accountId = '必选'
+
+    // 归档配置验证
+    const config = cronForm.value.config
+    if (config.archiveMode === 'TIME') {
+      const archiveDays = config.archiveDays
+      if (!Number.isInteger(archiveDays) || archiveDays <= 0) {
+        errors.archiveDays = '保留天数必须是正整数'
+      } else if (archiveDays > 365) {
+        errors.archiveDays = '保留天数不能超过365天'
+      }
+    }
+    
+    if (config.archiveMode === 'SPACE') {
+      const threshold = config.cloudSpaceThreshold
+      if (!Number.isInteger(threshold) || threshold < 1 || threshold > 100) {
+        errors.cloudSpaceThreshold = '空间阈值必须在 1-100 之间'
+      }
+    }
 
     formErrors.value = errors
     return Object.keys(errors).length === 0

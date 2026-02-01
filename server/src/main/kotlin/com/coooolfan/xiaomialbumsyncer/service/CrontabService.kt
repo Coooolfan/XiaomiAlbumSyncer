@@ -51,6 +51,16 @@ class CrontabService(private val sql: KSqlClient) {
         if (!taskScheduler.checkIsRunning(crontabId))
             return CrontabCurrentStats() // 没有正在运行
 
+        // 获取 Crontab 配置以判断是否为同步任务
+        val crontab = sql.findById(Crontab::class, crontabId)
+            ?: return CrontabCurrentStats() // Crontab 不存在
+
+        // 如果启用了同步功能，查询同步记录
+        if (crontab.config.enableSync) {
+            return getSyncCurrentStats(crontabId)
+        }
+
+        // 传统下载任务的统计逻辑
         val runningCrontabHistory = sql.createQuery(CrontabHistory::class) {
             where(table.crontabId eq crontabId)
             orderBy(table.startTime.desc())
@@ -103,6 +113,42 @@ class CrontabService(private val sql: KSqlClient) {
             sha1VerifiedCount,
             exifFilledCount,
             fsTimeUpdatedCount,
+        )
+    }
+
+    /**
+     * 获取同步任务的当前统计信息
+     */
+    private fun getSyncCurrentStats(crontabId: Long): CrontabCurrentStats {
+        // 查找最新的运行中的同步记录
+        val runningSyncRecord = sql.createQuery(SyncRecord::class) {
+            where(table.crontabId eq crontabId)
+            where(table.status eq SyncStatus.RUNNING)
+            orderBy(table.syncTime.desc())
+            select(table)
+        }.limit(1).execute().firstOrNull()
+
+        if (runningSyncRecord == null) {
+            // 没有运行中的同步记录，返回空统计
+            return CrontabCurrentStats()
+        }
+
+        // 统计同步详情
+        val totalCount = runningSyncRecord.addedCount + runningSyncRecord.deletedCount + runningSyncRecord.updatedCount
+        
+        val completedCount = sql.createQuery(SyncRecordDetail::class) {
+            where(table.syncRecordId eq runningSyncRecord.id)
+            where(table.isCompleted eq true)
+            select(count(table))
+        }.execute().firstOrNull() ?: 0L
+
+        return CrontabCurrentStats(
+            ts = runningSyncRecord.syncTime,
+            assetCount = totalCount.toLong(),
+            downloadCompletedCount = completedCount,
+            sha1VerifiedCount = null, // 同步任务不涉及 SHA1 校验
+            exifFilledCount = null,   // 同步任务不涉及 EXIF 填充
+            fsTimeUpdatedCount = null // 同步任务不涉及文件系统时间更新
         )
     }
 

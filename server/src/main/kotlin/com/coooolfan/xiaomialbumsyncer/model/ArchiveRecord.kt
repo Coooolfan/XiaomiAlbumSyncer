@@ -71,6 +71,11 @@ interface ArchiveRecord {
  */
 enum class ArchiveMode {
     /**
+     * 关闭归档
+     */
+    DISABLED,
+    
+    /**
      * 基于时间
      */
     TIME,

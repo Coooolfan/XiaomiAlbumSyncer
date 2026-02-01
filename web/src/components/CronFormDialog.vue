@@ -12,6 +12,8 @@ import Button from 'primevue/button'
 import Message from 'primevue/message'
 import ExpressionPathHelp from '@/components/ExpressionPathHelp.vue'
 import CronHelp from '@/components/CronHelp.vue'
+import SyncModeSelector from '@/components/SyncModeSelector.vue'
+import ArchiveModeSelector from '@/components/ArchiveModeSelector.vue'
 import type { LocalCronForm } from '@/utils/crontabForm'
 
 const props = defineProps<{
@@ -28,6 +30,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void
   (e: 'submit'): void
+  (e: 'validate'): void
 }>()
 
 const visibleProxy = computed({
@@ -40,6 +43,11 @@ const formErrors = toRef(props, 'formErrors')
 const accountOptions = computed(() => [...props.accountOptions])
 const formAlbumOptions = computed(() => [...props.formAlbumOptions])
 const timeZones = computed(() => [...props.timeZones])
+
+// 处理验证事件
+function handleValidate() {
+  emit('validate')
+}
 
 const showExpressionHelp = ref(false)
 const showCronHelp = ref(false)
@@ -318,6 +326,71 @@ onBeforeUnmount(() => {
               用于写入 EXIF 的时区；仅在开启“填充 EXIF 时间”后生效。
             </div>
           </div>
+
+          <!-- 同步配置面板 -->
+          <Panel header="同步配置" toggleable collapsed class="mt-4">
+            <div class="space-y-4">
+              <div class="flex items-center gap-2 text-sm text-slate-600">
+                <ToggleSwitch v-model="form.config.enableSync" />
+                <span class="font-medium">启用同步功能</span>
+              </div>
+              
+              <div v-if="form.config.enableSync" class="space-y-4">
+                <SyncModeSelector v-model="form.config.syncMode" />
+                
+                <div class="space-y-2">
+                  <label class="block text-xs font-medium text-slate-500">同步文件夹名称</label>
+                  <InputText
+                    v-model="form.config.syncFolder"
+                    placeholder="sync"
+                    class="w-full"
+                  />
+                  <div class="text-[10px] text-slate-400">
+                    相对于保存路径的文件夹名称，用于存放同步的照片
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Panel>
+
+          <!-- 归档配置面板 -->
+          <Panel header="归档配置" toggleable collapsed class="mt-4">
+            <div class="space-y-4">
+              <ArchiveModeSelector
+                v-model="form.config.archiveMode"
+                v-model:archiveDays="form.config.archiveDays"
+                v-model:cloudSpaceThreshold="form.config.cloudSpaceThreshold"
+                :archiveDaysError="formErrors.archiveDays"
+                :cloudSpaceThresholdError="formErrors.cloudSpaceThreshold"
+                @validate="handleValidate"
+              />
+              
+              <div v-if="form.config.archiveMode !== 'DISABLED'" class="space-y-4 pt-4 border-t border-slate-200">
+                <div class="space-y-2">
+                  <label class="block text-xs font-medium text-slate-500">归档文件夹名称</label>
+                  <InputText
+                    v-model="form.config.backupFolder"
+                    placeholder="backup"
+                    class="w-full"
+                  />
+                  <div class="text-[10px] text-slate-400">
+                    相对于保存路径的文件夹名称，用于存放归档的照片
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="flex items-center gap-2 text-xs text-slate-600">
+                    <ToggleSwitch v-model="form.config.deleteCloudAfterArchive" />
+                    <span>归档后删除云端</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-xs text-slate-600">
+                    <ToggleSwitch v-model="form.config.confirmBeforeArchive" />
+                    <span>归档前需要确认</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Panel>
 
           <Panel header="并发与性能" toggleable collapsed class="mt-4">
             <div class="text-[10px] text-slate-400 mb-4">

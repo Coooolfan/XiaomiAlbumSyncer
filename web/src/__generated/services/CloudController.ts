@@ -1,10 +1,9 @@
 import type {Executor} from '../';
+import type {CloudSpaceInfo} from '../model/static/';
 
 /**
  * 云端控制器
- * 
- * 提供云端空间相关的API接口
- * 所有接口均需要用户登录认证
+ * 提供云端相关功能 API
  */
 export class CloudController {
     
@@ -13,11 +12,10 @@ export class CloudController {
     /**
      * 获取云端空间使用情况
      * 
-     * 获取指定小米账号的云端空间使用情况
-     * 
      * @parameter {CloudControllerOptions['getCloudSpace']} options
-     * - accountId 小米账号ID
-     * @return 返回云端空间信息
+     * - accountId 账号 ID
+     * @return 云端空间信息
+     * 
      */
     readonly getCloudSpace: (options: CloudControllerOptions['getCloudSpace']) => Promise<
         CloudSpaceInfo
@@ -30,16 +28,9 @@ export class CloudController {
 
 export type CloudControllerOptions = {
     'getCloudSpace': {
+        /**
+         * 账号 ID
+         */
         readonly accountId: number
     }
-}
-
-/**
- * 云端空间信息
- */
-export interface CloudSpaceInfo {
-    readonly totalQuota: number
-    readonly used: number
-    readonly galleryUsed: number
-    readonly usagePercent: number
 }

@@ -189,6 +189,7 @@ watch(albums, () => {
       :account-options="accountOptions"
       :form-album-options="formAlbumOptions"
       @submit="submitCron"
+      @validate="validateCronForm"
     />
 
     <ExecutionDialogs

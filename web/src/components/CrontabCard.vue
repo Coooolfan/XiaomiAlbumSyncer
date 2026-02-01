@@ -89,7 +89,8 @@ async function fetchStats() {
     currentStats.value = await api.crontabController.getCrontabCurrentStats({
       crontabId: props.crontab.id,
     })
-    if (!currentStats.value.ts) {
+    // 只有在没有统计信息且超过5秒没有刷新时才触发刷新，避免频繁刷新
+    if (!currentStats.value.ts && Date.now() - lastFetchTime.value > 5000) {
       emit('refresh')
     }
     lastFetchTime.value = Date.now()
@@ -98,6 +99,7 @@ async function fetchStats() {
     const msg = e instanceof Error ? e.message : String(e)
     if (msg.includes('没有正在运行')) {
       stopPolling()
+      // 任务完成时才刷新一次
       emit('refresh')
     }
   }
@@ -107,10 +109,12 @@ function startPolling() {
   if (polling.value) return
   polling.value = true
   fetchStats()
-  pollTimer = window.setInterval(fetchStats, 1000)
+  // 降低轮询频率：从1秒改为3秒，减少服务器压力和页面闪烁
+  pollTimer = window.setInterval(fetchStats, 3000)
+  // 降低时间更新频率：从200ms改为1秒
   nowTimer = window.setInterval(() => {
     now.value = Date.now()
-  }, 200)
+  }, 1000)
 }
 
 function stopPolling() {

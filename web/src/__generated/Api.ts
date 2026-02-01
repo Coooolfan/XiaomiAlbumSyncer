@@ -1,12 +1,12 @@
 import type {Executor} from './';
 import {
-    AlbumsController,
-    ArchiveController,
-    AssetController,
-    CloudController,
+    AlbumsController, 
+    ArchiveController, 
+    AssetController, 
+    CloudController, 
     CrontabController, 
     PasskeyController, 
-    SyncController,
+    SyncController, 
     SystemConfigController, 
     TokenController, 
     XiaomiAccountController

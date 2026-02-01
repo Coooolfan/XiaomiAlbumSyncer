@@ -203,6 +203,14 @@ class CrontabController(private val service: CrontabService) {
             albumIds()
             albums { allScalarFields() }
         }
+
+        val CRONTAB_WITH_ALBUMS_AND_ACCOUNT_FETCHER = newFetcher(Crontab::class).by {
+            allScalarFields()
+            accountId()
+            account { allScalarFields() }
+            albumIds()
+            albums { allScalarFields() }
+        }
     }
 }
 

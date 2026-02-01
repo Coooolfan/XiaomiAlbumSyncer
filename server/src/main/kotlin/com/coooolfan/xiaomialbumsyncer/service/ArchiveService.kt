@@ -44,6 +44,11 @@ class ArchiveService(
     class ArchiveNotConfirmedException(message: String) : Exception(message)
 
     /**
+     * 归档已禁用异常
+     */
+    class ArchiveDisabledException(message: String) : Exception(message)
+
+    /**
      * 文件完整性异常
      */
     class FileIntegrityException(message: String) : Exception(message)
@@ -148,6 +153,14 @@ class ArchiveService(
             ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
         return when (crontab.config.archiveMode) {
+            ArchiveMode.DISABLED -> {
+                // 归档已关闭，返回空计划
+                ArchivePlan(
+                    archiveBeforeDate = LocalDate.now(),
+                    assetsToArchive = emptyList(),
+                    estimatedFreedSpace = 0L
+                )
+            }
             ArchiveMode.TIME -> calculateTimeBasedArchive(crontabId)
             ArchiveMode.SPACE -> calculateSpaceBasedArchive(crontabId)
         }
@@ -167,6 +180,13 @@ class ArchiveService(
 
         val config = crontab.config
 
+        // 检查归档模式
+        if (config.archiveMode == ArchiveMode.DISABLED) {
+            // 归档已关闭，不执行任何操作
+            log.info("归档功能已关闭，定时任务 ID=$crontabId，跳过归档操作")
+            throw ArchiveDisabledException("归档功能已关闭")
+        }
+
         if (!config.enableArchive) {
             throw IllegalStateException("定时任务未启用归档功能: $crontabId")
         }
@@ -178,6 +198,7 @@ class ArchiveService(
 
         // 生成归档计划
         val plan = when (config.archiveMode) {
+            ArchiveMode.DISABLED -> throw IllegalStateException("Should not reach here")
             ArchiveMode.TIME -> calculateTimeBasedArchive(crontabId)
             ArchiveMode.SPACE -> calculateSpaceBasedArchive(crontabId)
         }
