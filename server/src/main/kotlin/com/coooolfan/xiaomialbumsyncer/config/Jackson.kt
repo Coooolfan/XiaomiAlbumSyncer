@@ -30,6 +30,12 @@ class Jackson {
 
         serializer.deserializeConfig.mapper.registerModule(immutableModule)
         serializer.deserializeConfig.mapper.registerModule(kotlinModule)
+        
+        // 配置忽略未知字段，以支持向后兼容（例如删除 enableSync 和 enableArchive 字段）
+        serializer.deserializeConfig.mapper.configure(
+            com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+            false
+        )
 
         serializer.addEncoder(Instant::class.java) { it.toString() }
         serializer.addDecoder(Instant::class.java) { Instant.parse(it) }
