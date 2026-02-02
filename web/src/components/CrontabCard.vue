@@ -36,6 +36,30 @@ const albumMap = computed<Record<string, string>>(() => {
   return map
 })
 
+// 同步模式显示文本和样式
+const syncModeInfo = computed(() => {
+  const mode = props.crontab.config?.syncMode
+  if (mode === 'ADD_ONLY') {
+    return { text: '仅新增', severity: 'secondary' as const }
+  } else if (mode === 'SYNC_ALL_CHANGES') {
+    return { text: '完全同步', severity: 'success' as const }
+  }
+  return { text: '未知模式', severity: 'secondary' as const }
+})
+
+// 归档模式显示文本和样式
+const archiveModeInfo = computed(() => {
+  const mode = props.crontab.config?.archiveMode
+  if (mode === 'DISABLED') {
+    return { text: '关闭归档', severity: 'secondary' as const }
+  } else if (mode === 'TIME') {
+    return { text: '根据时间归档', severity: 'success' as const }
+  } else if (mode === 'SPACE') {
+    return { text: '根据空间归档', severity: 'success' as const }
+  }
+  return { text: '关闭归档', severity: 'secondary' as const }
+})
+
 function formatTime(t?: string) {
   if (!t) return '-'
   try {
@@ -297,6 +321,8 @@ onUnmounted(() => {
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
+            <Tag :severity="syncModeInfo.severity" :value="syncModeInfo.text" />
+            <Tag :severity="archiveModeInfo.severity" :value="archiveModeInfo.text" />
             <Tag
               :severity="crontab.config?.downloadImages ? 'success' : 'secondary'"
               :value="crontab.config?.downloadImages ? '下载照片' : '不下载照片'"
