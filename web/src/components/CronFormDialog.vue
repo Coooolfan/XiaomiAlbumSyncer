@@ -483,15 +483,9 @@ onBeforeUnmount(() => {
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="flex items-center gap-2 text-xs text-slate-600">
-                  <ToggleSwitch v-model="form.config.deleteCloudAfterArchive" />
-                  <span>归档后删除云端</span>
-                </div>
-                <div class="flex items-center gap-2 text-xs text-slate-600">
-                  <ToggleSwitch v-model="form.config.confirmBeforeArchive" />
-                  <span>归档前需要确认</span>
-                </div>
+              <div class="flex items-center gap-2 text-xs text-slate-600">
+                <ToggleSwitch v-model="form.config.deleteCloudAfterArchive" />
+                <span>归档后删除云端</span>
               </div>
             </div>
           </div>
