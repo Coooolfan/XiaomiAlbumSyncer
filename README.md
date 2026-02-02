@@ -1,5 +1,7 @@
 # <img src="./static/xiaomi-album-syncer-logo.png" alt="logo" width="20rem"> Xiaomi Album Syncer
 
+[![GitHub Stars](https://img.shields.io/github/stars/Coooolfan/XiaomiAlbumSyncer?style=flat)](https://github.com/Coooolfan/XiaomiAlbumSyncer/stargazers)[![Docker Pulls](https://img.shields.io/docker/pulls/coolfan1024/xiaomi-album-syncer?style=flat)](https://hub.docker.com/r/coolfan1024/xiaomi-album-syncer)
+
 发了 **issues** 记得常回来看看有没有回复，或者 >>>>> **[QQ 群聊：1059332701](https://qm.qq.com/q/H2trW6JWM4)**
 
 ![banner](./static/banner.avif)
