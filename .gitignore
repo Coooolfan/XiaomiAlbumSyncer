@@ -36,3 +36,6 @@ logs/
 /server/src/main/resources/static/
 /download/
 /db/
+
+# 调试目录
+/debug/
