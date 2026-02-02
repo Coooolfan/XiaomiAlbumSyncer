@@ -1050,6 +1050,17 @@
             "org.babyfish.jimmer.sql.kt.KSqlClient",
             "com.coooolfan.xiaomialbumsyncer.utils.SingleStagePatch",
             "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline",
+            "com.coooolfan.xiaomialbumsyncer.service.SyncService",
+            "java.util.concurrent.Executor"
+          ]
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.noear.solon.scheduling.scheduled.manager.IJobManager",
+            "org.babyfish.jimmer.sql.kt.KSqlClient",
+            "com.coooolfan.xiaomialbumsyncer.utils.SingleStagePatch",
+            "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline",
             "java.util.concurrent.Executor"
           ]
         },
@@ -1063,7 +1074,19 @@
           ]
         },
         {
+          "name": "access$getLog$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"
+          ]
+        },
+        {
           "name": "access$getPipeline$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"
+          ]
+        },
+        {
+          "name": "access$getSyncService$p",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"
           ]
@@ -1547,6 +1570,54 @@
       "type": "com.coooolfan.xiaomialbumsyncer.controller.AlbumsController$Companion"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.ArchiveController",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.ArchiveService"
+          ]
+        },
+        {
+          "name": "access$getArchiveService$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.controller.ArchiveController"
+          ]
+        },
+        {
+          "name": "executeArchive",
+          "parameterTypes": [
+            "long",
+            "com.coooolfan.xiaomialbumsyncer.controller.ExecuteArchiveRequest"
+          ]
+        },
+        {
+          "name": "getArchiveDetails",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "getArchiveRecords",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "previewArchive",
+          "parameterTypes": [
+            "long"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.ArchiveController$Companion"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.ArchiveController$executeArchive$1"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.AssetController",
       "allDeclaredFields": true,
       "methods": [
@@ -1584,6 +1655,23 @@
       "type": "com.coooolfan.xiaomialbumsyncer.controller.AssetController$Companion"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.CloudController",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"
+          ]
+        },
+        {
+          "name": "getCloudSpace",
+          "parameterTypes": [
+            "long"
+          ]
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.CrontabController",
       "allDeclaredFields": true,
       "methods": [
@@ -1592,6 +1680,10 @@
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.service.CrontabService"
           ]
+        },
+        {
+          "name": "access$getCRONTAB_WITH_ALBUMS_AND_ACCOUNT_FETCHER$cp",
+          "parameterTypes": []
         },
         {
           "name": "access$getCRONTAB_WITH_ALBUMS_FETCHER$cp",
@@ -1689,6 +1781,15 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.ExecuteArchiveRequest"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.ExecuteArchiveResponse"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.ExecuteSyncResponse"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.IsInitResponse",
       "allDeclaredFields": true,
       "methods": [
@@ -1772,6 +1873,53 @@
           ]
         }
       ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.SyncController",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.SyncService"
+          ]
+        },
+        {
+          "name": "access$getSyncService$p",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.controller.SyncController"
+          ]
+        },
+        {
+          "name": "detectChanges",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "executeSync",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "getSyncRecords",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "getSyncStatus",
+          "parameterTypes": [
+            "long"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.SyncController$Companion"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.SyncController$executeSync$1"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.SystemConfigController",
@@ -2395,6 +2543,181 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.AlbumTimelineKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetail"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetail$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailDraft"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailDraft$$",
+      "fields": [
+        {
+          "name": "INSTANCE"
+        }
+      ],
+      "methods": [
+        {
+          "name": "getType",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailDraft$$$DraftImpl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailDraft$$$Impl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailDraft$$$Implementor"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailDraft$$$Implementor$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailDraft$Builder"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailDraftKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailFetcherDsl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailFetcherKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailProps"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailProps$ARCHIVE_RECORD$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailProps$ARCHIVE_RECORD_ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailProps$ASSET$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailProps$ASSET_ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailProps$ERROR_MESSAGE$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailProps$ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailProps$IS_DELETED_FROM_CLOUD$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailProps$IS_MOVED_TO_BACKUP$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailProps$SOURCE_PATH$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailProps$TARGET_PATH$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveDetailPropsKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveMode"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecord"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecord$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordDraft"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordDraft$$",
+      "fields": [
+        {
+          "name": "INSTANCE"
+        }
+      ],
+      "methods": [
+        {
+          "name": "getType",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordDraft$$$DraftImpl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordDraft$$$Impl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordDraft$$$Implementor"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordDraft$$$Implementor$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordDraft$Builder"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordDraftKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordFetcherDsl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordFetcherKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordProps"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordProps$ARCHIVED_COUNT$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordProps$ARCHIVE_BEFORE_DATE$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordProps$ARCHIVE_MODE$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordProps$ARCHIVE_TIME$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordProps$CRONTAB$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordProps$CRONTAB_ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordProps$DETAILS$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordProps$ERROR_MESSAGE$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordProps$FREED_SPACE_BYTES$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordProps$ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordProps$STATUS$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveRecordPropsKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.ArchiveStatus"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.Asset",
@@ -3214,7 +3537,62 @@
           ]
         },
         {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
+            "boolean",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
+            "int",
+            "int",
+            "int",
+            "int",
+            "int",
+            "boolean",
+            "java.lang.String",
+            "com.coooolfan.xiaomialbumsyncer.model.SyncMode",
+            "java.lang.String",
+            "com.coooolfan.xiaomialbumsyncer.model.ArchiveMode",
+            "int",
+            "int",
+            "java.lang.String",
+            "boolean",
+            "boolean"
+          ]
+        },
+        {
+          "name": "getArchiveDays",
+          "parameterTypes": []
+        },
+        {
+          "name": "getArchiveMode",
+          "parameterTypes": []
+        },
+        {
+          "name": "getBackupFolder",
+          "parameterTypes": []
+        },
+        {
           "name": "getCheckSha1",
+          "parameterTypes": []
+        },
+        {
+          "name": "getCloudSpaceThreshold",
+          "parameterTypes": []
+        },
+        {
+          "name": "getConfirmBeforeArchive",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDeleteCloudAfterArchive",
           "parameterTypes": []
         },
         {
@@ -3271,6 +3649,14 @@
         },
         {
           "name": "getSkipExistingFile",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSyncFolder",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSyncMode",
           "parameterTypes": []
         },
         {
@@ -4308,6 +4694,178 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialPropsKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncMode"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncOperation"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecord"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecord$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetail"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetail$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailDraft"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailDraft$$",
+      "fields": [
+        {
+          "name": "INSTANCE"
+        }
+      ],
+      "methods": [
+        {
+          "name": "getType",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailDraft$$$DraftImpl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailDraft$$$Impl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailDraft$$$Implementor"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailDraft$$$Implementor$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailDraft$Builder"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailDraftKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailFetcherDsl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailFetcherKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailProps"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailProps$ASSET$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailProps$ASSET_ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailProps$ERROR_MESSAGE$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailProps$FILE_PATH$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailProps$ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailProps$IS_COMPLETED$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailProps$OPERATION$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailProps$SYNC_RECORD$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailProps$SYNC_RECORD_ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDetailPropsKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDraft"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDraft$$",
+      "fields": [
+        {
+          "name": "INSTANCE"
+        }
+      ],
+      "methods": [
+        {
+          "name": "getType",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDraft$$$DraftImpl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDraft$$$Impl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDraft$$$Implementor"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDraft$$$Implementor$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDraft$Builder"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordDraftKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordFetcherDsl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordFetcherKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordProps"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordProps$ADDED_COUNT$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordProps$CRONTAB$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordProps$CRONTAB_ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordProps$DELETED_COUNT$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordProps$DETAILS$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordProps$ERROR_MESSAGE$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordProps$ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordProps$STATUS$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordProps$SYNC_TIME$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordProps$UPDATED_COUNT$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncRecordPropsKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SyncStatus"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.SystemConfig",
@@ -5621,6 +6179,63 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.ArchiveService",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.KSqlClient",
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi",
+            "com.coooolfan.xiaomialbumsyncer.service.FileService"
+          ]
+        },
+        {
+          "name": "calculateSpaceBasedArchive",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "calculateTimeBasedArchive",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "executeArchive",
+          "parameterTypes": [
+            "long",
+            "boolean",
+            "kotlin.coroutines.Continuation"
+          ]
+        },
+        {
+          "name": "previewArchive",
+          "parameterTypes": [
+            "long"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.ArchiveService$ArchiveDisabledException"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.ArchiveService$ArchiveNotConfirmedException"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.ArchiveService$ArchivePlan"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.ArchiveService$Companion"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.ArchiveService$FileIntegrityException"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.ArchiveService$WhenMappings"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.service.AssetService",
       "allDeclaredFields": true,
       "methods": [
@@ -5935,6 +6550,84 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.FileService",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        },
+        {
+          "name": "batchDeleteFiles",
+          "parameterTypes": [
+            "java.util.List"
+          ]
+        },
+        {
+          "name": "batchMoveFiles",
+          "parameterTypes": [
+            "java.util.List"
+          ]
+        },
+        {
+          "name": "calculateSha1",
+          "parameterTypes": [
+            "java.nio.file.Path"
+          ]
+        },
+        {
+          "name": "copyFile",
+          "parameterTypes": [
+            "java.nio.file.Path",
+            "java.nio.file.Path",
+            "boolean"
+          ]
+        },
+        {
+          "name": "copyFile$default",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.FileService",
+            "java.nio.file.Path",
+            "java.nio.file.Path",
+            "boolean",
+            "int",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "deleteFile",
+          "parameterTypes": [
+            "java.nio.file.Path"
+          ]
+        },
+        {
+          "name": "moveFile",
+          "parameterTypes": [
+            "java.nio.file.Path",
+            "java.nio.file.Path",
+            "boolean"
+          ]
+        },
+        {
+          "name": "moveFile$default",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.FileService",
+            "java.nio.file.Path",
+            "java.nio.file.Path",
+            "boolean",
+            "int",
+            "java.lang.Object"
+          ]
+        },
+        {
+          "name": "verifySha1",
+          "parameterTypes": [
+            "java.nio.file.Path",
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.service.HasPasskeysResponse",
       "methods": [
         {
@@ -6205,6 +6898,70 @@
           "parameterTypes": []
         }
       ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.SyncService",
+      "fields": [
+        {
+          "name": "archiveService"
+        },
+        {
+          "name": "assetService"
+        },
+        {
+          "name": "crontabService"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.KSqlClient",
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi",
+            "com.coooolfan.xiaomialbumsyncer.service.FileService"
+          ]
+        },
+        {
+          "name": "detectChanges",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "detectSyncChanges",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "executeSync",
+          "parameterTypes": [
+            "long",
+            "kotlin.coroutines.Continuation"
+          ]
+        },
+        {
+          "name": "getSyncStatus",
+          "parameterTypes": [
+            "long"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.SyncService$ChangeSummary"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.SyncService$SyncStatusInfo"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.SyncService$WhenMappings"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.SyncService$detectSyncChanges$1$albumWithAccountId$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.SyncService$executeSync$1"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.service.SystemConfigService",
@@ -6539,6 +7296,77 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.validation.ConfigValidator",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        },
+        {
+          "name": "validateArchiveMode",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabConfig"
+          ]
+        },
+        {
+          "name": "validateConfig",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabConfig"
+          ]
+        },
+        {
+          "name": "validateSyncMode",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabConfig"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.validation.ValidationResult"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.validation.ValidationResult$Companion"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.CloudSpaceInfo",
+      "methods": [
+        {
+          "name": "getGalleryUsed",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTotalQuota",
+          "parameterTypes": []
+        },
+        {
+          "name": "getUsagePercent",
+          "parameterTypes": []
+        },
+        {
+          "name": "getUsed",
+          "parameterTypes": []
+        },
+        {
+          "name": "getUsedDetail",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.SpaceUsageItem",
+      "methods": [
+        {
+          "name": "getSize",
+          "parameterTypes": []
+        },
+        {
+          "name": "getText",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager",
       "allDeclaredFields": true,
       "methods": [
@@ -6626,6 +7454,20 @@
           ]
         },
         {
+          "name": "batchDeleteAssets",
+          "parameterTypes": [
+            "long",
+            "java.util.List"
+          ]
+        },
+        {
+          "name": "deleteAsset",
+          "parameterTypes": [
+            "long",
+            "long"
+          ]
+        },
+        {
           "name": "downloadAsset",
           "parameterTypes": [
             "long",
@@ -6680,6 +7522,12 @@
             "kotlin.jvm.functions.Function1",
             "int",
             "java.lang.Object"
+          ]
+        },
+        {
+          "name": "getCloudSpace",
+          "parameterTypes": [
+            "long"
           ]
         },
         {
