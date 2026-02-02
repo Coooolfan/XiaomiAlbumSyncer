@@ -56,7 +56,7 @@ function getSyncStats(history: any) {
   if (!syncTimeline || !syncTimeline.indexHash.startsWith('SYNC:')) return null
   
   // 解析 indexHash 中的同步统计信息
-  // 格式: "SYNC:syncMode:addedCount:deletedCount:updatedCount" 或 "SYNC:syncMode:0:0:0:ERROR:errorMessage"
+  // 格式: "SYNC:syncMode:addedCount:deletedCount:updatedCount:archivedCount" 或 "SYNC:syncMode:0:0:0:0:ERROR:errorMessage"
   const parts = syncTimeline.indexHash.split(':')
   if (parts.length < 5) return null
   
@@ -64,13 +64,15 @@ function getSyncStats(history: any) {
   const addedCount = parseInt(parts[2]) || 0
   const deletedCount = parseInt(parts[3]) || 0
   const updatedCount = parseInt(parts[4]) || 0
+  const archivedCount = parseInt(parts[5]) || 0
   
   const result = {
     syncMode,
     addedCount,
     deletedCount,
     updatedCount,
-    error: parts[5] === 'ERROR' ? parts.slice(6).join(':') : null
+    archivedCount,
+    error: parts[6] === 'ERROR' ? parts.slice(7).join(':') : null
   }
   
   return result
@@ -88,6 +90,7 @@ function formatSyncStats(syncStats: any) {
   if (syncStats.addedCount > 0) parts.push(`${syncStats.addedCount}新增`)
   if (syncStats.deletedCount > 0) parts.push(`${syncStats.deletedCount}删除`)
   if (syncStats.updatedCount > 0) parts.push(`${syncStats.updatedCount}修改`)
+  if (syncStats.archivedCount > 0) parts.push(`${syncStats.archivedCount}归档`)
   
   if (parts.length === 0) {
     return '无变化'
