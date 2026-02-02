@@ -2,6 +2,10 @@ import type {Executor} from '../';
 import type {SyncRecordDto} from '../model/dto/';
 import type {ExecuteSyncResponse, SyncService_ChangeSummary, SyncService_SyncStatusInfo} from '../model/static/';
 
+// 导出类型别名以便外部使用
+export type SyncStatusInfo = SyncService_SyncStatusInfo;
+export type ChangeSummary = SyncService_ChangeSummary;
+
 /**
  * 同步控制器
  * 提供云端到本地的同步功能 API

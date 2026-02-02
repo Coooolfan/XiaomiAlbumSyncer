@@ -140,7 +140,7 @@ onMounted(async () => {
   
   // 自动选择第一个账号
   if (accounts.value.length > 0) {
-    selectedAccountId.value = accounts.value[0].id
+    selectedAccountId.value = accounts.value[0]!.id
   }
 })
 

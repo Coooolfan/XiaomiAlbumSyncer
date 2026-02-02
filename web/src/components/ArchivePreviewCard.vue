@@ -142,13 +142,13 @@ defineExpose({
           <div class="space-y-1 max-h-60 overflow-y-auto">
             <div
               v-for="asset in archivePlan.assetsToArchive.slice(0, 10)"
-              :key="asset.assetId"
+              :key="asset.id"
               class="flex items-center justify-between text-xs py-1"
             >
               <span class="text-slate-600 truncate flex-1">{{ asset.fileName }}</span>
               <div class="flex items-center gap-2 ml-2">
-                <span class="text-slate-400">{{ formatSize(asset.fileSize) }}</span>
-                <span class="text-slate-400">{{ formatDate(asset.createTime) }}</span>
+                <span class="text-slate-400">{{ formatSize(asset.size ?? 0) }}</span>
+                <span class="text-slate-400">{{ formatDate(asset.dateTaken ?? '') }}</span>
               </div>
             </div>
           </div>
