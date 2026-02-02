@@ -483,9 +483,20 @@ onBeforeUnmount(() => {
                 </div>
               </div>
 
-              <div class="flex items-center gap-2 text-xs text-slate-600">
-                <ToggleSwitch v-model="form.config.deleteCloudAfterArchive" />
-                <span>归档后删除云端</span>
+              <div class="space-y-2">
+                <div class="flex items-center gap-2 text-xs text-slate-600">
+                  <ToggleSwitch v-model="form.config.deleteCloudAfterArchive" />
+                  <span>归档后删除云端</span>
+                </div>
+                <div
+                  v-if="form.config.deleteCloudAfterArchive"
+                  class="flex items-start gap-2 p-2 bg-amber-50 border border-amber-200 rounded text-[10px] text-amber-700"
+                >
+                  <i class="pi pi-exclamation-triangle text-amber-500 mt-0.5" />
+                  <span>
+                    警告：启用此选项后，归档的照片将从小米云端永久删除，请确保本地备份安全可靠
+                  </span>
+                </div>
               </div>
             </div>
           </div>
