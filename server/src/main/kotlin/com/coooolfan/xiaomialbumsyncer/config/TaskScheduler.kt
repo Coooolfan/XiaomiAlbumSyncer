@@ -101,11 +101,6 @@ class TaskScheduler(
                 // 同步功能始终启用，直接使用 SyncService
                 log.info("定时任务[${crontab.id}:${crontab.name}]使用同步服务执行")
                 syncService.executeSync(crontab.id)
-                } else {
-                    // 未启用同步功能时，使用原来的下载流程
-                    log.info("定时任务[${crontab.id}:${crontab.name}]使用传统下载流程执行")
-                    pipeline.execute(crontab)
-                }
             }
         } finally {
             runningCrontabs.remove(crontab.id)
