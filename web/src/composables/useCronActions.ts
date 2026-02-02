@@ -70,18 +70,18 @@ export function useCronActions(options: UseCronActionsOptions) {
     if (!validateCronForm()) return
     saving.value = true
     try {
-      // 在保存前自动同步 enableArchive 和 archiveMode 字段
+      // 在保存前自动同步 archiveMode 字段
       const configToSave = { ...cronForm.value.config }
       
-      // enableSync 始终为 true
-      configToSave.enableSync = true
-      
-      // 根据 archiveMode 自动设置 enableArchive
+      // 根据 archiveMode 自动设置 enableArchive（用于向后兼容旧版本）
       if (configToSave.archiveMode !== 'DISABLED') {
         configToSave.enableArchive = true
       } else {
         configToSave.enableArchive = false
       }
+      
+      // enableSync 始终为 true（用于向后兼容旧版本）
+      configToSave.enableSync = true
       
       if (isEditing.value && editingId.value !== null) {
         await crontabsStore.updateCrontab(editingId.value, {
@@ -112,18 +112,18 @@ export function useCronActions(options: UseCronActionsOptions) {
   async function toggleEnabled(row: Crontab) {
     updatingRow.value = row.id
     try {
-      // 在保存前自动同步 enableArchive 和 archiveMode 字段
+      // 在保存前自动同步 archiveMode 字段
       const configToSave = { ...row.config }
       
-      // enableSync 始终为 true
-      configToSave.enableSync = true
-      
-      // 根据 archiveMode 自动设置 enableArchive
+      // 根据 archiveMode 自动设置 enableArchive（用于向后兼容旧版本）
       if (configToSave.archiveMode !== 'DISABLED') {
         configToSave.enableArchive = true
       } else {
         configToSave.enableArchive = false
       }
+      
+      // enableSync 始终为 true（用于向后兼容旧版本）
+      configToSave.enableSync = true
       
       await crontabsStore.updateCrontab(row.id, {
         name: row.name,

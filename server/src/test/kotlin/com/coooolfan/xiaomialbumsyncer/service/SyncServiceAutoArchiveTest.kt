@@ -19,10 +19,9 @@ class SyncServiceAutoArchiveTest {
         // 实际的测试需要更完整的 mock 设置
         
         // 测试场景：
-        // 1. 启用了归档功能（enableArchive = true）
-        // 2. 归档模式为 TIME（不是 DISABLED）
-        // 3. 不需要确认（confirmBeforeArchive = false）
-        // 4. 有需要归档的资产
+        // 1. 归档模式为 TIME（不是 DISABLED）
+        // 2. 不需要确认（confirmBeforeArchive = false）
+        // 3. 有需要归档的资产
         
         // 预期结果：
         // 1. 同步完成后会调用 archiveService.previewArchive()
@@ -35,12 +34,11 @@ class SyncServiceAutoArchiveTest {
     @Test
     fun `归档模式为 DISABLED 时不应该执行自动归档`() = runBlocking {
         // 测试场景：
-        // 1. 启用了归档功能（enableArchive = true）
-        // 2. 归档模式为 DISABLED
+        // 1. 归档模式为 DISABLED
         
         // 预期结果：
         // 1. 同步完成后不会调用任何归档相关方法
-        // 2. 日志中应该记录"归档功能未启用或已禁用，跳过自动归档检查"
+        // 2. 日志中应该记录"归档模式为 DISABLED，跳过自动归档检查"
         
         assertTrue(true, "这是一个占位测试，实际测试需要完整的 mock 环境")
     }
@@ -48,10 +46,9 @@ class SyncServiceAutoArchiveTest {
     @Test
     fun `需要确认的归档不应该自动执行`() = runBlocking {
         // 测试场景：
-        // 1. 启用了归档功能（enableArchive = true）
-        // 2. 归档模式为 TIME
-        // 3. 需要确认（confirmBeforeArchive = true）
-        // 4. 有需要归档的资产
+        // 1. 归档模式为 TIME
+        // 2. 需要确认（confirmBeforeArchive = true）
+        // 3. 有需要归档的资产
         
         // 预期结果：
         // 1. 同步完成后会调用 archiveService.previewArchive()

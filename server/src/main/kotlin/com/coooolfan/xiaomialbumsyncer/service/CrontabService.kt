@@ -55,10 +55,8 @@ class CrontabService(private val sql: KSqlClient) {
         val crontab = sql.findById(Crontab::class, crontabId)
             ?: return CrontabCurrentStats() // Crontab 不存在
 
-        // 如果启用了同步功能，查询同步记录
-        if (crontab.config.enableSync) {
-            return getSyncCurrentStats(crontabId)
-        }
+        // 同步功能始终启用，直接查询同步记录
+        return getSyncCurrentStats(crontabId)
 
         // 传统下载任务的统计逻辑
         val runningCrontabHistory = sql.createQuery(CrontabHistory::class) {

@@ -61,31 +61,6 @@ class ConfigValidator {
     }
 
     /**
-     * 验证配置一致性
-     * 
-     * 检查 enableArchive 和 archiveMode 之间的一致性
-     * 
-     * @param config 定时任务配置
-     * @return 验证结果
-     */
-    fun validateConfigConsistency(config: CrontabConfig): ValidationResult {
-        // 如果 enableArchive 为 false，archiveMode 应该是 DISABLED
-        if (!config.enableArchive && config.archiveMode != ArchiveMode.DISABLED) {
-            logger.warn("配置不一致：enableArchive 为 false 但 archiveMode 不是 DISABLED，将自动修正")
-            // 这是一个警告，不是错误，因为我们会自动修正
-        }
-        
-        // 如果 archiveMode 是 DISABLED，enableArchive 应该是 false
-        if (config.archiveMode == ArchiveMode.DISABLED && config.enableArchive) {
-            logger.warn("配置不一致：archiveMode 为 DISABLED 但 enableArchive 为 true，将自动修正")
-            // 这是一个警告，不是错误，因为我们会自动修正
-        }
-        
-        logger.debug("配置一致性验证通过")
-        return ValidationResult.success()
-    }
-
-    /**
      * 验证完整的配置
      * 
      * 执行所有验证规则
@@ -106,38 +81,8 @@ class ConfigValidator {
             return archiveModeResult
         }
         
-        // 验证配置一致性
-        val consistencyResult = validateConfigConsistency(config)
-        if (!consistencyResult.isSuccess) {
-            return consistencyResult
-        }
-        
         logger.info("配置验证全部通过")
         return ValidationResult.success()
-    }
-
-    /**
-     * 自动修正配置不一致问题
-     * 
-     * @param config 原始配置
-     * @return 修正后的配置
-     */
-    fun autoCorrectConfig(config: CrontabConfig): CrontabConfig {
-        var correctedConfig = config
-        
-        // 如果 enableArchive 为 false，自动设置 archiveMode 为 DISABLED
-        if (!config.enableArchive && config.archiveMode != ArchiveMode.DISABLED) {
-            logger.info("自动修正：enableArchive 为 false，设置 archiveMode 为 DISABLED")
-            correctedConfig = correctedConfig.copy(archiveMode = ArchiveMode.DISABLED)
-        }
-        
-        // 如果 archiveMode 为 DISABLED，自动设置 enableArchive 为 false
-        if (config.archiveMode == ArchiveMode.DISABLED && config.enableArchive) {
-            logger.info("自动修正：archiveMode 为 DISABLED，设置 enableArchive 为 false")
-            correctedConfig = correctedConfig.copy(enableArchive = false)
-        }
-        
-        return correctedConfig
     }
 }
 

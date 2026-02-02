@@ -46,11 +46,6 @@ data class CrontabConfig(
     // ========== 同步配置 ==========
 
     /**
-     * 是否启用同步功能
-     */
-    val enableSync: Boolean = false,
-
-    /**
      * 同步模式
      * ADD_ONLY: 仅新增模式，只下载云端新增的文件到本地
      * SYNC_ALL_CHANGES: 同步所有变化模式，同步云端的新增、修改、删除到本地
@@ -66,17 +61,13 @@ data class CrontabConfig(
     // ========== 归档配置 ==========
 
     /**
-     * 是否启用归档功能
-     */
-    val enableArchive: Boolean = false,
-
-    /**
      * 归档模式
      * DISABLED: 关闭归档，不执行任何归档操作
      * TIME: 基于时间归档，归档超过指定天数的照片
      * SPACE: 基于空间阈值归档，当云端空间不足时自动归档旧照片
+     * 默认为 DISABLED
      */
-    val archiveMode: ArchiveMode = ArchiveMode.TIME,
+    val archiveMode: ArchiveMode = ArchiveMode.DISABLED,
 
     /**
      * 保留天数（时间模式）

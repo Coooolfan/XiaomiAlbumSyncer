@@ -237,10 +237,6 @@ class SyncService(
         val crontab = sql.findById(CRONTAB_WITH_ALBUMS_AND_ACCOUNT_FETCHER, crontabId)
             ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
-        if (!crontab.config.enableSync) {
-            throw IllegalStateException("定时任务未启用同步功能: $crontabId")
-        }
-
         // 记录同步模式
         log.info("同步模式: ${crontab.config.syncMode}")
 
@@ -362,8 +358,7 @@ class SyncService(
             log.info("同步任务完成，同步记录 ID=${syncRecord.id}，模式=${crontab.config.syncMode}，新增=${changes.addedAssets.size}，删除=${actualDeletedCount}，修改=${actualUpdatedCount}")
 
             // 同步完成后，检查是否需要自动归档
-            // 主要检查 archiveMode，enableArchive 字段主要用于向后兼容
-            log.info("检查自动归档条件：enableArchive=${crontab.config.enableArchive}, archiveMode=${crontab.config.archiveMode}")
+            log.info("检查自动归档条件：archiveMode=${crontab.config.archiveMode}")
             
             if (crontab.config.archiveMode != ArchiveMode.DISABLED) {
                 log.info("同步完成后检查自动归档，归档模式=${crontab.config.archiveMode}")

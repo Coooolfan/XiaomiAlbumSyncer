@@ -98,10 +98,9 @@ class TaskScheduler(
         }
         try {
             runBlocking(Dispatchers.IO) {
-                if (crontab.config.enableSync) {
-                    // 启用同步功能时，使用 SyncService
-                    log.info("定时任务[${crontab.id}:${crontab.name}]启用了同步功能，使用同步服务执行")
-                    syncService.executeSync(crontab.id)
+                // 同步功能始终启用，直接使用 SyncService
+                log.info("定时任务[${crontab.id}:${crontab.name}]使用同步服务执行")
+                syncService.executeSync(crontab.id)
                 } else {
                     // 未启用同步功能时，使用原来的下载流程
                     log.info("定时任务[${crontab.id}:${crontab.name}]使用传统下载流程执行")
