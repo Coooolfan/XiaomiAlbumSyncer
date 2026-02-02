@@ -123,15 +123,17 @@ class ArchiveService(
         // 获取云端空间使用情况
         val spaceInfo = xiaoMiApi.getCloudSpace(crontab.accountId)
 
-        // 计算需要释放的空间
+        // 计算需要释放的空间（基于总使用空间，而不是相册空间）
         val targetUsed = (spaceInfo.totalQuota * config.cloudSpaceThreshold / 100.0).toLong()
-        val needToFree = spaceInfo.galleryUsed - targetUsed
+        val needToFree = spaceInfo.used - targetUsed
 
         if (needToFree <= 0) {
             // 不需要归档
-            log.info("云端空间充足，无需归档")
+            log.info("云端空间充足，无需归档。当前使用率=${spaceInfo.usagePercent}%，阈值=${config.cloudSpaceThreshold}%")
             return ArchivePlan(LocalDate.now(), emptyList(), 0)
         }
+
+        log.info("云端空间不足，需要释放 $needToFree 字节。当前使用率=${spaceInfo.usagePercent}%，阈值=${config.cloudSpaceThreshold}%")
 
         // 获取已经成功归档的资产 ID 列表
         val archivedAssetIds = getArchivedAssetIds(crontabId).toSet()
