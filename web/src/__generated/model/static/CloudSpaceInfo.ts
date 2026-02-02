@@ -1,3 +1,5 @@
+import type {SpaceUsageItem} from './';
+
 /**
  * 云端空间使用情况信息
  */
@@ -18,4 +20,8 @@ export interface CloudSpaceInfo {
      * 使用百分比
      */
     readonly usagePercent: number;
+    /**
+     * 详细使用信息
+     */
+    readonly usedDetail: {readonly [key:string]: SpaceUsageItem};
 }

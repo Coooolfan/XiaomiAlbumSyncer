@@ -4,7 +4,7 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import { computed, ref } from 'vue'
 import { api } from '@/ApiInstance'
-import type { ArchivePlan } from '@/__generated/services/ArchiveController'
+import type { ArchiveService_ArchivePlan } from '@/__generated/model/static'
 
 const props = defineProps<{
   crontabId: number
@@ -14,7 +14,7 @@ const emit = defineEmits<{
   (e: 'execute', confirmed: boolean): void
 }>()
 
-const archivePlan = ref<ArchivePlan | null>(null)
+const archivePlan = ref<ArchiveService_ArchivePlan | null>(null)
 const loading = ref(false)
 const showConfirmDialog = ref(false)
 

@@ -1,6 +1,21 @@
 package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 
 /**
+ * 云端空间使用详情项
+ */
+data class SpaceUsageItem(
+    /**
+     * 使用空间（字节）
+     */
+    val size: Long,
+
+    /**
+     * 显示文本
+     */
+    val text: String
+)
+
+/**
  * 云端空间使用情况信息
  */
 data class CloudSpaceInfo(
@@ -22,5 +37,10 @@ data class CloudSpaceInfo(
     /**
      * 使用百分比
      */
-    val usagePercent: Int
+    val usagePercent: Int,
+
+    /**
+     * 详细使用信息
+     */
+    val usedDetail: Map<String, SpaceUsageItem>
 )

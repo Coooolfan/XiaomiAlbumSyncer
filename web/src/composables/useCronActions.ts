@@ -70,33 +70,17 @@ export function useCronActions(options: UseCronActionsOptions) {
     if (!validateCronForm()) return
     saving.value = true
     try {
-      // 在保存前自动同步 archiveMode 字段
-      const configToSave = { ...cronForm.value.config }
-
-      // 根据 archiveMode 自动设置 enableArchive（用于向后兼容旧版本）
-      if (configToSave.archiveMode !== 'DISABLED') {
-        configToSave.enableArchive = true
-      } else {
-        configToSave.enableArchive = false
-      }
-
-      // enableSync 始终为 true（用于向后兼容旧版本）
-      configToSave.enableSync = true
-
       if (isEditing.value && editingId.value !== null) {
         await crontabsStore.updateCrontab(editingId.value, {
           name: cronForm.value.name,
           description: cronForm.value.description,
           enabled: cronForm.value.enabled,
-          config: configToSave,
+          config: cronForm.value.config,
           albumIds: cronForm.value.albumIds,
         })
         toast.add({ severity: 'success', summary: '已更新', life: 1600 })
       } else {
-        await crontabsStore.createCrontab({
-          ...cronForm.value,
-          config: configToSave,
-        })
+        await crontabsStore.createCrontab(cronForm.value)
         toast.add({ severity: 'success', summary: '已创建', life: 1600 })
       }
       showCronDialog.value = false
@@ -112,24 +96,11 @@ export function useCronActions(options: UseCronActionsOptions) {
   async function toggleEnabled(row: Crontab) {
     updatingRow.value = row.id
     try {
-      // 在保存前自动同步 archiveMode 字段
-      const configToSave = { ...row.config }
-
-      // 根据 archiveMode 自动设置 enableArchive（用于向后兼容旧版本）
-      if (configToSave.archiveMode !== 'DISABLED') {
-        configToSave.enableArchive = true
-      } else {
-        configToSave.enableArchive = false
-      }
-
-      // enableSync 始终为 true（用于向后兼容旧版本）
-      configToSave.enableSync = true
-
       await crontabsStore.updateCrontab(row.id, {
         name: row.name,
         description: row.description,
         enabled: !row.enabled,
-        config: configToSave,
+        config: row.config,
         albumIds: row.albumIds,
       })
       toast.add({ severity: 'success', summary: '已更新', life: 1600 })

@@ -28,11 +28,9 @@ export function createDefaultCronConfig(defaultTz: string): CrontabConfig {
     exifProcessors: 2,
     fileTimeWorkers: 2,
     // 同步配置
-    enableSync: true,
     syncMode: 'ADD_ONLY',
     syncFolder: 'sync',
     // 归档配置
-    enableArchive: false,
     archiveMode: 'DISABLED',
     archiveDays: 30,
     cloudSpaceThreshold: 90,
@@ -79,11 +77,9 @@ export function mapCrontabToForm(item: Crontab, fallbackTz: string): LocalCronFo
       exifProcessors: item.config.exifProcessors ?? 2,
       fileTimeWorkers: item.config.fileTimeWorkers ?? 2,
       // 同步配置
-      enableSync: item.config.enableSync ?? true,
       syncMode: item.config.syncMode ?? 'ADD_ONLY',
       syncFolder: item.config.syncFolder ?? 'sync',
       // 归档配置
-      enableArchive: item.config.enableArchive ?? false,
       archiveMode: item.config.archiveMode ?? 'DISABLED',
       archiveDays: item.config.archiveDays ?? 30,
       cloudSpaceThreshold: item.config.cloudSpaceThreshold ?? 90,

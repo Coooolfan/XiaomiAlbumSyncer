@@ -22,6 +22,7 @@ export type {PasskeyRegisterStartRequest} from './PasskeyRegisterStartRequest';
 export type {PasskeyRegisterStartResponse} from './PasskeyRegisterStartResponse';
 export type {PasskeyUpdateNameRequest} from './PasskeyUpdateNameRequest';
 export type {PubKeyCredParam} from './PubKeyCredParam';
+export type {SpaceUsageItem} from './SpaceUsageItem';
 export type {SyncService_ChangeSummary} from './SyncService_ChangeSummary';
 export type {SyncService_SyncStatusInfo} from './SyncService_SyncStatusInfo';
 export type {SystemConfigFtqqKeyIsInitResponse} from './SystemConfigFtqqKeyIsInitResponse';

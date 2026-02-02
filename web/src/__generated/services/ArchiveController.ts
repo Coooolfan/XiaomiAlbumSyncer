@@ -2,9 +2,6 @@ import type {Executor} from '../';
 import type {ArchiveDetailDto, ArchiveRecordDto} from '../model/dto/';
 import type {ArchiveService_ArchivePlan, ExecuteArchiveRequest, ExecuteArchiveResponse} from '../model/static/';
 
-// 导出类型别名以便外部使用
-export type ArchivePlan = ArchiveService_ArchivePlan;
-
 /**
  * 归档控制器
  * 提供智能归档功能 API

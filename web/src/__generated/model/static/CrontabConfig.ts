@@ -20,10 +20,6 @@ export interface CrontabConfig {
     readonly downloadAudios: boolean;
     readonly expressionTargetPath: string;
     /**
-     * 是否启用同步功能
-     */
-    readonly enableSync: boolean;
-    /**
      * 同步模式
      * ADD_ONLY: 仅新增模式，只下载云端新增的文件到本地
      * SYNC_ALL_CHANGES: 同步所有变化模式，同步云端的新增、修改、删除到本地
@@ -35,14 +31,11 @@ export interface CrontabConfig {
      */
     readonly syncFolder: string;
     /**
-     * 是否启用归档功能
-     */
-    readonly enableArchive: boolean;
-    /**
      * 归档模式
      * DISABLED: 关闭归档，不执行任何归档操作
      * TIME: 基于时间归档，归档超过指定天数的照片
      * SPACE: 基于空间阈值归档，当云端空间不足时自动归档旧照片
+     * 默认为 DISABLED
      */
     readonly archiveMode: ArchiveMode;
     /**

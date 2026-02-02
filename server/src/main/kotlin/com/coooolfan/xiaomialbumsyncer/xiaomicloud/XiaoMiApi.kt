@@ -305,9 +305,28 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         val totalQuota = data.get("totalQuota")?.asLong() ?: 0L
         val used = data.get("used")?.asLong() ?: 0L
 
+        // 解析详细使用信息
+        val usedDetailNode = data.get("usedDetail")
+        val usedDetailMap = mutableMapOf<String, SpaceUsageItem>()
+        
+        if (usedDetailNode != null && usedDetailNode.isObject) {
+            usedDetailNode.fields().forEach { (key, value) ->
+                val size = value.get("size")?.asLong() ?: 0L
+                var text = value.get("text")?.asText() ?: key
+                
+                // 优化显示文本
+                text = when (text) {
+                    "桌面图标布局" -> "云备份"
+                    "Creation" -> "小米创作"
+                    else -> text
+                }
+                
+                usedDetailMap[key] = SpaceUsageItem(size, text)
+            }
+        }
+
         // 获取相册使用空间
-        val usedDetail = data.get("usedDetail")
-        val galleryUsed = usedDetail?.get("GalleryImage")?.get("size")?.asLong() ?: 0L
+        val galleryUsed = usedDetailMap["GalleryImage"]?.size ?: 0L
 
         // 计算使用百分比
         val usagePercent = if (totalQuota > 0) {
@@ -322,7 +341,8 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             totalQuota = totalQuota,
             used = used,
             galleryUsed = galleryUsed,
-            usagePercent = usagePercent
+            usagePercent = usagePercent,
+            usedDetail = usedDetailMap
         )
     }
 

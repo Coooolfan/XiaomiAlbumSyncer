@@ -4,7 +4,10 @@ import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import { computed, onMounted, ref } from 'vue'
 import { api } from '@/ApiInstance'
-import type { SyncStatusInfo, ChangeSummary } from '@/__generated/services/SyncController'
+import type {
+  SyncService_SyncStatusInfo,
+  SyncService_ChangeSummary,
+} from '@/__generated/model/static'
 
 const props = defineProps<{
   crontabId: number
@@ -14,8 +17,8 @@ const emit = defineEmits<{
   (e: 'execute'): void
 }>()
 
-const syncStatus = ref<SyncStatusInfo | null>(null)
-const changes = ref<ChangeSummary | null>(null)
+const syncStatus = ref<SyncService_SyncStatusInfo | null>(null)
+const changes = ref<SyncService_ChangeSummary | null>(null)
 const loading = ref(false)
 const detecting = ref(false)
 

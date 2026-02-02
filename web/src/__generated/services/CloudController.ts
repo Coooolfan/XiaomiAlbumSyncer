@@ -1,9 +1,6 @@
 import type {Executor} from '../';
 import type {CloudSpaceInfo} from '../model/static/';
 
-// 重新导出 CloudSpaceInfo 以便外部使用
-export type { CloudSpaceInfo };
-
 /**
  * 云端控制器
  * 提供云端相关功能 API
