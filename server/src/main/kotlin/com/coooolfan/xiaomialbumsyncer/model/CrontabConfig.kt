@@ -1,8 +1,10 @@
 package com.coooolfan.xiaomialbumsyncer.model
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.babyfish.jimmer.sql.Serialized
 
 @Serialized
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class CrontabConfig(
 
     // cron 表达式
