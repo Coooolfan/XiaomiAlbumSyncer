@@ -19,7 +19,22 @@ class DataSource {
     @Managed(index = 100)
     fun defaultDataSource(): DataSource {
         val dbPath = Paths.get(sqlite)
-        Files.createDirectories(dbPath.parent)
+        val parentDir = dbPath.parent
+        
+        // 确保父目录存在且是目录
+        if (parentDir != null) {
+            if (Files.exists(parentDir)) {
+                // 如果存在但不是目录，删除它
+                if (!Files.isDirectory(parentDir)) {
+                    Files.delete(parentDir)
+                    Files.createDirectories(parentDir)
+                }
+            } else {
+                // 不存在则创建
+                Files.createDirectories(parentDir)
+            }
+        }
+        
         val config = HikariConfig()
         config.jdbcUrl = buildSQLiteUrl(dbPath)
         config.driverClassName = "org.sqlite.JDBC"
