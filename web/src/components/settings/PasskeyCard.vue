@@ -167,7 +167,6 @@ async function doDelete(credentialId: string) {
     <template #title>
       <div class="flex items-center gap-2">
         <span>Passkey 管理</span>
-        <span class="text-xs font-normal text-slate-500">(WebAuthn)</span>
       </div>
     </template>
     <template #content>

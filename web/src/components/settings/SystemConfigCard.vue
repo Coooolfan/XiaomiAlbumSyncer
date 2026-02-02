@@ -106,7 +106,7 @@ onMounted(() => {
         <!-- FTQQ Config -->
         <div class="space-y-2">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-slate-600 font-medium">Server酱推送 SendKey</span>
+            <span class="text-sm text-slate-600 font-medium">Server 酱推送 SendKey</span>
             <Tag
               :severity="isFtqqKeySet ? 'success' : 'secondary'"
               :value="isFtqqKeySet ? '已配置' : '未配置'"

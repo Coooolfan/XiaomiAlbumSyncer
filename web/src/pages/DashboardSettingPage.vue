@@ -5,6 +5,7 @@ import PassTokenCard from '@/components/settings/PassTokenCard.vue'
 import PasswordCard from '@/components/settings/PasswordCard.vue'
 import PasskeyCard from '@/components/settings/PasskeyCard.vue'
 import ImportV2Card from '@/components/settings/ImportV2Card.vue'
+import OpenSourceCard from '@/components/settings/OpenSourceCard.vue'
 </script>
 
 <template>
@@ -15,5 +16,6 @@ import ImportV2Card from '@/components/settings/ImportV2Card.vue'
     <PasswordCard />
     <PasskeyCard />
     <ImportV2Card />
+    <OpenSourceCard />
   </div>
 </template>
