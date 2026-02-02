@@ -217,29 +217,6 @@ stop_gradle_daemon() {
     print_success "Gradle Daemon 已停止"
 }
 
-# 准备调试目录
-prepare_debug_dirs() {
-    print_info "准备调试目录..."
-    
-    # 创建 debug 目录
-    mkdir -p debug/db
-    mkdir -p debug/download/sync
-    mkdir -p debug/download/backup
-    
-    # 创建符号链接（如果不存在）
-    if [ ! -L "server/db" ]; then
-        rm -rf server/db
-        ln -s ../debug/db server/db
-        print_success "已创建数据库目录符号链接: server/db -> debug/db"
-    fi
-    
-    if [ ! -L "server/download" ]; then
-        rm -rf server/download
-        ln -s ../debug/download server/download
-        print_success "已创建下载目录符号链接: server/download -> debug/download"
-    fi
-}
-
 # 启动后端服务
 start_backend() {
     print_info "启动后端服务（Debug 模式）..."
@@ -307,9 +284,6 @@ main() {
     # 清理环境
     cleanup_processes
     stop_gradle_daemon
-    
-    # 准备调试目录
-    prepare_debug_dirs
     
     # 构建前端（如果需要）
     build_frontend
