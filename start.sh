@@ -285,10 +285,8 @@ main() {
     cleanup_processes
     stop_gradle_daemon
     
-    # 构建前端（如果需要）
+    # 构建前端
     build_frontend
-    
-    # 启动前端开发服务器（如果需要）
     start_frontend_dev
     
     echo ""
@@ -297,13 +295,13 @@ main() {
     print_info "应用信息："
     
     if [ "$FRONTEND_DEV" = true ]; then
-        echo "  - 前端地址: http://localhost:5173 (开发服务器)"
+        echo "  - 前端地址: http://localhost:5173 "
         echo "  - 后端地址: http://localhost:8080"
     elif [ "$BUILD_FRONTEND" = true ]; then
         echo "  - 应用地址: http://localhost:8080"
     else
         echo "  - API 地址: http://localhost:8080/api"
-        echo "  - 提示: 使用 -d 参数启动前端开发服务器"
+        echo "  - 提示: 使用 -d 参数启动前端开发"
     fi
     
     echo "  - 调试端口: 5005 (JDWP)"
