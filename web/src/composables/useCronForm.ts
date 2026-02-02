@@ -40,7 +40,7 @@ export function useCronForm(getDefaultAccountId: () => number) {
 
   function validateCronForm(): boolean {
     const errors: Record<string, string> = {}
-    
+
     // 基本字段验证
     if (!cronForm.value.name || cronForm.value.name.trim() === '') errors.name = '必填'
     if (!cronForm.value.config.expression || cronForm.value.config.expression.trim() === '') {
@@ -73,7 +73,7 @@ export function useCronForm(getDefaultAccountId: () => number) {
         errors.archiveDays = '保留天数不能超过365天'
       }
     }
-    
+
     if (config.archiveMode === 'SPACE') {
       const threshold = config.cloudSpaceThreshold
       if (!Number.isInteger(threshold) || threshold < 1 || threshold > 100) {

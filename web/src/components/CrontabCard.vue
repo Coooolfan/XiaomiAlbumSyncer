@@ -47,60 +47,75 @@ function formatTime(t?: string) {
   }
 }
 
+// 同步统计信息类型
+interface SyncStats {
+  syncMode: string
+  addedCount: number
+  deletedCount: number
+  updatedCount: number
+  archivedCount: number
+  error: string | null
+}
+
 // 获取同步统计信息
-function getSyncStats(history: any) {
+function getSyncStats(history: {
+  timelineSnapshot?: Record<number, { indexHash: string }>
+}): SyncStats | null {
   if (!history.timelineSnapshot) return null
-  
+
   // 查找 key 为 -1 的特殊条目，这是我们存储同步统计信息的地方
   const syncTimeline = history.timelineSnapshot[-1]
   if (!syncTimeline || !syncTimeline.indexHash.startsWith('SYNC:')) return null
-  
+
   // 解析 indexHash 中的同步统计信息
   // 格式: "SYNC:syncMode:addedCount:deletedCount:updatedCount:archivedCount" 或 "SYNC:syncMode:0:0:0:0:ERROR:errorMessage"
   const parts = syncTimeline.indexHash.split(':')
-  if (parts.length < 5) return null
-  
-  const syncMode = parts[1]
-  const addedCount = parseInt(parts[2]) || 0
-  const deletedCount = parseInt(parts[3]) || 0
-  const updatedCount = parseInt(parts[4]) || 0
-  const archivedCount = parseInt(parts[5]) || 0
-  
-  const result = {
+  if (parts.length < 6) return null
+
+  const syncMode = parts[1] || ''
+  const addedCount = parseInt(parts[2] || '0') || 0
+  const deletedCount = parseInt(parts[3] || '0') || 0
+  const updatedCount = parseInt(parts[4] || '0') || 0
+  const archivedCount = parseInt(parts[5] || '0') || 0
+
+  const result: SyncStats = {
     syncMode,
     addedCount,
     deletedCount,
     updatedCount,
     archivedCount,
-    error: parts[6] === 'ERROR' ? parts.slice(7).join(':') : null
+    error: parts[6] === 'ERROR' ? parts.slice(7).join(':') : null,
   }
-  
+
   return result
 }
 
 // 格式化同步统计信息显示
-function formatSyncStats(syncStats: any) {
+function formatSyncStats(syncStats: SyncStats | null): string {
   if (!syncStats) return ''
-  
+
   if (syncStats.error) {
     return '同步失败'
   }
-  
+
   const parts = []
   if (syncStats.addedCount > 0) parts.push(`${syncStats.addedCount}新增`)
   if (syncStats.deletedCount > 0) parts.push(`${syncStats.deletedCount}删除`)
   if (syncStats.updatedCount > 0) parts.push(`${syncStats.updatedCount}修改`)
   if (syncStats.archivedCount > 0) parts.push(`${syncStats.archivedCount}归档`)
-  
+
   if (parts.length === 0) {
     return '无变化'
   }
-  
+
   return parts.join('，')
 }
 
 // 格式化历史记录显示文本
-function formatHistoryText(history: any) {
+function formatHistoryText(history: {
+  timelineSnapshot?: Record<number, { indexHash: string }>
+  detailsCount?: number
+}): string {
   const syncStats = getSyncStats(history)
   if (syncStats) {
     return formatSyncStats(syncStats)

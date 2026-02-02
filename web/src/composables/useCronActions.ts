@@ -72,17 +72,17 @@ export function useCronActions(options: UseCronActionsOptions) {
     try {
       // 在保存前自动同步 archiveMode 字段
       const configToSave = { ...cronForm.value.config }
-      
+
       // 根据 archiveMode 自动设置 enableArchive（用于向后兼容旧版本）
       if (configToSave.archiveMode !== 'DISABLED') {
         configToSave.enableArchive = true
       } else {
         configToSave.enableArchive = false
       }
-      
+
       // enableSync 始终为 true（用于向后兼容旧版本）
       configToSave.enableSync = true
-      
+
       if (isEditing.value && editingId.value !== null) {
         await crontabsStore.updateCrontab(editingId.value, {
           name: cronForm.value.name,
@@ -114,17 +114,17 @@ export function useCronActions(options: UseCronActionsOptions) {
     try {
       // 在保存前自动同步 archiveMode 字段
       const configToSave = { ...row.config }
-      
+
       // 根据 archiveMode 自动设置 enableArchive（用于向后兼容旧版本）
       if (configToSave.archiveMode !== 'DISABLED') {
         configToSave.enableArchive = true
       } else {
         configToSave.enableArchive = false
       }
-      
+
       // enableSync 始终为 true（用于向后兼容旧版本）
       configToSave.enableSync = true
-      
+
       await crontabsStore.updateCrontab(row.id, {
         name: row.name,
         description: row.description,

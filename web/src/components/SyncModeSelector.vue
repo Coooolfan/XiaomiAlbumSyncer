@@ -36,7 +36,7 @@ const syncModeOptions = [
 <template>
   <div class="space-y-3">
     <label class="block text-xs font-medium text-slate-500">同步模式</label>
-    
+
     <div class="space-y-3">
       <div
         v-for="option in syncModeOptions"
@@ -54,7 +54,7 @@ const syncModeOptions = [
           :inputId="`sync-mode-${option.value}`"
           class="mt-0.5"
         />
-        
+
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <label
@@ -76,9 +76,10 @@ const syncModeOptions = [
         </div>
       </div>
     </div>
-    
+
     <div class="text-[10px] text-slate-400">
-      <strong>提示：</strong>仅新增模式适合希望保留本地所有文件的用户；同步所有变化模式适合希望本地与云端完全一致的用户。
+      <strong>提示：</strong
+      >仅新增模式适合希望保留本地所有文件的用户；同步所有变化模式适合希望本地与云端完全一致的用户。
     </div>
   </div>
 </template>

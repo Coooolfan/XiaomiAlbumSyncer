@@ -51,25 +51,25 @@ const cloudSpaceThresholdValue = computed({
 // 验证逻辑
 const validateArchiveDays = (days: number): string | undefined => {
   if (props.modelValue !== 'TIME') return undefined
-  
+
   if (!Number.isInteger(days) || days <= 0) {
     return '保留天数必须是正整数'
   }
-  
+
   if (days > 365) {
     return '保留天数不能超过365天'
   }
-  
+
   return undefined
 }
 
 const validateCloudSpaceThreshold = (threshold: number): string | undefined => {
   if (props.modelValue !== 'SPACE') return undefined
-  
+
   if (!Number.isInteger(threshold) || threshold < 1 || threshold > 100) {
     return '空间阈值必须在 1-100 之间'
   }
-  
+
   return undefined
 }
 
@@ -92,16 +92,16 @@ defineExpose({
   validate: () => {
     const archiveDaysError = validateArchiveDays(props.archiveDays)
     const cloudSpaceThresholdError = validateCloudSpaceThreshold(props.cloudSpaceThreshold)
-    
+
     return {
       isValid: !archiveDaysError && !cloudSpaceThresholdError,
       errors: {
         archiveDays: archiveDaysError,
         cloudSpaceThreshold: cloudSpaceThresholdError,
-      }
+      },
     }
   },
-  hasErrors: hasValidationErrors
+  hasErrors: hasValidationErrors,
 })
 
 // 归档模式选项配置
@@ -127,17 +127,12 @@ const archiveModeOptions = [
     configType: 'threshold',
   },
 ]
-
-// 获取当前选中模式的配置
-const currentModeConfig = computed(() => {
-  return archiveModeOptions.find(option => option.value === selectedMode.value)
-})
 </script>
 
 <template>
   <div class="space-y-3">
     <label class="block text-xs font-medium text-slate-500">归档模式</label>
-    
+
     <div class="space-y-3">
       <div
         v-for="option in archiveModeOptions"
@@ -149,17 +144,14 @@ const currentModeConfig = computed(() => {
         }"
       >
         <!-- 模式选择区域 -->
-        <div
-          class="flex items-start gap-3 p-3 cursor-pointer"
-          @click="selectedMode = option.value"
-        >
+        <div class="flex items-start gap-3 p-3 cursor-pointer" @click="selectedMode = option.value">
           <RadioButton
             :value="option.value"
             v-model="selectedMode"
             :inputId="`archive-mode-${option.value}`"
             class="mt-0.5"
           />
-          
+
           <div class="flex-1 min-w-0">
             <label
               :for="`archive-mode-${option.value}`"
@@ -172,7 +164,7 @@ const currentModeConfig = computed(() => {
             </p>
           </div>
         </div>
-        
+
         <!-- 配置区域 -->
         <div
           v-if="selectedMode === option.value && option.showConfig"
@@ -204,11 +196,9 @@ const currentModeConfig = computed(() => {
             <div v-if="archiveDaysValidationError" class="text-xs text-red-500">
               {{ archiveDaysValidationError }}
             </div>
-            <div class="text-[10px] text-slate-400">
-              归档早于当前日期减去保留天数的照片
-            </div>
+            <div class="text-[10px] text-slate-400">归档早于当前日期减去保留天数的照片</div>
           </div>
-          
+
           <!-- 空间模式配置 -->
           <div v-if="option.configType === 'threshold'" class="space-y-2">
             <label class="block text-xs font-medium text-slate-500">空间阈值</label>
@@ -242,9 +232,10 @@ const currentModeConfig = computed(() => {
         </div>
       </div>
     </div>
-    
+
     <div class="text-[10px] text-slate-400">
-      <strong>说明：</strong>归档操作会将照片从同步文件夹移动到归档文件夹，并可选择删除云端副本以释放空间。
+      <strong>说明：</strong
+      >归档操作会将照片从同步文件夹移动到归档文件夹，并可选择删除云端副本以释放空间。
     </div>
   </div>
 </template>

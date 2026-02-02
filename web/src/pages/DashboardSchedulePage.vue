@@ -137,7 +137,7 @@ onMounted(async () => {
     console.error('获取时间线数据失败', err)
   })
   buildTimeZones()
-  
+
   // 自动选择第一个账号
   if (accounts.value.length > 0) {
     selectedAccountId.value = accounts.value[0]!.id
@@ -191,10 +191,7 @@ watch(albums, () => {
 
     <!-- 云端空间卡片 -->
     <div v-if="selectedAccountId" class="mt-6">
-      <CloudSpaceCard
-        ref="cloudSpaceRef"
-        :accountId="selectedAccountId"
-      />
+      <CloudSpaceCard ref="cloudSpaceRef" :accountId="selectedAccountId" />
     </div>
 
     <!-- 账号选择器（如果有多个账号） -->

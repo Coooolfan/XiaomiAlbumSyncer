@@ -40,12 +40,6 @@ function getUsageColor(percent: number) {
   return 'bg-emerald-500'
 }
 
-function getUsageSeverity(percent: number): 'success' | 'warn' | 'danger' {
-  if (percent >= 90) return 'danger'
-  if (percent >= 75) return 'warn'
-  return 'success'
-}
-
 onMounted(() => {
   loadSpaceInfo()
 })
@@ -77,11 +71,14 @@ defineExpose({
         <div>
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm text-slate-600">空间使用率</span>
-            <span class="text-lg font-bold font-mono" :class="{
-              'text-emerald-600': spaceInfo.usagePercent < 75,
-              'text-amber-600': spaceInfo.usagePercent >= 75 && spaceInfo.usagePercent < 90,
-              'text-red-600': spaceInfo.usagePercent >= 90
-            }">
+            <span
+              class="text-lg font-bold font-mono"
+              :class="{
+                'text-emerald-600': spaceInfo.usagePercent < 75,
+                'text-amber-600': spaceInfo.usagePercent >= 75 && spaceInfo.usagePercent < 90,
+                'text-red-600': spaceInfo.usagePercent >= 90,
+              }"
+            >
               {{ spaceInfo.usagePercent }}%
             </span>
           </div>

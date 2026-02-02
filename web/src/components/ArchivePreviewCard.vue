@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import Card from 'primevue/card'
 import Button from 'primevue/button'
-import Tag from 'primevue/tag'
 import Dialog from 'primevue/dialog'
 import { computed, ref } from 'vue'
 import { api } from '@/ApiInstance'
@@ -136,9 +135,7 @@ defineExpose({
           v-if="archivePlan.assetsToArchive.length > 0"
           class="rounded-md bg-slate-50 dark:bg-slate-900/30 ring-1 ring-slate-200/60 p-3"
         >
-          <div class="text-xs font-medium text-slate-500 mb-2">
-            待归档照片 (显示前 10 个)
-          </div>
+          <div class="text-xs font-medium text-slate-500 mb-2">待归档照片 (显示前 10 个)</div>
           <div class="space-y-1 max-h-60 overflow-y-auto">
             <div
               v-for="asset in archivePlan.assetsToArchive.slice(0, 10)"
@@ -177,8 +174,13 @@ defineExpose({
   >
     <div class="space-y-4">
       <p class="text-slate-600">
-        即将归档 <span class="font-bold text-purple-600">{{ archivePlan?.assetsToArchive.length }}</span> 个照片，
-        预计释放 <span class="font-bold text-emerald-600">{{ formatSize(archivePlan?.estimatedFreedSpace || 0) }}</span> 空间。
+        即将归档
+        <span class="font-bold text-purple-600">{{ archivePlan?.assetsToArchive.length }}</span>
+        个照片， 预计释放
+        <span class="font-bold text-emerald-600">{{
+          formatSize(archivePlan?.estimatedFreedSpace || 0)
+        }}</span>
+        空间。
       </p>
       <p class="text-sm text-amber-600">
         <i class="pi pi-exclamation-triangle mr-2" />

@@ -448,14 +448,10 @@ onBeforeUnmount(() => {
         <Panel header="同步配置" toggleable collapsed class="mt-4">
           <div class="space-y-4">
             <SyncModeSelector v-model="form.config.syncMode" />
-            
+
             <div class="space-y-2">
               <label class="block text-xs font-medium text-slate-500">同步文件夹名称</label>
-              <InputText
-                v-model="form.config.syncFolder"
-                placeholder="sync"
-                class="w-full"
-              />
+              <InputText v-model="form.config.syncFolder" placeholder="sync" class="w-full" />
               <div class="text-[10px] text-slate-400">
                 相对于保存路径的文件夹名称，用于存放同步的照片
               </div>
@@ -474,20 +470,19 @@ onBeforeUnmount(() => {
               :cloudSpaceThresholdError="formErrors.cloudSpaceThreshold"
               @validate="handleValidate"
             />
-            
-            <div v-if="form.config.archiveMode !== 'DISABLED'" class="space-y-4 pt-4 border-t border-slate-200">
+
+            <div
+              v-if="form.config.archiveMode !== 'DISABLED'"
+              class="space-y-4 pt-4 border-t border-slate-200"
+            >
               <div class="space-y-2">
                 <label class="block text-xs font-medium text-slate-500">归档文件夹名称</label>
-                <InputText
-                  v-model="form.config.backupFolder"
-                  placeholder="backup"
-                  class="w-full"
-                />
+                <InputText v-model="form.config.backupFolder" placeholder="backup" class="w-full" />
                 <div class="text-[10px] text-slate-400">
                   相对于保存路径的文件夹名称，用于存放归档的照片
                 </div>
               </div>
-              
+
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="flex items-center gap-2 text-xs text-slate-600">
                   <ToggleSwitch v-model="form.config.deleteCloudAfterArchive" />
