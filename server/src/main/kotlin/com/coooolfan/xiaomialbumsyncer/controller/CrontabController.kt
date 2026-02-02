@@ -193,7 +193,7 @@ class CrontabController(private val service: CrontabService) {
                 allScalarFields()
                 isCompleted()
                 detailsCount()
-                timelineSnapshot(false)
+                timelineSnapshot()
             }
         }
 
