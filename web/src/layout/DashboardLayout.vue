@@ -12,7 +12,6 @@ const systemInfo = ref<SystemInfoResponse | null>(null)
 
 const tabs = [
   { label: '计划', to: '/dashboard/schedule' },
-  { label: '同步与归档', to: '/dashboard/sync-archive' },
   { label: '设置', to: '/dashboard/setting' },
 ] as const
 
@@ -72,9 +71,6 @@ const versionTag = computed(() => {
             }}</RouterLink>
             <RouterLink :to="tabs[1].to" :class="linkClasses(tabs[1].to)">{{
               tabs[1].label
-            }}</RouterLink>
-            <RouterLink :to="tabs[2].to" :class="linkClasses(tabs[2].to)">{{
-              tabs[2].label
             }}</RouterLink>
           </nav>
         </div>

@@ -26,12 +26,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../pages/DashboardSchedulePage.vue'),
         meta: { requiresAuth: true, title: '计划' },
       },
-      {
-        path: 'sync-archive',
-        name: 'dashboard-sync-archive',
-        component: () => import('../pages/DashboardSyncArchivePage.vue'),
-        meta: { requiresAuth: true, title: '同步与归档' },
-      },
     ],
   },
   {

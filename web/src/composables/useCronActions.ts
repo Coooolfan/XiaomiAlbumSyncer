@@ -73,6 +73,9 @@ export function useCronActions(options: UseCronActionsOptions) {
       // 在保存前自动同步 enableArchive 和 archiveMode 字段
       const configToSave = { ...cronForm.value.config }
       
+      // enableSync 始终为 true
+      configToSave.enableSync = true
+      
       // 根据 archiveMode 自动设置 enableArchive
       if (configToSave.archiveMode !== 'DISABLED') {
         configToSave.enableArchive = true
@@ -111,6 +114,9 @@ export function useCronActions(options: UseCronActionsOptions) {
     try {
       // 在保存前自动同步 enableArchive 和 archiveMode 字段
       const configToSave = { ...row.config }
+      
+      // enableSync 始终为 true
+      configToSave.enableSync = true
       
       // 根据 archiveMode 自动设置 enableArchive
       if (configToSave.archiveMode !== 'DISABLED') {
