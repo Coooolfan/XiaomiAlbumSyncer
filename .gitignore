@@ -3,7 +3,6 @@
 .db-shm
 .db-wal
 .log
-.github/
 
 .idea/
 **/__pycache__
