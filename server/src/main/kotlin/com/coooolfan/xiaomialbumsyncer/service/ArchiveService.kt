@@ -1,12 +1,16 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
+import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CRONTAB_WITH_ALBUMS_FETCHER
 import com.coooolfan.xiaomialbumsyncer.model.*
+import com.coooolfan.xiaomialbumsyncer.model.by
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
+import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.asc
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.ast.expression.lt
 import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
+import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
@@ -28,6 +32,18 @@ class ArchiveService(
 ) {
 
     private val log = LoggerFactory.getLogger(this.javaClass)
+
+    companion object {
+        /**
+         * Asset Fetcher，包含 Album 信息
+         */
+        private val ASSET_WITH_ALBUM_FETCHER = newFetcher(Asset::class).by {
+            allScalarFields()
+            album {
+                allScalarFields()
+            }
+        }
+    }
 
     /**
      * 归档计划
@@ -61,7 +77,7 @@ class ArchiveService(
     fun calculateTimeBasedArchive(crontabId: Long): ArchivePlan {
         log.info("计算基于时间的归档计划，定时任务 ID=$crontabId")
 
-        val crontab = sql.findById(Crontab::class, crontabId)
+        val crontab = sql.findById(CRONTAB_WITH_ALBUMS_FETCHER, crontabId)
             ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
         val config = crontab.config
@@ -70,12 +86,18 @@ class ArchiveService(
         val archiveBeforeDate = LocalDate.now().minusDays(config.archiveDays.toLong())
         val archiveBeforeInstant = archiveBeforeDate.atStartOfDay().toInstant(ZoneOffset.UTC)
 
-        // 查询需要归档的资产
-        val assetsToArchive = sql.createQuery(Asset::class) {
+        // 获取已经成功归档的资产 ID 列表
+        val archivedAssetIds = getArchivedAssetIds(crontabId).toSet()
+
+        // 查询需要归档的资产（包含 Album 信息）
+        val allAssets = sql.createQuery(Asset::class) {
             where(table.album.id valueIn crontab.albums.map { it.id })
             where(table.dateTaken lt archiveBeforeInstant)
-            select(table)
+            select(table.fetch(ASSET_WITH_ALBUM_FETCHER))
         }.execute()
+
+        // 过滤掉已归档的资产
+        val assetsToArchive = allAssets.filter { it.id !in archivedAssetIds }
 
         // 计算释放的空间
         val estimatedFreedSpace = assetsToArchive.sumOf { it.size }
@@ -93,7 +115,7 @@ class ArchiveService(
     fun calculateSpaceBasedArchive(crontabId: Long): ArchivePlan {
         log.info("计算基于空间阈值的归档计划，定时任务 ID=$crontabId")
 
-        val crontab = sql.findById(Crontab::class, crontabId)
+        val crontab = sql.findById(CRONTAB_WITH_ALBUMS_FETCHER, crontabId)
             ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
         val config = crontab.config
@@ -111,18 +133,25 @@ class ArchiveService(
             return ArchivePlan(LocalDate.now(), emptyList(), 0)
         }
 
-        // 按时间从旧到新排序资产
+        // 获取已经成功归档的资产 ID 列表
+        val archivedAssetIds = getArchivedAssetIds(crontabId).toSet()
+
+        // 按时间从旧到新排序资产（包含 Album 信息）
         val allAssets = sql.createQuery(Asset::class) {
             where(table.album.id valueIn crontab.albums.map { it.id })
             orderBy(table.dateTaken.asc())
-            select(table)
+            select(table.fetch(ASSET_WITH_ALBUM_FETCHER))
         }.execute()
 
-        // 累加资产大小直到达到需要释放的空间
+        // 过滤掉已归档的资产，并累加资产大小直到达到需要释放的空间
         var freedSpace = 0L
         val assetsToArchive = mutableListOf<Asset>()
 
         for (asset in allAssets) {
+            if (asset.id in archivedAssetIds) {
+                continue  // 跳过已归档的资产
+            }
+            
             assetsToArchive.add(asset)
             freedSpace += asset.size
 
@@ -144,12 +173,25 @@ class ArchiveService(
     }
 
     /**
+     * 获取已经成功归档的资产 ID 列表
+     * @param crontabId 定时任务 ID
+     * @return 已归档的资产 ID 列表
+     */
+    private fun getArchivedAssetIds(crontabId: Long): List<Long> {
+        return sql.createQuery(ArchiveDetail::class) {
+            where(table.archiveRecord.crontabId eq crontabId)
+            where(table.isMovedToBackup eq true)
+            select(table.assetId)
+        }.execute()
+    }
+
+    /**
      * 预览归档计划
      * @param crontabId 定时任务 ID
      * @return 归档计划
      */
     fun previewArchive(crontabId: Long): ArchivePlan {
-        val crontab = sql.findById(Crontab::class, crontabId)
+        val crontab = sql.findById(CRONTAB_WITH_ALBUMS_FETCHER, crontabId)
             ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
         return when (crontab.config.archiveMode) {
@@ -175,7 +217,7 @@ class ArchiveService(
     suspend fun executeArchive(crontabId: Long, confirmed: Boolean): Long {
         log.info("开始执行归档任务，定时任务 ID=$crontabId，已确认=$confirmed")
 
-        val crontab = sql.findById(Crontab::class, crontabId)
+        val crontab = sql.findById(CRONTAB_WITH_ALBUMS_FETCHER, crontabId)
             ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
         val config = crontab.config
@@ -185,10 +227,6 @@ class ArchiveService(
             // 归档已关闭，不执行任何操作
             log.info("归档功能已关闭，定时任务 ID=$crontabId，跳过归档操作")
             throw ArchiveDisabledException("归档功能已关闭")
-        }
-
-        if (!config.enableArchive) {
-            throw IllegalStateException("定时任务未启用归档功能: $crontabId")
         }
 
         // 检查是否需要确认
@@ -302,7 +340,8 @@ class ArchiveService(
      */
     private fun createArchiveRecord(crontab: Crontab, plan: ArchivePlan): ArchiveRecord {
         val record = ArchiveRecord {
-            this.crontab = crontab
+            // 只设置 crontabId，避免级联保存整个 Crontab 对象
+            this.crontabId = crontab.id
             archiveTime = Instant.now()
             archiveMode = crontab.config.archiveMode
             archiveBeforeDate = plan.archiveBeforeDate
@@ -312,7 +351,8 @@ class ArchiveService(
             errorMessage = null
         }
 
-        val saved = sql.save(record)
+        // 使用 INSERT_ONLY 模式
+        val saved = sql.save(record, SaveMode.INSERT_ONLY)
         return sql.findById(ArchiveRecord::class, saved.modifiedEntity.id)!!
     }
 
@@ -336,7 +376,8 @@ class ArchiveService(
         val detailToSave = ArchiveDetail(detail) {
             this.archiveRecordId = archiveRecordId
         }
-        sql.save(detailToSave)
+        // 使用 INSERT_ONLY 模式
+        sql.save(detailToSave, SaveMode.INSERT_ONLY)
     }
 
     /**

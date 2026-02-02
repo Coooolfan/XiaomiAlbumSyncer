@@ -36,7 +36,9 @@ interface ArchiveRecord {
 
     /**
      * 归档此日期之前的照片
+     * 使用 @Serialized 注解确保以 ISO 8601 格式（YYYY-MM-DD）存储
      */
+    @Serialized
     val archiveBeforeDate: LocalDate
 
     /**

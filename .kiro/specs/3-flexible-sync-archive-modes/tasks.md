@@ -114,6 +114,11 @@
   - [x] 修复 Jimmer ORM UnloadedException 问题
   - [x] 修复同步记录保存问题
   - [x] 修复孤儿文件清理问题
+  - [x] **修复同步时不会自动归档的问题**
+    - [x] 修改后端逻辑，主要依赖 archiveMode 而不是 enableArchive
+    - [x] 修改前端逻辑，保存时自动同步 enableArchive 和 archiveMode
+    - [x] **修复 ArchiveService 中的 Jimmer UnloadedException 问题**
+    - [x] **修复 ArchiveRecord 保存时的 SaveException 问题**
 
 - [ ] 7. 更新前端 API 类型定义
   - [x] 7.1 运行 API 生成脚本

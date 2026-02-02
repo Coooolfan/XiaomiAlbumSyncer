@@ -37,6 +37,9 @@ class SyncService(
     @Inject
     private lateinit var crontabService: CrontabService
 
+    @Inject
+    private lateinit var archiveService: ArchiveService
+
     private val log = LoggerFactory.getLogger(this.javaClass)
 
     /**
@@ -341,10 +344,57 @@ class SyncService(
                 null
             )
 
-            // 完成 CrontabHistory 记录
-            crontabService.finishCrontabHistory(crontabHistory)
+            // 完成 CrontabHistory 记录，并存储同步统计信息
+            val syncStats = mapOf(
+                -1L to AlbumTimeline(
+                    "SYNC:${crontab.config.syncMode.name}:${changes.addedAssets.size}:${actualDeletedCount}:${actualUpdatedCount}",
+                    emptyMap()
+                )
+            )
+            
+            // 更新 CrontabHistory 的 timelineSnapshot 来存储同步统计信息
+            sql.createUpdate(CrontabHistory::class) {
+                set(table.endTime, Instant.now())
+                set(table.timelineSnapshot, syncStats)
+                where(table.id eq crontabHistory.id)
+            }.execute()
 
             log.info("同步任务完成，同步记录 ID=${syncRecord.id}，模式=${crontab.config.syncMode}，新增=${changes.addedAssets.size}，删除=${actualDeletedCount}，修改=${actualUpdatedCount}")
+
+            // 同步完成后，检查是否需要自动归档
+            // 主要检查 archiveMode，enableArchive 字段主要用于向后兼容
+            log.info("检查自动归档条件：enableArchive=${crontab.config.enableArchive}, archiveMode=${crontab.config.archiveMode}")
+            
+            if (crontab.config.archiveMode != ArchiveMode.DISABLED) {
+                log.info("同步完成后检查自动归档，归档模式=${crontab.config.archiveMode}")
+                try {
+                    // 预览归档计划
+                    val archivePlan = archiveService.previewArchive(crontabId)
+                    
+                    if (archivePlan.assetsToArchive.isNotEmpty()) {
+                        log.info("检测到需要归档的资产 ${archivePlan.assetsToArchive.size} 个，开始自动归档")
+                        
+                        // 根据配置决定是否需要确认
+                        val needConfirmation = crontab.config.confirmBeforeArchive
+                        
+                        if (!needConfirmation) {
+                            // 不需要确认，直接执行归档
+                            val archiveRecordId = archiveService.executeArchive(crontabId, confirmed = true)
+                            log.info("自动归档完成，归档记录 ID=$archiveRecordId")
+                        } else {
+                            // 需要确认，记录日志但不执行
+                            log.info("归档需要用户确认，跳过自动归档。用户可以手动执行归档操作")
+                        }
+                    } else {
+                        log.info("没有需要归档的资产，跳过自动归档")
+                    }
+                } catch (e: Exception) {
+                    // 归档失败不应该影响同步操作的成功状态
+                    log.error("自动归档失败，但同步操作已成功完成", e)
+                }
+            } else {
+                log.info("归档模式为 DISABLED，跳过自动归档检查。archiveMode=${crontab.config.archiveMode}")
+            }
 
             return syncRecord.id
         } catch (e: Exception) {
@@ -352,7 +402,19 @@ class SyncService(
             updateSyncRecord(syncRecord.id, SyncStatus.FAILED, 0, 0, 0, e.message)
             
             // 完成 CrontabHistory 记录（即使失败也要完成）
-            crontabService.finishCrontabHistory(crontabHistory)
+            val syncStats = mapOf(
+                -1L to AlbumTimeline(
+                    "SYNC:${crontab.config.syncMode.name}:0:0:0:ERROR:${e.message ?: "未知错误"}",
+                    emptyMap()
+                )
+            )
+            
+            // 更新 CrontabHistory 的 timelineSnapshot 来存储同步统计信息
+            sql.createUpdate(CrontabHistory::class) {
+                set(table.endTime, Instant.now())
+                set(table.timelineSnapshot, syncStats)
+                where(table.id eq crontabHistory.id)
+            }.execute()
             
             throw e
         }
@@ -395,7 +457,8 @@ class SyncService(
             this.errorMessage = null
         }
 
-        val saveResult = sql.saveCommand(syncRecord, SaveMode.INSERT_ONLY).execute()
+        // 使用 INSERT_ONLY 模式
+        val saveResult = sql.save(syncRecord, SaveMode.INSERT_ONLY)
         return saveResult.modifiedEntity
     }
 
@@ -443,7 +506,8 @@ class SyncService(
             this.errorMessage = errorMessage
         }
 
-        sql.saveCommand(detail, SaveMode.INSERT_ONLY).execute()
+        // 使用 INSERT_ONLY 模式
+        sql.save(detail, SaveMode.INSERT_ONLY)
     }
 
     /**

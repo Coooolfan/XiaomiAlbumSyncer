@@ -47,6 +47,66 @@ function formatTime(t?: string) {
   }
 }
 
+// 获取同步统计信息
+function getSyncStats(history: any) {
+  if (!history.timelineSnapshot) return null
+  
+  // 查找 key 为 -1 的特殊条目，这是我们存储同步统计信息的地方
+  const syncTimeline = history.timelineSnapshot[-1]
+  if (!syncTimeline || !syncTimeline.indexHash.startsWith('SYNC:')) return null
+  
+  // 解析 indexHash 中的同步统计信息
+  // 格式: "SYNC:syncMode:addedCount:deletedCount:updatedCount" 或 "SYNC:syncMode:0:0:0:ERROR:errorMessage"
+  const parts = syncTimeline.indexHash.split(':')
+  if (parts.length < 5) return null
+  
+  const syncMode = parts[1]
+  const addedCount = parseInt(parts[2]) || 0
+  const deletedCount = parseInt(parts[3]) || 0
+  const updatedCount = parseInt(parts[4]) || 0
+  
+  const result = {
+    syncMode,
+    addedCount,
+    deletedCount,
+    updatedCount,
+    error: parts[5] === 'ERROR' ? parts.slice(6).join(':') : null
+  }
+  
+  return result
+}
+
+// 格式化同步统计信息显示
+function formatSyncStats(syncStats: any) {
+  if (!syncStats) return ''
+  
+  if (syncStats.error) {
+    return '同步失败'
+  }
+  
+  const parts = []
+  if (syncStats.addedCount > 0) parts.push(`${syncStats.addedCount}新增`)
+  if (syncStats.deletedCount > 0) parts.push(`${syncStats.deletedCount}删除`)
+  if (syncStats.updatedCount > 0) parts.push(`${syncStats.updatedCount}修改`)
+  
+  if (parts.length === 0) {
+    return '无变化'
+  }
+  
+  return parts.join('，')
+}
+
+// 格式化历史记录显示文本
+function formatHistoryText(history: any) {
+  const syncStats = getSyncStats(history)
+  if (syncStats) {
+    return formatSyncStats(syncStats)
+  } else if (history.detailsCount !== undefined) {
+    return `${history.detailsCount} 个资产`
+  }
+  return ''
+}
+
 const recentHistories = computed(() => {
   const list = [...(props.crontab.histories || [])]
   list.sort((a, b) => (a.startTime < b.startTime ? 1 : -1))
@@ -410,8 +470,8 @@ onUnmounted(() => {
                   >
                 </div>
                 <div class="flex items-center gap-2">
-                  <span class="text-xs text-slate-400" v-if="h.detailsCount !== undefined">
-                    {{ h.detailsCount }} 个资产
+                  <span class="text-xs text-slate-400">
+                    {{ formatHistoryText(h) }}
                   </span>
                   <Tag
                     v-if="index === 0 && crontab.running"

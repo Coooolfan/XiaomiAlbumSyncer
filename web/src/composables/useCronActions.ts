@@ -70,17 +70,30 @@ export function useCronActions(options: UseCronActionsOptions) {
     if (!validateCronForm()) return
     saving.value = true
     try {
+      // 在保存前自动同步 enableArchive 和 archiveMode 字段
+      const configToSave = { ...cronForm.value.config }
+      
+      // 根据 archiveMode 自动设置 enableArchive
+      if (configToSave.archiveMode !== 'DISABLED') {
+        configToSave.enableArchive = true
+      } else {
+        configToSave.enableArchive = false
+      }
+      
       if (isEditing.value && editingId.value !== null) {
         await crontabsStore.updateCrontab(editingId.value, {
           name: cronForm.value.name,
           description: cronForm.value.description,
           enabled: cronForm.value.enabled,
-          config: cronForm.value.config,
+          config: configToSave,
           albumIds: cronForm.value.albumIds,
         })
         toast.add({ severity: 'success', summary: '已更新', life: 1600 })
       } else {
-        await crontabsStore.createCrontab(cronForm.value)
+        await crontabsStore.createCrontab({
+          ...cronForm.value,
+          config: configToSave,
+        })
         toast.add({ severity: 'success', summary: '已创建', life: 1600 })
       }
       showCronDialog.value = false
@@ -96,11 +109,21 @@ export function useCronActions(options: UseCronActionsOptions) {
   async function toggleEnabled(row: Crontab) {
     updatingRow.value = row.id
     try {
+      // 在保存前自动同步 enableArchive 和 archiveMode 字段
+      const configToSave = { ...row.config }
+      
+      // 根据 archiveMode 自动设置 enableArchive
+      if (configToSave.archiveMode !== 'DISABLED') {
+        configToSave.enableArchive = true
+      } else {
+        configToSave.enableArchive = false
+      }
+      
       await crontabsStore.updateCrontab(row.id, {
         name: row.name,
         description: row.description,
         enabled: !row.enabled,
-        config: row.config,
+        config: configToSave,
         albumIds: row.albumIds,
       })
       toast.add({ severity: 'success', summary: '已更新', life: 1600 })
