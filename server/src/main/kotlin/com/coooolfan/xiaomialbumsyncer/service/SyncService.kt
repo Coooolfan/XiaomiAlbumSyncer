@@ -68,25 +68,23 @@ class SyncService(
     fun detectSyncChanges(crontabId: Long): ChangeSummary {
         log.info("开始检测同步变化，定时任务 ID=$crontabId")
 
-        // 获取定时任务配置（包含关联的相册）
-        val crontab = sql.findById(CRONTAB_WITH_ALBUMS_FETCHER, crontabId)
+        // 获取定时任务配置（包含关联的相册和账号）
+        val crontab = sql.findById(CRONTAB_WITH_ALBUMS_AND_ACCOUNT_FETCHER, crontabId)
             ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
         val syncFolder = Path(crontab.config.targetPath, crontab.config.syncFolder)
         log.info("同步文件夹路径: $syncFolder")
 
-        // 获取云端资产列表，使用 crontab.accountId 而不是 album.accountId
+        // 获取云端资产列表
         val cloudAssets = mutableListOf<Asset>()
         crontab.albums.forEach { album ->
             log.info("获取相册 ${album.name} (ID=${album.id}) 的云端资产")
-            // 创建一个临时的 Album 对象，包含 accountId 信息
-            val albumWithAccount = Album {
-                this.id = album.id
-                this.name = album.name
-                this.remoteId = album.remoteId
-                this.accountId = crontab.accountId
+            // 由于使用了 CRONTAB_WITH_ALBUMS_AND_ACCOUNT_FETCHER，album 对象应该包含 accountId
+            // 但为了确保，我们创建一个包含 accountId 的临时对象
+            val albumWithAccountId = object : Album by album {
+                override val accountId: Long = crontab.accountId
             }
-            val assets = xiaoMiApi.fetchAllAssetsByAlbumId(albumWithAccount)
+            val assets = xiaoMiApi.fetchAllAssetsByAlbumId(albumWithAccountId)
             log.info("相册 ${album.name} 云端资产数量: ${assets.size}")
             cloudAssets.addAll(assets)
         }
@@ -341,22 +339,8 @@ class SyncService(
             )
 
             // 完成 CrontabHistory 记录，并存储同步统计信息
-            val syncStats = mapOf(
-                -1L to AlbumTimeline(
-                    "SYNC:${crontab.config.syncMode.name}:${changes.addedAssets.size}:${actualDeletedCount}:${actualUpdatedCount}",
-                    emptyMap()
-                )
-            )
+            var archivedCount = 0
             
-            // 更新 CrontabHistory 的 timelineSnapshot 来存储同步统计信息
-            sql.createUpdate(CrontabHistory::class) {
-                set(table.endTime, Instant.now())
-                set(table.timelineSnapshot, syncStats)
-                where(table.id eq crontabHistory.id)
-            }.execute()
-
-            log.info("同步任务完成，同步记录 ID=${syncRecord.id}，模式=${crontab.config.syncMode}，新增=${changes.addedAssets.size}，删除=${actualDeletedCount}，修改=${actualUpdatedCount}")
-
             // 同步完成后，检查是否需要自动归档
             log.info("检查自动归档条件：archiveMode=${crontab.config.archiveMode}")
             
@@ -375,7 +359,8 @@ class SyncService(
                         if (!needConfirmation) {
                             // 不需要确认，直接执行归档
                             val archiveRecordId = archiveService.executeArchive(crontabId, confirmed = true)
-                            log.info("自动归档完成，归档记录 ID=$archiveRecordId")
+                            archivedCount = archivePlan.assetsToArchive.size
+                            log.info("自动归档完成，归档记录 ID=$archiveRecordId，归档资产数量=$archivedCount")
                         } else {
                             // 需要确认，记录日志但不执行
                             log.info("归档需要用户确认，跳过自动归档。用户可以手动执行归档操作")
@@ -390,6 +375,23 @@ class SyncService(
             } else {
                 log.info("归档模式为 DISABLED，跳过自动归档检查。archiveMode=${crontab.config.archiveMode}")
             }
+            
+            // 存储同步统计信息（包含归档数量）
+            val syncStats = mapOf(
+                -1L to AlbumTimeline(
+                    "SYNC:${crontab.config.syncMode.name}:${changes.addedAssets.size}:${actualDeletedCount}:${actualUpdatedCount}:${archivedCount}",
+                    emptyMap()
+                )
+            )
+            
+            // 更新 CrontabHistory 的 timelineSnapshot 来存储同步统计信息
+            sql.createUpdate(CrontabHistory::class) {
+                set(table.endTime, Instant.now())
+                set(table.timelineSnapshot, syncStats)
+                where(table.id eq crontabHistory.id)
+            }.execute()
+
+            log.info("同步任务完成，同步记录 ID=${syncRecord.id}，模式=${crontab.config.syncMode}，新增=${changes.addedAssets.size}，删除=${actualDeletedCount}，修改=${actualUpdatedCount}，归档=${archivedCount}")
 
             return syncRecord.id
         } catch (e: Exception) {
@@ -399,7 +401,7 @@ class SyncService(
             // 完成 CrontabHistory 记录（即使失败也要完成）
             val syncStats = mapOf(
                 -1L to AlbumTimeline(
-                    "SYNC:${crontab.config.syncMode.name}:0:0:0:ERROR:${e.message ?: "未知错误"}",
+                    "SYNC:${crontab.config.syncMode.name}:0:0:0:0:ERROR:${e.message ?: "未知错误"}",
                     emptyMap()
                 )
             )
