@@ -180,7 +180,7 @@ onBeforeUnmount(() => {
 
         <div class="space-y-2">
           <label class="block text-xs font-medium text-slate-500">保存路径</label>
-          <InputText v-model="form.config.targetPath" placeholder="./download" class="w-full" />
+          <InputText v-model="form.config.targetPath" placeholder="/app/download" class="w-full" />
           <div v-if="formErrors.targetPath" class="text-xs text-red-500">
             {{ formErrors.targetPath }}
           </div>
@@ -204,7 +204,7 @@ onBeforeUnmount(() => {
           </div>
           <InputText
             v-model="form.config.expressionTargetPath"
-            placeholder="./download/${album}/${download_YYYYMM}/${fileName}"
+            placeholder="/app/download/${album}/${download_YYYYMM}/${fileName}"
             class="w-full"
             @focus="openExpressionHelp"
           />

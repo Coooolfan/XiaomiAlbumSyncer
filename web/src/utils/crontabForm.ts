@@ -11,7 +11,7 @@ export function createDefaultCronConfig(defaultTz: string): CrontabConfig {
   return {
     expression: '0 0 23 * * ?',
     timeZone: defaultTz,
-    targetPath: './download',
+    targetPath: '/app/download',
     downloadImages: true,
     downloadVideos: false,
     downloadAudios: true,
