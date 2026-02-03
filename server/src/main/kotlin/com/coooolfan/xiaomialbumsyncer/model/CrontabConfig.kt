@@ -90,10 +90,4 @@ data class CrontabConfig(
      * 归档后是否删除云端
      */
     val deleteCloudAfterArchive: Boolean = true,
-
-    /**
-     * 归档前是否需要确认（已弃用，始终为 false）
-     */
-    @Deprecated("该选项已移除，归档操作不再需要确认")
-    val confirmBeforeArchive: Boolean = false,
 )

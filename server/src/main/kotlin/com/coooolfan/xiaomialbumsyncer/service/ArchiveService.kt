@@ -231,10 +231,7 @@ class ArchiveService(
             throw ArchiveDisabledException("归档功能已关闭")
         }
 
-        // 检查是否需要确认
-        if (config.confirmBeforeArchive && !confirmed) {
-            throw ArchiveNotConfirmedException("归档操作需要用户确认")
-        }
+        // 归档操作无需确认，直接执行
 
         // 生成归档计划
         val plan = when (config.archiveMode) {

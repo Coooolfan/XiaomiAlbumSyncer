@@ -353,18 +353,10 @@ class SyncService(
                     if (archivePlan.assetsToArchive.isNotEmpty()) {
                         log.info("检测到需要归档的资产 ${archivePlan.assetsToArchive.size} 个，开始自动归档")
                         
-                        // 根据配置决定是否需要确认
-                        val needConfirmation = crontab.config.confirmBeforeArchive
-                        
-                        if (!needConfirmation) {
-                            // 不需要确认，直接执行归档
-                            val archiveRecordId = archiveService.executeArchive(crontabId, confirmed = true)
-                            archivedCount = archivePlan.assetsToArchive.size
-                            log.info("自动归档完成，归档记录 ID=$archiveRecordId，归档资产数量=$archivedCount")
-                        } else {
-                            // 需要确认，记录日志但不执行
-                            log.info("归档需要用户确认，跳过自动归档。用户可以手动执行归档操作")
-                        }
+                        // 直接执行归档，无需确认
+                        val archiveRecordId = archiveService.executeArchive(crontabId, confirmed = true)
+                        archivedCount = archivePlan.assetsToArchive.size
+                        log.info("自动归档完成，归档记录 ID=$archiveRecordId，归档资产数量=$archivedCount")
                     } else {
                         log.info("没有需要归档的资产，跳过自动归档")
                     }

@@ -54,8 +54,4 @@ export interface CrontabConfig {
      * 归档后是否删除云端
      */
     readonly deleteCloudAfterArchive: boolean;
-    /**
-     * 归档前是否需要确认
-     */
-    readonly confirmBeforeArchive: boolean;
 }
