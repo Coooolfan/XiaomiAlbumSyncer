@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
-import Panel from 'primevue/panel'
+import { onMounted, computed, ref } from 'vue'
+import Card from 'primevue/card'
 import SplitButton from 'primevue/splitbutton'
 import Button from 'primevue/button'
 import AlbumCard from '@/components/AlbumCard.vue'
@@ -20,6 +20,9 @@ const accountsStore = useAccountsStore()
 
 const { albums } = storeToRefs(albumsStore)
 const { accounts } = storeToRefs(accountsStore)
+
+// 折叠状态管理：key 为账号 ID，value 为是否折叠
+const collapsedState = ref<Map<number, boolean>>(new Map())
 
 const groupedAlbums = computed(() => {
   const groups: Array<{ account: XiaomiAccount; albums: Album[] }> = []
@@ -61,6 +64,19 @@ function getRefreshModel(accountId: number) {
       command: () => fetchLatestAlbums(accountId),
     },
   ]
+}
+
+function toggleCollapse(accountId: number) {
+  const current = collapsedState.value.get(accountId) ?? false
+  collapsedState.value.set(accountId, !current)
+}
+
+function isCollapsed(accountId: number): boolean {
+  // 多账号时默认折叠
+  if (!collapsedState.value.has(accountId)) {
+    return accounts.value.length > 1
+  }
+  return collapsedState.value.get(accountId) ?? false
 }
 
 async function fetchData() {
@@ -106,6 +122,37 @@ async function fetchLatestAlbums(accountId: number) {
   }
 }
 
+// 折叠动画钩子
+function onEnter(el: Element) {
+  const element = el as HTMLElement
+  element.style.maxHeight = '0'
+  element.style.opacity = '0'
+  // 强制重排以触发过渡
+  void element.offsetHeight
+  element.style.maxHeight = element.scrollHeight + 'px'
+  element.style.opacity = '1'
+}
+
+function onAfterEnter(el: Element) {
+  const element = el as HTMLElement
+  element.style.maxHeight = ''
+}
+
+function onLeave(el: Element) {
+  const element = el as HTMLElement
+  element.style.maxHeight = element.scrollHeight + 'px'
+  // 强制重排
+  void element.offsetHeight
+  element.style.maxHeight = '0'
+  element.style.opacity = '0'
+}
+
+function onAfterLeave(el: Element) {
+  const element = el as HTMLElement
+  element.style.maxHeight = ''
+  element.style.opacity = ''
+}
+
 onMounted(() => {
   accountsStore.fetchAccounts()
   albumsStore.fetchAlbums()
@@ -114,48 +161,86 @@ onMounted(() => {
 
 <template>
   <div class="space-y-4">
-    <div v-if="accounts.length === 0">
-      <Panel header="相册" toggleable>
-        <template #icons>
-          <Button icon="pi pi-refresh" rounded text @click="fetchData" />
-        </template>
+    <Card v-if="accounts.length === 0" class="overflow-hidden shadow-sm ring-1 ring-slate-200/60">
+      <template #title>
+        <div class="flex items-center justify-between">
+          <div class="font-medium text-slate-600">相册</div>
+          <Button icon="pi pi-refresh" severity="secondary" rounded text @click="fetchData" />
+        </div>
+      </template>
+      <template #content>
         <div class="text-xs text-slate-500">暂无账号</div>
-      </Panel>
-    </div>
+      </template>
+    </Card>
 
-    <Panel
+    <Card
       v-for="group in groupedAlbums"
       :key="group.account.id"
-      :header="getHeader(group)"
-      :collapsed="accounts.length > 1"
-      toggleable
+      class="overflow-hidden shadow-sm ring-1 ring-slate-200/60"
     >
-      <template #icons>
-        <SplitButton
-          icon="pi pi-refresh"
-          size="small"
-          class="mr-1"
-          severity="secondary"
-          outlined
-          rounded
-          label="刷新"
-          @click="() => fetchData()"
-          :model="getRefreshModel(group.account.id)"
-        />
-      </template>
-
-      <div class="space-y-2">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          <AlbumCard
-            v-for="a in group.albums"
-            :key="a.id"
-            :name="a.name"
-            :asset-count="a.assetCount"
-            :last-update-time="a.lastUpdateTime"
+      <template #title>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <Button
+              :icon="isCollapsed(group.account.id) ? 'pi pi-chevron-right' : 'pi pi-chevron-down'"
+              severity="secondary"
+              text
+              rounded
+              size="small"
+              @click="toggleCollapse(group.account.id)"
+              class="w-8 h-8 flex-shrink-0"
+            />
+            <div class="font-medium text-slate-600 leading-none">{{ getHeader(group) }}</div>
+          </div>
+          <SplitButton
+            icon="pi pi-refresh"
+            size="small"
+            severity="secondary"
+            outlined
+            rounded
+            label="刷新"
+            @click="() => fetchData()"
+            :model="getRefreshModel(group.account.id)"
           />
         </div>
-        <div v-if="group.albums.length === 0" class="text-xs text-slate-500">暂无相册</div>
-      </div>
-    </Panel>
+      </template>
+
+      <template #content>
+        <Transition
+          name="collapse"
+          @enter="onEnter"
+          @after-enter="onAfterEnter"
+          @leave="onLeave"
+          @after-leave="onAfterLeave"
+        >
+          <div v-show="!isCollapsed(group.account.id)" class="space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              <AlbumCard
+                v-for="a in group.albums"
+                :key="a.id"
+                :name="a.name"
+                :asset-count="a.assetCount"
+                :last-update-time="a.lastUpdateTime"
+              />
+            </div>
+            <div v-if="group.albums.length === 0" class="text-xs text-slate-500">暂无相册</div>
+          </div>
+        </Transition>
+      </template>
+    </Card>
   </div>
 </template>
+
+<style scoped>
+.collapse-enter-active,
+.collapse-leave-active {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.collapse-enter-from,
+.collapse-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+</style>
