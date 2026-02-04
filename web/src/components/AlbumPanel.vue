@@ -243,15 +243,9 @@ onMounted(() => {
   <Card v-else class="overflow-hidden shadow-sm ring-1 ring-slate-200/60">
     <template #content>
       <div class="space-y-0">
-        <div
-          v-for="(group, index) in groupedAlbums"
-          :key="group.account.id"
-        >
+        <div v-for="(group, index) in groupedAlbums" :key="group.account.id">
           <!-- 分割线（除了第一个账号） -->
-          <div
-            v-if="index > 0"
-            class="border-t border-slate-200 dark:border-slate-700 my-4"
-          ></div>
+          <div v-if="index > 0" class="border-t border-slate-200 dark:border-slate-700 my-4"></div>
 
           <!-- 账号标题和按钮 -->
           <div class="flex items-center justify-between mb-3">
@@ -275,7 +269,13 @@ onMounted(() => {
               />
             </div>
             <div class="flex items-center gap-2">
-              <Button icon="pi pi-refresh" severity="secondary" rounded text @click="() => fetchData()" />
+              <Button
+                icon="pi pi-refresh"
+                severity="secondary"
+                rounded
+                text
+                @click="() => fetchData()"
+              />
               <Button
                 icon="pi pi-cloud-download"
                 severity="secondary"
@@ -297,13 +297,20 @@ onMounted(() => {
             <div v-show="!isCollapsed(group.account.id)" class="space-y-4">
               <!-- 云端空间信息 -->
               <div>
-                <div v-if="loadingSpaceMap.get(group.account.id) && !spaceInfoMap.get(group.account.id)" class="text-center py-4 text-slate-400">
+                <div
+                  v-if="
+                    loadingSpaceMap.get(group.account.id) && !spaceInfoMap.get(group.account.id)
+                  "
+                  class="text-center py-4 text-slate-400"
+                >
                   <i class="pi pi-spin pi-spinner text-xl" />
                 </div>
 
                 <div v-else-if="spaceInfoMap.get(group.account.id)" class="space-y-3">
                   <!-- 详细分段式进度条 -->
-                  <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-5 overflow-hidden flex">
+                  <div
+                    class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-5 overflow-hidden flex"
+                  >
                     <div
                       v-for="segment in getSegmentData(spaceInfoMap.get(group.account.id)!)"
                       :key="segment.key"
@@ -337,7 +344,13 @@ onMounted(() => {
                       <div class="flex items-center gap-1">
                         <div class="w-3 h-3 rounded bg-slate-200 dark:bg-slate-700"></div>
                         <span class="text-slate-600 dark:text-slate-300"
-                          >剩余 {{ formatSize(spaceInfoMap.get(group.account.id)!.totalQuota - spaceInfoMap.get(group.account.id)!.used) }}</span
+                          >剩余
+                          {{
+                            formatSize(
+                              spaceInfoMap.get(group.account.id)!.totalQuota -
+                                spaceInfoMap.get(group.account.id)!.used,
+                            )
+                          }}</span
                         >
                       </div>
                     </div>

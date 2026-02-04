@@ -47,13 +47,14 @@ const emit = defineEmits<{
           >
             暂无计划任务
           </div>
-          <div v-else class="grid grid-cols-1 gap-3">
+          <div v-else class="grid grid-cols-1">
             <CrontabCard
-              v-for="item in props.crontabs"
+              v-for="(item, index) in props.crontabs"
               :key="item.id"
               :crontab="item"
               :album-options="props.albumOptions"
               :busy="props.updatingRow === item.id"
+              :class="{ 'pt-4': index === 0 }"
               @edit="emit('edit', item)"
               @delete="emit('delete', item)"
               @toggle="emit('toggle', item)"

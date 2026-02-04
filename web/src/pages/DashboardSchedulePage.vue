@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import Card from 'primevue/card'
 import ContributionHeatmap from '@/components/ContributionHeatmap.vue'
 import AlbumPanel from '@/components/AlbumPanel.vue'
