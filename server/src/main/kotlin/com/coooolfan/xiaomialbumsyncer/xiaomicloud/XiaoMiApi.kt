@@ -318,6 +318,8 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 text = when (text) {
                     "桌面图标布局" -> "云备份"
                     "Creation" -> "小米创作"
+                    "相册图片" -> "相册"
+                    "录音备份" -> "录音"
                     else -> text
                 }
                 

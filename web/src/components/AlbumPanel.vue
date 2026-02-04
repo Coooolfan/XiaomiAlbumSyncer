@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from 'vue'
 import Card from 'primevue/card'
-import SplitButton from 'primevue/splitbutton'
 import Button from 'primevue/button'
 import AlbumCard from '@/components/AlbumCard.vue'
 import { useToast } from 'primevue/usetoast'
@@ -54,16 +53,6 @@ function getHeader(group: { account: XiaomiAccount; albums: Album[] }) {
     return `相册-共${count}个项目`
   }
   return `${group.account.nickname}-共${count}个相册`
-}
-
-function getRefreshModel(accountId: number) {
-  return [
-    {
-      label: '从远程更新此账号相册列表',
-      icon: 'pi pi-cloud-download',
-      command: () => fetchLatestAlbums(accountId),
-    },
-  ]
 }
 
 function toggleCollapse(accountId: number) {
@@ -194,16 +183,22 @@ onMounted(() => {
               {{ getHeader(group) }}
             </div>
           </div>
-          <SplitButton
-            icon="pi pi-refresh"
-            size="small"
-            severity="secondary"
-            outlined
-            rounded
-            label="刷新"
-            @click="() => fetchData()"
-            :model="getRefreshModel(group.account.id)"
-          />
+          <div class="flex items-center gap-2">
+            <Button
+              icon="pi pi-refresh"
+              severity="secondary"
+              rounded
+              text
+              @click="() => fetchData()"
+            />
+            <Button
+              icon="pi pi-cloud-download"
+              severity="secondary"
+              rounded
+              text
+              @click="() => fetchLatestAlbums(group.account.id)"
+            />
+          </div>
         </div>
       </template>
 

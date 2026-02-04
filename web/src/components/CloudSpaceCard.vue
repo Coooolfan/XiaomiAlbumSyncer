@@ -93,7 +93,14 @@ defineExpose({
     <template #title>
       <div class="flex items-center justify-between">
         <div class="font-medium text-slate-700 dark:text-white">云端空间</div>
-        <Button icon="pi pi-refresh" size="small" :loading="loading" @click="loadSpaceInfo" />
+        <Button
+          icon="pi pi-refresh"
+          severity="secondary"
+          rounded
+          text
+          :loading="loading"
+          @click="loadSpaceInfo"
+        />
       </div>
     </template>
 
