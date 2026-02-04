@@ -6,8 +6,6 @@ import AlbumPanel from '@/components/AlbumPanel.vue'
 import CrontabList from '@/components/CrontabList.vue'
 import CronFormDialog from '@/components/CronFormDialog.vue'
 import ExecutionDialogs from '@/components/ExecutionDialogs.vue'
-import CloudSpaceCard from '@/components/CloudSpaceCard.vue'
-import Select from 'primevue/select'
 import { useToast } from 'primevue/usetoast'
 import { storeToRefs } from 'pinia'
 import { useAccountsStore } from '@/stores/accounts'
@@ -29,9 +27,6 @@ const { crontabs, loading: loadingCrons } = storeToRefs(crontabsStore)
 const { optimizeHeatmap } = storeToRefs(preferencesStore)
 
 const toast = useToast()
-
-const selectedAccountId = ref<number | null>(null)
-const cloudSpaceRef = ref<InstanceType<typeof CloudSpaceCard> | null>(null)
 
 const albumIds = computed(() => albums.value.map((a) => a.id))
 const {
@@ -137,11 +132,6 @@ onMounted(async () => {
     console.error('获取时间线数据失败', err)
   })
   buildTimeZones()
-
-  // 自动选择第一个账号
-  if (accounts.value.length > 0) {
-    selectedAccountId.value = accounts.value[0]!.id
-  }
 })
 
 watch(albums, () => {
@@ -191,24 +181,6 @@ watch(albums, () => {
     />
 
     <AlbumPanel />
-
-    <!-- 云端空间卡片 -->
-    <div v-if="selectedAccountId" class="mt-6">
-      <CloudSpaceCard ref="cloudSpaceRef" :accountId="selectedAccountId" />
-    </div>
-
-    <!-- 账号选择器（如果有多个账号） -->
-    <div v-if="accounts.length > 1" class="mt-4">
-      <label class="block text-sm font-medium text-slate-700 mb-2">查看云端空间</label>
-      <Select
-        v-model="selectedAccountId"
-        :options="accountOptions"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="选择账号"
-        class="w-full max-w-xs"
-      />
-    </div>
 
     <CronFormDialog
       v-model:visible="showCronDialog"
