@@ -59,7 +59,7 @@ const displayRelativeUpdate = computed(() => {
     class="group relative w-full max-w-sm rounded-xl border border-slate-200/80 bg-white/70 px-4 py-3 shadow-sm backdrop-blur transition-all hover:bg-white hover:shadow-md dark:border-slate-700/60 dark:bg-slate-900/40 dark:hover:bg-slate-900/55"
   >
     <div class="min-w-0">
-      <div class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+      <div class="truncate text-sm font-semibold text-slate-600 dark:text-slate-300">
         {{ displayName }}
       </div>
       <div class="mt-1 flex items-center justify-between">

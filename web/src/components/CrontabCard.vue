@@ -256,7 +256,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Card class="overflow-hidden ring-1 ring-slate-200/60">
+  <Card
+    class="border-2 border-slate-300 dark:border-slate-600 rounded-lg bg-gradient-to-br from-white to-slate-50/80 dark:from-slate-800 dark:to-slate-900/80 shadow-md"
+  >
     <template #title>
       <div class="flex items-center justify-between pb-4">
         <div class="flex items-center gap-3">

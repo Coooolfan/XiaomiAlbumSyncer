@@ -91,11 +91,8 @@ defineExpose({
 <template>
   <Card class="overflow-hidden ring-1 ring-slate-200/60">
     <template #title>
-      <div class="flex items-center justify-between pb-4">
-        <div class="flex items-center gap-3">
-          <i class="pi pi-cloud text-sky-500" />
-          <span class="font-medium text-slate-700 text-base">云端空间</span>
-        </div>
+      <div class="flex items-center justify-between">
+        <div class="font-medium text-slate-700 dark:text-white">云端空间</div>
         <Button icon="pi pi-refresh" size="small" :loading="loading" @click="loadSpaceInfo" />
       </div>
     </template>

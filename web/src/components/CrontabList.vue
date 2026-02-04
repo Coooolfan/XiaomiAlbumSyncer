@@ -29,7 +29,7 @@ const emit = defineEmits<{
   <Card header="计划任务" class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
     <template #title>
       <div class="flex items-center justify-between">
-        <div class="font-medium text-slate-600">计划任务</div>
+        <div class="font-medium text-slate-700 dark:text-white">计划任务</div>
         <div class="flex items-center gap-2">
           <Button icon="pi pi-refresh" severity="secondary" rounded text @click="emit('refresh')" />
           <Button icon="pi pi-plus" severity="success" rounded text @click="emit('create')" />

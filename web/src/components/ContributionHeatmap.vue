@@ -376,15 +376,6 @@ function tooltipText(day: { dateStr: string; count: number }) {
 
 <template>
   <div class="inline-block w-full" :style="rootStyle" ref="containerEl">
-    <div class="flex items-center justify-between mb-2">
-      <div v-if="label" class="text-sm font-medium text-slate-700 dark:text-slate-200">
-        {{ label }}
-      </div>
-      <div class="text-[10px] text-slate-400 dark:text-slate-500">
-        {{ rangeText }}
-      </div>
-    </div>
-
     <!-- Month labels -->
     <div
       class="grid mb-1 select-none"
@@ -430,20 +421,25 @@ function tooltipText(day: { dateStr: string; count: number }) {
       </div>
     </div>
 
-    <!-- Legend -->
-    <div
-      class="flex items-center gap-2 mt-3 text-[10px] text-slate-400 dark:text-slate-500 select-none"
-    >
-      <span>Less</span>
-      <div class="flex items-center gap-1">
-        <div
-          v-for="l in [0, 1, 2, 3, 4]"
-          :key="`legend-${l}`"
-          class="cell"
-          :style="cellStyle(l)"
-        ></div>
+    <!-- Legend and Date Range -->
+    <div class="flex items-center justify-between mt-3">
+      <div
+        class="flex items-center gap-2 text-[10px] text-slate-400 dark:text-slate-500 select-none"
+      >
+        <span>Less</span>
+        <div class="flex items-center gap-1">
+          <div
+            v-for="l in [0, 1, 2, 3, 4]"
+            :key="`legend-${l}`"
+            class="cell"
+            :style="cellStyle(l)"
+          ></div>
+        </div>
+        <span>More</span>
       </div>
-      <span>More</span>
+      <div class="text-[10px] text-slate-400 dark:text-slate-500">
+        {{ rangeText }}
+      </div>
     </div>
   </div>
 </template>

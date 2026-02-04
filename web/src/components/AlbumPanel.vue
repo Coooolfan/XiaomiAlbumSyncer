@@ -164,7 +164,7 @@ onMounted(() => {
     <Card v-if="accounts.length === 0" class="overflow-hidden shadow-sm ring-1 ring-slate-200/60">
       <template #title>
         <div class="flex items-center justify-between">
-          <div class="font-medium text-slate-600">相册</div>
+          <div class="font-medium text-slate-700 dark:text-white">相册</div>
           <Button icon="pi pi-refresh" severity="secondary" rounded text @click="fetchData" />
         </div>
       </template>
@@ -190,7 +190,9 @@ onMounted(() => {
               @click="toggleCollapse(group.account.id)"
               class="w-8 h-8 flex-shrink-0"
             />
-            <div class="font-medium text-slate-600 leading-none">{{ getHeader(group) }}</div>
+            <div class="font-medium text-slate-700 dark:text-white leading-none">
+              {{ getHeader(group) }}
+            </div>
           </div>
           <SplitButton
             icon="pi pi-refresh"
