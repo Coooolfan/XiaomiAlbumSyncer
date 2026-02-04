@@ -349,7 +349,13 @@ const colorPalette = computed(() => {
       return ['var(--heatmap-empty)', '#e9eef4', '#cfd8e3', '#97a6ba', '#475569']
     case 'emerald':
     default:
-      return ['var(--heatmap-empty)', '#e6f4ea', '#c9ecd7', '#8fdbb7', '#10b981']
+      return [
+        'var(--heatmap-empty)',
+        'var(--heatmap-level-1)',
+        'var(--heatmap-level-2)',
+        'var(--heatmap-level-3)',
+        'var(--heatmap-level-4)',
+      ]
   }
 })
 
@@ -456,6 +462,11 @@ function tooltipText(day: { dateStr: string; count: number }) {
 .inline-block {
   --heatmap-empty: rgba(15, 23, 42, 0.06);
   --heatmap-cell-border: rgba(15, 23, 42, 0.08);
+  /* 浅色模式：由少到多 #ACEEBB #4AC26B #2EA44E #126329 */
+  --heatmap-level-1: #aceebb;
+  --heatmap-level-2: #4ac26b;
+  --heatmap-level-3: #2ea44e;
+  --heatmap-level-4: #126329;
 }
 @media (prefers-color-scheme: dark) {
   :host,
@@ -463,6 +474,11 @@ function tooltipText(day: { dateStr: string; count: number }) {
   .inline-block {
     --heatmap-empty: rgba(148, 163, 184, 0.12);
     --heatmap-cell-border: rgba(148, 163, 184, 0.18);
+    /* 深色模式：由少到多 #033A16 #186C2D #2DA043 #57D364 */
+    --heatmap-level-1: #033a16;
+    --heatmap-level-2: #186c2d;
+    --heatmap-level-3: #2da043;
+    --heatmap-level-4: #57d364;
   }
 }
 </style>

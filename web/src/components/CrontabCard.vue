@@ -262,7 +262,9 @@ onUnmounted(() => {
     <template #title>
       <div class="flex items-center justify-between pb-4">
         <div class="flex items-center gap-3">
-          <span class="font-medium text-slate-700 text-base">{{ crontab.name }}</span>
+          <span class="font-medium text-slate-700 dark:text-slate-200 text-base">{{
+            crontab.name
+          }}</span>
         </div>
         <div class="flex items-center gap-2 text-xs text-slate-600">
           <span class="hidden sm:inline">启用</span>
@@ -299,26 +301,32 @@ onUnmounted(() => {
     <template #content>
       <div class="text-sm md:flex md:items-start md:gap-6">
         <div class="flex-1 space-y-3">
-          <div v-if="crontab.description" class="text-slate-500">
+          <div v-if="crontab.description" class="text-slate-500 dark:text-slate-400">
             {{ crontab.description }}
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="flex items-center gap-2">
-              <i class="pi pi-user text-slate-400" />
-              <span class="text-slate-600">{{ crontab.account?.nickname || '-' }}</span>
+              <i class="pi pi-user text-slate-400 dark:text-slate-500" />
+              <span class="text-slate-600 dark:text-slate-300">{{
+                crontab.account?.nickname || '-'
+              }}</span>
             </div>
             <div class="flex items-center gap-2">
-              <i class="pi pi-clock text-slate-400" />
-              <span class="text-slate-600">{{ crontab.config?.expression }}</span>
+              <i class="pi pi-clock text-slate-400 dark:text-slate-500" />
+              <span class="text-slate-600 dark:text-slate-300">{{
+                crontab.config?.expression
+              }}</span>
             </div>
             <div class="flex items-center gap-2">
-              <i class="pi pi-globe text-slate-400" />
-              <span class="text-slate-600">{{ crontab.config?.timeZone }}</span>
+              <i class="pi pi-globe text-slate-400 dark:text-slate-500" />
+              <span class="text-slate-600 dark:text-slate-300">{{ crontab.config?.timeZone }}</span>
             </div>
             <div class="flex items-center gap-2 sm:col-span-1 col-span-1">
-              <i class="pi pi-folder text-slate-400" />
-              <span class="text-slate-600 truncate">{{ crontab.config?.targetPath || '-' }}</span>
+              <i class="pi pi-folder text-slate-400 dark:text-slate-500" />
+              <span class="text-slate-600 dark:text-slate-300 truncate">{{
+                crontab.config?.targetPath || '-'
+              }}</span>
             </div>
           </div>
 
