@@ -257,7 +257,7 @@ onUnmounted(() => {
 
 <template>
   <Card
-    class="border-2 border-slate-300 dark:border-slate-600 rounded-lg bg-gradient-to-br from-white to-slate-50/80 dark:from-slate-800 dark:to-slate-900/80 shadow-md"
+    class="rounded-lg bg-gradient-to-br from-white to-slate-50/80 dark:from-slate-800 dark:to-slate-900/80 shadow-md"
   >
     <template #title>
       <div class="flex items-center justify-between pb-4">
@@ -497,9 +497,16 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <div class="rounded-md bg-slate-50 dark:bg-slate-900/30 ring-1 ring-slate-200/60 p-3">
-            <div class="text-xs font-medium text-slate-500 mb-2">最近执行(本地时间)</div>
-            <div v-if="recentHistories.length === 0" class="text-xs text-slate-400">暂无历史</div>
+          <div class="rounded-md bg-[#F1F5F9] dark:bg-[#27272A] p-3">
+            <div class="text-xs font-medium text-slate-700 dark:text-slate-200 mb-2">
+              最近执行(本地时间)
+            </div>
+            <div
+              v-if="recentHistories.length === 0"
+              class="text-xs text-slate-400 dark:text-slate-500"
+            >
+              暂无历史
+            </div>
             <ul v-else class="space-y-2">
               <li
                 v-for="(h, index) in recentHistories"
@@ -511,12 +518,12 @@ onUnmounted(() => {
                     class="inline-block w-2 h-2 rounded-full"
                     :class="h.isCompleted ? 'bg-emerald-500' : 'bg-amber-500'"
                   />
-                  <span class="text-slate-600"
+                  <span class="text-slate-600 dark:text-slate-300"
                     >{{ formatTime(h.startTime) }} → {{ formatTime(h.endTime) }}</span
                   >
                 </div>
                 <div class="flex items-center gap-2">
-                  <span class="text-xs text-slate-400">
+                  <span class="text-xs text-slate-600 dark:text-slate-300">
                     {{ formatHistoryText(h) }}
                   </span>
                   <Tag
