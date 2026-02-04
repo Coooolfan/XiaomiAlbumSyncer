@@ -241,6 +241,20 @@ onMounted(() => {
   </Card>
 
   <Card v-else class="overflow-hidden shadow-sm ring-1 ring-slate-200/60">
+    <template #title>
+      <div class="flex items-center justify-between">
+        <div class="font-medium text-slate-700 dark:text-white">相册</div>
+        <div class="flex items-center gap-2">
+          <Button
+            icon="pi pi-refresh"
+            severity="secondary"
+            rounded
+            text
+            @click="() => fetchData()"
+          />
+        </div>
+      </div>
+    </template>
     <template #content>
       <div class="space-y-0">
         <div v-for="(group, index) in groupedAlbums" :key="group.account.id">
