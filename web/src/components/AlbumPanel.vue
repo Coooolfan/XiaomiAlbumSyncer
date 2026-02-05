@@ -3,6 +3,7 @@ import { onMounted, computed, ref } from 'vue'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import AlbumCard from '@/components/AlbumCard.vue'
+import CollapsibleCard from '@/components/CollapsibleCard.vue'
 import { useToast } from 'primevue/usetoast'
 import type { AlbumDto } from '@/__generated/model/dto/AlbumDto'
 import type { XiaomiAccountDto } from '@/__generated/model/dto/XiaomiAccountDto'
@@ -21,9 +22,6 @@ const accountsStore = useAccountsStore()
 
 const { albums } = storeToRefs(albumsStore)
 const { accounts } = storeToRefs(accountsStore)
-
-// 折叠状态管理：key 为账号 ID，value 为是否折叠
-const collapsedState = ref<Map<number, boolean>>(new Map())
 
 // 云端空间信息管理
 const spaceInfoMap = ref<Map<number, CloudSpaceInfo | null>>(new Map())
@@ -66,19 +64,6 @@ function getAlbumCount(group: { account: XiaomiAccount; albums: Album[] }) {
     return `共${count}个项目`
   }
   return `共${count}个相册`
-}
-
-function toggleCollapse(accountId: number) {
-  const current = collapsedState.value.get(accountId) ?? false
-  collapsedState.value.set(accountId, !current)
-}
-
-function isCollapsed(accountId: number): boolean {
-  // 多账号时默认折叠
-  if (!collapsedState.value.has(accountId)) {
-    return accounts.value.length > 1
-  }
-  return collapsedState.value.get(accountId) ?? false
 }
 
 async function fetchData() {
@@ -186,37 +171,6 @@ function getSegmentData(spaceInfo: CloudSpaceInfo) {
   return segments
 }
 
-// 折叠动画钩子
-function onEnter(el: Element) {
-  const element = el as HTMLElement
-  element.style.maxHeight = '0'
-  element.style.opacity = '0'
-  // 强制重排以触发过渡
-  void element.offsetHeight
-  element.style.maxHeight = element.scrollHeight + 'px'
-  element.style.opacity = '1'
-}
-
-function onAfterEnter(el: Element) {
-  const element = el as HTMLElement
-  element.style.maxHeight = ''
-}
-
-function onLeave(el: Element) {
-  const element = el as HTMLElement
-  element.style.maxHeight = element.scrollHeight + 'px'
-  // 强制重排
-  void element.offsetHeight
-  element.style.maxHeight = '0'
-  element.style.opacity = '0'
-}
-
-function onAfterLeave(el: Element) {
-  const element = el as HTMLElement
-  element.style.maxHeight = ''
-  element.style.opacity = ''
-}
-
 onMounted(() => {
   accountsStore.fetchAccounts()
   albumsStore.fetchAlbums()
@@ -256,164 +210,115 @@ onMounted(() => {
       </div>
     </template>
     <template #content>
-      <div class="space-y-0">
-        <div v-for="(group, index) in groupedAlbums" :key="group.account.id">
-          <!-- 分割线（除了第一个账号） -->
-          <div v-if="index > 0" class="border-t border-slate-200 dark:border-slate-700 my-4"></div>
-
-          <!-- 账号标题和按钮 -->
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-              <div class="flex items-baseline gap-2">
-                <span class="text-xl font-semibold text-slate-700 dark:text-white leading-none">
-                  {{ getAccountName(group) }}
-                </span>
-                <span class="text-sm text-slate-500 dark:text-slate-400">
-                  {{ getAlbumCount(group) }}
-                </span>
-              </div>
-              <Button
-                :icon="isCollapsed(group.account.id) ? 'pi pi-chevron-right' : 'pi pi-chevron-down'"
-                severity="secondary"
-                text
-                rounded
-                size="small"
-                @click="toggleCollapse(group.account.id)"
-                class="w-8 h-8 flex-shrink-0"
-              />
-            </div>
-            <div class="flex items-center gap-2">
-              <Button
-                icon="pi pi-refresh"
-                severity="secondary"
-                rounded
-                text
-                @click="() => fetchData()"
-              />
-              <Button
-                icon="pi pi-cloud-download"
-                severity="secondary"
-                rounded
-                text
-                @click="() => fetchLatestAlbums(group.account.id)"
-              />
-            </div>
-          </div>
+      <div>
+        <CollapsibleCard
+          v-for="(group, index) in groupedAlbums"
+          :key="group.account.id"
+          :title="getAccountName(group)"
+          :subtitle="getAlbumCount(group)"
+          :default-collapsed="accounts.length > 1"
+          :is-first="index === 0"
+        >
+          <template #actions>
+            <Button
+              icon="pi pi-cloud-download"
+              severity="secondary"
+              rounded
+              text
+              @click="() => fetchLatestAlbums(group.account.id)"
+            />
+          </template>
 
           <!-- 相册内容 -->
-          <Transition
-            name="collapse"
-            @enter="onEnter"
-            @after-enter="onAfterEnter"
-            @leave="onLeave"
-            @after-leave="onAfterLeave"
-          >
-            <div v-show="!isCollapsed(group.account.id)" class="space-y-4">
-              <!-- 云端空间信息 -->
-              <div>
+          <div class="space-y-4">
+            <!-- 云端空间信息 -->
+            <div>
+              <div
+                v-if="loadingSpaceMap.get(group.account.id) && !spaceInfoMap.get(group.account.id)"
+                class="text-center py-4 text-slate-400"
+              >
+                <i class="pi pi-spin pi-spinner text-xl" />
+              </div>
+
+              <div v-else-if="spaceInfoMap.get(group.account.id)" class="space-y-3">
+                <!-- 详细分段式进度条 -->
                 <div
-                  v-if="
-                    loadingSpaceMap.get(group.account.id) && !spaceInfoMap.get(group.account.id)
-                  "
-                  class="text-center py-4 text-slate-400"
+                  class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-5 overflow-hidden flex"
                 >
-                  <i class="pi pi-spin pi-spinner text-xl" />
+                  <div
+                    v-for="segment in getSegmentData(spaceInfoMap.get(group.account.id)!)"
+                    :key="segment.key"
+                    class="h-5 transition-all duration-500 flex items-center justify-center"
+                    :class="segment.color"
+                    :style="{ width: segment.percent + '%' }"
+                    :title="`${segment.label}: ${formatSize(segment.size)}`"
+                  >
+                    <span
+                      v-if="segment.percent > 8"
+                      class="text-[10px] text-white font-medium px-1 truncate"
+                    >
+                      {{ segment.label }}
+                    </span>
+                  </div>
                 </div>
 
-                <div v-else-if="spaceInfoMap.get(group.account.id)" class="space-y-3">
-                  <!-- 详细分段式进度条 -->
-                  <div
-                    class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-5 overflow-hidden flex"
-                  >
+                <!-- 详细图例说明 -->
+                <div class="flex items-center justify-between text-xs flex-wrap gap-y-2">
+                  <div class="flex items-center gap-3 flex-wrap">
                     <div
                       v-for="segment in getSegmentData(spaceInfoMap.get(group.account.id)!)"
                       :key="segment.key"
-                      class="h-5 transition-all duration-500 flex items-center justify-center"
-                      :class="segment.color"
-                      :style="{ width: segment.percent + '%' }"
-                      :title="`${segment.label}: ${formatSize(segment.size)}`"
+                      class="flex items-center gap-1"
                     >
-                      <span
-                        v-if="segment.percent > 8"
-                        class="text-[10px] text-white font-medium px-1 truncate"
+                      <div class="w-3 h-3 rounded" :class="segment.color"></div>
+                      <span class="text-slate-600 dark:text-slate-300"
+                        >{{ segment.label }} {{ formatSize(segment.size) }}</span
                       >
-                        {{ segment.label }}
-                      </span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <div class="w-3 h-3 rounded bg-slate-200 dark:bg-slate-700"></div>
+                      <span class="text-slate-600 dark:text-slate-300"
+                        >剩余
+                        {{
+                          formatSize(
+                            spaceInfoMap.get(group.account.id)!.totalQuota -
+                              spaceInfoMap.get(group.account.id)!.used,
+                          )
+                        }}</span
+                      >
                     </div>
                   </div>
-
-                  <!-- 详细图例说明 -->
-                  <div class="flex items-center justify-between text-xs flex-wrap gap-y-2">
-                    <div class="flex items-center gap-3 flex-wrap">
-                      <div
-                        v-for="segment in getSegmentData(spaceInfoMap.get(group.account.id)!)"
-                        :key="segment.key"
-                        class="flex items-center gap-1"
-                      >
-                        <div class="w-3 h-3 rounded" :class="segment.color"></div>
-                        <span class="text-slate-600 dark:text-slate-300"
-                          >{{ segment.label }} {{ formatSize(segment.size) }}</span
-                        >
-                      </div>
-                      <div class="flex items-center gap-1">
-                        <div class="w-3 h-3 rounded bg-slate-200 dark:bg-slate-700"></div>
-                        <span class="text-slate-600 dark:text-slate-300"
-                          >剩余
-                          {{
-                            formatSize(
-                              spaceInfoMap.get(group.account.id)!.totalQuota -
-                                spaceInfoMap.get(group.account.id)!.used,
-                            )
-                          }}</span
-                        >
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <span class="text-slate-600 dark:text-slate-300 font-medium">
-                        总空间 {{ formatSize(spaceInfoMap.get(group.account.id)!.totalQuota) }}
-                      </span>
-                      <span class="text-slate-600 dark:text-slate-300 font-medium">
-                        已使用{{ spaceInfoMap.get(group.account.id)!.usagePercent }}%
-                      </span>
-                    </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-slate-600 dark:text-slate-300 font-medium">
+                      总空间 {{ formatSize(spaceInfoMap.get(group.account.id)!.totalQuota) }}
+                    </span>
+                    <span class="text-slate-600 dark:text-slate-300 font-medium">
+                      已使用{{ spaceInfoMap.get(group.account.id)!.usagePercent }}%
+                    </span>
                   </div>
-                </div>
-
-                <div v-else class="text-center py-4 text-slate-400">
-                  <i class="pi pi-cloud-download text-2xl mb-1" />
-                  <p class="text-xs">无法加载云端空间信息</p>
                 </div>
               </div>
 
-              <!-- 相册列表 -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                <AlbumCard
-                  v-for="a in group.albums"
-                  :key="a.id"
-                  :name="a.name"
-                  :asset-count="a.assetCount"
-                  :last-update-time="a.lastUpdateTime"
-                />
+              <div v-else class="text-center py-4 text-slate-400">
+                <i class="pi pi-cloud-download text-2xl mb-1" />
+                <p class="text-xs">无法加载云端空间信息</p>
               </div>
-              <div v-if="group.albums.length === 0" class="text-xs text-slate-500">暂无相册</div>
             </div>
-          </Transition>
-        </div>
+
+            <!-- 相册列表 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              <AlbumCard
+                v-for="a in group.albums"
+                :key="a.id"
+                :name="a.name"
+                :asset-count="a.assetCount"
+                :last-update-time="a.lastUpdateTime"
+              />
+            </div>
+            <div v-if="group.albums.length === 0" class="text-xs text-slate-500">暂无相册</div>
+          </div>
+        </CollapsibleCard>
       </div>
     </template>
   </Card>
 </template>
-
-<style scoped>
-.collapse-enter-active,
-.collapse-leave-active {
-  transition: all 0.3s ease;
-  overflow: hidden;
-}
-
-.collapse-enter-from,
-.collapse-leave-to {
-  opacity: 0;
-  max-height: 0;
-}
-</style>
