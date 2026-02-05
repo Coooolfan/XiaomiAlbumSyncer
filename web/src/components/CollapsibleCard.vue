@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import Button from 'primevue/button'
 
 const props = defineProps<{
@@ -7,13 +7,37 @@ const props = defineProps<{
   subtitle?: string
   defaultCollapsed?: boolean
   isFirst?: boolean
+  storageKey?: string
 }>()
 
-const isCollapsed = ref(props.defaultCollapsed ?? false)
+// 从 localStorage 读取折叠状态，如果没有则使用默认值
+function getInitialCollapsedState(): boolean {
+  if (props.storageKey) {
+    const stored = localStorage.getItem(`collapsed-${props.storageKey}`)
+    if (stored !== null) {
+      return stored === 'true'
+    }
+  }
+  return props.defaultCollapsed ?? false
+}
+
+const isCollapsed = ref(getInitialCollapsedState())
 
 function toggleCollapse() {
   isCollapsed.value = !isCollapsed.value
+  // 保存状态到 localStorage
+  if (props.storageKey) {
+    localStorage.setItem(`collapsed-${props.storageKey}`, String(isCollapsed.value))
+  }
 }
+
+// 监听 storageKey 变化，重新读取状态
+watch(
+  () => props.storageKey,
+  () => {
+    isCollapsed.value = getInitialCollapsedState()
+  },
+)
 </script>
 
 <template>

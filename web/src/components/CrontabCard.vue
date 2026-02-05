@@ -35,11 +35,25 @@ const albumMap = computed<Record<string, string>>(() => {
   return map
 })
 
-// 折叠状态
-const isCollapsed = ref(false)
+// 折叠状态 - 从 localStorage 读取
+function getInitialCollapsedState(): boolean {
+  if (props.crontab.id) {
+    const stored = localStorage.getItem(`collapsed-crontab-${props.crontab.id}`)
+    if (stored !== null) {
+      return stored === 'true'
+    }
+  }
+  return false
+}
+
+const isCollapsed = ref(getInitialCollapsedState())
 
 function toggleCollapse() {
   isCollapsed.value = !isCollapsed.value
+  // 保存状态到 localStorage
+  if (props.crontab.id) {
+    localStorage.setItem(`collapsed-crontab-${props.crontab.id}`, String(isCollapsed.value))
+  }
 }
 
 // 同步模式显示文本和样式

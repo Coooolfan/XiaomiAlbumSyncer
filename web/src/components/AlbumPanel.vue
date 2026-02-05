@@ -218,6 +218,7 @@ onMounted(async () => {
           :subtitle="getAlbumCount(group)"
           :default-collapsed="accounts.length > 1"
           :is-first="index === 0"
+          :storage-key="'album-' + group.account.id"
         >
           <template #actions>
             <Button
