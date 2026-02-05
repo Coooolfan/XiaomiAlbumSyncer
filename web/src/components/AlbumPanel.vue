@@ -171,8 +171,8 @@ function getSegmentData(spaceInfo: CloudSpaceInfo) {
   return segments
 }
 
-onMounted(() => {
-  accountsStore.fetchAccounts()
+onMounted(async () => {
+  await accountsStore.fetchAccounts()
   albumsStore.fetchAlbums()
   // 加载所有账号的云端空间信息
   accounts.value.forEach((account) => {
