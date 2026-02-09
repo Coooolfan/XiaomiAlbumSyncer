@@ -175,16 +175,17 @@ class ArchiveService(
     }
 
     /**
-     * 获取已经成功归档的资产 ID 列表
+     * 获取已经尝试过归档的资产 ID 列表（包括成功和失败的）
      * @param crontabId 定时任务 ID
-     * @return 已归档的资产 ID 列表
+     * @return 已尝试归档的资产 ID 列表
      */
     private fun getArchivedAssetIds(crontabId: Long): List<Long> {
+        // 查询所有有归档详情记录的资产 ID，无论成功失败
+        // 这样可以避免重复尝试归档已经失败的资产
         return sql.createQuery(ArchiveDetail::class) {
             where(table.archiveRecord.crontabId eq crontabId)
-            where(table.isMovedToBackup eq true)
             select(table.assetId)
-        }.execute()
+        }.execute().distinct()
     }
 
     /**
@@ -311,6 +312,38 @@ class ArchiveService(
     private fun moveToBackup(asset: Asset, syncFolder: Path, backupFolder: Path): ArchiveDetail {
         val sourcePath = Path(syncFolder.toString(), asset.album.name, asset.fileName)
         val targetPath = Path(backupFolder.toString(), asset.album.name, asset.fileName)
+
+        // 检查源文件是否存在
+        if (!sourcePath.exists()) {
+            // 源文件不存在，检查目标文件是否已存在
+            if (targetPath.exists()) {
+                // 文件已经在 backup 文件夹中，验证完整性
+                val isValid = fileService.verifySha1(targetPath, asset.sha1)
+                
+                if (isValid) {
+                    log.info("文件已存在于 backup 文件夹且完整性验证通过: ${asset.fileName}")
+                    return ArchiveDetail {
+                        this.assetId = asset.id
+                        this.sourcePath = sourcePath.toString()
+                        this.targetPath = targetPath.toString()
+                        this.isMovedToBackup = true
+                        this.isDeletedFromCloud = false
+                        this.errorMessage = "文件已存在于 backup 文件夹"
+                    }
+                } else {
+                    log.warn("文件已存在于 backup 文件夹但完整性验证失败: ${asset.fileName}")
+                    throw FileIntegrityException("backup 文件夹中的文件完整性验证失败：${asset.fileName}")
+                }
+            } else {
+                // 文件既不在 sync 也不在 backup，可能已被手动删除
+                log.warn("文件不存在于 sync 和 backup 文件夹: ${asset.fileName}，将从数据库删除该资产")
+                
+                // 从数据库删除该资产记录
+                sql.deleteById(Asset::class, asset.id)
+                
+                throw IOException("文件不存在且已从数据库删除: ${asset.fileName}")
+            }
+        }
 
         // 移动文件
         fileService.moveFile(sourcePath, targetPath)
