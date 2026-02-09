@@ -267,7 +267,7 @@ class CrontabService(private val sql: KSqlClient) {
             throw IllegalArgumentException("未指定有效的时区，填充 EXIF 时间操作将被取消")
         }
 
-        val assetPathMap = fetchAssetPathMapBy(crontab.id)
+        val assetPathMap = fetchAssetPathMapForExifTime(crontabId)
 
         taskScheduler.executeCrontabExifTime(true, assetPathMap, systemConfig, timeZone)
     }
@@ -283,14 +283,23 @@ class CrontabService(private val sql: KSqlClient) {
             throw IllegalArgumentException("定时任务未启用重写文件系统时间选项: $crontabId")
         }
 
-        val assetPathMap = fetchAssetPathMapBy(crontab.id)
+        val assetPathMap = fetchAssetPathMapForFileSystemTime(crontabId)
 
         taskScheduler.executeCrontabRewriteFileSystemTime(true, assetPathMap)
     }
 
-    private fun fetchAssetPathMapBy(crontabId: Long): Map<Asset, Path> {
+    /**
+     * 获取需要重写 EXIF 时间的资产路径映射
+     * @param crontabId 定时任务 ID
+     * @return 资产到文件路径的映射
+     */
+    private fun fetchAssetPathMapForExifTime(crontabId: Long): Map<Asset, Path> {
+        log.info("查询定时任务 $crontabId 中需要重写 EXIF 时间的资产")
+        
         val crontabHistoryDetails = sql.createQuery(CrontabHistoryDetail::class) {
-            where(table.crontabHistoryId eq crontabId)
+            where(table.crontabHistory.crontab.id eq crontabId)
+            where(table.exifFilled eq false)
+            where(table.downloadCompleted eq true)
             select(table.fetchBy {
                 asset { allTableFields() }
                 filePath()
@@ -301,6 +310,35 @@ class CrontabService(private val sql: KSqlClient) {
         crontabHistoryDetails.forEach { detail ->
             assetPathMap[detail.asset] = Path(detail.filePath)
         }
+        
+        log.info("找到 ${assetPathMap.size} 个需要重写 EXIF 时间的资产")
+        return assetPathMap
+    }
+
+    /**
+     * 获取需要重写文件系统时间的资产路径映射
+     * @param crontabId 定时任务 ID
+     * @return 资产到文件路径的映射
+     */
+    private fun fetchAssetPathMapForFileSystemTime(crontabId: Long): Map<Asset, Path> {
+        log.info("查询定时任务 $crontabId 中需要重写文件系统时间的资产")
+        
+        val crontabHistoryDetails = sql.createQuery(CrontabHistoryDetail::class) {
+            where(table.crontabHistory.crontab.id eq crontabId)
+            where(table.fsTimeUpdated eq false)
+            where(table.downloadCompleted eq true)
+            select(table.fetchBy {
+                asset { allTableFields() }
+                filePath()
+            })
+        }.distinct().execute()
+
+        val assetPathMap = mutableMapOf<Asset, Path>()
+        crontabHistoryDetails.forEach { detail ->
+            assetPathMap[detail.asset] = Path(detail.filePath)
+        }
+        
+        log.info("找到 ${assetPathMap.size} 个需要重写文件系统时间的资产")
         return assetPathMap
     }
 

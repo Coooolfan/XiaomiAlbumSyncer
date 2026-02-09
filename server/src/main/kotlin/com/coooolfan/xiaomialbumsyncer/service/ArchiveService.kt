@@ -14,6 +14,7 @@ import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
+import java.io.IOException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
