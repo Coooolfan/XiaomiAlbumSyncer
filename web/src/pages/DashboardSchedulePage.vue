@@ -62,6 +62,7 @@ const {
   cronForm,
   formErrors,
   timeZones,
+  targetPathMountWarning,
   openCreateCron,
   openEditCron,
   validateCronForm,
@@ -188,6 +189,7 @@ watch(albums, () => {
       :time-zones="timeZones"
       :account-options="accountOptions"
       :form-album-options="formAlbumOptions"
+      :target-path-mount-warning="targetPathMountWarning"
       @submit="submitCron"
     />
 

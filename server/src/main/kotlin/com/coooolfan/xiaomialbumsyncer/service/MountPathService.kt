@@ -9,10 +9,14 @@ import java.nio.file.Path
 @Managed
 class MountPathService {
 
+    fun isRunningInDockerContainer(): Boolean {
+        return Files.exists(DOCKER_ENV_PATH)
+    }
+
     fun checkExplicitMountPoint(path: String): Boolean {
         val normalizedPath = normalizeAbsolutePath(path)
 
-        if (!Files.exists(DOCKER_ENV_PATH)) {
+        if (!isRunningInDockerContainer()) {
             return false
         }
 

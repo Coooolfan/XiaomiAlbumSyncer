@@ -23,6 +23,7 @@ const props = defineProps<{
   timeZones: ReadonlyArray<string>
   accountOptions: ReadonlyArray<{ label: string; value: number }>
   formAlbumOptions: ReadonlyArray<{ label: string; value: number }>
+  targetPathMountWarning: boolean
 }>()
 
 const emit = defineEmits<{
@@ -187,6 +188,16 @@ onBeforeUnmount(() => {
           <div class="text-[10px] text-slate-400">
             如在容器环境下运行，请确保已将此路径映射到宿主机。程序将在此路径下创建相册各自的文件夹。
           </div>
+          <Message
+            v-if="props.targetPathMountWarning"
+            severity="warn"
+            variant="simple"
+            icon="pi pi-exclamation-triangle"
+          >
+            <div class="text-[11px]">
+              警告：该路径可能仅存在于容器内，未挂载到宿主机，数据可能不会被持久化。
+            </div>
+          </Message>
         </div>
 
         <div class="space-y-2">

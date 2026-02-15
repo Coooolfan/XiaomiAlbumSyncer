@@ -198,7 +198,12 @@ class SystemConfigController(
     @Mapping("/mount-path", method = [MethodType.POST])
     @SaCheckLogin
     fun checkMountPath(@Body request: MountPathCheckRequest): MountPathCheckResponse {
-        return MountPathCheckResponse(mountPathService.checkExplicitMountPoint(request.path))
+        val mounted = mountPathService.checkExplicitMountPoint(request.path)
+        val inDocker = mountPathService.isRunningInDockerContainer()
+        return MountPathCheckResponse(
+            mounted = mounted,
+            inDocker = inDocker
+        )
     }
 
     /**
@@ -298,7 +303,8 @@ data class MountPathCheckRequest(
 )
 
 data class MountPathCheckResponse(
-    val mounted: Boolean
+    val mounted: Boolean,
+    val inDocker: Boolean
 )
 
 /**
