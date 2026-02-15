@@ -49,7 +49,6 @@ class ExifProcessingStage(
             timeZone.toTimeZone()
         )
 
-        log.info("开始处理资源 {} 的 EXIF 时间", asset.id)
         try {
             rewriteExifTime(asset, filePath, config)
         } catch (e: RuntimeException) {
@@ -59,7 +58,6 @@ class ExifProcessingStage(
                 throw e
             }
         }
-        log.info("资源 {} 的 EXIF 时间处理完成", asset.id)
     }
 
     fun process(context: CrontabHistoryDetail, systemConfig: SystemConfig): CrontabHistoryDetail {

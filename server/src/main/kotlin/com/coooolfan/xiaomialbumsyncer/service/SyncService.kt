@@ -158,7 +158,6 @@ class SyncService(
                         
                         if (asset != null) {
                             syncFolderAssets.add(asset)
-                            log.debug("找到匹配的资产: ${asset.fileName}")
                         } else {
                             log.warn("文件 $fileName 在数据库中找不到对应的资产记录，标记为孤儿文件")
                             orphanFiles.add(filePath)
@@ -175,7 +174,6 @@ class SyncService(
             orphanFiles.forEach { orphanFile ->
                 try {
                     fileService.deleteFile(orphanFile)
-                    log.info("已删除孤儿文件: ${orphanFile.fileName}")
                 } catch (e: Exception) {
                     log.error("删除孤儿文件失败: ${orphanFile.fileName}", e)
                 }
@@ -203,13 +201,6 @@ class SyncService(
         }
 
         log.info("同步变化检测完成：新增=${added.size}，删除=${deleted.size}，修改=${updated.size}")
-        
-        if (deleted.isNotEmpty()) {
-            log.info("检测到需要删除的资产:")
-            deleted.forEach { asset ->
-                log.info("  - ${asset.fileName} (ID=${asset.id})")
-            }
-        }
 
         return ChangeSummary(added, deleted, updated)
     }
@@ -304,7 +295,6 @@ class SyncService(
                             if (crontab.config.skipExistingFile && fileService.fileExists(filePath)) {
                                 val fileSize = fileService.getFileSize(filePath)
                                 if (fileSize == asset.size) {
-                                    log.info("文件已存在且大小匹配，跳过下载: ${asset.fileName} (大小=${fileSize})")
                                     recordSyncDetail(
                                         syncRecord.id,
                                         asset,
@@ -317,14 +307,13 @@ class SyncService(
                                     emit(Unit)
                                     return@flow
                                 } else {
-                                    log.info("文件已存在但大小不匹配，重新下载: ${asset.fileName} (本地=${fileSize}, 云端=${asset.size})")
+                                    log.warn("文件已存在但大小不匹配，重新下载: ${asset.fileName} (本地=${fileSize}, 云端=${asset.size})")
                                 }
                             }
                             
                             // 下载文件（使用生成的路径）
                             xiaoMiApi.downloadAsset(crontab.accountId, asset, filePath)
                             sql.saveCommand(asset, SaveMode.UPSERT).execute()
-                            log.debug("下载到 sync 文件夹: ${asset.fileName} -> $filePath")
                             
                             // 执行后处理
                             val postProcessingResult = postProcessingCoordinator.process(
@@ -416,7 +405,6 @@ class SyncService(
                                     if (crontab.config.skipExistingFile && fileService.fileExists(filePath)) {
                                         val fileSize = fileService.getFileSize(filePath)
                                         if (fileSize == asset.size) {
-                                            log.info("UPDATE 操作：文件已存在且大小匹配，跳过下载: ${asset.fileName} (大小=${fileSize})")
                                             recordSyncDetail(
                                                 syncRecord.id,
                                                 asset,
@@ -429,7 +417,7 @@ class SyncService(
                                             emit(Unit)
                                             return@flow
                                         } else {
-                                            log.info("UPDATE 操作：文件已存在但大小不匹配，重新下载: ${asset.fileName} (本地=${fileSize}, 云端=${asset.size})")
+                                            log.warn("UPDATE 操作：文件已存在但大小不匹配，重新下载: ${asset.fileName} (本地=${fileSize}, 云端=${asset.size})")
                                         }
                                     }
                                     
@@ -442,7 +430,6 @@ class SyncService(
                                     // 下载新文件（使用生成的路径）
                                     xiaoMiApi.downloadAsset(crontab.accountId, asset, filePath)
                                     sql.saveCommand(asset, SaveMode.UPSERT).execute()
-                                    log.debug("下载到 sync 文件夹: ${asset.fileName} -> $filePath")
                                     
                                     // 执行后处理
                                     val postProcessingResult = postProcessingCoordinator.process(
@@ -683,8 +670,6 @@ class SyncService(
         xiaoMiApi.downloadAsset(accountId, asset, targetPath)
         
         sql.saveCommand(asset, SaveMode.UPSERT).execute()
-        
-        log.debug("下载到 sync 文件夹: ${asset.fileName}")
     }
 
     /**
@@ -724,7 +709,6 @@ class SyncService(
         val filePath = Path(syncFolder.toString(), album.name, asset.fileName)
         if (filePath.exists()) {
             fileService.deleteFile(filePath)
-            log.debug("从 sync 文件夹删除: ${asset.fileName}")
         }
         
         sql.deleteById(Asset::class, asset.id)

@@ -31,12 +31,10 @@ class VerificationStage(
      * @throws RuntimeException 当 SHA1 校验失败时
      */
     fun verifySha1(asset: com.coooolfan.xiaomialbumsyncer.model.Asset, filePath: Path): Boolean {
-        log.info("开始校验资源 {} 的 SHA1", asset.id)
         val sha1 = computeSha1(filePath)
         if (!sha1.equals(asset.sha1, ignoreCase = true)) {
             throw RuntimeException("资源 ${asset.id} 的 SHA1 校验失败，期望 ${asset.sha1} 实际 $sha1")
         }
-        log.info("资源 {} 的 SHA1 校验成功", asset.id)
         return true
     }
 

@@ -51,8 +51,6 @@ class FileTimeStage(
      * @param filePath 文件路径
      */
     fun updateFileSystemTime(asset: Asset, filePath: java.nio.file.Path) {
-        log.info("开始处理资源 {} 的文件系统时间", asset.id)
         rewriteFSTime(filePath, asset.dateTaken)
-        log.info("资源 {} 的文件系统时间处理完成", asset.id)
     }
 }
