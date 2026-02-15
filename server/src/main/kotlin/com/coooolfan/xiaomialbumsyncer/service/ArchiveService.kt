@@ -29,7 +29,8 @@ import kotlin.io.path.exists
 class ArchiveService(
     private val sql: KSqlClient,
     private val xiaoMiApi: XiaoMiApi,
-    private val fileService: FileService
+    private val fileService: FileService,
+    private val fileTimeStage: com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage
 ) {
 
     private val log = LoggerFactory.getLogger(this.javaClass)
@@ -323,6 +324,16 @@ class ArchiveService(
                 
                 if (isValid) {
                     log.info("文件已存在于 backup 文件夹且完整性验证通过: ${asset.fileName}")
+                    
+                    // 重新设置文件系统时间（确保归档后的文件保持正确的时间戳）
+                    try {
+                        fileTimeStage.updateFileSystemTime(asset, targetPath)
+                        log.debug("已更新 backup 文件的文件系统时间: ${asset.fileName}")
+                    } catch (e: Exception) {
+                        log.warn("更新 backup 文件的文件系统时间失败: ${asset.fileName}", e)
+                        // 文件系统时间更新失败不影响归档操作
+                    }
+                    
                     return ArchiveDetail {
                         this.assetId = asset.id
                         this.sourcePath = sourcePath.toString()
@@ -356,6 +367,15 @@ class ArchiveService(
             // 回滚：移动回 sync 文件夹
             fileService.moveFile(targetPath, sourcePath)
             throw FileIntegrityException("文件完整性验证失败：${asset.fileName}")
+        }
+
+        // 重新设置文件系统时间（移动文件可能会改变文件的修改时间）
+        try {
+            fileTimeStage.updateFileSystemTime(asset, targetPath)
+            log.debug("已更新归档文件的文件系统时间: ${asset.fileName}")
+        } catch (e: Exception) {
+            log.warn("更新归档文件的文件系统时间失败: ${asset.fileName}", e)
+            // 文件系统时间更新失败不影响归档操作
         }
 
         return ArchiveDetail {
