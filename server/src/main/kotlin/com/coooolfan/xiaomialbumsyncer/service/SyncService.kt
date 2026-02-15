@@ -5,16 +5,26 @@ import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CR
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.pipeline.PostProcessingCoordinator
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.desc
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
+import org.babyfish.jimmer.sql.kt.ast.expression.ne
 import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
 import org.noear.solon.annotation.Inject
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
@@ -65,9 +75,10 @@ class SyncService(
     /**
      * 检测云端变化（针对同步功能）
      * @param crontabId 定时任务 ID
+     * @param crontabHistory 同步历史记录（用于时间线差异对比）
      * @return 变化摘要
      */
-    fun detectSyncChanges(crontabId: Long): ChangeSummary {
+    fun detectSyncChanges(crontabId: Long, crontabHistory: CrontabHistory? = null): ChangeSummary {
         log.info("开始检测同步变化，定时任务 ID=$crontabId")
 
         val crontab = sql.findById(CRONTAB_WITH_ALBUMS_AND_ACCOUNT_FETCHER, crontabId)
@@ -75,6 +86,28 @@ class SyncService(
 
         val syncFolder = Path(crontab.config.targetPath, crontab.config.syncFolder)
         log.info("同步文件夹路径: $syncFolder")
+
+        // 时间线差异对比优化
+        if (crontab.config.diffByTimeline && crontabHistory != null) {
+            log.info("使用时间线差异对比模式刷新资产数据")
+            
+            // 获取历史时间线快照
+            val albumTimelinesHistory = getHistoricalTimelineSnapshot(crontabId)
+            
+            // 使用时间线差异对比刷新资产
+            assetService.refreshAssetsByDiffTimeline(crontab, crontabHistory, albumTimelinesHistory)
+        } else {
+            if (crontab.config.diffByTimeline) {
+                log.warn("时间线差异对比模式已启用，但未提供 crontabHistory，回退到全量刷新")
+            } else {
+                log.info("使用全量刷新模式刷新资产数据")
+            }
+            
+            // 全量刷新资产（如果提供了 crontabHistory）
+            if (crontabHistory != null) {
+                assetService.refreshAssetsFull(crontab, crontabHistory)
+            }
+        }
 
         val cloudAssets = mutableListOf<Asset>()
         crontab.albums.forEach { album ->
@@ -87,6 +120,23 @@ class SyncService(
             cloudAssets.addAll(assets)
         }
         log.info("云端资产总数: ${cloudAssets.size}")
+        
+        // 应用文件类型过滤
+        val filteredCloudAssets = cloudAssets.filter { asset ->
+            val includeImage = crontab.config.downloadImages || asset.type != AssetType.IMAGE
+            val includeVideo = crontab.config.downloadVideos || asset.type != AssetType.VIDEO
+            val includeAudio = crontab.config.downloadAudios || asset.type != AssetType.AUDIO
+            includeImage && includeVideo && includeAudio
+        }
+        
+        val filteredCount = cloudAssets.size - filteredCloudAssets.size
+        if (filteredCount > 0) {
+            log.info("文件类型过滤：过滤掉 $filteredCount 个资产（downloadImages=${crontab.config.downloadImages}, downloadVideos=${crontab.config.downloadVideos}, downloadAudios=${crontab.config.downloadAudios}）")
+        }
+        
+        // 使用过滤后的资产列表替换原始列表
+        cloudAssets.clear()
+        cloudAssets.addAll(filteredCloudAssets)
 
         val syncFolderAssets = mutableListOf<Asset>()
         val orphanFiles = mutableListOf<Path>()
@@ -211,66 +261,110 @@ class SyncService(
      * @param crontabId 定时任务 ID
      * @return 同步记录 ID
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun executeSync(crontabId: Long): Long {
-        log.info("开始执行同步任务，定时任务 ID=$crontabId")
+        val startTime = Instant.now()
+        log.info("========== 开始执行同步任务 ==========")
+        log.info("定时任务 ID=$crontabId")
 
         val crontab = sql.findById(CRONTAB_WITH_ALBUMS_AND_ACCOUNT_FETCHER, crontabId)
             ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
-        log.info("同步模式: ${crontab.config.syncMode}")
+        log.info("同步配置：")
+        log.info("  - 同步模式: ${crontab.config.syncMode}")
+        log.info("  - 文件类型过滤: 图片=${crontab.config.downloadImages}, 视频=${crontab.config.downloadVideos}, 音频=${crontab.config.downloadAudios}")
+        log.info("  - 跳过已存在文件: ${crontab.config.skipExistingFile}")
+        log.info("  - 自定义路径表达式: ${if (crontab.config.expressionTargetPath.isNotEmpty()) crontab.config.expressionTargetPath else "未配置（使用默认路径）"}")
+        log.info("  - 并发下载数: ${crontab.config.downloaders}")
+        log.info("  - 时间线差异对比: ${crontab.config.diffByTimeline}")
+        log.info("  - 归档模式: ${crontab.config.archiveMode}")
 
         val crontabHistory = crontabService.createCrontabHistory(crontab)
         
         val syncRecord = createSyncRecord(crontab)
 
         try {
-            val changes = detectSyncChanges(crontabId)
+            val changes = detectSyncChanges(crontabId, crontabHistory)
 
             val syncFolder = Path(crontab.config.targetPath, crontab.config.syncFolder)
 
-            changes.addedAssets.forEach { asset ->
-                try {
-                    val album = crontab.albums.find { it.id == asset.album.id }
-                        ?: throw IllegalStateException("找不到资产对应的相册: ${asset.album.id}")
-                    
-                    val filePath = Path(syncFolder.toString(), album.name, asset.fileName)
-                    
-                    // 下载文件
-                    downloadToSync(asset, album, syncFolder, crontab.accountId)
-                    
-                    // 执行后处理
-                    val postProcessingResult = postProcessingCoordinator.process(
-                        asset, 
-                        filePath, 
-                        crontab.config
-                    )
-                    
-                    // 记录同步详情
-                    recordSyncDetail(
-                        syncRecord.id, 
-                        asset, 
-                        album, 
-                        SyncOperation.ADD, 
-                        syncFolder, 
-                        postProcessingResult.success, 
-                        postProcessingResult.errorMessage
-                    )
-                } catch (e: Exception) {
-                    log.error("处理新增资产失败: ${asset.fileName}", e)
-                    val album = crontab.albums.find { it.id == asset.album.id }
-                    if (album != null) {
-                        recordSyncDetail(
-                            syncRecord.id, 
-                            asset, 
-                            album, 
-                            SyncOperation.ADD, 
-                            syncFolder, 
-                            false, 
-                            e.message
-                        )
+            // 并发处理 ADD 操作
+            changes.addedAssets
+                .asFlow()
+                .flatMapMerge(crontab.config.downloaders) { asset ->
+                    flow {
+                        try {
+                            val album = crontab.albums.find { it.id == asset.album.id }
+                                ?: throw IllegalStateException("找不到资产对应的相册: ${asset.album.id}")
+                            
+                            // 使用自定义路径表达式生成文件路径
+                            val filePath = generateFilePath(asset, album, syncFolder, crontab.config)
+                            
+                            // 跳过已存在文件检查
+                            if (crontab.config.skipExistingFile && fileService.fileExists(filePath)) {
+                                val fileSize = fileService.getFileSize(filePath)
+                                if (fileSize == asset.size) {
+                                    log.info("文件已存在且大小匹配，跳过下载: ${asset.fileName} (大小=${fileSize})")
+                                    recordSyncDetail(
+                                        syncRecord.id,
+                                        asset,
+                                        album,
+                                        SyncOperation.ADD,
+                                        syncFolder,
+                                        true,
+                                        "跳过下载：文件已存在且大小匹配"
+                                    )
+                                    emit(Unit)
+                                    return@flow
+                                } else {
+                                    log.info("文件已存在但大小不匹配，重新下载: ${asset.fileName} (本地=${fileSize}, 云端=${asset.size})")
+                                }
+                            }
+                            
+                            // 下载文件（使用生成的路径）
+                            xiaoMiApi.downloadAsset(crontab.accountId, asset, filePath)
+                            sql.saveCommand(asset, SaveMode.UPSERT).execute()
+                            log.debug("下载到 sync 文件夹: ${asset.fileName} -> $filePath")
+                            
+                            // 执行后处理
+                            val postProcessingResult = postProcessingCoordinator.process(
+                                asset, 
+                                filePath, 
+                                crontab.config
+                            )
+                            
+                            // 记录同步详情
+                            recordSyncDetail(
+                                syncRecord.id, 
+                                asset, 
+                                album, 
+                                SyncOperation.ADD, 
+                                syncFolder, 
+                                postProcessingResult.success, 
+                                postProcessingResult.errorMessage
+                            )
+                            
+                            emit(Unit)
+                        } catch (e: Exception) {
+                            log.error("处理新增资产失败: ${asset.fileName}", e)
+                            val album = crontab.albums.find { it.id == asset.album.id }
+                            if (album != null) {
+                                recordSyncDetail(
+                                    syncRecord.id, 
+                                    asset, 
+                                    album, 
+                                    SyncOperation.ADD, 
+                                    syncFolder, 
+                                    false, 
+                                    e.message
+                                )
+                            }
+                            // 错误隔离：不抛出异常，继续处理其他资产
+                            emit(Unit)
+                        }
                     }
                 }
-            }
+                .collect()
 
             when (crontab.config.syncMode) {
                 SyncMode.ADD_ONLY -> {
@@ -304,50 +398,91 @@ class SyncService(
                         }
                     }
 
-                    changes.updatedAssets.forEach { asset ->
-                        try {
-                            val album = crontab.albums.find { it.id == asset.album.id }
-                                ?: throw IllegalStateException("找不到资产对应的相册: ${asset.album.id}")
-                            
-                            val filePath = Path(syncFolder.toString(), album.name, asset.fileName)
-                            
-                            // 删除旧文件并下载新文件
-                            deleteFromSync(asset, album, syncFolder)
-                            downloadToSync(asset, album, syncFolder, crontab.accountId)
-                            
-                            // 执行后处理
-                            val postProcessingResult = postProcessingCoordinator.process(
-                                asset, 
-                                filePath, 
-                                crontab.config
-                            )
-                            
-                            // 记录同步详情
-                            recordSyncDetail(
-                                syncRecord.id, 
-                                asset, 
-                                album, 
-                                SyncOperation.UPDATE, 
-                                syncFolder, 
-                                postProcessingResult.success, 
-                                postProcessingResult.errorMessage
-                            )
-                        } catch (e: Exception) {
-                            log.error("更新资产失败: ${asset.fileName}", e)
-                            val album = crontab.albums.find { it.id == asset.album.id }
-                            if (album != null) {
-                                recordSyncDetail(
-                                    syncRecord.id, 
-                                    asset, 
-                                    album, 
-                                    SyncOperation.UPDATE, 
-                                    syncFolder, 
-                                    false, 
-                                    e.message
-                                )
+                    // 并发处理 UPDATE 操作
+                    changes.updatedAssets
+                        .asFlow()
+                        .flatMapMerge(crontab.config.downloaders) { asset ->
+                            flow {
+                                try {
+                                    val album = crontab.albums.find { it.id == asset.album.id }
+                                        ?: throw IllegalStateException("找不到资产对应的相册: ${asset.album.id}")
+                                    
+                                    // 使用自定义路径表达式生成文件路径
+                                    val filePath = generateFilePath(asset, album, syncFolder, crontab.config)
+                                    
+                                    // 跳过已存在文件检查（UPDATE 操作）
+                                    // 注意：UPDATE 操作表示云端文件已修改（SHA1 或 dateTaken 不同）
+                                    // 但如果本地文件大小与云端匹配，可能是误判或已经是最新版本
+                                    if (crontab.config.skipExistingFile && fileService.fileExists(filePath)) {
+                                        val fileSize = fileService.getFileSize(filePath)
+                                        if (fileSize == asset.size) {
+                                            log.info("UPDATE 操作：文件已存在且大小匹配，跳过下载: ${asset.fileName} (大小=${fileSize})")
+                                            recordSyncDetail(
+                                                syncRecord.id,
+                                                asset,
+                                                album,
+                                                SyncOperation.UPDATE,
+                                                syncFolder,
+                                                true,
+                                                "跳过下载：文件已存在且大小匹配"
+                                            )
+                                            emit(Unit)
+                                            return@flow
+                                        } else {
+                                            log.info("UPDATE 操作：文件已存在但大小不匹配，重新下载: ${asset.fileName} (本地=${fileSize}, 云端=${asset.size})")
+                                        }
+                                    }
+                                    
+                                    // 删除旧文件（如果存在）
+                                    if (fileService.fileExists(filePath)) {
+                                        fileService.deleteFile(filePath)
+                                        log.debug("删除旧文件: $filePath")
+                                    }
+                                    
+                                    // 下载新文件（使用生成的路径）
+                                    xiaoMiApi.downloadAsset(crontab.accountId, asset, filePath)
+                                    sql.saveCommand(asset, SaveMode.UPSERT).execute()
+                                    log.debug("下载到 sync 文件夹: ${asset.fileName} -> $filePath")
+                                    
+                                    // 执行后处理
+                                    val postProcessingResult = postProcessingCoordinator.process(
+                                        asset, 
+                                        filePath, 
+                                        crontab.config
+                                    )
+                                    
+                                    // 记录同步详情
+                                    recordSyncDetail(
+                                        syncRecord.id, 
+                                        asset, 
+                                        album, 
+                                        SyncOperation.UPDATE, 
+                                        syncFolder, 
+                                        postProcessingResult.success, 
+                                        postProcessingResult.errorMessage
+                                    )
+                                    
+                                    emit(Unit)
+                                } catch (e: Exception) {
+                                    log.error("更新资产失败: ${asset.fileName}", e)
+                                    val album = crontab.albums.find { it.id == asset.album.id }
+                                    if (album != null) {
+                                        recordSyncDetail(
+                                            syncRecord.id, 
+                                            asset, 
+                                            album, 
+                                            SyncOperation.UPDATE, 
+                                            syncFolder, 
+                                            false, 
+                                            e.message
+                                        )
+                                    }
+                                    // 错误隔离：不抛出异常，继续处理其他资产
+                                    emit(Unit)
+                                }
                             }
                         }
-                    }
+                        .collect()
                 }
             }
 
@@ -408,11 +543,31 @@ class SyncService(
                 where(table.id eq crontabHistory.id)
             }.execute()
 
-            log.info("同步任务完成，同步记录 ID=${syncRecord.id}，模式=${crontab.config.syncMode}，新增=${changes.addedAssets.size}，删除=${actualDeletedCount}，修改=${actualUpdatedCount}，归档=${archivedCount}")
+            val endTime = Instant.now()
+            val duration = endTime.toEpochMilli() - startTime.toEpochMilli()
+            
+            log.info("========== 同步任务完成 ==========")
+            log.info("同步记录 ID: ${syncRecord.id}")
+            log.info("同步模式: ${crontab.config.syncMode}")
+            log.info("处理结果:")
+            log.info("  - 新增: ${changes.addedAssets.size} 个文件")
+            log.info("  - 删除: ${actualDeletedCount} 个文件")
+            log.info("  - 修改: ${actualUpdatedCount} 个文件")
+            log.info("  - 归档: ${archivedCount} 个文件")
+            log.info("总耗时: ${duration} ms (${duration / 1000.0} 秒)")
+            log.info("=====================================")
 
             return syncRecord.id
         } catch (e: Exception) {
-            log.error("同步任务失败", e)
+            val endTime = Instant.now()
+            val duration = endTime.toEpochMilli() - startTime.toEpochMilli()
+            
+            log.error("========== 同步任务失败 ==========")
+            log.error("定时任务 ID: $crontabId")
+            log.error("错误信息: ${e.message}")
+            log.error("耗时: ${duration} ms (${duration / 1000.0} 秒)")
+            log.error("=====================================", e)
+            
             updateSyncRecord(syncRecord.id, SyncStatus.FAILED, 0, 0, 0, e.message)
             
             val syncStats = mapOf(
@@ -533,6 +688,36 @@ class SyncService(
     }
 
     /**
+     * 获取历史时间线快照
+     * @param crontabId 定时任务 ID
+     * @return 历史时间线快照（相册 remoteId -> AlbumTimeline）
+     */
+    private fun getHistoricalTimelineSnapshot(crontabId: Long): Map<Long, AlbumTimeline> {
+        // 获取最近一次成功的同步记录
+        val lastSuccessfulHistory = sql.createQuery(CrontabHistory::class) {
+            where(table.crontab.id eq crontabId)
+            where(table.endTime ne null)
+            orderBy(table.startTime.desc())
+            select(table)
+        }.limit(1).execute().firstOrNull()
+
+        if (lastSuccessfulHistory == null) {
+            log.info("没有找到历史时间线快照，使用空时间线作为基准")
+            return emptyMap()
+        }
+
+        val timelineSnapshot = lastSuccessfulHistory.timelineSnapshot
+        if (timelineSnapshot == null || timelineSnapshot.isEmpty()) {
+            log.info("历史时间线快照为空，使用空时间线作为基准")
+            return emptyMap()
+        }
+        
+        log.info("找到历史时间线快照，包含 ${timelineSnapshot.size} 个相册")
+        
+        return timelineSnapshot
+    }
+
+    /**
      * 从 sync 文件夹删除
      */
     private fun deleteFromSync(asset: Asset, album: Album, syncFolder: Path) {
@@ -543,5 +728,146 @@ class SyncService(
         }
         
         sql.deleteById(Asset::class, asset.id)
+    }
+
+    /**
+     * 生成文件路径（支持自定义路径表达式）
+     * @param asset 资产
+     * @param album 相册
+     * @param syncFolder 同步文件夹
+     * @param config 配置
+     * @return 文件路径
+     */
+    private fun generateFilePath(
+        asset: Asset,
+        album: Album,
+        syncFolder: Path,
+        config: CrontabConfig
+    ): Path {
+        val expression = config.expressionTargetPath.trim().takeIf { it.isNotEmpty() }
+
+        // 如果没有配置表达式，使用默认路径
+        if (expression == null) {
+            return Path(syncFolder.toString(), album.name, asset.fileName)
+        }
+
+        val zoneId = resolveZoneId(config.timeZone)
+        val downloadTime = Instant.now()
+        val takenTime = asset.dateTaken
+
+        val fileNameRaw = asset.fileName
+        val fileName = fileNameRaw
+        val fileNameSafe = sanitizeSegment(fileName)
+        val fileStem = fileNameSafe.substringBeforeLast('.', fileNameSafe)
+        val fileExt = fileNameRaw.substringAfterLast('.', "")
+
+        val replacements = buildMap {
+            put("album", sanitizeSegment(album.name))
+            put("albumName", sanitizeSegment(album.name))
+            put("fileName", fileNameSafe)
+            put("fileStem", fileStem)
+            put("fileExt", fileExt)
+            put("assetId", asset.id.toString())
+            put("assetType", asset.type.name.lowercase(Locale.ROOT))
+            put("sha1", asset.sha1)
+            put("title", sanitizeSegment(asset.title))
+            put("size", asset.size.toString())
+            put("downloadEpochMillis", downloadTime.toEpochMilli().toString())
+            put("takenEpochMillis", takenTime.toEpochMilli().toString())
+            put("downloadEpochSeconds", downloadTime.epochSecond.toString())
+            put("takenEpochSeconds", takenTime.epochSecond.toString())
+        }
+
+        // 检查表达式是否包含支持的插值
+        if (!containsSupportedInterpolation(expression, replacements.keys)) {
+            log.warn("路径表达式不包含支持的变量，回退到默认路径: $expression")
+            return Path(syncFolder.toString(), album.name, asset.fileName)
+        }
+
+        // 解析表达式
+        val resolved = try {
+            interpolateExpression(expression, replacements, downloadTime, takenTime, zoneId).trim()
+        } catch (e: Exception) {
+            log.warn("路径表达式解析失败，回退到默认路径: $expression", e)
+            return Path(syncFolder.toString(), album.name, asset.fileName)
+        }
+
+        if (resolved.isEmpty()) {
+            log.warn("路径表达式解析结果为空，回退到默认路径: $expression")
+            return Path(syncFolder.toString(), album.name, asset.fileName)
+        }
+
+        // 返回相对于 syncFolder 的完整路径
+        return Path(syncFolder.toString(), resolved).normalize()
+    }
+
+    /**
+     * 替换表达式中的变量
+     */
+    private fun interpolateExpression(
+        template: String,
+        values: Map<String, String>,
+        downloadTime: Instant,
+        takenTime: Instant,
+        zoneId: ZoneId,
+    ): String {
+        val tokenRegex = Regex("""\$\{([^}]+)}""")
+        return tokenRegex.replace(template) { match ->
+            val key = match.groupValues[1]
+            when {
+                key.startsWith("download_") -> {
+                    val pattern = key.removePrefix("download_")
+                    formatInstant(downloadTime, zoneId, pattern) ?: match.value
+                }
+
+                key.startsWith("taken_") -> {
+                    val pattern = key.removePrefix("taken_")
+                    formatInstant(takenTime, zoneId, pattern) ?: match.value
+                }
+
+                else -> values[key] ?: match.value
+            }
+        }
+    }
+
+    /**
+     * 格式化时间
+     */
+    private fun formatInstant(instant: Instant, zoneId: ZoneId, pattern: String): String? {
+        if (pattern.isBlank()) return null
+        return runCatching {
+            DateTimeFormatter.ofPattern(pattern).withLocale(Locale.ROOT).format(instant.atZone(zoneId))
+        }.getOrNull()
+    }
+
+    /**
+     * 解析时区
+     */
+    private fun resolveZoneId(timeZone: String?): ZoneId {
+        if (timeZone.isNullOrBlank()) {
+            return ZoneId.systemDefault()
+        }
+        return runCatching { ZoneId.of(timeZone) }.getOrDefault(ZoneId.systemDefault())
+    }
+
+    /**
+     * 清理路径片段中的非法字符
+     */
+    private fun sanitizeSegment(value: String): String {
+        if (value.isEmpty()) return value
+        return value.replace(Regex("""[\\/:*?"<>|\r\n\t]"""), "_")
+    }
+
+    /**
+     * 检查表达式是否包含支持的插值
+     */
+    private fun containsSupportedInterpolation(template: String, supportedKeys: Set<String>): Boolean {
+        val tokenRegex = Regex("""\$\{([^}]+)}""")
+        return tokenRegex.findAll(template).any { match ->
+            val key = match.groupValues[1]
+            key in supportedKeys ||
+                    key.startsWith("download_") ||
+                    key.startsWith("taken_")
+        }
     }
 }

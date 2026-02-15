@@ -179,4 +179,36 @@ class FileService {
         log.info("批量删除文件完成，成功 $successCount/${files.size}")
         return successCount
     }
+
+    /**
+     * 检查文件是否存在
+     * @param path 文件路径
+     * @return 文件是否存在且为常规文件
+     */
+    fun fileExists(path: Path): Boolean {
+        return try {
+            path.exists() && Files.isRegularFile(path)
+        } catch (e: Exception) {
+            log.warn("检查文件存在性失败: $path", e)
+            false
+        }
+    }
+
+    /**
+     * 获取文件大小
+     * @param path 文件路径
+     * @return 文件大小（字节），如果文件不存在或访问失败返回 0
+     */
+    fun getFileSize(path: Path): Long {
+        return try {
+            if (fileExists(path)) {
+                Files.size(path)
+            } else {
+                0L
+            }
+        } catch (e: Exception) {
+            log.warn("获取文件大小失败: $path", e)
+            0L
+        }
+    }
 }
