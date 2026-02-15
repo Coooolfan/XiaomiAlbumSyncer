@@ -22,7 +22,6 @@ import kotlin.io.path.Path
 @Managed
 class CrontabService(private val sql: KSqlClient) {
 
-    // 避免一下循环依赖
     @Inject
     private lateinit var taskScheduler: TaskScheduler
 
@@ -49,21 +48,18 @@ class CrontabService(private val sql: KSqlClient) {
 
     fun getCrontabCurrentStats(crontabId: Long): CrontabCurrentStats {
         if (!taskScheduler.checkIsRunning(crontabId))
-            return CrontabCurrentStats() // 没有正在运行
+            return CrontabCurrentStats()
 
-        // 获取 Crontab 配置以判断是否为同步任务
         val crontab = sql.findById(Crontab::class, crontabId)
-            ?: return CrontabCurrentStats() // Crontab 不存在
+            ?: return CrontabCurrentStats()
 
-        // 同步功能始终启用，直接查询同步记录
         return getSyncCurrentStats(crontabId)
 
-        // 传统下载任务的统计逻辑
         val runningCrontabHistory = sql.createQuery(CrontabHistory::class) {
             where(table.crontabId eq crontabId)
             orderBy(table.startTime.desc())
             select(table)
-        }.limit(1).execute().firstOrNull() ?: return CrontabCurrentStats() // 没有正在运行
+        }.limit(1).execute().firstOrNull() ?: return CrontabCurrentStats()
 
         if (!runningCrontabHistory.fetchedAllAssets) {
             return CrontabCurrentStats(Instant.now())
@@ -118,7 +114,6 @@ class CrontabService(private val sql: KSqlClient) {
      * 获取同步任务的当前统计信息
      */
     private fun getSyncCurrentStats(crontabId: Long): CrontabCurrentStats {
-        // 查找最新的运行中的同步记录
         val runningSyncRecord = sql.createQuery(SyncRecord::class) {
             where(table.crontabId eq crontabId)
             where(table.status eq SyncStatus.RUNNING)
@@ -127,11 +122,9 @@ class CrontabService(private val sql: KSqlClient) {
         }.limit(1).execute().firstOrNull()
 
         if (runningSyncRecord == null) {
-            // 没有运行中的同步记录，返回空统计
             return CrontabCurrentStats()
         }
 
-        // 统计同步详情
         val totalCount = runningSyncRecord.addedCount + runningSyncRecord.deletedCount + runningSyncRecord.updatedCount
         
         val completedCount = sql.createQuery(SyncRecordDetail::class) {
@@ -144,9 +137,9 @@ class CrontabService(private val sql: KSqlClient) {
             ts = runningSyncRecord.syncTime,
             assetCount = totalCount.toLong(),
             downloadCompletedCount = completedCount,
-            sha1VerifiedCount = null, // 同步任务不涉及 SHA1 校验
-            exifFilledCount = null,   // 同步任务不涉及 EXIF 填充
-            fsTimeUpdatedCount = null // 同步任务不涉及文件系统时间更新
+            sha1VerifiedCount = null,
+            exifFilledCount = null,
+            fsTimeUpdatedCount = null
         )
     }
 
