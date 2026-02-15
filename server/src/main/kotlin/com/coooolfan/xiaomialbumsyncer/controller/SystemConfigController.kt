@@ -8,6 +8,7 @@ import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate
 import com.coooolfan.xiaomialbumsyncer.service.DebugService
+import com.coooolfan.xiaomialbumsyncer.service.MountPathService
 import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.client.meta.Api
@@ -32,7 +33,11 @@ import org.noear.solon.core.runtime.NativeDetector.isAotRuntime
 @Api
 @Controller
 @Mapping("/api/system-config")
-class SystemConfigController(private val service: SystemConfigService, private val debugService: DebugService) {
+class SystemConfigController(
+    private val service: SystemConfigService,
+    private val debugService: DebugService,
+    private val mountPathService: MountPathService
+) {
 
     /**
      * 检查系统是否已完成初始化
@@ -177,6 +182,26 @@ class SystemConfigController(private val service: SystemConfigService, private v
     }
 
     /**
+     * 检查路径是否为挂载点
+     *
+     * 此接口用于判断传入绝对路径是否为明确挂载点
+     * 非 Docker 运行环境固定返回 false
+     * 需要用户登录认证才能访问
+     *
+     * @param request 路径检查请求，包含待检查的绝对路径
+     * @return MountPathCheckResponse 挂载点检查结果
+     *
+     * @api POST /api/system-config/mount-path
+     * @permission 需要登录认证
+     */
+    @Api
+    @Mapping("/mount-path", method = [MethodType.POST])
+    @SaCheckLogin
+    fun checkMountPath(@Body request: MountPathCheckRequest): MountPathCheckResponse {
+        return MountPathCheckResponse(mountPathService.checkExplicitMountPoint(request.path))
+    }
+
+    /**
      * 从旧版本数据库导入数据
      *
      * 此接口用于从旧版本的数据库中导入数据到当前系统
@@ -266,6 +291,14 @@ data class SystemInfoResponse(
 
 data class SystemConfigFtqqKeyIsInitResponse(
     val ftqqKey: Boolean
+)
+
+data class MountPathCheckRequest(
+    val path: String
+)
+
+data class MountPathCheckResponse(
+    val mounted: Boolean
 )
 
 /**

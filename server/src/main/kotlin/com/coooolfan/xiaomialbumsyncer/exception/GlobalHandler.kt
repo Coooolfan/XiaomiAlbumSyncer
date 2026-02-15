@@ -23,6 +23,11 @@ class GlobalHandler : Filter {
             ctx.returnValue(
                 Result.failure<Any>(401, e.message)
             )
+        } catch (e: BadRequestException) {
+            ctx.status(400)
+            ctx.returnValue(
+                Result.failure<Any>(400, e.message)
+            )
         } catch (e: StatusException) {
             if (e.code == 404) {
                 log.warn(e.message)
