@@ -218,6 +218,136 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         return targetPath
     }
 
+    /**
+     * 删除云端照片
+     * @param accountId 账号 ID
+     * @param assetId 资产 ID
+     * @return 是否成功删除
+     */
+    fun deleteAsset(accountId: Long, assetId: Long): Boolean {
+        val req = Request.Builder()
+            .url("https://i.mi.com/gallery/info/delete")
+            .ua()
+            .authHeader(tokenManager.getAuthPair(accountId))
+            .post(
+                FormBody.Builder()
+                    .add("id", assetId.toString())
+                    .add("serviceToken", tokenManager.getAuthPair(accountId).second)
+                    .build()
+            )
+            .build()
+
+        return try {
+            val responseTree = client().executeWithRetry(req).use { res ->
+                throwIfNotSuccess(res.code)
+                Solon.context().objectMapper.readTree(res.body.string())
+            }
+
+            val result = responseTree.get("result")?.asText()
+            val code = responseTree.get("code")?.asInt()
+
+            if (result == "ok" && code == 0) {
+                log.info("成功删除云端照片 ID=$assetId")
+                true
+            } else {
+                log.warn("删除云端照片失败 ID=$assetId, result=$result, code=$code")
+                false
+            }
+        } catch (e: Exception) {
+            log.error("删除云端照片异常 ID=$assetId", e)
+            false
+        }
+    }
+
+    /**
+     * 批量删除云端照片
+     * @param accountId 账号 ID
+     * @param assetIds 资产 ID 列表
+     * @return 成功删除的资产 ID 列表
+     */
+    fun batchDeleteAssets(accountId: Long, assetIds: List<Long>): List<Long> {
+        val successIds = mutableListOf<Long>()
+
+        log.info("开始批量删除云端照片，账号 ID=$accountId，共 ${assetIds.size} 个照片")
+
+        assetIds.forEach { assetId ->
+            if (deleteAsset(accountId, assetId)) {
+                successIds.add(assetId)
+            }
+            // 添加短暂延迟，避免 API 限流
+            Thread.sleep(100)
+        }
+
+        log.info("批量删除完成，成功删除 ${successIds.size}/${assetIds.size} 个照片")
+
+        return successIds
+    }
+
+    /**
+     * 获取云端空间使用情况
+     * @param accountId 账号 ID
+     * @return 云端空间信息
+     */
+    fun getCloudSpace(accountId: Long): CloudSpaceInfo {
+        val req = Request.Builder()
+            .url("https://i.mi.com/status/lite/alldetail?ts=${System.currentTimeMillis()}")
+            .ua()
+            .authHeader(tokenManager.getAuthPair(accountId))
+            .get()
+            .build()
+
+        val responseTree = client().executeWithRetry(req).use { res ->
+            throwIfNotSuccess(res.code)
+            Solon.context().objectMapper.readTree(res.body.string())
+        }
+
+        val data = responseTree.get("data")
+        val totalQuota = data.get("totalQuota")?.asLong() ?: 0L
+        val used = data.get("used")?.asLong() ?: 0L
+
+        // 解析详细使用信息
+        val usedDetailNode = data.get("usedDetail")
+        val usedDetailMap = mutableMapOf<String, SpaceUsageItem>()
+        
+        if (usedDetailNode != null && usedDetailNode.isObject) {
+            usedDetailNode.fields().forEach { (key, value) ->
+                val size = value.get("size")?.asLong() ?: 0L
+                var text = value.get("text")?.asText() ?: key
+                
+                // 优化显示文本
+                text = when (text) {
+                    "桌面图标布局" -> "云备份"
+                    "Creation" -> "小米创作"
+                    "相册图片" -> "相册"
+                    "录音备份" -> "录音"
+                    else -> text
+                }
+                
+                usedDetailMap[key] = SpaceUsageItem(size, text)
+            }
+        }
+
+        // 获取相册使用空间
+        val galleryUsed = usedDetailMap["GalleryImage"]?.size ?: 0L
+
+        // 计算使用百分比
+        val usagePercent = if (totalQuota > 0) {
+            ((used.toDouble() / totalQuota) * 100).toInt()
+        } else {
+            0
+        }
+
+        log.info("获取云端空间信息成功，账号 ID=$accountId，总空间=$totalQuota，已用=$used，相册=$galleryUsed，使用率=$usagePercent%")
+
+        return CloudSpaceInfo(
+            totalQuota = totalQuota,
+            used = used,
+            galleryUsed = galleryUsed,
+            usagePercent = usagePercent,
+            usedDetail = usedDetailMap
+        )
+    }
+
     private fun parseJsonNode(jsonNode: JsonNode, album: Album): Asset {
         return when (album.isAudioAlbum()) {
             false -> {
@@ -228,7 +358,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                     fileName = fullFileName
                     type = AssetType.valueOf(jsonNode.get("type").asText().uppercase())
                     dateTaken = Instant.ofEpochMilli(jsonNode.get("dateTaken").asLong())
-                    albumId = album.id
+                    this.album = Album { id = album.id }
                     sha1 = jsonNode.get("sha1").asText()
                     mimeType = jsonNode.get("mimeType").asText()
                     title = jsonNode.get("title")?.asText() ?: fullFileName.substringBeforeLast('.')
@@ -247,7 +377,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                     this.fileName = fileName
                     this.type = AssetType.AUDIO
                     this.dateTaken = Instant.ofEpochMilli(jsonNode.get("create_time").asLong())
-                    this.albumId = album.id
+                    this.album = Album { id = album.id }
                     this.sha1 = jsonNode.get("sha1").asText()
                     this.mimeType = Files.probeContentType(Path(fileName)) ?: "application/octet-stream"
                     this.title = fileName.substringBeforeLast(".")

@@ -22,7 +22,6 @@ import kotlin.io.path.Path
 @Managed
 class CrontabService(private val sql: KSqlClient) {
 
-    // 避免一下循环依赖
     @Inject
     private lateinit var taskScheduler: TaskScheduler
 
@@ -49,13 +48,18 @@ class CrontabService(private val sql: KSqlClient) {
 
     fun getCrontabCurrentStats(crontabId: Long): CrontabCurrentStats {
         if (!taskScheduler.checkIsRunning(crontabId))
-            return CrontabCurrentStats() // 没有正在运行
+            return CrontabCurrentStats()
+
+        val crontab = sql.findById(Crontab::class, crontabId)
+            ?: return CrontabCurrentStats()
+
+        return getSyncCurrentStats(crontabId)
 
         val runningCrontabHistory = sql.createQuery(CrontabHistory::class) {
             where(table.crontabId eq crontabId)
             orderBy(table.startTime.desc())
             select(table)
-        }.limit(1).execute().firstOrNull() ?: return CrontabCurrentStats() // 没有正在运行
+        }.limit(1).execute().firstOrNull() ?: return CrontabCurrentStats()
 
         if (!runningCrontabHistory.fetchedAllAssets) {
             return CrontabCurrentStats(Instant.now())
@@ -103,6 +107,39 @@ class CrontabService(private val sql: KSqlClient) {
             sha1VerifiedCount,
             exifFilledCount,
             fsTimeUpdatedCount,
+        )
+    }
+
+    /**
+     * 获取同步任务的当前统计信息
+     */
+    private fun getSyncCurrentStats(crontabId: Long): CrontabCurrentStats {
+        val runningSyncRecord = sql.createQuery(SyncRecord::class) {
+            where(table.crontabId eq crontabId)
+            where(table.status eq SyncStatus.RUNNING)
+            orderBy(table.syncTime.desc())
+            select(table)
+        }.limit(1).execute().firstOrNull()
+
+        if (runningSyncRecord == null) {
+            return CrontabCurrentStats()
+        }
+
+        val totalCount = runningSyncRecord.addedCount + runningSyncRecord.deletedCount + runningSyncRecord.updatedCount
+        
+        val completedCount = sql.createQuery(SyncRecordDetail::class) {
+            where(table.syncRecordId eq runningSyncRecord.id)
+            where(table.isCompleted eq true)
+            select(count(table))
+        }.execute().firstOrNull() ?: 0L
+
+        return CrontabCurrentStats(
+            ts = runningSyncRecord.syncTime,
+            assetCount = totalCount.toLong(),
+            downloadCompletedCount = completedCount,
+            sha1VerifiedCount = null,
+            exifFilledCount = null,
+            fsTimeUpdatedCount = null
         )
     }
 
@@ -223,7 +260,7 @@ class CrontabService(private val sql: KSqlClient) {
             throw IllegalArgumentException("未指定有效的时区，填充 EXIF 时间操作将被取消")
         }
 
-        val assetPathMap = fetchAssetPathMapBy(crontab.id)
+        val assetPathMap = fetchAssetPathMapForExifTime(crontabId)
 
         taskScheduler.executeCrontabExifTime(true, assetPathMap, systemConfig, timeZone)
     }
@@ -239,14 +276,23 @@ class CrontabService(private val sql: KSqlClient) {
             throw IllegalArgumentException("定时任务未启用重写文件系统时间选项: $crontabId")
         }
 
-        val assetPathMap = fetchAssetPathMapBy(crontab.id)
+        val assetPathMap = fetchAssetPathMapForFileSystemTime(crontabId)
 
         taskScheduler.executeCrontabRewriteFileSystemTime(true, assetPathMap)
     }
 
-    private fun fetchAssetPathMapBy(crontabId: Long): Map<Asset, Path> {
+    /**
+     * 获取需要重写 EXIF 时间的资产路径映射
+     * @param crontabId 定时任务 ID
+     * @return 资产到文件路径的映射
+     */
+    private fun fetchAssetPathMapForExifTime(crontabId: Long): Map<Asset, Path> {
+        log.info("查询定时任务 $crontabId 中需要重写 EXIF 时间的资产")
+        
         val crontabHistoryDetails = sql.createQuery(CrontabHistoryDetail::class) {
-            where(table.crontabHistoryId eq crontabId)
+            where(table.crontabHistory.crontab.id eq crontabId)
+            where(table.exifFilled eq false)
+            where(table.downloadCompleted eq true)
             select(table.fetchBy {
                 asset { allTableFields() }
                 filePath()
@@ -257,6 +303,35 @@ class CrontabService(private val sql: KSqlClient) {
         crontabHistoryDetails.forEach { detail ->
             assetPathMap[detail.asset] = Path(detail.filePath)
         }
+        
+        log.info("找到 ${assetPathMap.size} 个需要重写 EXIF 时间的资产")
+        return assetPathMap
+    }
+
+    /**
+     * 获取需要重写文件系统时间的资产路径映射
+     * @param crontabId 定时任务 ID
+     * @return 资产到文件路径的映射
+     */
+    private fun fetchAssetPathMapForFileSystemTime(crontabId: Long): Map<Asset, Path> {
+        log.info("查询定时任务 $crontabId 中需要重写文件系统时间的资产")
+        
+        val crontabHistoryDetails = sql.createQuery(CrontabHistoryDetail::class) {
+            where(table.crontabHistory.crontab.id eq crontabId)
+            where(table.fsTimeUpdated eq false)
+            where(table.downloadCompleted eq true)
+            select(table.fetchBy {
+                asset { allTableFields() }
+                filePath()
+            })
+        }.distinct().execute()
+
+        val assetPathMap = mutableMapOf<Asset, Path>()
+        crontabHistoryDetails.forEach { detail ->
+            assetPathMap[detail.asset] = Path(detail.filePath)
+        }
+        
+        log.info("找到 ${assetPathMap.size} 个需要重写文件系统时间的资产")
         return assetPathMap
     }
 

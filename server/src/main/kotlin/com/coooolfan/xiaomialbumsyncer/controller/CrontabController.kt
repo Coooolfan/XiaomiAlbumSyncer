@@ -193,13 +193,21 @@ class CrontabController(private val service: CrontabService) {
                 allScalarFields()
                 isCompleted()
                 detailsCount()
-                timelineSnapshot(false)
+                timelineSnapshot()
             }
         }
 
         val CRONTAB_WITH_ALBUMS_FETCHER = newFetcher(Crontab::class).by {
             allScalarFields()
             accountId()
+            albumIds()
+            albums { allScalarFields() }
+        }
+
+        val CRONTAB_WITH_ALBUMS_AND_ACCOUNT_FETCHER = newFetcher(Crontab::class).by {
+            allScalarFields()
+            accountId()
+            account { allScalarFields() }
             albumIds()
             albums { allScalarFields() }
         }

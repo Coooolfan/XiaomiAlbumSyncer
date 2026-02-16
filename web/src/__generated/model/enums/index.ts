@@ -1,2 +1,10 @@
+export type {ArchiveMode} from './ArchiveMode';
+export {ArchiveMode_CONSTANTS} from './ArchiveMode';
+export type {ArchiveStatus} from './ArchiveStatus';
+export {ArchiveStatus_CONSTANTS} from './ArchiveStatus';
 export type {AssetType} from './AssetType';
 export {AssetType_CONSTANTS} from './AssetType';
+export type {SyncMode} from './SyncMode';
+export {SyncMode_CONSTANTS} from './SyncMode';
+export type {SyncStatus} from './SyncStatus';
+export {SyncStatus_CONSTANTS} from './SyncStatus';

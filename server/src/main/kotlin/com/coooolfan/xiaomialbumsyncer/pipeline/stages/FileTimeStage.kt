@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.pipeline.stages
 
+import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
 import com.coooolfan.xiaomialbumsyncer.model.fsTimeUpdated
 import com.coooolfan.xiaomialbumsyncer.model.id
@@ -39,5 +40,17 @@ class FileTimeStage(
         return CrontabHistoryDetail(context) {
             fsTimeUpdated = true
         }
+    }
+
+    /**
+     * 更新文件系统时间
+     * 
+     * 将文件的创建和修改时间设置为资产的拍摄时间
+     * 
+     * @param asset 资产对象
+     * @param filePath 文件路径
+     */
+    fun updateFileSystemTime(asset: Asset, filePath: java.nio.file.Path) {
+        rewriteFSTime(filePath, asset.dateTaken)
     }
 }

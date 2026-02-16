@@ -592,7 +592,25 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean","boolean","int","int","int","int","int"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean","boolean","int","int","int","int","int","int","kotlin.jvm.internal.DefaultConstructorMarker"] }, {"name":"getCheckSha1","parameterTypes":[] }, {"name":"getDiffByTimeline","parameterTypes":[] }, {"name":"getDownloadImages","parameterTypes":[] }, {"name":"getDownloadVideos","parameterTypes":[] }, {"name":"getDownloaders","parameterTypes":[] }, {"name":"getExifProcessors","parameterTypes":[] }, {"name":"getExpression","parameterTypes":[] }, {"name":"getFetchFromDbSize","parameterTypes":[] }, {"name":"getFileTimeWorkers","parameterTypes":[] }, {"name":"getRewriteExifTime","parameterTypes":[] }, {"name":"getRewriteExifTimeZone","parameterTypes":[] }, {"name":"getRewriteFileSystemTime","parameterTypes":[] }, {"name":"getSkipExistingFile","parameterTypes":[] }, {"name":"getTargetPath","parameterTypes":[] }, {"name":"getTimeZone","parameterTypes":[] }, {"name":"getVerifiers","parameterTypes":[] }]
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean","boolean","int","int","int","int","int","boolean","java.lang.String","com.coooolfan.xiaomialbumsyncer.model.SyncMode","java.lang.String","com.coooolfan.xiaomialbumsyncer.model.ArchiveMode","int","int","java.lang.String","boolean"] }, {"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","boolean","java.lang.String","boolean","boolean","boolean","int","int","int","int","int","boolean","java.lang.String","com.coooolfan.xiaomialbumsyncer.model.SyncMode","java.lang.String","com.coooolfan.xiaomialbumsyncer.model.ArchiveMode","int","int","java.lang.String","boolean","int","kotlin.jvm.internal.DefaultConstructorMarker"] }]
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.model.SyncMode",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.model.ArchiveMode",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.model.ArchiveStatus",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.model.CrontabDraft",
@@ -2350,5 +2368,54 @@
 {
   "name":"sun.security.x509.SubjectKeyIdentifierExtension",
   "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.PostProcessingResult",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.service.SyncService$ChangeSummary",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.service.SyncService$SyncStatusInfo",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.controller.SyncController$ExecuteSyncResponse",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.service.ArchiveService$ArchivePlan",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.controller.ArchiveController$ExecuteArchiveRequest",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true
+},
+{
+  "name":"com.coooolfan.xiaomialbumsyncer.controller.ArchiveController$ExecuteArchiveResponse",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true
 }
 ]
