@@ -12,9 +12,6 @@ import java.nio.file.Path
 import java.security.MessageDigest
 import kotlin.io.path.Path
 
-/**
- * 校验阶段处理器
- */
 @Managed
 class VerificationStage(
     private val sql: KSqlClient,
@@ -22,14 +19,6 @@ class VerificationStage(
 
     private val log = LoggerFactory.getLogger(VerificationStage::class.java)
 
-    /**
-     * 校验文件的 SHA1 值
-     * 
-     * @param asset 资产对象
-     * @param filePath 文件路径
-     * @return 校验是否成功
-     * @throws RuntimeException 当 SHA1 校验失败时
-     */
     fun verifySha1(asset: com.coooolfan.xiaomialbumsyncer.model.Asset, filePath: Path): Boolean {
         val sha1 = computeSha1(filePath)
         if (!sha1.equals(asset.sha1, ignoreCase = true)) {

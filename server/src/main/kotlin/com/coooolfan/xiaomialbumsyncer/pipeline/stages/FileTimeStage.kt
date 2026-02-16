@@ -11,9 +11,6 @@ import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import kotlin.io.path.Path
 
-/**
- * 文件时间处理阶段处理器
- */
 @Managed
 class FileTimeStage(
     private val sql: KSqlClient,
@@ -42,14 +39,6 @@ class FileTimeStage(
         }
     }
 
-    /**
-     * 更新文件系统时间
-     * 
-     * 将文件的创建和修改时间设置为资产的拍摄时间
-     * 
-     * @param asset 资产对象
-     * @param filePath 文件路径
-     */
     fun updateFileSystemTime(asset: Asset, filePath: java.nio.file.Path) {
         rewriteFSTime(filePath, asset.dateTaken)
     }

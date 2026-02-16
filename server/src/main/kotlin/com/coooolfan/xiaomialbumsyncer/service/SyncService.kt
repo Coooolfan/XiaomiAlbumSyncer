@@ -31,10 +31,6 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
 
-/**
- * 同步服务
- * 实现云端到本地的同步功能
- */
 @Managed
 class SyncService(
     private val sql: KSqlClient,
@@ -54,56 +50,31 @@ class SyncService(
 
     private val log = LoggerFactory.getLogger(this.javaClass)
 
-    /**
-     * 变化摘要
-     */
     data class ChangeSummary(
         val addedAssets: List<Asset>,
         val deletedAssets: List<Asset>,
         val updatedAssets: List<Asset>
     )
 
-    /**
-     * 同步状态信息
-     */
     data class SyncStatusInfo(
         val isRunning: Boolean = false,
         val lastSyncTime: Instant? = null,
         val lastSyncResult: SyncStatus? = null
     )
 
-    /**
-     * 检测云端变化（针对同步功能）
-     * @param crontabId 定时任务 ID
-     * @param crontabHistory 同步历史记录（用于时间线差异对比）
-     * @return 变化摘要
-     */
     fun detectSyncChanges(crontabId: Long, crontabHistory: CrontabHistory? = null): ChangeSummary {
-        log.info("开始检测同步变化，定时任务 ID=$crontabId")
-
         val crontab = sql.findById(CRONTAB_WITH_ALBUMS_AND_ACCOUNT_FETCHER, crontabId)
             ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
         val syncFolder = Path(crontab.config.targetPath, crontab.config.syncFolder)
-        log.info("同步文件夹路径: $syncFolder")
 
-        // 时间线差异对比优化
         if (crontab.config.diffByTimeline && crontabHistory != null) {
-            log.info("使用时间线差异对比模式刷新资产数据")
-            
-            // 获取历史时间线快照
             val albumTimelinesHistory = getHistoricalTimelineSnapshot(crontabId)
-            
-            // 使用时间线差异对比刷新资产
             assetService.refreshAssetsByDiffTimeline(crontab, crontabHistory, albumTimelinesHistory)
         } else {
             if (crontab.config.diffByTimeline) {
                 log.warn("时间线差异对比模式已启用，但未提供 crontabHistory，回退到全量刷新")
-            } else {
-                log.info("使用全量刷新模式刷新资产数据")
             }
-            
-            // 全量刷新资产（如果提供了 crontabHistory）
             if (crontabHistory != null) {
                 assetService.refreshAssetsFull(crontab, crontabHistory)
             }
@@ -111,17 +82,13 @@ class SyncService(
 
         val cloudAssets = mutableListOf<Asset>()
         crontab.albums.forEach { album ->
-            log.info("获取相册 ${album.name} (ID=${album.id}) 的云端资产")
             val albumWithAccountId = object : Album by album {
                 override val accountId: Long = crontab.accountId
             }
             val assets = xiaoMiApi.fetchAllAssetsByAlbumId(albumWithAccountId)
-            log.info("相册 ${album.name} 云端资产数量: ${assets.size}")
             cloudAssets.addAll(assets)
         }
-        log.info("云端资产总数: ${cloudAssets.size}")
         
-        // 应用文件类型过滤
         val filteredCloudAssets = cloudAssets.filter { asset ->
             val includeImage = crontab.config.downloadImages || asset.type != AssetType.IMAGE
             val includeVideo = crontab.config.downloadVideos || asset.type != AssetType.VIDEO
@@ -129,12 +96,6 @@ class SyncService(
             includeImage && includeVideo && includeAudio
         }
         
-        val filteredCount = cloudAssets.size - filteredCloudAssets.size
-        if (filteredCount > 0) {
-            log.info("文件类型过滤：过滤掉 $filteredCount 个资产（downloadImages=${crontab.config.downloadImages}, downloadVideos=${crontab.config.downloadVideos}, downloadAudios=${crontab.config.downloadAudios}）")
-        }
-        
-        // 使用过滤后的资产列表替换原始列表
         cloudAssets.clear()
         cloudAssets.addAll(filteredCloudAssets)
 
@@ -143,10 +104,8 @@ class SyncService(
         
         crontab.albums.forEach { album ->
             val albumFolder = Path(syncFolder.toString(), album.name)
-            log.info("检查相册文件夹: $albumFolder")
             if (albumFolder.exists() && albumFolder.isDirectory()) {
                 val files = albumFolder.listDirectoryEntries()
-                log.info("相册 ${album.name} 本地文件数量: ${files.size}")
                 files.forEach { filePath ->
                     if (filePath.isRegularFile()) {
                         val fileName = filePath.fileName.toString()
@@ -159,18 +118,14 @@ class SyncService(
                         if (asset != null) {
                             syncFolderAssets.add(asset)
                         } else {
-                            log.warn("文件 $fileName 在数据库中找不到对应的资产记录，标记为孤儿文件")
                             orphanFiles.add(filePath)
                         }
                     }
                 }
-            } else {
-                log.info("相册文件夹不存在或不是目录: $albumFolder")
             }
         }
         
         if (orphanFiles.isNotEmpty()) {
-            log.info("发现 ${orphanFiles.size} 个孤儿文件，开始清理...")
             orphanFiles.forEach { orphanFile ->
                 try {
                     fileService.deleteFile(orphanFile)
@@ -178,11 +133,6 @@ class SyncService(
                     log.error("删除孤儿文件失败: ${orphanFile.fileName}", e)
                 }
             }
-        }
-        
-        log.info("同步文件夹资产总数: ${syncFolderAssets.size}")
-        if (orphanFiles.isNotEmpty()) {
-            log.info("已清理 ${orphanFiles.size} 个孤儿文件，这些文件对应的云端资产将被重新下载")
         }
 
         val cloudAssetMap = cloudAssets.associateBy { it.id }
@@ -200,19 +150,10 @@ class SyncService(
                     )
         }
 
-        log.info("同步变化检测完成：新增=${added.size}，删除=${deleted.size}，修改=${updated.size}")
-
         return ChangeSummary(added, deleted, updated)
     }
 
-    /**
-     * 检测云端变化（原有的下载功能）
-     * @param crontabId 定时任务 ID
-     * @return 变化摘要
-     */
     fun detectChanges(crontabId: Long): ChangeSummary {
-        log.info("开始检测云端变化，定时任务 ID=$crontabId")
-
         val crontab = sql.findById(Crontab::class, crontabId)
             ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
@@ -231,9 +172,7 @@ class SyncService(
         val localAssetMap = localAssets.associateBy { it.id }
 
         val added = cloudAssets.filter { it.id !in localAssetMap }
-
         val deleted = localAssets.filter { it.id !in cloudAssetMap }
-
         val updated = cloudAssets.filter { cloudAsset ->
             val localAsset = localAssetMap[cloudAsset.id]
             localAsset != null && (
@@ -242,44 +181,24 @@ class SyncService(
                     )
         }
 
-        log.info("变化检测完成：新增=${added.size}，删除=${deleted.size}，修改=${updated.size}")
-
         return ChangeSummary(added, deleted, updated)
     }
 
-    /**
-     * 执行同步任务
-     * @param crontabId 定时任务 ID
-     * @return 同步记录 ID
-     */
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun executeSync(crontabId: Long): Long {
         val startTime = Instant.now()
-        log.info("========== 开始执行同步任务 ==========")
-        log.info("定时任务 ID=$crontabId")
+        log.info("开始执行同步任务，定时任务 ID=$crontabId")
 
         val crontab = sql.findById(CRONTAB_WITH_ALBUMS_AND_ACCOUNT_FETCHER, crontabId)
             ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
-        log.info("同步配置：")
-        log.info("  - 同步模式: ${crontab.config.syncMode}")
-        log.info("  - 文件类型过滤: 图片=${crontab.config.downloadImages}, 视频=${crontab.config.downloadVideos}, 音频=${crontab.config.downloadAudios}")
-        log.info("  - 跳过已存在文件: ${crontab.config.skipExistingFile}")
-        log.info("  - 自定义路径表达式: ${if (crontab.config.expressionTargetPath.isNotEmpty()) crontab.config.expressionTargetPath else "未配置（使用默认路径）"}")
-        log.info("  - 并发下载数: ${crontab.config.downloaders}")
-        log.info("  - 时间线差异对比: ${crontab.config.diffByTimeline}")
-        log.info("  - 归档模式: ${crontab.config.archiveMode}")
-
         val crontabHistory = crontabService.createCrontabHistory(crontab)
-        
         val syncRecord = createSyncRecord(crontab)
 
         try {
             val changes = detectSyncChanges(crontabId, crontabHistory)
-
             val syncFolder = Path(crontab.config.targetPath, crontab.config.syncFolder)
 
-            // 并发处理 ADD 操作
             changes.addedAssets
                 .asFlow()
                 .flatMapMerge(crontab.config.downloaders) { asset ->
@@ -288,10 +207,8 @@ class SyncService(
                             val album = crontab.albums.find { it.id == asset.album.id }
                                 ?: throw IllegalStateException("找不到资产对应的相册: ${asset.album.id}")
                             
-                            // 使用自定义路径表达式生成文件路径
                             val filePath = generateFilePath(asset, album, syncFolder, crontab.config)
                             
-                            // 跳过已存在文件检查
                             if (crontab.config.skipExistingFile && fileService.fileExists(filePath)) {
                                 val fileSize = fileService.getFileSize(filePath)
                                 if (fileSize == asset.size) {
@@ -306,23 +223,18 @@ class SyncService(
                                     )
                                     emit(Unit)
                                     return@flow
-                                } else {
-                                    log.warn("文件已存在但大小不匹配，重新下载: ${asset.fileName} (本地=${fileSize}, 云端=${asset.size})")
                                 }
                             }
                             
-                            // 下载文件（使用生成的路径）
                             xiaoMiApi.downloadAsset(crontab.accountId, asset, filePath)
                             sql.saveCommand(asset, SaveMode.UPSERT).execute()
                             
-                            // 执行后处理
                             val postProcessingResult = postProcessingCoordinator.process(
                                 asset, 
                                 filePath, 
                                 crontab.config
                             )
                             
-                            // 记录同步详情
                             recordSyncDetail(
                                 syncRecord.id, 
                                 asset, 
@@ -348,7 +260,6 @@ class SyncService(
                                     e.message
                                 )
                             }
-                            // 错误隔离：不抛出异常，继续处理其他资产
                             emit(Unit)
                         }
                     }
@@ -357,25 +268,15 @@ class SyncService(
 
             when (crontab.config.syncMode) {
                 SyncMode.ADD_ONLY -> {
-                    log.info("同步模式为 ADD_ONLY，跳过 ${changes.deletedAssets.size} 个删除操作和 ${changes.updatedAssets.size} 个修改操作")
+                    // 跳过删除和修改操作
                 }
                 
                 SyncMode.SYNC_ALL_CHANGES -> {
-                    log.info("同步模式为 SYNC_ALL_CHANGES，处理所有变化：删除 ${changes.deletedAssets.size} 个，修改 ${changes.updatedAssets.size} 个")
-                    
-                    // 处理 DELETE 操作
-                    // 注意：DELETE 操作不执行后处理（SHA1 校验、EXIF 时间填充、文件系统时间更新）
-                    // 原因：
-                    // 1. 文件已被删除，无法进行后处理操作
-                    // 2. 后处理步骤（SHA1 校验、EXIF 填充、文件时间更新）仅适用于存在的文件
-                    // 3. DELETE 操作的成功与否仅取决于文件删除是否成功
-                    // 参考需求：7.1, 7.2, 7.3
                     changes.deletedAssets.forEach { asset ->
                         try {
                             val album = crontab.albums.find { it.id == asset.album.id }
                                 ?: throw IllegalStateException("找不到资产对应的相册: ${asset.album.id}")
                             
-                            // 仅执行文件删除操作，不调用 postProcessingCoordinator.process()
                             deleteFromSync(asset, album, syncFolder)
                             recordSyncDetail(syncRecord.id, asset, album, SyncOperation.DELETE, syncFolder, true, null)
                         } catch (e: Exception) {
@@ -387,7 +288,6 @@ class SyncService(
                         }
                     }
 
-                    // 并发处理 UPDATE 操作
                     changes.updatedAssets
                         .asFlow()
                         .flatMapMerge(crontab.config.downloaders) { asset ->
@@ -396,12 +296,8 @@ class SyncService(
                                     val album = crontab.albums.find { it.id == asset.album.id }
                                         ?: throw IllegalStateException("找不到资产对应的相册: ${asset.album.id}")
                                     
-                                    // 使用自定义路径表达式生成文件路径
                                     val filePath = generateFilePath(asset, album, syncFolder, crontab.config)
                                     
-                                    // 跳过已存在文件检查（UPDATE 操作）
-                                    // 注意：UPDATE 操作表示云端文件已修改（SHA1 或 dateTaken 不同）
-                                    // 但如果本地文件大小与云端匹配，可能是误判或已经是最新版本
                                     if (crontab.config.skipExistingFile && fileService.fileExists(filePath)) {
                                         val fileSize = fileService.getFileSize(filePath)
                                         if (fileSize == asset.size) {
@@ -416,29 +312,22 @@ class SyncService(
                                             )
                                             emit(Unit)
                                             return@flow
-                                        } else {
-                                            log.warn("UPDATE 操作：文件已存在但大小不匹配，重新下载: ${asset.fileName} (本地=${fileSize}, 云端=${asset.size})")
                                         }
                                     }
                                     
-                                    // 删除旧文件（如果存在）
                                     if (fileService.fileExists(filePath)) {
                                         fileService.deleteFile(filePath)
-                                        log.debug("删除旧文件: $filePath")
                                     }
                                     
-                                    // 下载新文件（使用生成的路径）
                                     xiaoMiApi.downloadAsset(crontab.accountId, asset, filePath)
                                     sql.saveCommand(asset, SaveMode.UPSERT).execute()
                                     
-                                    // 执行后处理
                                     val postProcessingResult = postProcessingCoordinator.process(
                                         asset, 
                                         filePath, 
                                         crontab.config
                                     )
                                     
-                                    // 记录同步详情
                                     recordSyncDetail(
                                         syncRecord.id, 
                                         asset, 
@@ -464,7 +353,6 @@ class SyncService(
                                             e.message
                                         )
                                     }
-                                    // 错误隔离：不抛出异常，继续处理其他资产
                                     emit(Unit)
                                 }
                             }
@@ -494,27 +382,17 @@ class SyncService(
 
             var archivedCount = 0
             
-            log.info("检查自动归档条件：archiveMode=${crontab.config.archiveMode}")
-            
             if (crontab.config.archiveMode != ArchiveMode.DISABLED) {
-                log.info("同步完成后检查自动归档，归档模式=${crontab.config.archiveMode}")
                 try {
                     val archivePlan = archiveService.previewArchive(crontabId)
                     
                     if (archivePlan.assetsToArchive.isNotEmpty()) {
-                        log.info("检测到需要归档的资产 ${archivePlan.assetsToArchive.size} 个，开始自动归档")
-                        
                         val archiveRecordId = archiveService.executeArchive(crontabId, confirmed = true)
                         archivedCount = archivePlan.assetsToArchive.size
-                        log.info("自动归档完成，归档记录 ID=$archiveRecordId，归档资产数量=$archivedCount")
-                    } else {
-                        log.info("没有需要归档的资产，跳过自动归档")
                     }
                 } catch (e: Exception) {
                     log.error("自动归档失败，但同步操作已成功完成", e)
                 }
-            } else {
-                log.info("归档模式为 DISABLED，跳过自动归档检查。archiveMode=${crontab.config.archiveMode}")
             }
             
             val syncStats = mapOf(
@@ -533,27 +411,14 @@ class SyncService(
             val endTime = Instant.now()
             val duration = endTime.toEpochMilli() - startTime.toEpochMilli()
             
-            log.info("========== 同步任务完成 ==========")
-            log.info("同步记录 ID: ${syncRecord.id}")
-            log.info("同步模式: ${crontab.config.syncMode}")
-            log.info("处理结果:")
-            log.info("  - 新增: ${changes.addedAssets.size} 个文件")
-            log.info("  - 删除: ${actualDeletedCount} 个文件")
-            log.info("  - 修改: ${actualUpdatedCount} 个文件")
-            log.info("  - 归档: ${archivedCount} 个文件")
-            log.info("总耗时: ${duration} ms (${duration / 1000.0} 秒)")
-            log.info("=====================================")
+            log.info("同步任务完成，记录 ID=${syncRecord.id}，新增=${changes.addedAssets.size}，删除=${actualDeletedCount}，修改=${actualUpdatedCount}，归档=${archivedCount}，耗时=${duration}ms")
 
             return syncRecord.id
         } catch (e: Exception) {
             val endTime = Instant.now()
             val duration = endTime.toEpochMilli() - startTime.toEpochMilli()
             
-            log.error("========== 同步任务失败 ==========")
-            log.error("定时任务 ID: $crontabId")
-            log.error("错误信息: ${e.message}")
-            log.error("耗时: ${duration} ms (${duration / 1000.0} 秒)")
-            log.error("=====================================", e)
+            log.error("同步任务失败，定时任务 ID=$crontabId，耗时=${duration}ms", e)
             
             updateSyncRecord(syncRecord.id, SyncStatus.FAILED, 0, 0, 0, e.message)
             
@@ -574,11 +439,6 @@ class SyncService(
         }
     }
 
-    /**
-     * 获取同步状态
-     * @param crontabId 定时任务 ID
-     * @return 同步状态信息
-     */
     fun getSyncStatus(crontabId: Long): SyncStatusInfo {
         val lastSyncRecord = sql.createQuery(SyncRecord::class) {
             where(table.crontabId eq crontabId)
@@ -597,12 +457,9 @@ class SyncService(
         }
     }
 
-    /**
-     * 创建同步记录
-     */
     private fun createSyncRecord(crontab: Crontab): SyncRecord {
         val syncRecord = SyncRecord {
-            this.crontabId = crontab.id  // 只设置 ID，不设置整个对象
+            this.crontabId = crontab.id
             this.syncTime = Instant.now()
             this.addedCount = 0
             this.deletedCount = 0
@@ -615,9 +472,6 @@ class SyncService(
         return saveResult.modifiedEntity
     }
 
-    /**
-     * 更新同步记录
-     */
     private fun updateSyncRecord(
         syncRecordId: Long,
         status: SyncStatus,
@@ -636,9 +490,6 @@ class SyncService(
         }.execute()
     }
 
-    /**
-     * 记录同步详情
-     */
     private fun recordSyncDetail(
         syncRecordId: Long,
         asset: Asset,
@@ -662,9 +513,6 @@ class SyncService(
         sql.save(detail, SaveMode.INSERT_ONLY)
     }
 
-    /**
-     * 下载到 sync 文件夹
-     */
     private fun downloadToSync(asset: Asset, album: Album, syncFolder: Path, accountId: Long) {
         val targetPath = Path(syncFolder.toString(), album.name, asset.fileName)
         xiaoMiApi.downloadAsset(accountId, asset, targetPath)
@@ -672,13 +520,7 @@ class SyncService(
         sql.saveCommand(asset, SaveMode.UPSERT).execute()
     }
 
-    /**
-     * 获取历史时间线快照
-     * @param crontabId 定时任务 ID
-     * @return 历史时间线快照（相册 remoteId -> AlbumTimeline）
-     */
     private fun getHistoricalTimelineSnapshot(crontabId: Long): Map<Long, AlbumTimeline> {
-        // 获取最近一次成功的同步记录
         val lastSuccessfulHistory = sql.createQuery(CrontabHistory::class) {
             where(table.crontab.id eq crontabId)
             where(table.endTime ne null)
@@ -687,24 +529,17 @@ class SyncService(
         }.limit(1).execute().firstOrNull()
 
         if (lastSuccessfulHistory == null) {
-            log.info("没有找到历史时间线快照，使用空时间线作为基准")
             return emptyMap()
         }
 
         val timelineSnapshot = lastSuccessfulHistory.timelineSnapshot
         if (timelineSnapshot == null || timelineSnapshot.isEmpty()) {
-            log.info("历史时间线快照为空，使用空时间线作为基准")
             return emptyMap()
         }
-        
-        log.info("找到历史时间线快照，包含 ${timelineSnapshot.size} 个相册")
         
         return timelineSnapshot
     }
 
-    /**
-     * 从 sync 文件夹删除
-     */
     private fun deleteFromSync(asset: Asset, album: Album, syncFolder: Path) {
         val filePath = Path(syncFolder.toString(), album.name, asset.fileName)
         if (filePath.exists()) {
@@ -714,14 +549,6 @@ class SyncService(
         sql.deleteById(Asset::class, asset.id)
     }
 
-    /**
-     * 生成文件路径（支持自定义路径表达式）
-     * @param asset 资产
-     * @param album 相册
-     * @param syncFolder 同步文件夹
-     * @param config 配置
-     * @return 文件路径
-     */
     private fun generateFilePath(
         asset: Asset,
         album: Album,
@@ -730,7 +557,6 @@ class SyncService(
     ): Path {
         val expression = config.expressionTargetPath.trim().takeIf { it.isNotEmpty() }
 
-        // 如果没有配置表达式，使用默认路径
         if (expression == null) {
             return Path(syncFolder.toString(), album.name, asset.fileName)
         }
@@ -762,32 +588,23 @@ class SyncService(
             put("takenEpochSeconds", takenTime.epochSecond.toString())
         }
 
-        // 检查表达式是否包含支持的插值
         if (!containsSupportedInterpolation(expression, replacements.keys)) {
-            log.warn("路径表达式不包含支持的变量，回退到默认路径: $expression")
             return Path(syncFolder.toString(), album.name, asset.fileName)
         }
 
-        // 解析表达式
         val resolved = try {
             interpolateExpression(expression, replacements, downloadTime, takenTime, zoneId).trim()
         } catch (e: Exception) {
-            log.warn("路径表达式解析失败，回退到默认路径: $expression", e)
             return Path(syncFolder.toString(), album.name, asset.fileName)
         }
 
         if (resolved.isEmpty()) {
-            log.warn("路径表达式解析结果为空，回退到默认路径: $expression")
             return Path(syncFolder.toString(), album.name, asset.fileName)
         }
 
-        // 返回相对于 syncFolder 的完整路径
         return Path(syncFolder.toString(), resolved).normalize()
     }
 
-    /**
-     * 替换表达式中的变量
-     */
     private fun interpolateExpression(
         template: String,
         values: Map<String, String>,
@@ -814,9 +631,6 @@ class SyncService(
         }
     }
 
-    /**
-     * 格式化时间
-     */
     private fun formatInstant(instant: Instant, zoneId: ZoneId, pattern: String): String? {
         if (pattern.isBlank()) return null
         return runCatching {
@@ -824,9 +638,6 @@ class SyncService(
         }.getOrNull()
     }
 
-    /**
-     * 解析时区
-     */
     private fun resolveZoneId(timeZone: String?): ZoneId {
         if (timeZone.isNullOrBlank()) {
             return ZoneId.systemDefault()
@@ -834,17 +645,11 @@ class SyncService(
         return runCatching { ZoneId.of(timeZone) }.getOrDefault(ZoneId.systemDefault())
     }
 
-    /**
-     * 清理路径片段中的非法字符
-     */
     private fun sanitizeSegment(value: String): String {
         if (value.isEmpty()) return value
         return value.replace(Regex("""[\\/:*?"<>|\r\n\t]"""), "_")
     }
 
-    /**
-     * 检查表达式是否包含支持的插值
-     */
     private fun containsSupportedInterpolation(template: String, supportedKeys: Set<String>): Boolean {
         val tokenRegex = Regex("""\$\{([^}]+)}""")
         return tokenRegex.findAll(template).any { match ->
