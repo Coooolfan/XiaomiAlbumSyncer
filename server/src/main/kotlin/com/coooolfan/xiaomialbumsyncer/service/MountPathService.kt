@@ -2,25 +2,28 @@ package com.coooolfan.xiaomialbumsyncer.service
 
 import com.coooolfan.xiaomialbumsyncer.exception.BadRequestException
 import org.noear.solon.annotation.Managed
+import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
 
 @Managed
 class MountPathService {
+    private val inDockerCached: Boolean = Files.exists(DOCKER_ENV_PATH)
+    private val mountPointsCached: Set<Path> = loadMountPoints(inDockerCached)
 
     fun isRunningInDockerContainer(): Boolean {
-        return Files.exists(DOCKER_ENV_PATH)
+        return inDockerCached
     }
 
     fun checkExplicitMountPoint(path: String): Boolean {
         val normalizedPath = normalizeAbsolutePath(path)
 
-        if (!isRunningInDockerContainer()) {
+        if (!inDockerCached) {
             return false
         }
 
-        return readMountPoints().contains(normalizedPath)
+        return isMountedPathOrSubPath(normalizedPath)
     }
 
     private fun normalizeAbsolutePath(path: String): Path {
@@ -35,6 +38,19 @@ class MountPathService {
         }
 
         return normalizedPath
+    }
+
+    private fun loadMountPoints(inDocker: Boolean): Set<Path> {
+        if (!inDocker) {
+            return emptySet()
+        }
+
+        return try {
+            readMountPoints()
+        } catch (e: Exception) {
+            log.warn("读取 {} 失败，将挂载点缓存降级为空集合", MOUNT_INFO_PATH, e)
+            emptySet()
+        }
     }
 
     private fun readMountPoints(): Set<Path> {
@@ -64,7 +80,14 @@ class MountPathService {
         }
     }
 
+    private fun isMountedPathOrSubPath(path: Path): Boolean {
+        return mountPointsCached.any { mountPoint ->
+            path == mountPoint || (mountPoint.nameCount > 0 && path.startsWith(mountPoint))
+        }
+    }
+
     companion object {
+        private val log = LoggerFactory.getLogger(MountPathService::class.java)
         private val DOCKER_ENV_PATH: Path = Path.of("/.dockerenv")
         private val MOUNT_INFO_PATH: Path = Path.of("/proc/self/mountinfo")
         private val MOUNT_INFO_ESCAPE_REGEX = Regex("""\\([0-7]{3})""")

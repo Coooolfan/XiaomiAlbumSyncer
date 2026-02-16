@@ -3,6 +3,7 @@ import Card from 'primevue/card'
 import Button from 'primevue/button'
 import CrontabCard from '@/components/CrontabCard.vue'
 import type { CrontabDto } from '@/__generated/model/dto'
+import { ref, watch } from 'vue'
 
 type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
 
@@ -12,6 +13,18 @@ const props = defineProps<{
   albumOptions: ReadonlyArray<{ label: string; value: string }>
   updatingRow?: number | null
 }>()
+
+const collapsed = ref(false)
+
+watch(
+  () => props.crontabs,
+  (list) => {
+    if (list && list.length > 2) {
+      collapsed.value = true
+    }
+  },
+  { immediate: true },
+)
 
 const emit = defineEmits<{
   (e: 'refresh'): void
@@ -31,6 +44,14 @@ const emit = defineEmits<{
       <div class="flex items-center justify-between">
         <div class="font-medium text-slate-600">计划任务</div>
         <div class="flex items-center gap-2">
+          <Button
+            :icon="collapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
+            severity="secondary"
+            rounded
+            text
+            @click="collapsed = !collapsed"
+            v-tooltip="'展开/折叠'"
+          />
           <Button icon="pi pi-refresh" severity="secondary" rounded text @click="emit('refresh')" />
           <Button icon="pi pi-plus" severity="success" rounded text @click="emit('create')" />
         </div>
@@ -47,13 +68,18 @@ const emit = defineEmits<{
           >
             暂无计划任务
           </div>
-          <div v-else class="grid grid-cols-1 gap-3">
+          <div
+            v-else
+            class="grid gap-3"
+            :class="collapsed ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'"
+          >
             <CrontabCard
               v-for="item in props.crontabs"
               :key="item.id"
               :crontab="item"
               :album-options="props.albumOptions"
               :busy="props.updatingRow === item.id"
+              :collapsed="collapsed"
               @edit="emit('edit', item)"
               @delete="emit('delete', item)"
               @toggle="emit('toggle', item)"

@@ -16,6 +16,7 @@ const props = defineProps<{
   crontab: Crontab
   albumOptions: ReadonlyArray<{ label: string; value: string }>
   busy?: boolean
+  collapsed?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -150,20 +151,23 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Card class="overflow-hidden ring-1 ring-slate-200/60">
+  <Card class="overflow-hidden ring-1 ring-slate-200/60 h-full">
     <template #title>
       <div class="flex items-center justify-between pb-4">
-        <div class="flex items-center gap-3">
-          <span class="font-medium text-slate-700 text-base">{{ crontab.name }}</span>
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="font-medium text-slate-700 text-base truncate">{{ crontab.name }}</span>
         </div>
-        <div class="flex items-center gap-2 text-xs text-slate-600">
-          <span class="hidden sm:inline">启用</span>
-          <ToggleSwitch
-            :modelValue="crontab.enabled"
-            :disabled="busy"
-            @update:modelValue="() => emit('toggle')"
-            class="mr-2 sm:mr-4"
-          />
+        <div class="flex items-center gap-2 text-xs text-slate-600 shrink-0">
+          <template v-if="!props.collapsed">
+            <span class="hidden sm:inline">启用</span>
+            <ToggleSwitch
+              :modelValue="crontab.enabled"
+              :disabled="busy"
+              @update:modelValue="() => emit('toggle')"
+              class="mr-2 sm:mr-4"
+            />
+          </template>
+
           <SplitButton
             v-if="manualActionOptions.length > 0"
             size="small"
@@ -180,16 +184,69 @@ onUnmounted(() => {
             size="small"
             severity="warning"
             class="mr-1"
+            v-tooltip="'立即执行'"
             @click="emit('execute')"
           />
-          <Button icon="pi pi-pencil" size="small" @click="emit('edit')" />
-          <Button icon="pi pi-trash" size="small" severity="danger" @click="emit('delete')" />
+
+          <template v-if="!props.collapsed">
+            <Button icon="pi pi-pencil" size="small" @click="emit('edit')" />
+            <Button icon="pi pi-trash" size="small" severity="danger" @click="emit('delete')" />
+          </template>
         </div>
       </div>
     </template>
 
     <template #content>
-      <div class="text-sm md:flex md:items-start md:gap-6">
+      <div v-if="props.collapsed" class="flex flex-col gap-3 text-sm text-slate-600">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <Tag
+              :severity="
+                recentHistories[0]?.isCompleted ? 'success' : crontab.running ? 'info' : 'warn'
+              "
+              :value="
+                recentHistories[0]?.isCompleted ? '完成' : crontab.running ? '进行中' : '终止'
+              "
+              class="!text-xs !py-0 !px-2 !h-6"
+            />
+            <span
+              v-if="recentHistories[0]?.detailsCount !== undefined"
+              class="text-xs text-slate-500"
+            >
+              {{ recentHistories[0].detailsCount }} 项
+            </span>
+          </div>
+          <span class="text-xs text-slate-400 font-mono">{{
+            formatTime(recentHistories[0]?.endTime || recentHistories[0]?.startTime)
+          }}</span>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center gap-2" title="Status">
+            <i
+              class="pi pi-power-off text-xs shrink-0"
+              :class="crontab.enabled ? 'text-green-500' : 'text-slate-300'"
+            />
+            <span class="text-xs" :class="crontab.enabled ? 'text-slate-600' : 'text-slate-400'">
+              {{ crontab.enabled ? '已启用' : '已禁用' }}
+            </span>
+          </div>
+          <div class="flex items-center gap-2 w-full" title="Target Path">
+            <i class="pi pi-folder text-xs text-slate-400 shrink-0" />
+            <span class="truncate font-mono text-xs">{{ crontab.config?.targetPath || '-' }}</span>
+          </div>
+          <div class="flex items-center gap-2" title="Cron Expression">
+            <i class="pi pi-clock text-xs text-slate-400 shrink-0" />
+            <span class="font-mono text-xs">{{ crontab.config?.expression }}</span>
+          </div>
+          <div class="flex items-center gap-2" title="Account">
+            <i class="pi pi-user text-xs text-slate-400 shrink-0" />
+            <span class="truncate text-xs">{{ crontab.account?.nickname || '-' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="text-sm md:flex md:items-start md:gap-6">
         <div class="flex-1 space-y-3">
           <div v-if="crontab.description" class="text-slate-500">
             {{ crontab.description }}
