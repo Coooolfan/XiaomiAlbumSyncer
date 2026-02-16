@@ -2,7 +2,6 @@
 *.db
 .db-shm
 .db-wal
-.log
 
 .idea/
 **/__pycache__
@@ -36,6 +35,3 @@ logs/
 /server/src/main/resources/static/
 /download/
 /db/
-
-# 调试目录
-/debug/
