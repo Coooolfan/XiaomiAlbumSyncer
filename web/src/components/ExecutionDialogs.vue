@@ -73,7 +73,9 @@ function closeExecuteRewriteFs() {
 <template>
   <!-- 删除确认 -->
   <Dialog v-model:visible="deleteVisible" modal header="删除计划任务" class="w-full sm:w-105">
-    <div class="text-sm text-slate-700">确定要删除该计划任务吗？该操作不可恢复。</div>
+    <div class="text-sm text-slate-700 dark:text-slate-200">
+      确定要删除该计划任务吗？该操作不可恢复。
+    </div>
     <template #footer>
       <div class="flex items-center justify-end gap-2 w-full">
         <Button label="取消" severity="secondary" text @click="closeDelete" />
@@ -89,7 +91,7 @@ function closeExecuteRewriteFs() {
 
   <!-- 立即执行确认 -->
   <Dialog v-model:visible="executeVisible" modal header="立即执行" class="w-full sm:w-105">
-    <div class="text-sm text-slate-700">
+    <div class="text-sm text-slate-700 dark:text-slate-200">
       确定要立即触发该计划任务的执行吗？该操作较为耗时，将在后台执行。
     </div>
     <template #footer>
@@ -112,7 +114,7 @@ function closeExecuteRewriteFs() {
     header="立即执行 EXIF 填充"
     class="w-full sm:w-105"
   >
-    <div class="text-sm text-slate-700">
+    <div class="text-sm text-slate-700 dark:text-slate-200">
       确定要手动触发该计划任务的 EXIF
       填充操作吗？该操作较为耗时，将在后台执行。可观察程序日志查看进度。<br />会对此计划任务所有下载过的文件执行此操作。
     </div>
@@ -136,7 +138,7 @@ function closeExecuteRewriteFs() {
     header="立即重写文件系统时间"
     class="w-full sm:w-105"
   >
-    <div class="text-sm text-slate-700">
+    <div class="text-sm text-slate-700 dark:text-slate-200">
       确定要对该计划任务已下载的文件执行文件系统时间重写吗？该操作较为耗时，将在后台执行。可观察程序日志查看进度。<br />会对此计划任务所有下载过的文件执行此操作。
     </div>
     <template #footer>

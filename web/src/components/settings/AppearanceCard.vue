@@ -21,11 +21,11 @@ const heatOptions: Array<{ label: string; value: boolean }> = [
 </script>
 
 <template>
-  <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
+  <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mb-6">
     <template #title>外观</template>
     <template #content>
       <div class="flex items-center justify-between">
-        <span class="text-sm text-slate-600">背景</span>
+        <span class="text-sm text-slate-600 dark:text-slate-300">背景</span>
         <div class="min-w-40">
           <SelectButton
             v-model="backgroundMode"
@@ -35,12 +35,14 @@ const heatOptions: Array<{ label: string; value: boolean }> = [
           />
         </div>
       </div>
-      <p class="text-xs text-slate-400 mt-3">选择背景效果（单选），偏好将被本地保存。</p>
+      <p class="text-xs text-slate-400 dark:text-slate-500 mt-3">
+        选择背景效果（单选），偏好将被本地保存。
+      </p>
 
-      <div class="mt-4 pt-4 border-t border-slate-200/60">
+      <div class="mt-4 pt-4 border-t border-slate-200/60 dark:border-slate-700/60">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="text-sm text-slate-600">热力图优化展示</span>
+            <span class="text-sm text-slate-600 dark:text-slate-300">热力图优化展示</span>
           </div>
           <div class="min-w-40">
             <SelectButton
@@ -51,7 +53,7 @@ const heatOptions: Array<{ label: string; value: boolean }> = [
             />
           </div>
         </div>
-        <p class="text-xs text-slate-400 mt-3">
+        <p class="text-xs text-slate-400 dark:text-slate-500 mt-3">
           开启后，颜色深度将基于近似上界（95%分位）映射，弱化极端离群值影响；偏好将被本地保存。
         </p>
       </div>

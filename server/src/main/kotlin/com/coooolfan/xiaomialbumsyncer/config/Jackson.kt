@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import org.babyfish.jimmer.jackson.ImmutableModule
+import org.babyfish.jimmer.jackson.v2.ImmutableModuleV2
 import org.noear.solon.annotation.Bean
 import org.noear.solon.annotation.Configuration
 import org.noear.solon.core.convert.Converter
@@ -22,7 +22,7 @@ class Jackson {
     fun objectMapper(serializer: JacksonStringSerializer): ObjectMapper {
         log.info("配置 Jackson 并注册全局 ObjectMapper Bean...")
 
-        val immutableModule = ImmutableModule()
+        val immutableModule = ImmutableModuleV2()
         val kotlinModule = KotlinModule.Builder().build()
 
         // 配置序列化 mapper

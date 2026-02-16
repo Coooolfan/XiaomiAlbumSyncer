@@ -1,4 +1,5 @@
-import { ref, watch } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
+import { api } from '@/ApiInstance'
 import type { CrontabDto } from '@/__generated/model/dto'
 import { createEmptyCronForm, mapCrontabToForm, type LocalCronForm } from '@/utils/crontabForm'
 
@@ -20,6 +21,72 @@ export function useCronForm(getDefaultAccountId: () => number) {
   const cronForm = ref<LocalCronForm>(createEmptyCronForm(defaultTz, 0))
   const formErrors = ref<Record<string, string>>({})
   const timeZones = ref<string[]>([])
+  const targetPathMountWarning = ref(false)
+  let mountCheckTimer: number | undefined
+  let mountCheckSeq = 0
+
+  function clearMountCheckTimer() {
+    if (mountCheckTimer) {
+      window.clearTimeout(mountCheckTimer)
+      mountCheckTimer = undefined
+    }
+  }
+
+  function clearMountWarningState() {
+    clearMountCheckTimer()
+    mountCheckSeq += 1
+    targetPathMountWarning.value = false
+  }
+
+  function shouldSkipMountCheck(): boolean {
+    if (!showCronDialog.value) return true
+
+    const targetPath = cronForm.value.config.targetPath?.trim() ?? ''
+    if (!targetPath) return true
+
+    const expressionTargetPath = cronForm.value.config.expressionTargetPath?.trim() ?? ''
+    return expressionTargetPath.length > 0
+  }
+
+  function scheduleTargetPathMountCheck() {
+    clearMountCheckTimer()
+
+    if (shouldSkipMountCheck()) {
+      clearMountWarningState()
+      return
+    }
+
+    const requestSeq = ++mountCheckSeq
+    mountCheckTimer = window.setTimeout(() => {
+      void runTargetPathMountCheck(requestSeq)
+    }, 300)
+  }
+
+  async function runTargetPathMountCheck(requestSeq: number) {
+    if (requestSeq !== mountCheckSeq) return
+
+    if (shouldSkipMountCheck()) {
+      if (requestSeq === mountCheckSeq) {
+        targetPathMountWarning.value = false
+      }
+      return
+    }
+
+    const path = cronForm.value.config.targetPath.trim()
+
+    try {
+      const response = await api.systemConfigController.checkMountPath({
+        body: { path },
+      })
+
+      if (requestSeq !== mountCheckSeq) return
+      targetPathMountWarning.value = response.inDocker === true && response.mounted === false
+    } catch (err) {
+      if (requestSeq !== mountCheckSeq) return
+      console.warn('检测保存路径挂载状态失败', err)
+      targetPathMountWarning.value = false
+    }
+  }
 
   function openCreateCron() {
     isEditing.value = false
@@ -112,6 +179,36 @@ export function useCronForm(getDefaultAccountId: () => number) {
     },
   )
 
+  watch(
+    () => cronForm.value.config.targetPath,
+    () => {
+      scheduleTargetPathMountCheck()
+    },
+  )
+
+  watch(
+    () => cronForm.value.config.expressionTargetPath,
+    (value) => {
+      if (value?.trim()) {
+        clearMountWarningState()
+        return
+      }
+      scheduleTargetPathMountCheck()
+    },
+  )
+
+  watch(showCronDialog, (visible) => {
+    if (visible) {
+      scheduleTargetPathMountCheck()
+      return
+    }
+    clearMountWarningState()
+  })
+
+  onBeforeUnmount(() => {
+    clearMountWarningState()
+  })
+
   return {
     showCronDialog,
     isEditing,
@@ -119,6 +216,7 @@ export function useCronForm(getDefaultAccountId: () => number) {
     cronForm,
     formErrors,
     timeZones,
+    targetPathMountWarning,
     openCreateCron,
     openEditCron,
     validateCronForm,

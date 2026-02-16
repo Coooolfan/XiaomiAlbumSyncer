@@ -14,6 +14,8 @@ export type {ExecuteArchiveResponse} from './ExecuteArchiveResponse';
 export type {ExecuteSyncResponse} from './ExecuteSyncResponse';
 export type {HasPasskeysResponse} from './HasPasskeysResponse';
 export type {IsInitResponse} from './IsInitResponse';
+export type {MountPathCheckRequest} from './MountPathCheckRequest';
+export type {MountPathCheckResponse} from './MountPathCheckResponse';
 export type {PasskeyAuthFinishRequest} from './PasskeyAuthFinishRequest';
 export type {PasskeyAuthStartResponse} from './PasskeyAuthStartResponse';
 export type {PasskeyCredentialInfo} from './PasskeyCredentialInfo';

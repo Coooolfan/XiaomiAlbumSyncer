@@ -132,7 +132,7 @@ function confirmDelete(account: Account) {
 </script>
 
 <template>
-  <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mt-6">
+  <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mt-6">
     <template #title>
       <div class="flex items-center justify-between">
         <span>小米账号管理</span>
@@ -148,7 +148,7 @@ function confirmDelete(account: Account) {
     <template #content>
       <div
         v-if="isInsecureContext"
-        class="mb-4 rounded-md bg-red-50 text-red-700 text-xs px-3 py-2 ring-1 ring-red-200"
+        class="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
       >
         警告：当前处于不安全上下文，提交的 passToken 将在网络上以明文传输到服务器，谨防中间人攻击。
         请仅在受信网络环境使用或通过 HTTPS 访问本页面。
@@ -192,29 +192,35 @@ function confirmDelete(account: Account) {
     <div class="flex flex-col gap-4 pt-2">
       <div class="flex gap-3">
         <div class="flex-1">
-          <label class="block text-sm font-medium text-slate-700 mb-1">User ID</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1"
+            >User ID</label
+          >
           <InputText v-model="form.userId" placeholder="输入 userId" class="w-full" />
         </div>
         <div class="flex-1">
-          <label class="block text-sm font-medium text-slate-700 mb-1">昵称 (可选)</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1"
+            >昵称 (可选)</label
+          >
           <InputText v-model="form.nickname" placeholder="输入昵称" class="w-full" />
         </div>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">PassToken</label>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1"
+          >PassToken</label
+        >
         <Textarea
           v-model="form.passToken"
           rows="5"
           :placeholder="isEditMode ? '如需修改，请输入新的 PassToken' : '输入 PassToken'"
           class="w-full"
         />
-        <p v-if="isEditMode" class="text-xs text-slate-500 mt-1">
+        <p v-if="isEditMode" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
           注意：更新账号信息时必须重新提供 PassToken。
         </p>
       </div>
 
-      <div v-if="isInsecureContext" class="text-xs text-red-600">
+      <div v-if="isInsecureContext" class="text-xs text-red-600 dark:text-red-300">
         当前环境不安全，PassToken 将明文传输。
       </div>
     </div>

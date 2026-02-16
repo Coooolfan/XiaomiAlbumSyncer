@@ -2,6 +2,8 @@ import type {Executor} from '../';
 import type {SystemConfigDto} from '../model/dto/';
 import type {
     IsInitResponse, 
+    MountPathCheckRequest, 
+    MountPathCheckResponse, 
     SystemConfigFtqqKeyIsInitResponse, 
     SystemConfigFtqqKeyUpdate, 
     SystemConfigInit, 
@@ -20,6 +22,25 @@ import type {
 export class SystemConfigController {
     
     constructor(private executor: Executor) {}
+    
+    /**
+     * 检查路径是否为挂载点
+     * 
+     * 此接口用于判断传入绝对路径是否为明确挂载点
+     * 非 Docker 运行环境固定返回 false
+     * 需要用户登录认证才能访问
+     * 
+     * @parameter {SystemConfigControllerOptions['checkMountPath']} options
+     * - request 路径检查请求，包含待检查的绝对路径
+     * @return MountPathCheckResponse 挂载点检查结果
+     * 
+     */
+    readonly checkMountPath: (options: SystemConfigControllerOptions['checkMountPath']) => Promise<
+        MountPathCheckResponse
+    > = async(options) => {
+        let _uri = '/api/system-config/mount-path';
+        return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<MountPathCheckResponse>;
+    }
     
     /**
      * 获取 Server酱（FTQQ）推送Key初始化状态
@@ -210,6 +231,12 @@ export type SystemConfigControllerOptions = {
     }, 
     'getSystemInfo': {}, 
     'getSystemDebugInfo': {}, 
+    'checkMountPath': {
+        /**
+         * 路径检查请求，包含待检查的绝对路径
+         */
+        readonly body: MountPathCheckRequest
+    }, 
     'importFromV2Db': {}, 
     'ftqqKeyIsInitd': {}, 
     'updateFtqqKey': {

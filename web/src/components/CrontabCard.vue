@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import ToggleSwitch from 'primevue/toggleswitch'
@@ -15,6 +16,7 @@ const props = defineProps<{
   crontab: Crontab
   albumOptions: ReadonlyArray<{ label: string; value: string }>
   busy?: boolean
+  collapsed?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -35,51 +37,6 @@ const albumMap = computed<Record<string, string>>(() => {
   return map
 })
 
-// 折叠状态 - 从 localStorage 读取
-function getInitialCollapsedState(): boolean {
-  if (props.crontab.id) {
-    const stored = localStorage.getItem(`collapsed-crontab-${props.crontab.id}`)
-    if (stored !== null) {
-      return stored === 'true'
-    }
-  }
-  return false
-}
-
-const isCollapsed = ref(getInitialCollapsedState())
-
-function toggleCollapse() {
-  isCollapsed.value = !isCollapsed.value
-  // 保存状态到 localStorage
-  if (props.crontab.id) {
-    localStorage.setItem(`collapsed-crontab-${props.crontab.id}`, String(isCollapsed.value))
-  }
-}
-
-// 同步模式显示文本和样式
-const syncModeInfo = computed(() => {
-  const mode = props.crontab.config?.syncMode
-  if (mode === 'ADD_ONLY') {
-    return { text: '仅新增', severity: 'secondary' as const }
-  } else if (mode === 'SYNC_ALL_CHANGES') {
-    return { text: '完全同步', severity: 'success' as const }
-  }
-  return { text: '未知模式', severity: 'secondary' as const }
-})
-
-// 归档模式显示文本和样式
-const archiveModeInfo = computed(() => {
-  const mode = props.crontab.config?.archiveMode
-  if (mode === 'DISABLED') {
-    return { text: '关闭归档', severity: 'secondary' as const }
-  } else if (mode === 'TIME') {
-    return { text: '根据时间归档', severity: 'success' as const }
-  } else if (mode === 'SPACE') {
-    return { text: '根据空间归档', severity: 'success' as const }
-  }
-  return { text: '关闭归档', severity: 'secondary' as const }
-})
-
 function formatTime(t?: string) {
   if (!t) return '-'
   try {
@@ -89,84 +46,6 @@ function formatTime(t?: string) {
   } catch {
     return t
   }
-}
-
-// 同步统计信息类型
-interface SyncStats {
-  syncMode: string
-  addedCount: number
-  deletedCount: number
-  updatedCount: number
-  archivedCount: number
-  error: string | null
-}
-
-// 获取同步统计信息
-function getSyncStats(history: {
-  timelineSnapshot?: Record<number, { indexHash: string }>
-}): SyncStats | null {
-  if (!history.timelineSnapshot) return null
-
-  // 查找 key 为 -1 的特殊条目，这是我们存储同步统计信息的地方
-  const syncTimeline = history.timelineSnapshot[-1]
-  if (!syncTimeline || !syncTimeline.indexHash.startsWith('SYNC:')) return null
-
-  // 解析 indexHash 中的同步统计信息
-  // 格式: "SYNC:syncMode:addedCount:deletedCount:updatedCount:archivedCount" 或 "SYNC:syncMode:0:0:0:0:ERROR:errorMessage"
-  const parts = syncTimeline.indexHash.split(':')
-  if (parts.length < 6) return null
-
-  const syncMode = parts[1] || ''
-  const addedCount = parseInt(parts[2] || '0') || 0
-  const deletedCount = parseInt(parts[3] || '0') || 0
-  const updatedCount = parseInt(parts[4] || '0') || 0
-  const archivedCount = parseInt(parts[5] || '0') || 0
-
-  const result: SyncStats = {
-    syncMode,
-    addedCount,
-    deletedCount,
-    updatedCount,
-    archivedCount,
-    error: parts[6] === 'ERROR' ? parts.slice(7).join(':') : null,
-  }
-
-  return result
-}
-
-// 格式化同步统计信息显示
-function formatSyncStats(syncStats: SyncStats | null): string {
-  if (!syncStats) return ''
-
-  if (syncStats.error) {
-    return '同步失败'
-  }
-
-  const parts = []
-  if (syncStats.addedCount > 0) parts.push(`${syncStats.addedCount}新增`)
-  if (syncStats.deletedCount > 0) parts.push(`${syncStats.deletedCount}删除`)
-  if (syncStats.updatedCount > 0) parts.push(`${syncStats.updatedCount}修改`)
-  if (syncStats.archivedCount > 0) parts.push(`${syncStats.archivedCount}归档`)
-
-  if (parts.length === 0) {
-    return '无变化'
-  }
-
-  return parts.join('，')
-}
-
-// 格式化历史记录显示文本
-function formatHistoryText(history: {
-  timelineSnapshot?: Record<number, { indexHash: string }>
-  detailsCount?: number
-}): string {
-  const syncStats = getSyncStats(history)
-  if (syncStats) {
-    return formatSyncStats(syncStats)
-  } else if (history.detailsCount !== undefined) {
-    return `${history.detailsCount} 个资产`
-  }
-  return ''
 }
 
 const recentHistories = computed(() => {
@@ -211,8 +90,7 @@ async function fetchStats() {
     currentStats.value = await api.crontabController.getCrontabCurrentStats({
       crontabId: props.crontab.id,
     })
-    // 只有在没有统计信息且超过5秒没有刷新时才触发刷新，避免频繁刷新
-    if (!currentStats.value.ts && Date.now() - lastFetchTime.value > 5000) {
+    if (!currentStats.value.ts) {
       emit('refresh')
     }
     lastFetchTime.value = Date.now()
@@ -221,7 +99,6 @@ async function fetchStats() {
     const msg = e instanceof Error ? e.message : String(e)
     if (msg.includes('没有正在运行')) {
       stopPolling()
-      // 任务完成时才刷新一次
       emit('refresh')
     }
   }
@@ -231,12 +108,10 @@ function startPolling() {
   if (polling.value) return
   polling.value = true
   fetchStats()
-  // 降低轮询频率：从1秒改为3秒，减少服务器压力和页面闪烁
-  pollTimer = window.setInterval(fetchStats, 3000)
-  // 降低时间更新频率：从200ms改为1秒
+  pollTimer = window.setInterval(fetchStats, 1000)
   nowTimer = window.setInterval(() => {
     now.value = Date.now()
-  }, 1000)
+  }, 200)
 }
 
 function stopPolling() {
@@ -276,300 +151,388 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="py-4 pl-4 border-b border-slate-200 dark:border-slate-700 last:border-b-0">
-    <div class="flex items-center justify-between" :class="{ 'pb-4': !isCollapsed }">
-      <div class="flex items-center gap-2">
-        <span class="font-semibold text-slate-700 dark:text-slate-200 text-lg">{{
-          crontab.name
-        }}</span>
-        <Button
-          :icon="isCollapsed ? 'pi pi-chevron-right' : 'pi pi-chevron-down'"
-          severity="secondary"
-          text
-          rounded
-          size="small"
-          @click.stop="toggleCollapse"
-          class="w-8 h-8 flex-shrink-0"
-          :aria-label="isCollapsed ? '展开' : '折叠'"
-        />
-      </div>
-      <div class="flex items-center gap-2 text-xs text-slate-600">
-        <span class="hidden sm:inline">启用</span>
-        <ToggleSwitch
-          :modelValue="crontab.enabled"
-          :disabled="busy"
-          @update:modelValue="() => emit('toggle')"
-          class="mr-2 sm:mr-4"
-        />
-        <SplitButton
-          v-if="manualActionOptions.length > 0"
-          size="small"
-          severity="warning"
-          class="mr-1"
-          label="立即执行"
-          icon="pi pi-play"
-          :model="manualActionOptions"
-          @click="emit('execute')"
-        />
-        <Button
-          v-else
-          icon="pi pi-play"
-          size="small"
-          severity="warning"
-          class="mr-1"
-          @click="emit('execute')"
-        />
-        <Button icon="pi pi-pencil" size="small" @click="emit('edit')" />
-        <Button icon="pi pi-trash" size="small" severity="danger" @click="emit('delete')" />
-      </div>
-    </div>
-
-    <div v-show="!isCollapsed" class="text-sm md:flex md:items-start md:gap-6">
-      <div class="flex-1 space-y-3">
-        <div v-if="crontab.description" class="text-slate-500 dark:text-slate-400">
-          {{ crontab.description }}
+  <Card class="overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-700/60 h-full">
+    <template #title>
+      <div class="flex items-center justify-between pb-4">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="font-medium text-slate-700 dark:text-slate-200 text-base truncate">{{
+            crontab.name
+          }}</span>
         </div>
+        <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 shrink-0">
+          <template v-if="!props.collapsed">
+            <span class="hidden sm:inline">启用</span>
+            <ToggleSwitch
+              :modelValue="crontab.enabled"
+              :disabled="busy"
+              @update:modelValue="() => emit('toggle')"
+              class="mr-2 sm:mr-4"
+            />
+          </template>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div class="flex items-center gap-2">
-            <i class="pi pi-user text-slate-400 dark:text-slate-500" />
-            <span class="text-slate-600 dark:text-slate-300">{{
-              crontab.account?.nickname || '-'
-            }}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <i class="pi pi-clock text-slate-400 dark:text-slate-500" />
-            <span class="text-slate-600 dark:text-slate-300">{{ crontab.config?.expression }}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <i class="pi pi-globe text-slate-400 dark:text-slate-500" />
-            <span class="text-slate-600 dark:text-slate-300">{{ crontab.config?.timeZone }}</span>
-          </div>
-          <div class="flex items-center gap-2 sm:col-span-1 col-span-1">
-            <i class="pi pi-folder text-slate-400 dark:text-slate-500" />
-            <span class="text-slate-600 dark:text-slate-300 truncate">{{
-              crontab.config?.targetPath || '-'
-            }}</span>
-          </div>
-        </div>
+          <SplitButton
+            v-if="manualActionOptions.length > 0"
+            size="small"
+            severity="warning"
+            class="mr-1"
+            label="立即执行"
+            icon="pi pi-play"
+            :model="manualActionOptions"
+            @click="emit('execute')"
+          />
+          <Button
+            v-else
+            icon="pi pi-play"
+            size="small"
+            severity="warning"
+            class="mr-1"
+            v-tooltip="'立即执行'"
+            @click="emit('execute')"
+          />
 
-        <div class="flex items-center gap-2 flex-wrap">
-          <Tag :severity="syncModeInfo.severity" :value="syncModeInfo.text" />
-          <Tag :severity="archiveModeInfo.severity" :value="archiveModeInfo.text" />
-          <Tag
-            :severity="crontab.config?.downloadImages ? 'success' : 'secondary'"
-            :value="crontab.config?.downloadImages ? '下载照片' : '不下载照片'"
-          />
-          <Tag
-            :severity="crontab.config?.downloadVideos ? 'success' : 'secondary'"
-            :value="crontab.config?.downloadVideos ? '下载视频' : '不下载视频'"
-          />
-          <Tag
-            :severity="crontab.config?.downloadAudios ? 'success' : 'secondary'"
-            :value="crontab.config?.downloadAudios ? '下载录音' : '不下载录音'"
-          />
-          <Tag
-            :severity="crontab.config?.rewriteExifTime ? 'success' : 'secondary'"
-            :value="crontab.config?.rewriteExifTime ? '填充 EXIF' : '不填充 EXIF 时间'"
-          />
-          <Tag
-            :severity="crontab.config?.diffByTimeline ? 'success' : 'secondary'"
-            :value="crontab.config?.diffByTimeline ? '时间线比对差异' : '全量比对差异'"
-          />
-          <Tag
-            :severity="crontab.config?.skipExistingFile ? 'success' : 'danger'"
-            :value="crontab.config?.skipExistingFile ? '跳过已存在文件' : '覆盖已存在文件'"
-          />
-          <Tag
-            :severity="crontab.config?.rewriteFileSystemTime ? 'success' : 'secondary'"
-            :value="
-              crontab.config?.rewriteFileSystemTime ? '重写文件系统时间' : '不重写文件系统时间'
-            "
-          />
-          <Tag
-            :severity="crontab.config?.checkSha1 ? 'success' : 'secondary'"
-            :value="crontab.config?.checkSha1 ? '校验 SHA1' : '不校验 SHA1'"
-          />
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2 pt-1">
-          <Chip
-            v-for="id in crontab.albumIds"
-            :key="id"
-            :label="albumMap[id] || String(id)"
-            class="text-xs"
-          />
-          <span
-            v-if="!crontab.albumIds || crontab.albumIds.length === 0"
-            class="text-xs text-slate-400"
-            >无关联相册</span
-          >
+          <template v-if="!props.collapsed">
+            <Button icon="pi pi-pencil" size="small" @click="emit('edit')" />
+            <Button icon="pi pi-trash" size="small" severity="danger" @click="emit('delete')" />
+          </template>
         </div>
       </div>
+    </template>
 
-      <div class="mt-4 md:mt-0 md:w-1/2">
-        <div
-          v-if="crontab.running"
-          class="mb-3 rounded-md bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-200/60 p-3"
-        >
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-2">
-              <i class="pi pi-spin pi-spinner text-blue-500"></i>
-              <span class="text-xs font-medium text-blue-700 dark:text-blue-300"
-                >正在执行中...</span
-              >
-            </div>
-            <div class="flex flex-col items-end">
-              <span class="text-[10px] text-blue-600/60 font-mono" title="数据获取时间">{{
-                currentStats?.ts ? new Date(currentStats.ts).toLocaleTimeString() : ''
-              }}</span>
-              <span v-if="lastFetchTime" class="text-[9px] text-blue-400 font-mono">
-                {{ ((now - lastFetchTime) / 1000).toFixed(1) }}s ago
-              </span>
-            </div>
-          </div>
-
-          <div v-if="currentStats" class="space-y-2">
-            <div
-              class="text-xs flex justify-between items-center pb-1 border-b border-blue-100 dark:border-blue-800"
-            >
-              <span class="text-slate-500">总计资产</span>
-              <span class="font-mono text-blue-700 font-bold">{{
-                currentStats.assetCount ?? '-'
-              }}</span>
-            </div>
-
-            <div v-if="currentStats.downloadCompletedCount !== undefined" class="text-xs">
-              <div class="flex justify-between items-center mb-1">
-                <span class="text-slate-500">下载进度</span>
-                <span class="font-mono text-slate-700"
-                  >{{ currentStats.downloadCompletedCount }}
-                  <span class="text-slate-400" v-if="currentStats.assetCount"
-                    >/ {{ currentStats.assetCount }}</span
-                  ></span
-                >
-              </div>
-              <div
-                class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5"
-                v-if="currentStats.assetCount"
-              >
-                <div
-                  class="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
-                  :style="{ width: getPercent(currentStats.downloadCompletedCount) + '%' }"
-                ></div>
-              </div>
-            </div>
-
-            <div
-              v-if="currentStats.sha1VerifiedCount !== undefined && crontab.config?.checkSha1"
-              class="text-xs"
-            >
-              <div class="flex justify-between items-center mb-1">
-                <span class="text-slate-500">SHA1 校验</span>
-                <span class="font-mono text-slate-700">{{ currentStats.sha1VerifiedCount }}</span>
-              </div>
-              <div
-                class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5"
-                v-if="currentStats.assetCount"
-              >
-                <div
-                  class="bg-purple-500 h-1.5 rounded-full transition-all duration-500"
-                  :style="{ width: getPercent(currentStats.sha1VerifiedCount) + '%' }"
-                ></div>
-              </div>
-            </div>
-
-            <div
-              v-if="currentStats.exifFilledCount !== undefined && crontab.config?.rewriteExifTime"
-              class="text-xs"
-            >
-              <div class="flex justify-between items-center mb-1">
-                <span class="text-slate-500">EXIF 填充</span>
-                <span class="font-mono text-slate-700">{{ currentStats.exifFilledCount }}</span>
-              </div>
-              <div
-                class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5"
-                v-if="currentStats.assetCount"
-              >
-                <div
-                  class="bg-amber-500 h-1.5 rounded-full transition-all duration-500"
-                  :style="{ width: getPercent(currentStats.exifFilledCount) + '%' }"
-                ></div>
-              </div>
-            </div>
-
-            <div
-              v-if="
-                currentStats.fsTimeUpdatedCount !== undefined &&
-                crontab.config?.rewriteFileSystemTime
+    <template #content>
+      <div
+        v-if="props.collapsed"
+        class="flex flex-col gap-3 text-sm text-slate-600 dark:text-slate-300"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <Tag
+              :severity="
+                recentHistories[0]?.isCompleted ? 'success' : crontab.running ? 'info' : 'warn'
               "
-              class="text-xs"
+              :value="
+                recentHistories[0]?.isCompleted ? '完成' : crontab.running ? '进行中' : '终止'
+              "
+              class="!text-xs !py-0 !px-2 !h-6"
+            />
+            <span
+              v-if="recentHistories[0]?.detailsCount !== undefined"
+              class="text-xs text-slate-500 dark:text-slate-400"
             >
-              <div class="flex justify-between items-center mb-1">
-                <span class="text-slate-500">时间重写</span>
-                <span class="font-mono text-slate-700">{{ currentStats.fsTimeUpdatedCount }}</span>
-              </div>
-              <div
-                class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5"
-                v-if="currentStats.assetCount"
-              >
-                <div
-                  class="bg-emerald-500 h-1.5 rounded-full transition-all duration-500"
-                  :style="{ width: getPercent(currentStats.fsTimeUpdatedCount) + '%' }"
-                ></div>
-              </div>
-            </div>
-
-            <div v-else class="text-xs text-slate-400 pl-6 py-2">
-              正在获取远程数据和资产差异检查...
-            </div>
+              {{ recentHistories[0].detailsCount }} 项
+            </span>
           </div>
+          <span class="text-xs text-slate-400 dark:text-slate-500 font-mono">{{
+            formatTime(recentHistories[0]?.endTime || recentHistories[0]?.startTime)
+          }}</span>
         </div>
 
-        <div class="rounded-md bg-[#F1F5F9] dark:bg-[#27272A] p-3">
-          <div class="text-xs font-medium text-slate-700 dark:text-slate-200 mb-2">
-            最近执行(本地时间)
-          </div>
-          <div
-            v-if="recentHistories.length === 0"
-            class="text-xs text-slate-400 dark:text-slate-500"
-          >
-            暂无历史
-          </div>
-          <ul v-else class="space-y-2">
-            <li
-              v-for="(h, index) in recentHistories"
-              :key="h.id"
-              class="flex items-center justify-between"
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center gap-2" title="Status">
+            <i
+              class="pi pi-power-off text-xs shrink-0"
+              :class="crontab.enabled ? 'text-green-500' : 'text-slate-300'"
+            />
+            <span
+              class="text-xs"
+              :class="
+                crontab.enabled
+                  ? 'text-slate-600 dark:text-slate-300'
+                  : 'text-slate-400 dark:text-slate-500'
+              "
             >
-              <div class="flex items-center gap-2">
-                <span
-                  class="inline-block w-2 h-2 rounded-full"
-                  :class="h.isCompleted ? 'bg-emerald-500' : 'bg-amber-500'"
-                />
-                <span class="text-slate-600 dark:text-slate-300"
-                  >{{ formatTime(h.startTime) }} → {{ formatTime(h.endTime) }}</span
-                >
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-600 dark:text-slate-300">
-                  {{ formatHistoryText(h) }}
-                </span>
-                <Tag
-                  v-if="index === 0 && crontab.running"
-                  :severity="h.isCompleted ? 'success' : 'info'"
-                  :value="h.isCompleted ? '完成' : '进行中'"
-                />
-                <Tag
-                  v-else
-                  :severity="h.isCompleted ? 'success' : 'warn'"
-                  :value="h.isCompleted ? '完成' : '终止'"
-                />
-              </div>
-            </li>
-          </ul>
+              {{ crontab.enabled ? '已启用' : '已禁用' }}
+            </span>
+          </div>
+          <div class="flex items-center gap-2 w-full" title="Target Path">
+            <i class="pi pi-folder text-xs text-slate-400 dark:text-slate-500 shrink-0" />
+            <span class="truncate font-mono text-xs">{{ crontab.config?.targetPath || '-' }}</span>
+          </div>
+          <div class="flex items-center gap-2" title="Cron Expression">
+            <i class="pi pi-clock text-xs text-slate-400 dark:text-slate-500 shrink-0" />
+            <span class="font-mono text-xs">{{ crontab.config?.expression }}</span>
+          </div>
+          <div class="flex items-center gap-2" title="Account">
+            <i class="pi pi-user text-xs text-slate-400 dark:text-slate-500 shrink-0" />
+            <span class="truncate text-xs">{{ crontab.account?.nickname || '-' }}</span>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
+
+      <div v-else class="text-sm md:flex md:items-start md:gap-6">
+        <div class="flex-1 space-y-3">
+          <div v-if="crontab.description" class="text-slate-500 dark:text-slate-400">
+            {{ crontab.description }}
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="flex items-center gap-2">
+              <i class="pi pi-user text-slate-400 dark:text-slate-500" />
+              <span class="text-slate-600 dark:text-slate-300">{{
+                crontab.account?.nickname || '-'
+              }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i class="pi pi-clock text-slate-400 dark:text-slate-500" />
+              <span class="text-slate-600 dark:text-slate-300">{{
+                crontab.config?.expression
+              }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i class="pi pi-globe text-slate-400 dark:text-slate-500" />
+              <span class="text-slate-600 dark:text-slate-300">{{ crontab.config?.timeZone }}</span>
+            </div>
+            <div class="flex items-center gap-2 sm:col-span-1 col-span-1">
+              <i class="pi pi-folder text-slate-400 dark:text-slate-500" />
+              <span class="text-slate-600 dark:text-slate-300 truncate">{{
+                crontab.config?.targetPath || '-'
+              }}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <Tag
+              :severity="crontab.config?.downloadImages ? 'success' : 'secondary'"
+              :value="crontab.config?.downloadImages ? '下载照片' : '不下载照片'"
+            />
+            <Tag
+              :severity="crontab.config?.downloadVideos ? 'success' : 'secondary'"
+              :value="crontab.config?.downloadVideos ? '下载视频' : '不下载视频'"
+            />
+            <Tag
+              :severity="crontab.config?.downloadAudios ? 'success' : 'secondary'"
+              :value="crontab.config?.downloadAudios ? '下载录音' : '不下载录音'"
+            />
+            <Tag
+              :severity="crontab.config?.rewriteExifTime ? 'success' : 'secondary'"
+              :value="crontab.config?.rewriteExifTime ? '填充 EXIF' : '不填充 EXIF 时间'"
+            />
+            <Tag
+              :severity="crontab.config?.diffByTimeline ? 'success' : 'secondary'"
+              :value="crontab.config?.diffByTimeline ? '时间线比对差异' : '全量比对差异'"
+            />
+            <Tag
+              :severity="crontab.config?.skipExistingFile ? 'success' : 'danger'"
+              :value="crontab.config?.skipExistingFile ? '跳过已存在文件' : '覆盖已存在文件'"
+            />
+            <Tag
+              :severity="crontab.config?.rewriteFileSystemTime ? 'success' : 'secondary'"
+              :value="
+                crontab.config?.rewriteFileSystemTime ? '重写文件系统时间' : '不重写文件系统时间'
+              "
+            />
+            <Tag
+              :severity="crontab.config?.checkSha1 ? 'success' : 'secondary'"
+              :value="crontab.config?.checkSha1 ? '校验 SHA1' : '不校验 SHA1'"
+            />
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 pt-1">
+            <Chip
+              v-for="id in crontab.albumIds"
+              :key="id"
+              :label="albumMap[id] || String(id)"
+              class="text-xs"
+            />
+            <span
+              v-if="!crontab.albumIds || crontab.albumIds.length === 0"
+              class="text-xs text-slate-400 dark:text-slate-500"
+              >无关联相册</span
+            >
+          </div>
+        </div>
+
+        <div class="mt-4 md:mt-0 md:w-1/2">
+          <div
+            v-if="crontab.running"
+            class="mb-3 rounded-md bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-200/60 dark:ring-blue-900/60 p-3"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <i class="pi pi-spin pi-spinner text-blue-500"></i>
+                <span class="text-xs font-medium text-blue-700 dark:text-blue-300"
+                  >正在执行中...</span
+                >
+              </div>
+              <div class="flex flex-col items-end">
+                <span
+                  class="text-[10px] text-blue-600/60 dark:text-blue-300/70 font-mono"
+                  title="数据获取时间"
+                  >{{
+                    currentStats?.ts ? new Date(currentStats.ts).toLocaleTimeString() : ''
+                  }}</span
+                >
+                <span v-if="lastFetchTime" class="text-[9px] text-blue-400 font-mono">
+                  {{ ((now - lastFetchTime) / 1000).toFixed(1) }}s ago
+                </span>
+              </div>
+            </div>
+
+            <div v-if="currentStats" class="space-y-2">
+              <div
+                class="text-xs flex justify-between items-center pb-1 border-b border-blue-100 dark:border-blue-800"
+              >
+                <span class="text-slate-500 dark:text-slate-400">总计资产</span>
+                <span class="font-mono text-blue-700 dark:text-blue-300 font-bold">{{
+                  currentStats.assetCount ?? '-'
+                }}</span>
+              </div>
+
+              <div v-if="currentStats.downloadCompletedCount !== undefined" class="text-xs">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-slate-500 dark:text-slate-400">下载进度</span>
+                  <span class="font-mono text-slate-700 dark:text-slate-200"
+                    >{{ currentStats.downloadCompletedCount }}
+                    <span class="text-slate-400 dark:text-slate-500" v-if="currentStats.assetCount"
+                      >/ {{ currentStats.assetCount }}</span
+                    ></span
+                  >
+                </div>
+                <div
+                  class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5"
+                  v-if="currentStats.assetCount"
+                >
+                  <div
+                    class="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
+                    :style="{ width: getPercent(currentStats.downloadCompletedCount) + '%' }"
+                  ></div>
+                </div>
+              </div>
+
+              <div
+                v-if="currentStats.sha1VerifiedCount !== undefined && crontab.config?.checkSha1"
+                class="text-xs"
+              >
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-slate-500 dark:text-slate-400">SHA1 校验</span>
+                  <span class="font-mono text-slate-700 dark:text-slate-200">{{
+                    currentStats.sha1VerifiedCount
+                  }}</span>
+                </div>
+                <div
+                  class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5"
+                  v-if="currentStats.assetCount"
+                >
+                  <div
+                    class="bg-purple-500 h-1.5 rounded-full transition-all duration-500"
+                    :style="{ width: getPercent(currentStats.sha1VerifiedCount) + '%' }"
+                  ></div>
+                </div>
+              </div>
+
+              <div
+                v-if="currentStats.exifFilledCount !== undefined && crontab.config?.rewriteExifTime"
+                class="text-xs"
+              >
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-slate-500 dark:text-slate-400">EXIF 填充</span>
+                  <span class="font-mono text-slate-700 dark:text-slate-200">{{
+                    currentStats.exifFilledCount
+                  }}</span>
+                </div>
+                <div
+                  class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5"
+                  v-if="currentStats.assetCount"
+                >
+                  <div
+                    class="bg-amber-500 h-1.5 rounded-full transition-all duration-500"
+                    :style="{ width: getPercent(currentStats.exifFilledCount) + '%' }"
+                  ></div>
+                </div>
+              </div>
+
+              <div
+                v-if="
+                  currentStats.fsTimeUpdatedCount !== undefined &&
+                  crontab.config?.rewriteFileSystemTime
+                "
+                class="text-xs"
+              >
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-slate-500 dark:text-slate-400">时间重写</span>
+                  <span class="font-mono text-slate-700 dark:text-slate-200">{{
+                    currentStats.fsTimeUpdatedCount
+                  }}</span>
+                </div>
+                <div
+                  class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5"
+                  v-if="currentStats.assetCount"
+                >
+                  <div
+                    class="bg-emerald-500 h-1.5 rounded-full transition-all duration-500"
+                    :style="{ width: getPercent(currentStats.fsTimeUpdatedCount) + '%' }"
+                  ></div>
+                </div>
+              </div>
+
+              <div v-else class="text-xs text-slate-400 dark:text-slate-500 pl-6 py-2">
+                正在获取远程数据和资产差异检查...
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="rounded-md bg-slate-50 dark:bg-slate-900/30 ring-1 ring-slate-200/60 dark:ring-slate-700/60 p-3"
+          >
+            <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+              最近执行(本地时间)
+            </div>
+            <div
+              v-if="recentHistories.length === 0"
+              class="text-xs text-slate-400 dark:text-slate-500"
+            >
+              暂无历史
+            </div>
+            <ul v-else class="space-y-2">
+              <li
+                v-for="(h, index) in recentHistories"
+                :key="h.id"
+                class="flex items-center justify-between"
+              >
+                <div class="flex items-center gap-2">
+                  <span
+                    class="inline-block w-2 h-2 rounded-full"
+                    :class="h.isCompleted ? 'bg-emerald-500' : 'bg-amber-500'"
+                  />
+                  <span class="text-slate-600 dark:text-slate-300"
+                    >{{ formatTime(h.startTime) }} → {{ formatTime(h.endTime) }}</span
+                  >
+                </div>
+                <div class="flex items-center gap-2">
+                  <span
+                    class="text-xs text-slate-400 dark:text-slate-500"
+                    v-if="h.detailsCount !== undefined"
+                  >
+                    {{ h.detailsCount }} 个资产
+                  </span>
+                  <Tag
+                    v-if="index === 0 && crontab.running"
+                    :severity="h.isCompleted ? 'success' : 'info'"
+                    :value="h.isCompleted ? '完成' : '进行中'"
+                  />
+                  <Tag
+                    v-else
+                    :severity="h.isCompleted ? 'success' : 'warn'"
+                    :value="h.isCompleted ? '完成' : '终止'"
+                  />
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </template>
+  </Card>
 </template>
+
+<style scoped>
+:deep(.p-card) {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+:deep(.p-card:hover) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 30px -12px rgba(2, 6, 23, 0.2);
+}
+</style>

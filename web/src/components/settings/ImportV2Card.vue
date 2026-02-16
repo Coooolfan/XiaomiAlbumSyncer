@@ -45,12 +45,12 @@ async function confirmImportFromV2() {
 
 <template>
   <Card
-    class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mt-6"
+    class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mt-6"
     pt:footer:class="text-right"
   >
     <template #title>从 V2 导入数据</template>
     <template #content>
-      <p class="text-sm text-slate-600">
+      <p class="text-sm text-slate-600 dark:text-slate-300">
         该操作会从旧版数据库导入数据，仅在全新空库环境下执行。导入过程可能较长，执行中将阻塞。
       </p>
     </template>
@@ -66,9 +66,9 @@ async function confirmImportFromV2() {
     header="从 V2 导入数据"
     class="w-full sm:w-115"
   >
-    <div class="text-sm text-slate-700">
+    <div class="text-sm text-slate-700 dark:text-slate-200">
       确定要从 V2 导入数据吗？
-      <div class="mt-2 text-xs text-red-600">
+      <div class="mt-2 text-xs text-red-600 dark:text-red-300">
         注意：仅在空库环境下执行，导入过程可能耗时，执行期间将阻塞。
       </div>
     </div>
@@ -98,8 +98,8 @@ async function confirmImportFromV2() {
     header="正在导入"
     class="w-full sm:w-105"
   >
-    <div class="flex items-center gap-3 text-sm text-slate-700">
-      <i class="pi pi-spin pi-spinner text-slate-500"></i>
+    <div class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200">
+      <i class="pi pi-spin pi-spinner text-slate-500 dark:text-slate-400"></i>
       <span>正在从 V2 导入数据，请勿关闭页面...</span>
     </div>
     <template #footer>

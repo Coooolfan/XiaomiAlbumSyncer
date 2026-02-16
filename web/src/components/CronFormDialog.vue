@@ -25,6 +25,7 @@ const props = defineProps<{
   timeZones: ReadonlyArray<string>
   accountOptions: ReadonlyArray<{ label: string; value: number }>
   formAlbumOptions: ReadonlyArray<{ label: string; value: number }>
+  targetPathMountWarning: boolean
 }>()
 
 const emit = defineEmits<{
@@ -109,13 +110,13 @@ onBeforeUnmount(() => {
     <div class="flex gap-8 items-start">
       <div class="flex-1 space-y-4 min-w-0">
         <div class="space-y-2">
-          <label class="block text-xs font-medium text-slate-500">名称</label>
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">名称</label>
           <InputText v-model="form.name" placeholder="例如：每日同步" class="w-full" />
           <div v-if="formErrors.name" class="text-xs text-red-500">{{ formErrors.name }}</div>
         </div>
 
         <div class="space-y-2">
-          <label class="block text-xs font-medium text-slate-500">描述</label>
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">描述</label>
           <Textarea
             v-model="form.description"
             rows="2"
@@ -126,7 +127,9 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="space-y-2">
-          <label class="block text-xs font-medium text-slate-500">归属账号</label>
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+            >归属账号</label
+          >
           <Select
             v-model="form.accountId"
             :options="accountOptions"
@@ -139,7 +142,7 @@ onBeforeUnmount(() => {
           <div v-if="formErrors.accountId" class="text-xs text-red-500">
             {{ formErrors.accountId }}
           </div>
-          <div v-if="props.isEditing" class="text-[10px] text-slate-400">
+          <div v-if="props.isEditing" class="text-[10px] text-slate-400 dark:text-slate-500">
             计划任务创建后无法更改归属账号
           </div>
         </div>
@@ -147,7 +150,9 @@ onBeforeUnmount(() => {
         <div class="grid grid-cols-2 gap-4">
           <div class="space-y-2">
             <div class="flex items-center justify-between">
-              <label class="block text-xs font-medium text-slate-500">Cron 表达式</label>
+              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+                >Cron 表达式</label
+              >
               <Button
                 icon="pi pi-question-circle"
                 variant="text"
@@ -167,12 +172,14 @@ onBeforeUnmount(() => {
             <div v-if="formErrors.expression" class="text-xs text-red-500">
               {{ formErrors.expression }}
             </div>
-            <div class="text-[10px] text-slate-400">
+            <div class="text-[10px] text-slate-400 dark:text-slate-500">
               支持标准 6/7 字段 Cron 表达式<br />例：0 0 23 * * ? 表示每天 23 点执行
             </div>
           </div>
           <div class="space-y-2">
-            <label class="block text-xs font-medium text-slate-500 mb-4">时区</label>
+            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-4"
+              >时区</label
+            >
             <Select
               v-model="form.config.timeZone"
               :options="timeZones"
@@ -187,19 +194,33 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="space-y-2">
-          <label class="block text-xs font-medium text-slate-500">保存路径</label>
-          <InputText v-model="form.config.targetPath" placeholder="./download" class="w-full" />
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+            >保存路径</label
+          >
+          <InputText v-model="form.config.targetPath" placeholder="/app/download" class="w-full" />
           <div v-if="formErrors.targetPath" class="text-xs text-red-500">
             {{ formErrors.targetPath }}
           </div>
-          <div class="text-[10px] text-slate-400">
+          <div class="text-[10px] text-slate-400 dark:text-slate-500">
             如在容器环境下运行，请确保已将此路径映射到宿主机。程序将在此路径下创建相册各自的文件夹。
           </div>
+          <Message
+            v-if="props.targetPathMountWarning"
+            severity="warn"
+            variant="simple"
+            icon="pi pi-exclamation-triangle"
+          >
+            <div class="text-[11px]">
+              警告：该路径可能仅存在于容器内，未挂载到宿主机，数据可能不会被持久化。
+            </div>
+          </Message>
         </div>
 
         <div class="space-y-2">
           <div class="flex items-center justify-between">
-            <label class="block text-xs font-medium text-slate-500">表达式路径 (高级)</label>
+            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+              >表达式路径 (高级)</label
+            >
             <Button
               icon="pi pi-question-circle"
               variant="text"
@@ -212,32 +233,34 @@ onBeforeUnmount(() => {
           </div>
           <InputText
             v-model="form.config.expressionTargetPath"
-            placeholder="./download/${album}/${download_YYYYMM}/${fileName}"
+            placeholder="/app/download/${album}/${download_YYYYMM}/${fileName}"
             class="w-full"
             @focus="openExpressionHelp"
           />
-          <div class="text-[10px] text-slate-400">
+          <div class="text-[10px] text-slate-400 dark:text-slate-500">
             使用表达式自定义路径结构。此值有效将忽略上方的“保存路径”。
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-          <div class="flex items-center gap-2 text-xs text-slate-600">
+          <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
             <ToggleSwitch v-model="form.config.downloadImages" />
             <span>下载照片</span>
           </div>
-          <div class="flex items-center gap-2 text-xs text-slate-600">
+          <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
             <ToggleSwitch v-model="form.config.downloadVideos" />
             <span>下载视频</span>
           </div>
-          <div class="flex items-center gap-2 text-xs text-slate-600">
+          <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
             <ToggleSwitch v-model="form.config.downloadAudios" />
             <span>下载录音</span>
           </div>
         </div>
 
         <div class="space-y-2">
-          <label class="block text-xs font-medium text-slate-500">关联相册</label>
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+            >关联相册</label
+          >
           <MultiSelect
             v-model="form.albumIds"
             :options="formAlbumOptions"
@@ -265,47 +288,47 @@ onBeforeUnmount(() => {
         <Panel header="高级配置" toggleable>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="space-y-1">
-              <div class="flex items-center gap-2 text-xs text-slate-600">
+              <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                 <ToggleSwitch v-model="form.config.diffByTimeline" />
                 <span>按时间线比对差异</span>
               </div>
-              <div class="text-[10px] text-slate-400">
+              <div class="text-[10px] text-slate-400 dark:text-slate-500">
                 通过对比上一次同步的相册时间线，将相册资产的获取范围限定为存在变动的日期。
               </div>
             </div>
             <div class="space-y-1">
-              <div class="flex items-center gap-2 text-xs text-slate-600">
+              <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                 <ToggleSwitch v-model="form.config.rewriteExifTime" />
                 <span>填充 EXIF 时间</span>
               </div>
-              <div class="text-[10px] text-slate-400">
+              <div class="text-[10px] text-slate-400 dark:text-slate-500">
                 将资产在小米云服务的时间写入 EXIF 时间，仅在资产不存在 EXIF 时间时生效。
               </div>
             </div>
             <div class="space-y-1">
-              <div class="flex items-center gap-2 text-xs text-slate-600">
+              <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                 <ToggleSwitch v-model="form.config.skipExistingFile" />
                 <span>跳过已存在文件</span>
               </div>
-              <div class="text-[10px] text-slate-400">
+              <div class="text-[10px] text-slate-400 dark:text-slate-500">
                 若资产的目标文件路径已存在，将跳过下载。仅适用于保存路径中已有存量数据。
               </div>
             </div>
             <div class="space-y-1">
-              <div class="flex items-center gap-2 text-xs text-slate-600">
+              <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                 <ToggleSwitch v-model="form.config.rewriteFileSystemTime" />
                 <span>重写文件时间</span>
               </div>
-              <div class="text-[10px] text-slate-400">
+              <div class="text-[10px] text-slate-400 dark:text-slate-500">
                 同步完成后，将资产的文件系统时间修改为对应的小米云服务上的时间。
               </div>
             </div>
             <div class="space-y-1">
-              <div class="flex items-center gap-2 text-xs text-slate-600">
+              <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                 <ToggleSwitch v-model="form.config.checkSha1" />
                 <span>校验 SHA1</span>
               </div>
-              <div class="text-[10px] text-slate-400">
+              <div class="text-[10px] text-slate-400 dark:text-slate-500">
                 对下载的文件进行 SHA1 校验，失败则重新下载。<span class="font-bold"
                   >没必要开。</span
                 >
@@ -314,7 +337,9 @@ onBeforeUnmount(() => {
           </div>
 
           <div v-if="form.config.rewriteExifTime" class="space-y-2 mt-3">
-            <label class="block text-xs font-medium text-slate-500">EXIF 时区</label>
+            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+              >EXIF 时区</label
+            >
             <Select
               v-model="form.config.rewriteExifTimeZone"
               :options="timeZones"
@@ -322,19 +347,21 @@ onBeforeUnmount(() => {
               filter
               class="w-full"
             />
-            <div class="text-[10px] text-slate-400">
+            <div class="text-[10px] text-slate-400 dark:text-slate-500">
               用于写入 EXIF 的时区；仅在开启“填充 EXIF 时间”后生效。
             </div>
           </div>
 
           <Panel header="并发与性能" toggleable collapsed class="mt-4">
-            <div class="text-[10px] text-slate-400 mb-4">
+            <div class="text-[10px] text-slate-400 dark:text-slate-500 mb-4">
               除非你明确知道改动这些值的后果，否则不要改动
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-500">数据库读批大小</label>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+                  >数据库读批大小</label
+                >
                 <InputNumber
                   v-model="form.config.fetchFromDbSize"
                   :min="1"
@@ -351,14 +378,18 @@ onBeforeUnmount(() => {
                     <span class="pi pi-minus" />
                   </template>
                 </InputNumber>
-                <div class="text-[10px] text-slate-400">每次从数据库拉取的资产数量</div>
+                <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                  每次从数据库拉取的资产数量
+                </div>
                 <div v-if="formErrors.concurrency" class="text-xs text-red-500">
                   {{ formErrors.concurrency }}
                 </div>
               </div>
 
               <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-500">资产下载</label>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+                  >资产下载</label
+                >
                 <InputNumber
                   v-model="form.config.downloaders"
                   :min="1"
@@ -375,11 +406,13 @@ onBeforeUnmount(() => {
                     <span class="pi pi-minus" />
                   </template>
                 </InputNumber>
-                <div class="text-[10px] text-slate-400">同时下载的资产数</div>
+                <div class="text-[10px] text-slate-400 dark:text-slate-500">同时下载的资产数</div>
               </div>
 
               <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-500">文件系统时间重写</label>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+                  >文件系统时间重写</label
+                >
                 <InputNumber
                   v-model="form.config.fileTimeWorkers"
                   :min="1"
@@ -396,11 +429,15 @@ onBeforeUnmount(() => {
                     <span class="pi pi-minus" />
                   </template>
                 </InputNumber>
-                <div class="text-[10px] text-slate-400">文件系统时间重写并发数</div>
+                <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                  文件系统时间重写并发数
+                </div>
               </div>
 
               <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-500">文件校验</label>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+                  >文件校验</label
+                >
                 <InputNumber
                   v-model="form.config.verifiers"
                   :min="1"
@@ -417,11 +454,15 @@ onBeforeUnmount(() => {
                     <span class="pi pi-minus" />
                   </template>
                 </InputNumber>
-                <div class="text-[10px] text-slate-400">SHA1 校验检查并发数</div>
+                <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                  SHA1 校验检查并发数
+                </div>
               </div>
 
               <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-500">EXIF 填充</label>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+                  >EXIF 填充</label
+                >
                 <InputNumber
                   v-model="form.config.exifProcessors"
                   :min="1"
@@ -438,7 +479,9 @@ onBeforeUnmount(() => {
                     <span class="pi pi-minus" />
                   </template>
                 </InputNumber>
-                <div class="text-[10px] text-slate-400">EXIF 信息填充并发数</div>
+                <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                  EXIF 信息填充并发数
+                </div>
               </div>
             </div>
           </Panel>
@@ -503,7 +546,7 @@ onBeforeUnmount(() => {
         </Panel>
 
         <div class="flex items-center justify-between pt-1">
-          <div class="flex items-center gap-2 text-xs text-slate-600">
+          <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
             <ToggleSwitch v-model="form.enabled" />
             <span>启用</span>
           </div>
@@ -520,7 +563,7 @@ onBeforeUnmount(() => {
 
       <div
         v-if="showExpressionHelp || showCronHelp"
-        class="flex-1 border-l border-slate-100 pl-8 hidden lg:block self-stretch min-w-0"
+        class="flex-1 border-l border-slate-100 dark:border-slate-800 pl-8 hidden lg:block self-stretch min-w-0"
       >
         <ExpressionPathHelp v-if="showExpressionHelp" />
         <CronHelp v-if="showCronHelp" />

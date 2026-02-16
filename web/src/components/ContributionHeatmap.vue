@@ -254,7 +254,9 @@ const weeks = computed(() => {
 const containerEl = ref<HTMLElement | null>(null)
 const measuredCell = ref(Math.max(8, cellSize.value))
 const measuredGap = ref(Math.max(1, gap.value))
+const prefersDark = ref(false)
 let ro: ResizeObserver | null = null
+let darkQuery: MediaQueryList | null = null
 
 const weeksCount = computed(() => weeks.value.length)
 
@@ -298,6 +300,27 @@ function recomputeLayout() {
 }
 
 onMounted(() => {
+  if (typeof window !== 'undefined') {
+    darkQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    prefersDark.value = darkQuery.matches
+    const onChange = (event: MediaQueryListEvent) => {
+      prefersDark.value = event.matches
+    }
+    if (typeof darkQuery.addEventListener === 'function') {
+      darkQuery.addEventListener('change', onChange)
+    } else {
+      darkQuery.addListener(onChange)
+    }
+    cleanupDarkListener = () => {
+      if (!darkQuery) return
+      if (typeof darkQuery.removeEventListener === 'function') {
+        darkQuery.removeEventListener('change', onChange)
+      } else {
+        darkQuery.removeListener(onChange)
+      }
+    }
+  }
+
   ro = new ResizeObserver(() => {
     recomputeLayout()
   })
@@ -308,6 +331,9 @@ onMounted(() => {
 onBeforeUnmount(() => {
   ro?.disconnect()
   ro = null
+  cleanupDarkListener?.()
+  cleanupDarkListener = null
+  darkQuery = null
 })
 
 watch(
@@ -340,6 +366,20 @@ const rootStyle = computed(() => {
 const colorPalette = computed(() => {
   // 从浅到深，5个级别
   // 0是"空"状态，仍由CSS变量控制主题；这里我们提供一个微妙的回退。
+  if (prefersDark.value) {
+    switch (scheme.value) {
+      case 'blue':
+        return ['var(--heatmap-empty)', '#142742', '#1d3d66', '#2b5b96', '#60a5fa']
+      case 'rose':
+        return ['var(--heatmap-empty)', '#4a1e2d', '#6f2943', '#9f3a61', '#fb7185']
+      case 'slate':
+        return ['var(--heatmap-empty)', '#1f2937', '#334155', '#475569', '#94a3b8']
+      case 'emerald':
+      default:
+        return ['var(--heatmap-empty)', '#12372d', '#1b5743', '#277a5d', '#34d399']
+    }
+  }
+
   switch (scheme.value) {
     case 'blue':
       return ['var(--heatmap-empty)', '#e6f0ff', '#c7dcff', '#8fb8ff', '#3b82f6']
@@ -358,6 +398,8 @@ const colorPalette = computed(() => {
       ]
   }
 })
+
+let cleanupDarkListener: (() => void) | null = null
 
 function cellStyle(level: number) {
   const idx = Math.max(0, Math.min(4, Math.floor(level)))

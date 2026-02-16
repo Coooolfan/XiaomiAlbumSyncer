@@ -82,8 +82,8 @@ class ExifProcessingStage(
             try {
                 rewriteExifTime(context.asset, Path(context.filePath), config)
             } catch (e: RuntimeException) {
-                if (e.message?.contains("Not a valid JPG") ?: false) {
-                    log.warn("资源 {} 的 EXIF 处理失败, 将跳过后续处理", context.asset.id, e)
+                if (e.message?.lowercase()?.contains("not a valid") ?: false) {
+                    log.warn("资源 {} 的 EXIF 处理失败, 此文件的 EXIF 标签未被更改。", context.asset.id, e)
                 } else {
                     throw e
                 }

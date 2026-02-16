@@ -9100,6 +9100,9 @@
       "type": "com.fasterxml.jackson.databind.ser.Serializers[]"
     },
     {
+      "type": "com.fasterxml.jackson.datatype.jsr310.JavaTimeModule"
+    },
+    {
       "type": "com.fasterxml.jackson.module.kotlin.KotlinModule"
     },
     {
@@ -11810,7 +11813,25 @@
       ]
     },
     {
+      "type": "org.babyfish.jimmer.client.meta.Doc$DeserializerV2",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.babyfish.jimmer.client.meta.TypeName$Deserializer",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.client.meta.TypeName$DeserializerV2",
       "methods": [
         {
           "name": "<init>",
@@ -11828,7 +11849,25 @@
       ]
     },
     {
+      "type": "org.babyfish.jimmer.client.meta.impl.ApiOperationImpl$DeserializerV2",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.babyfish.jimmer.client.meta.impl.ApiParameterImpl$Deserializer",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.client.meta.impl.ApiParameterImpl$DeserializerV2",
       "methods": [
         {
           "name": "<init>",
@@ -11846,7 +11885,25 @@
       ]
     },
     {
+      "type": "org.babyfish.jimmer.client.meta.impl.ApiServiceImpl$DeserializerV2",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.babyfish.jimmer.client.meta.impl.EnumConstantImpl$Deserializer",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.client.meta.impl.EnumConstantImpl$DeserializerV2",
       "methods": [
         {
           "name": "<init>",
@@ -11864,7 +11921,25 @@
       ]
     },
     {
+      "type": "org.babyfish.jimmer.client.meta.impl.PropImpl$DeserializerV2",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.babyfish.jimmer.client.meta.impl.SchemaImpl$Deserializer",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.client.meta.impl.SchemaImpl$DeserializerV2",
       "methods": [
         {
           "name": "<init>",
@@ -11882,7 +11957,25 @@
       ]
     },
     {
+      "type": "org.babyfish.jimmer.client.meta.impl.TypeDefinitionImpl$DeserializerV2",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.babyfish.jimmer.client.meta.impl.TypeRefImpl$Deserializer",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.client.meta.impl.TypeRefImpl$DeserializerV2",
       "methods": [
         {
           "name": "<init>",
@@ -15004,6 +15097,9 @@
     },
     {
       "type": "sun.util.resources.cldr.TimeZoneNames_en"
+    },
+    {
+      "type": "tools.jackson.databind.ObjectMapper"
     },
     {
       "type": {

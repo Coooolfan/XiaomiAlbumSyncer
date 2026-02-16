@@ -130,7 +130,7 @@ onMounted(() => {
     >
       <Card
         v-if="!checkingInit"
-        class="w-full max-w-md shadow-xl ring-1 ring-black/5 rounded-2xl overflow-hidden bg-white/80 backdrop-blur"
+        class="w-full max-w-md shadow-xl ring-1 ring-black/5 dark:ring-white/10 rounded-2xl overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur"
       >
         <template #title>
           <div class="text-xl font-semibold tracking-tight">
@@ -151,16 +151,16 @@ onMounted(() => {
               />
 
               <Divider>
-                <span class="text-xs text-slate-400">或使用密码</span>
+                <span class="text-xs text-slate-400 dark:text-slate-500">或使用密码</span>
               </Divider>
             </div>
 
-            <div v-if="!isInit" class="text-sm text-slate-500">
+            <div v-if="!isInit" class="text-sm text-slate-500 dark:text-slate-400">
               首次使用，请设置登录密码。该密码仅保存在后端。
             </div>
 
             <div class="space-y-2">
-              <label class="text-sm font-medium text-slate-700">密码</label>
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-200">密码</label>
               <Password
                 v-model="password"
                 :feedback="false"
@@ -173,7 +173,7 @@ onMounted(() => {
             </div>
 
             <div v-if="!isInit" class="space-y-2">
-              <label class="text-sm font-medium text-slate-700">确认密码</label>
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-200">确认密码</label>
               <Password
                 v-model="confirmPassword"
                 :feedback="false"
@@ -195,7 +195,7 @@ onMounted(() => {
             >
               <div
                 v-if="errorMsg"
-                class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md p-2"
+                class="text-sm text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/70 rounded-md p-2"
               >
                 {{ errorMsg }}
               </div>
@@ -212,19 +212,19 @@ onMounted(() => {
             <!-- WebAuthn 不支持提示 -->
             <div
               v-if="isInit && !webAuthnSupported"
-              class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2"
+              class="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/35 border border-amber-200 dark:border-amber-900/60 rounded-md p-2"
             >
               当前浏览器不支持 Passkey（WebAuthn）登录
             </div>
 
             <div
               v-if="!isSecureCtx"
-              class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md p-2"
+              class="text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/70 rounded-md p-2"
             >
               注意：当前页面不处于安全上下文（非 HTTPS 或来源不安全），请求将以明文传输。
             </div>
 
-            <div class="text-center text-sm text-slate-500">
+            <div class="text-center text-sm text-slate-500 dark:text-slate-400">
               <template v-if="isInit"> 如需重置密码，请清空数据库的 system_config 表 </template>
               <template v-else> 已初始化？请直接使用上方密码登录 </template>
             </div>
@@ -238,13 +238,15 @@ onMounted(() => {
       enter-from-class="opacity-0"
       enter-to-class="opacity-100"
     >
-      <div v-if="checkingInit" class="flex items-center gap-3 text-slate-500">
-        <span class="inline-block h-2 w-2 rounded-full bg-slate-300 animate-pulse"></span>
+      <div v-if="checkingInit" class="flex items-center gap-3 text-slate-500 dark:text-slate-400">
         <span
-          class="inline-block h-2 w-2 rounded-full bg-slate-300 animate-pulse [animation-delay:120ms]"
+          class="inline-block h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-600 animate-pulse"
         ></span>
         <span
-          class="inline-block h-2 w-2 rounded-full bg-slate-300 animate-pulse [animation-delay:240ms]"
+          class="inline-block h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-600 animate-pulse [animation-delay:120ms]"
+        ></span>
+        <span
+          class="inline-block h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-600 animate-pulse [animation-delay:240ms]"
         ></span>
         <span class="text-sm">正在加载...</span>
       </div>

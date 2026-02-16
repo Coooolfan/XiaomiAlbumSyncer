@@ -77,7 +77,7 @@ onMounted(() => {
 
 <template>
   <Card
-    class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6"
+    class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mb-6"
     pt:footer:class="text-right"
   >
     <template #title>
@@ -90,14 +90,14 @@ onMounted(() => {
       <div class="space-y-6">
         <!-- ExifTool Config -->
         <div class="space-y-2">
-          <span class="text-sm text-slate-600 font-medium">ExifTool 路径</span>
+          <span class="text-sm text-slate-600 dark:text-slate-300 font-medium">ExifTool 路径</span>
           <InputText
             v-model="exifToolPath"
             :disabled="loadingConfig"
             placeholder="输入 exiftool 可执行文件路径"
             class="w-full"
           />
-          <p class="text-xs text-slate-400">
+          <p class="text-xs text-slate-400 dark:text-slate-500">
             如果您使用 Docker 部署此项目，请不要改动此配置。如果您使用其他方式部署此项目，请输入
             exiftool 可执行文件路径。
           </p>
@@ -106,7 +106,9 @@ onMounted(() => {
         <!-- FTQQ Config -->
         <div class="space-y-2">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-slate-600 font-medium">Server酱推送 SendKey</span>
+            <span class="text-sm text-slate-600 dark:text-slate-300 font-medium"
+              >Server 酱推送 SendKey</span
+            >
             <Tag
               :severity="isFtqqKeySet ? 'success' : 'secondary'"
               :value="isFtqqKeySet ? '已配置' : '未配置'"
@@ -119,7 +121,7 @@ onMounted(() => {
             class="w-full"
             type="password"
           />
-          <p class="text-xs text-slate-400">
+          <p class="text-xs text-slate-400 dark:text-slate-500">
             用于发送系统通知到指定通知渠道。同时支持 Server酱 Turbo 与 Server酱<sup>3</sup>。
           </p>
         </div>

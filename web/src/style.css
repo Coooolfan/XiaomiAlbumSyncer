@@ -1,2 +1,28 @@
 @import 'tailwindcss';
 @import 'primeicons/primeicons.css';
+
+:root {
+  color-scheme: light dark;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: rgb(248 250 252);
+  color: rgb(30 41 59);
+  transition:
+    background-color 220ms ease,
+    color 220ms ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: rgb(2 6 23);
+    color: rgb(226 232 240);
+  }
+}
