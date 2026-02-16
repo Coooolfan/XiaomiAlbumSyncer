@@ -52,9 +52,6 @@ const groupedAlbums = computed(() => {
 })
 
 function getAccountName(group: { account: XiaomiAccount; albums: Album[] }) {
-  if (accounts.value.length === 1) {
-    return '相册'
-  }
   return group.account.nickname
 }
 
