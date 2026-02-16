@@ -14,106 +14,41 @@ interface ArchiveRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long
 
-    /**
-     * 关联的定时任务
-     */
+    // 关联的定时任务
     @OnDissociate(DissociateAction.DELETE)
     @ManyToOne
     val crontab: Crontab
 
     @IdView("crontab")
     val crontabId: Long
+    val archiveTime: Instant         // 归档时间
+    val archiveMode: ArchiveMode     // 归档模式（TIME / SPACE）
 
-    /**
-     * 归档时间
-     */
-    val archiveTime: Instant
-
-    /**
-     * 归档模式（TIME / SPACE）
-     */
-    val archiveMode: ArchiveMode
-
-    /**
-     * 归档此日期之前的照片
-     * 使用 @Serialized 注解确保以 ISO 8601 格式（YYYY-MM-DD）存储
-     */
+    // 归档此日期之前的照片
     @Serialized
     val archiveBeforeDate: LocalDate
+    val archivedCount: Int           // 归档文件数
+    val freedSpaceBytes: Long        // 释放的云空间（字节）
+    val status: ArchiveStatus        // 归档状态
+    val errorMessage: String?        // 错误信息
 
-    /**
-     * 归档文件数
-     */
-    val archivedCount: Int
-
-    /**
-     * 释放的云空间（字节）
-     */
-    val freedSpaceBytes: Long
-
-    /**
-     * 归档状态
-     */
-    val status: ArchiveStatus
-
-    /**
-     * 错误信息（如果失败）
-     */
-    val errorMessage: String?
-
-    /**
-     * 归档详情列表
-     */
+    // 归档详情列表
     @OneToMany(mappedBy = "archiveRecord")
     val details: List<ArchiveDetail>
 }
 
-/**
- * 归档模式枚举
- */
+// 归档模式枚举
 enum class ArchiveMode {
-    /**
-     * 关闭归档
-     */
     DISABLED,
-    
-    /**
-     * 基于时间
-     */
     TIME,
-
-    /**
-     * 基于空间阈值
-     */
     SPACE
 }
 
-/**
- * 归档状态枚举
- */
+// 归档状态枚举
 enum class ArchiveStatus {
-    /**
-     * 计划中
-     */
     PLANNING,
-
-    /**
-     * 移动文件中
-     */
     MOVING_FILES,
-
-    /**
-     * 删除云端中
-     */
     DELETING_CLOUD,
-
-    /**
-     * 已完成
-     */
     COMPLETED,
-
-    /**
-     * 失败
-     */
     FAILED
 }

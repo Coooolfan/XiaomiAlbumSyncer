@@ -3,13 +3,7 @@ package com.coooolfan.xiaomialbumsyncer.service
 import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CRONTAB_WITH_ALBUMS_FETCHER
 import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CRONTAB_WITH_ALBUMS_AND_ACCOUNT_FETCHER
 import com.coooolfan.xiaomialbumsyncer.model.*
-import com.coooolfan.xiaomialbumsyncer.pipeline.PostProcessingCoordinator
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flatMapMerge
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.desc
@@ -35,8 +29,7 @@ import kotlin.io.path.listDirectoryEntries
 class SyncService(
     private val sql: KSqlClient,
     private val xiaoMiApi: XiaoMiApi,
-    private val fileService: FileService,
-    private val postProcessingCoordinator: PostProcessingCoordinator
+    private val fileService: FileService
 ) {
 
     @Inject
@@ -184,340 +177,26 @@ class SyncService(
         return ChangeSummary(added, deleted, updated)
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    suspend fun executeSync(crontabId: Long): Long {
-        val startTime = Instant.now()
-        log.info("开始执行同步任务，定时任务 ID=$crontabId")
-
-        val crontab = sql.findById(CRONTAB_WITH_ALBUMS_AND_ACCOUNT_FETCHER, crontabId)
-            ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
-
-        val crontabHistory = crontabService.createCrontabHistory(crontab)
-        val syncRecord = createSyncRecord(crontab)
-
-        try {
-            val changes = detectSyncChanges(crontabId, crontabHistory)
-            val syncFolder = Path(crontab.config.targetPath, crontab.config.syncFolder)
-
-            changes.addedAssets
-                .asFlow()
-                .flatMapMerge(crontab.config.downloaders) { asset ->
-                    flow {
-                        try {
-                            val album = crontab.albums.find { it.id == asset.album.id }
-                                ?: throw IllegalStateException("找不到资产对应的相册: ${asset.album.id}")
-                            
-                            val filePath = generateFilePath(asset, album, syncFolder, crontab.config)
-                            
-                            if (crontab.config.skipExistingFile && fileService.fileExists(filePath)) {
-                                val fileSize = fileService.getFileSize(filePath)
-                                if (fileSize == asset.size) {
-                                    recordSyncDetail(
-                                        syncRecord.id,
-                                        asset,
-                                        album,
-                                        SyncOperation.ADD,
-                                        syncFolder,
-                                        true,
-                                        "跳过下载：文件已存在且大小匹配"
-                                    )
-                                    emit(Unit)
-                                    return@flow
-                                }
-                            }
-                            
-                            xiaoMiApi.downloadAsset(crontab.accountId, asset, filePath)
-                            sql.saveCommand(asset, SaveMode.UPSERT).execute()
-                            
-                            val postProcessingResult = postProcessingCoordinator.process(
-                                asset, 
-                                filePath, 
-                                crontab.config
-                            )
-                            
-                            recordSyncDetail(
-                                syncRecord.id, 
-                                asset, 
-                                album, 
-                                SyncOperation.ADD, 
-                                syncFolder, 
-                                postProcessingResult.success, 
-                                postProcessingResult.errorMessage
-                            )
-                            
-                            emit(Unit)
-                        } catch (e: Exception) {
-                            log.error("处理新增资产失败: ${asset.fileName}", e)
-                            val album = crontab.albums.find { it.id == asset.album.id }
-                            if (album != null) {
-                                recordSyncDetail(
-                                    syncRecord.id, 
-                                    asset, 
-                                    album, 
-                                    SyncOperation.ADD, 
-                                    syncFolder, 
-                                    false, 
-                                    e.message
-                                )
-                            }
-                            emit(Unit)
-                        }
-                    }
-                }
-                .collect()
-
-            when (crontab.config.syncMode) {
-                SyncMode.ADD_ONLY -> {
-                    // 跳过删除和修改操作
-                }
-                
-                SyncMode.SYNC_ALL_CHANGES -> {
-                    changes.deletedAssets.forEach { asset ->
-                        try {
-                            val album = crontab.albums.find { it.id == asset.album.id }
-                                ?: throw IllegalStateException("找不到资产对应的相册: ${asset.album.id}")
-                            
-                            deleteFromSync(asset, album, syncFolder)
-                            recordSyncDetail(syncRecord.id, asset, album, SyncOperation.DELETE, syncFolder, true, null)
-                        } catch (e: Exception) {
-                            log.error("删除资产失败: ${asset.fileName}", e)
-                            val album = crontab.albums.find { it.id == asset.album.id }
-                            if (album != null) {
-                                recordSyncDetail(syncRecord.id, asset, album, SyncOperation.DELETE, syncFolder, false, e.message)
-                            }
-                        }
-                    }
-
-                    changes.updatedAssets
-                        .asFlow()
-                        .flatMapMerge(crontab.config.downloaders) { asset ->
-                            flow {
-                                try {
-                                    val album = crontab.albums.find { it.id == asset.album.id }
-                                        ?: throw IllegalStateException("找不到资产对应的相册: ${asset.album.id}")
-                                    
-                                    val filePath = generateFilePath(asset, album, syncFolder, crontab.config)
-                                    
-                                    if (crontab.config.skipExistingFile && fileService.fileExists(filePath)) {
-                                        val fileSize = fileService.getFileSize(filePath)
-                                        if (fileSize == asset.size) {
-                                            recordSyncDetail(
-                                                syncRecord.id,
-                                                asset,
-                                                album,
-                                                SyncOperation.UPDATE,
-                                                syncFolder,
-                                                true,
-                                                "跳过下载：文件已存在且大小匹配"
-                                            )
-                                            emit(Unit)
-                                            return@flow
-                                        }
-                                    }
-                                    
-                                    if (fileService.fileExists(filePath)) {
-                                        fileService.deleteFile(filePath)
-                                    }
-                                    
-                                    xiaoMiApi.downloadAsset(crontab.accountId, asset, filePath)
-                                    sql.saveCommand(asset, SaveMode.UPSERT).execute()
-                                    
-                                    val postProcessingResult = postProcessingCoordinator.process(
-                                        asset, 
-                                        filePath, 
-                                        crontab.config
-                                    )
-                                    
-                                    recordSyncDetail(
-                                        syncRecord.id, 
-                                        asset, 
-                                        album, 
-                                        SyncOperation.UPDATE, 
-                                        syncFolder, 
-                                        postProcessingResult.success, 
-                                        postProcessingResult.errorMessage
-                                    )
-                                    
-                                    emit(Unit)
-                                } catch (e: Exception) {
-                                    log.error("更新资产失败: ${asset.fileName}", e)
-                                    val album = crontab.albums.find { it.id == asset.album.id }
-                                    if (album != null) {
-                                        recordSyncDetail(
-                                            syncRecord.id, 
-                                            asset, 
-                                            album, 
-                                            SyncOperation.UPDATE, 
-                                            syncFolder, 
-                                            false, 
-                                            e.message
-                                        )
-                                    }
-                                    emit(Unit)
-                                }
-                            }
-                        }
-                        .collect()
-                }
-            }
-
-            val actualDeletedCount = when (crontab.config.syncMode) {
-                SyncMode.ADD_ONLY -> 0
-                SyncMode.SYNC_ALL_CHANGES -> changes.deletedAssets.size
-            }
-            
-            val actualUpdatedCount = when (crontab.config.syncMode) {
-                SyncMode.ADD_ONLY -> 0
-                SyncMode.SYNC_ALL_CHANGES -> changes.updatedAssets.size
-            }
-
-            updateSyncRecord(
-                syncRecord.id,
-                SyncStatus.COMPLETED,
-                changes.addedAssets.size,
-                actualDeletedCount,
-                actualUpdatedCount,
-                null
-            )
-
-            var archivedCount = 0
-            
-            if (crontab.config.archiveMode != ArchiveMode.DISABLED) {
-                try {
-                    val archivePlan = archiveService.previewArchive(crontabId)
-                    
-                    if (archivePlan.assetsToArchive.isNotEmpty()) {
-                        val archiveRecordId = archiveService.executeArchive(crontabId, confirmed = true)
-                        archivedCount = archivePlan.assetsToArchive.size
-                    }
-                } catch (e: Exception) {
-                    log.error("自动归档失败，但同步操作已成功完成", e)
-                }
-            }
-            
-            val syncStats = mapOf(
-                -1L to AlbumTimeline(
-                    "SYNC:${crontab.config.syncMode.name}:${changes.addedAssets.size}:${actualDeletedCount}:${actualUpdatedCount}:${archivedCount}",
-                    emptyMap()
-                )
-            )
-            
-            sql.createUpdate(CrontabHistory::class) {
-                set(table.endTime, Instant.now())
-                set(table.timelineSnapshot, syncStats)
-                where(table.id eq crontabHistory.id)
-            }.execute()
-
-            val endTime = Instant.now()
-            val duration = endTime.toEpochMilli() - startTime.toEpochMilli()
-            
-            log.info("同步任务完成，记录 ID=${syncRecord.id}，新增=${changes.addedAssets.size}，删除=${actualDeletedCount}，修改=${actualUpdatedCount}，归档=${archivedCount}，耗时=${duration}ms")
-
-            return syncRecord.id
-        } catch (e: Exception) {
-            val endTime = Instant.now()
-            val duration = endTime.toEpochMilli() - startTime.toEpochMilli()
-            
-            log.error("同步任务失败，定时任务 ID=$crontabId，耗时=${duration}ms", e)
-            
-            updateSyncRecord(syncRecord.id, SyncStatus.FAILED, 0, 0, 0, e.message)
-            
-            val syncStats = mapOf(
-                -1L to AlbumTimeline(
-                    "SYNC:${crontab.config.syncMode.name}:0:0:0:0:ERROR:${e.message ?: "未知错误"}",
-                    emptyMap()
-                )
-            )
-            
-            sql.createUpdate(CrontabHistory::class) {
-                set(table.endTime, Instant.now())
-                set(table.timelineSnapshot, syncStats)
-                where(table.id eq crontabHistory.id)
-            }.execute()
-            
-            throw e
-        }
-    }
-
     fun getSyncStatus(crontabId: Long): SyncStatusInfo {
-        val lastSyncRecord = sql.createQuery(SyncRecord::class) {
-            where(table.crontabId eq crontabId)
-            orderBy(table.syncTime.desc())
+        // 查询最新的 CrontabHistory 记录
+        val lastHistory = sql.createQuery(CrontabHistory::class) {
+            where(table.crontab.id eq crontabId)
+            orderBy(table.startTime.desc())
             select(table)
         }.limit(1).execute().firstOrNull()
 
-        return if (lastSyncRecord != null) {
+        return if (lastHistory != null) {
+            val isRunning = lastHistory.endTime == null
+            val lastSyncResult = if (lastHistory.endTime != null) SyncStatus.COMPLETED else SyncStatus.RUNNING
+            
             SyncStatusInfo(
-                isRunning = lastSyncRecord.status == SyncStatus.RUNNING,
-                lastSyncTime = lastSyncRecord.syncTime,
-                lastSyncResult = lastSyncRecord.status
+                isRunning = isRunning,
+                lastSyncTime = lastHistory.startTime,
+                lastSyncResult = lastSyncResult
             )
         } else {
             SyncStatusInfo()
         }
-    }
-
-    private fun createSyncRecord(crontab: Crontab): SyncRecord {
-        val syncRecord = SyncRecord {
-            this.crontabId = crontab.id
-            this.syncTime = Instant.now()
-            this.addedCount = 0
-            this.deletedCount = 0
-            this.updatedCount = 0
-            this.status = SyncStatus.RUNNING
-            this.errorMessage = null
-        }
-
-        val saveResult = sql.save(syncRecord, SaveMode.INSERT_ONLY)
-        return saveResult.modifiedEntity
-    }
-
-    private fun updateSyncRecord(
-        syncRecordId: Long,
-        status: SyncStatus,
-        addedCount: Int,
-        deletedCount: Int,
-        updatedCount: Int,
-        errorMessage: String?
-    ) {
-        sql.createUpdate(SyncRecord::class) {
-            set(table.status, status)
-            set(table.addedCount, addedCount)
-            set(table.deletedCount, deletedCount)
-            set(table.updatedCount, updatedCount)
-            set(table.errorMessage, errorMessage)
-            where(table.id eq syncRecordId)
-        }.execute()
-    }
-
-    private fun recordSyncDetail(
-        syncRecordId: Long,
-        asset: Asset,
-        album: Album,
-        operation: SyncOperation,
-        syncFolder: Path,
-        isCompleted: Boolean,
-        errorMessage: String?
-    ) {
-        val filePath = Path(syncFolder.toString(), album.name, asset.fileName).toString()
-
-        val detail = SyncRecordDetail {
-            this.syncRecordId = syncRecordId
-            this.assetId = asset.id
-            this.operation = operation
-            this.filePath = filePath
-            this.isCompleted = isCompleted
-            this.errorMessage = errorMessage
-        }
-
-        sql.save(detail, SaveMode.INSERT_ONLY)
-    }
-
-    private fun downloadToSync(asset: Asset, album: Album, syncFolder: Path, accountId: Long) {
-        val targetPath = Path(syncFolder.toString(), album.name, asset.fileName)
-        xiaoMiApi.downloadAsset(accountId, asset, targetPath)
-        
-        sql.saveCommand(asset, SaveMode.UPSERT).execute()
     }
 
     private fun getHistoricalTimelineSnapshot(crontabId: Long): Map<Long, AlbumTimeline> {

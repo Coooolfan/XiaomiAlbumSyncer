@@ -4,7 +4,6 @@ import cn.dev33.satoken.annotation.SaCheckLogin
 import com.coooolfan.xiaomialbumsyncer.model.SyncRecord
 import com.coooolfan.xiaomialbumsyncer.model.by
 import com.coooolfan.xiaomialbumsyncer.service.SyncService
-import kotlinx.coroutines.runBlocking
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.client.meta.Api
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
@@ -21,22 +20,6 @@ import org.noear.solon.core.handle.MethodType
 @Controller
 @SaCheckLogin
 class SyncController(private val syncService: SyncService) {
-
-    /**
-     * 执行同步任务
-     *
-     * @param crontabId 定时任务 ID
-     * @return 同步记录 ID
-     *
-     * @api POST /api/sync/execute/{crontabId}
-     * @permission 需要登录认证
-     */
-    @Api
-    @Mapping("/execute/{crontabId}", method = [MethodType.POST])
-    fun executeSync(@Path crontabId: Long): ExecuteSyncResponse = runBlocking {
-        val syncRecordId = syncService.executeSync(crontabId)
-        ExecuteSyncResponse(syncRecordId)
-    }
 
     /**
      * 获取同步记录列表
@@ -91,10 +74,3 @@ class SyncController(private val syncService: SyncService) {
         }
     }
 }
-
-/**
- * 执行同步响应
- */
-data class ExecuteSyncResponse(
-    val syncRecordId: Long
-)

@@ -14,7 +14,6 @@ import org.noear.solon.core.handle.MethodType
 
 /**
  * 归档控制器
- * 提供智能归档功能 API
  */
 @Api
 @Managed
@@ -104,16 +103,12 @@ class ArchiveController(private val archiveService: ArchiveService) {
     }
 }
 
-/**
- * 执行归档请求
- */
+// 执行归档请求
 data class ExecuteArchiveRequest(
     val confirmed: Boolean
 )
 
-/**
- * 执行归档响应
- */
+// 执行归档响应
 data class ExecuteArchiveResponse(
     val archiveRecordId: Long
 )

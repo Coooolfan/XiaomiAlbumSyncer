@@ -45,8 +45,6 @@ data class CrontabConfig(
 
     val expressionTargetPath: String = "",
 
-    // ========== 同步配置 ==========
-
     /**
      * 同步模式
      * ADD_ONLY: 仅新增模式，只下载云端新增的文件到本地
@@ -54,13 +52,7 @@ data class CrontabConfig(
      * 默认为 ADD_ONLY 以保持向后兼容
      */
     val syncMode: SyncMode = SyncMode.ADD_ONLY,
-
-    /**
-     * 同步文件夹名称（相对于 targetPath）
-     */
-    val syncFolder: String = "sync",
-
-    // ========== 归档配置 ==========
+    val syncFolder: String = "sync",                // 同步文件夹名称（相对于 targetPath）
 
     /**
      * 归档模式
@@ -70,24 +62,8 @@ data class CrontabConfig(
      * 默认为 DISABLED
      */
     val archiveMode: ArchiveMode = ArchiveMode.DISABLED,
-
-    /**
-     * 保留天数（时间模式）
-     */
-    val archiveDays: Int = 30,
-
-    /**
-     * 云空间阈值百分比（空间模式）
-     */
-    val cloudSpaceThreshold: Int = 90,
-
-    /**
-     * 归档文件夹名称（相对于 targetPath）
-     */
-    val backupFolder: String = "backup",
-
-    /**
-     * 归档后是否删除云端
-     */
-    val deleteCloudAfterArchive: Boolean = true,
+    val archiveDays: Int = 30,                      // 保留天数（时间模式）
+    val cloudSpaceThreshold: Int = 90,              // 云空间阈值百分比（空间模式）
+    val backupFolder: String = "backup",            // 归档文件夹名称（相对于 targetPath）
+    val deleteCloudAfterArchive: Boolean = true,    // 归档后是否删除云端
 )

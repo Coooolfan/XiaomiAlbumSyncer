@@ -268,13 +268,10 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
     fun batchDeleteAssets(accountId: Long, assetIds: List<Long>): List<Long> {
         val successIds = mutableListOf<Long>()
 
-        log.info("开始批量删除云端照片，账号 ID=$accountId，共 ${assetIds.size} 个照片")
-
         assetIds.forEach { assetId ->
             if (deleteAsset(accountId, assetId)) {
                 successIds.add(assetId)
             }
-            // 添加短暂延迟，避免 API 限流
             Thread.sleep(100)
         }
 
@@ -304,8 +301,6 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         val data = responseTree.get("data")
         val totalQuota = data.get("totalQuota")?.asLong() ?: 0L
         val used = data.get("used")?.asLong() ?: 0L
-
-        // 解析详细使用信息
         val usedDetailNode = data.get("usedDetail")
         val usedDetailMap = mutableMapOf<String, SpaceUsageItem>()
         
@@ -314,7 +309,6 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 val size = value.get("size")?.asLong() ?: 0L
                 var text = value.get("text")?.asText() ?: key
                 
-                // 优化显示文本
                 text = when (text) {
                     "桌面图标布局" -> "云备份"
                     "Creation" -> "小米创作"
@@ -327,18 +321,13 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             }
         }
 
-        // 获取相册使用空间
         val galleryUsed = usedDetailMap["GalleryImage"]?.size ?: 0L
-
-        // 计算使用百分比
         val usagePercent = if (totalQuota > 0) {
             ((used.toDouble() / totalQuota) * 100).toInt()
         } else {
             0
         }
-
         log.info("获取云端空间信息成功，账号 ID=$accountId，总空间=$totalQuota，已用=$used，相册=$galleryUsed，使用率=$usagePercent%")
-
         return CloudSpaceInfo(
             totalQuota = totalQuota,
             used = used,

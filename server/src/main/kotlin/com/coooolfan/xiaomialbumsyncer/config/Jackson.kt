@@ -25,15 +25,9 @@ class Jackson {
         val immutableModule = ImmutableModuleV2()
         val kotlinModule = KotlinModule.Builder().build()
 
-        // 配置序列化 mapper
         serializer.serializeConfig.mapper.registerModule(immutableModule)
         serializer.serializeConfig.mapper.registerModule(kotlinModule)
-        serializer.serializeConfig.mapper.configure(
-            com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-            false
-        )
 
-        // 配置反序列化 mapper
         serializer.deserializeConfig.mapper.registerModule(immutableModule)
         serializer.deserializeConfig.mapper.registerModule(kotlinModule)
         serializer.deserializeConfig.mapper.configure(
@@ -44,7 +38,6 @@ class Jackson {
         serializer.addEncoder(Instant::class.java) { it.toString() }
         serializer.addDecoder(Instant::class.java) { Instant.parse(it) }
 
-        // 返回反序列化 mapper，因为 Jimmer 主要用于反序列化数据库中的 JSON
         return serializer.deserializeConfig.mapper
     }
 }

@@ -50,11 +50,6 @@ class CrontabService(private val sql: KSqlClient) {
         if (!taskScheduler.checkIsRunning(crontabId))
             return CrontabCurrentStats()
 
-        val crontab = sql.findById(Crontab::class, crontabId)
-            ?: return CrontabCurrentStats()
-
-        return getSyncCurrentStats(crontabId)
-
         val runningCrontabHistory = sql.createQuery(CrontabHistory::class) {
             where(table.crontabId eq crontabId)
             orderBy(table.startTime.desc())
@@ -109,40 +104,6 @@ class CrontabService(private val sql: KSqlClient) {
             fsTimeUpdatedCount,
         )
     }
-
-    /**
-     * 获取同步任务的当前统计信息
-     */
-    private fun getSyncCurrentStats(crontabId: Long): CrontabCurrentStats {
-        val runningSyncRecord = sql.createQuery(SyncRecord::class) {
-            where(table.crontabId eq crontabId)
-            where(table.status eq SyncStatus.RUNNING)
-            orderBy(table.syncTime.desc())
-            select(table)
-        }.limit(1).execute().firstOrNull()
-
-        if (runningSyncRecord == null) {
-            return CrontabCurrentStats()
-        }
-
-        val totalCount = runningSyncRecord.addedCount + runningSyncRecord.deletedCount + runningSyncRecord.updatedCount
-        
-        val completedCount = sql.createQuery(SyncRecordDetail::class) {
-            where(table.syncRecordId eq runningSyncRecord.id)
-            where(table.isCompleted eq true)
-            select(count(table))
-        }.execute().firstOrNull() ?: 0L
-
-        return CrontabCurrentStats(
-            ts = runningSyncRecord.syncTime,
-            assetCount = totalCount.toLong(),
-            downloadCompletedCount = completedCount,
-            sha1VerifiedCount = null,
-            exifFilledCount = null,
-            fsTimeUpdatedCount = null
-        )
-    }
-
 
     fun updateCrontab(crontab: Crontab, fetcher: Fetcher<Crontab>): Crontab {
         val execute = sql.saveCommand(crontab, SaveMode.UPDATE_ONLY).execute(fetcher)

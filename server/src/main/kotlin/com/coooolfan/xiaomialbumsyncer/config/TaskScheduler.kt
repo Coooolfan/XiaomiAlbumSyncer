@@ -6,7 +6,6 @@ import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.enabled
 import com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline
-import com.coooolfan.xiaomialbumsyncer.service.SyncService
 import com.coooolfan.xiaomialbumsyncer.utils.SingleStagePatch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -28,7 +27,6 @@ class TaskScheduler(
     private val sql: KSqlClient,
     private val singleStagePatch: SingleStagePatch,
     private val pipeline: CrontabPipeline,
-    private val syncService: SyncService,
     private val thread: Executor
 ) {
 
@@ -98,9 +96,9 @@ class TaskScheduler(
         }
         try {
             runBlocking(Dispatchers.IO) {
-                // 同步功能始终启用，直接使用 SyncService
-                log.info("定时任务[${crontab.id}:${crontab.name}]使用同步服务执行")
-                syncService.executeSync(crontab.id)
+                // 使用 Pipeline 执行任务，Pipeline 内部会根据 syncMode 决定行为
+                log.info("定时任务[${crontab.id}:${crontab.name}]开始执行，同步模式: ${crontab.config.syncMode}")
+                pipeline.execute(crontab)
             }
         } finally {
             runningCrontabs.remove(crontab.id)
@@ -127,5 +125,4 @@ class TaskScheduler(
             singleStagePatch.rewriteFileSystemTime(assetPathMap)
         }
     }
-
 }
