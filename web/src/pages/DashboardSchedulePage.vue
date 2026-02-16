@@ -142,7 +142,7 @@ watch(albums, () => {
 
 <template>
   <div class="max-w-5xl mx-auto px-4 py-8">
-    <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
+    <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mb-6">
       <template #content>
         <div class="w-full overflow-x-hidden">
           <ContributionHeatmap

@@ -61,7 +61,7 @@ async function confirmUpdatePassword() {
 
 <template>
   <Card
-    class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mt-6"
+    class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mt-6"
     pt:footer:class="text-right"
   >
     <template #title>修改密码</template>
@@ -86,7 +86,7 @@ async function confirmUpdatePassword() {
       />
       <div
         v-if="isInsecureContext"
-        class="mt-3 rounded-md bg-red-50 text-red-700 text-xs px-3 py-2 ring-1 ring-red-200"
+        class="mt-3 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
       >
         警告：当前处于不安全上下文，提交的密码将在网络上以明文传输到服务器，可能被窃取。
         请仅在受信网络环境使用或通过 HTTPS 访问本页面。
@@ -104,9 +104,9 @@ async function confirmUpdatePassword() {
     header="更新密码"
     class="w-full sm:w-105"
   >
-    <div class="text-sm text-slate-700">
+    <div class="text-sm text-slate-700 dark:text-slate-200">
       确定要更新密码吗？
-      <span v-if="isInsecureContext" class="text-red-600 font-medium">
+      <span v-if="isInsecureContext" class="text-red-600 dark:text-red-300 font-medium">
         当前为不安全上下文，提交将以明文传输。
       </span>
     </div>

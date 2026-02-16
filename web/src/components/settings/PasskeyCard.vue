@@ -161,7 +161,7 @@ async function doDelete(credentialId: string) {
 
 <template>
   <Card
-    class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mt-6"
+    class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mt-6"
     pt:footer:class="text-right"
   >
     <template #title>
@@ -173,7 +173,7 @@ async function doDelete(credentialId: string) {
       <!-- WebAuthn 不支持警告 -->
       <div
         v-if="!webAuthnSupported"
-        class="mb-4 rounded-md bg-amber-50 text-amber-700 text-sm px-3 py-2 ring-1 ring-amber-200"
+        class="mb-4 rounded-md bg-amber-50 dark:bg-amber-950/35 text-amber-700 dark:text-amber-300 text-sm px-3 py-2 ring-1 ring-amber-200 dark:ring-amber-900/60"
       >
         <i class="pi pi-exclamation-triangle mr-2"></i>
         当前浏览器不支持
@@ -183,14 +183,14 @@ async function doDelete(credentialId: string) {
       <!-- 不安全上下文警告 -->
       <div
         v-if="isInsecureContext"
-        class="mb-4 rounded-md bg-red-50 text-red-700 text-xs px-3 py-2 ring-1 ring-red-200"
+        class="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
       >
         <i class="pi pi-shield mr-2"></i>
         警告：当前处于不安全上下文（非 HTTPS），WebAuthn 功能可能受限。
       </div>
 
       <!-- 说明文字 -->
-      <p class="text-sm text-slate-600 mb-4">
+      <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">
         Passkey 是一种无密码登录方式，使用设备的生物识别（指纹、面容）或 PIN 进行验证。
         您可以在多个设备上注册 Passkey，实现便捷安全的登录。
       </p>
@@ -207,7 +207,9 @@ async function doDelete(credentialId: string) {
         }"
       >
         <template #empty>
-          <div class="text-center text-slate-500 py-4">尚未注册任何 Passkey</div>
+          <div class="text-center text-slate-500 dark:text-slate-400 py-4">
+            尚未注册任何 Passkey
+          </div>
         </template>
 
         <Column field="name" header="名称" class="font-medium" />
@@ -266,12 +268,14 @@ async function doDelete(credentialId: string) {
     class="w-full sm:w-105"
   >
     <div class="space-y-4">
-      <p class="text-sm text-slate-600">
+      <p class="text-sm text-slate-600 dark:text-slate-300">
         注册前需要验证您的密码。注册后，您可以使用此设备的 Passkey 登录。
       </p>
 
       <div>
-        <label class="text-sm font-medium text-slate-700 block mb-1">当前密码</label>
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200 block mb-1"
+          >当前密码</label
+        >
         <InputText
           v-model="registerPassword"
           type="password"
@@ -282,19 +286,23 @@ async function doDelete(credentialId: string) {
       </div>
 
       <div>
-        <label class="text-sm font-medium text-slate-700 block mb-1">Passkey 名称</label>
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200 block mb-1"
+          >Passkey 名称</label
+        >
         <InputText
           v-model="registerName"
           placeholder="例如：MacBook Pro、iPhone 15"
           class="w-full"
           @keyup.enter="doRegister"
         />
-        <p class="text-xs text-slate-500 mt-1">为此 Passkey 取一个便于识别的名称</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          为此 Passkey 取一个便于识别的名称
+        </p>
       </div>
 
       <div
         v-if="isInsecureContext"
-        class="rounded-md bg-red-50 text-red-700 text-xs px-3 py-2 ring-1 ring-red-200"
+        class="rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
       >
         警告：当前处于不安全上下文，密码将以明文传输。
       </div>
@@ -311,7 +319,9 @@ async function doDelete(credentialId: string) {
   <!-- 重命名对话框 -->
   <Dialog v-model:visible="showRenameDialog" modal header="重命名 Passkey" class="w-full sm:w-96">
     <div>
-      <label class="text-sm font-medium text-slate-700 block mb-1">新名称</label>
+      <label class="text-sm font-medium text-slate-700 dark:text-slate-200 block mb-1"
+        >新名称</label
+      >
       <InputText
         v-model="renameName"
         placeholder="输入新名称"

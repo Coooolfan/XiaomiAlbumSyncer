@@ -119,7 +119,7 @@ onMounted(() => {
         <template #icons>
           <Button icon="pi pi-refresh" rounded text @click="fetchData" />
         </template>
-        <div class="text-xs text-slate-500">暂无账号</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400">暂无账号</div>
       </Panel>
     </div>
 
@@ -154,7 +154,9 @@ onMounted(() => {
             :last-update-time="a.lastUpdateTime"
           />
         </div>
-        <div v-if="group.albums.length === 0" class="text-xs text-slate-500">暂无相册</div>
+        <div v-if="group.albums.length === 0" class="text-xs text-slate-500 dark:text-slate-400">
+          暂无相册
+        </div>
       </div>
     </Panel>
   </div>

@@ -39,10 +39,13 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <Card header="计划任务" class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mb-6">
+  <Card
+    header="计划任务"
+    class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mb-6"
+  >
     <template #title>
       <div class="flex items-center justify-between">
-        <div class="font-medium text-slate-600">计划任务</div>
+        <div class="font-medium text-slate-600 dark:text-slate-300">计划任务</div>
         <div class="flex items-center gap-2">
           <Button
             :icon="collapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
@@ -60,11 +63,13 @@ const emit = defineEmits<{
 
     <template #content>
       <div class="space-y-3">
-        <div v-if="props.loading" class="text-xs text-slate-500 py-6">加载中...</div>
+        <div v-if="props.loading" class="text-xs text-slate-500 dark:text-slate-400 py-6">
+          加载中...
+        </div>
         <div v-else>
           <div
             v-if="!props.crontabs || props.crontabs.length === 0"
-            class="text-xs text-slate-500 py-6"
+            class="text-xs text-slate-500 dark:text-slate-400 py-6"
           >
             暂无计划任务
           </div>

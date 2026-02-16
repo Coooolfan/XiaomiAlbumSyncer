@@ -59,7 +59,7 @@ const backendCore = [
 </script>
 
 <template>
-  <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 mt-6 mb-6">
+  <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mt-6 mb-6">
     <template #title>
       <div class="flex items-center gap-2">
         <span>开源与致谢</span>
@@ -67,61 +67,66 @@ const backendCore = [
       </div>
     </template>
     <template #content>
-      <p class="text-xs text-slate-500">
+      <p class="text-xs text-slate-500 dark:text-slate-400">
         本项目遵循 GPL-3.0 开源协议。以下列出主要依赖及其许可证（以仓库清单为准）。
       </p>
 
       <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="space-y-2">
-          <div class="text-sm font-medium text-slate-700">前端核心</div>
-          <ul class="text-xs text-slate-500 list-disc pl-4 space-y-1">
+          <div class="text-sm font-medium text-slate-700 dark:text-slate-200">前端核心</div>
+          <ul class="text-xs text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1">
             <li v-for="item in frontendCore" :key="item.name">
-              <span class="text-slate-700">{{ item.name }}</span> · {{ item.desc }} ·
-              <span class="text-slate-400">{{ item.license }}</span>
+              <span class="text-slate-700 dark:text-slate-200">{{ item.name }}</span> ·
+              {{ item.desc }} ·
+              <span class="text-slate-400 dark:text-slate-500">{{ item.license }}</span>
             </li>
           </ul>
         </div>
 
         <div class="space-y-2">
-          <div class="text-sm font-medium text-slate-700">UI / 样式</div>
-          <ul class="text-xs text-slate-500 list-disc pl-4 space-y-1">
+          <div class="text-sm font-medium text-slate-700 dark:text-slate-200">UI / 样式</div>
+          <ul class="text-xs text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1">
             <li v-for="item in uiStack" :key="item.name">
-              <span class="text-slate-700">{{ item.name }}</span> · {{ item.desc }} ·
-              <span class="text-slate-400">{{ item.license }}</span>
+              <span class="text-slate-700 dark:text-slate-200">{{ item.name }}</span> ·
+              {{ item.desc }} ·
+              <span class="text-slate-400 dark:text-slate-500">{{ item.license }}</span>
             </li>
           </ul>
         </div>
 
         <div class="space-y-2">
-          <div class="text-sm font-medium text-slate-700">工程化</div>
-          <ul class="text-xs text-slate-500 list-disc pl-4 space-y-1">
+          <div class="text-sm font-medium text-slate-700 dark:text-slate-200">工程化</div>
+          <ul class="text-xs text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1">
             <li v-for="item in tooling" :key="item.name">
-              <span class="text-slate-700">{{ item.name }}</span> · {{ item.desc }} ·
-              <span class="text-slate-400">{{ item.license }}</span>
+              <span class="text-slate-700 dark:text-slate-200">{{ item.name }}</span> ·
+              {{ item.desc }} ·
+              <span class="text-slate-400 dark:text-slate-500">{{ item.license }}</span>
             </li>
           </ul>
         </div>
 
         <div class="space-y-2">
-          <div class="text-sm font-medium text-slate-700">特性组件</div>
-          <ul class="text-xs text-slate-500 list-disc pl-4 space-y-1">
+          <div class="text-sm font-medium text-slate-700 dark:text-slate-200">特性组件</div>
+          <ul class="text-xs text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1">
             <li v-for="item in features" :key="item.name">
-              <span class="text-slate-700">{{ item.name }}</span> · {{ item.desc }} ·
-              <span class="text-slate-400">{{ item.license }}</span>
+              <span class="text-slate-700 dark:text-slate-200">{{ item.name }}</span> ·
+              {{ item.desc }} ·
+              <span class="text-slate-400 dark:text-slate-500">{{ item.license }}</span>
             </li>
           </ul>
         </div>
       </div>
 
-      <div class="mt-4 pt-4 border-t border-slate-200/60">
-        <div class="text-sm font-medium text-slate-700">后端主要依赖</div>
-        <ul class="mt-2 text-xs text-slate-500 list-disc pl-4 space-y-1">
+      <div class="mt-4 pt-4 border-t border-slate-200/60 dark:border-slate-700/60">
+        <div class="text-sm font-medium text-slate-700 dark:text-slate-200">后端主要依赖</div>
+        <ul class="mt-2 text-xs text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1">
           <li v-for="item in backendCore" :key="item.name">
-            <span class="text-slate-700">{{ item.name }}</span> · {{ item.desc }} ·
-            <span class="text-slate-400">{{ item.license }}</span>
+            <span class="text-slate-700 dark:text-slate-200">{{ item.name }}</span> ·
+            {{ item.desc }} ·
+            <span class="text-slate-400 dark:text-slate-500">{{ item.license }}</span>
           </li>
         </ul>
-        <p class="text-xs text-slate-400 mt-3">
+        <p class="text-xs text-slate-400 dark:text-slate-500 mt-3">
           详细依赖清单见
           <a
             class="text-blue-600 hover:underline"

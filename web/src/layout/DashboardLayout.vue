@@ -28,8 +28,8 @@ function linkClasses(to: string) {
   return [
     'px-3 py-1.5 text-sm rounded-md border transition-colors',
     active
-      ? 'bg-blue-50 text-blue-600 border-blue-200'
-      : 'text-slate-600 border-transparent hover:bg-slate-50',
+      ? 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800/70'
+      : 'text-slate-600 dark:text-slate-300 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/70',
   ].join(' ')
 }
 
@@ -54,14 +54,18 @@ const versionTag = computed(() => {
 <template>
   <div class="min-h-screen">
     <!-- Topbar -->
-    <header class="sticky top-0 z-10 backdrop-blur-3xl bg-white/70 border-b border-slate-200/60">
+    <header
+      class="sticky top-0 z-10 backdrop-blur-3xl bg-white/70 dark:bg-slate-900/70 border-b border-slate-200/60 dark:border-slate-700/60"
+    >
       <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-2">
             <div class="h-8 w-8 flex items-center justify-center">
               <img src="/logo.avif" alt="Logo" class="w-full h-full object-contain" />
             </div>
-            <div class="font-semibold tracking-tight text-slate-700">Xiaomi Album Syncer</div>
+            <div class="font-semibold tracking-tight text-slate-700 dark:text-slate-200">
+              Xiaomi Album Syncer
+            </div>
           </div>
 
           <!-- Nav tabs -->
@@ -76,15 +80,21 @@ const versionTag = computed(() => {
         </div>
 
         <div class="flex items-center gap-3">
-          <div v-if="systemInfo" class="hidden md:flex items-center gap-2 text-xs text-slate-500">
-            <Chip :label="`${versionTag}`" class="!text-xs !py-1 !px-2 bg-slate-100" />
-            <span class="text-slate-300">|</span>
+          <div
+            v-if="systemInfo"
+            class="hidden md:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"
+          >
+            <Chip
+              :label="`${versionTag}`"
+              class="!text-xs !py-1 !px-2 bg-slate-100 dark:bg-slate-800"
+            />
+            <span class="text-slate-300 dark:text-slate-600">|</span>
             <span v-if="systemInfo.nativeImage" class="font-medium text-emerald-600"> Native </span>
             <span v-else-if="systemInfo.aotRuntime" class="font-medium text-blue-600"> AOT </span>
             <span v-else class="font-medium text-amber-600"> JVM {{ systemInfo.jvmVersion }} </span>
-            <span class="text-slate-300">|</span>
+            <span class="text-slate-300 dark:text-slate-600">|</span>
             <a href="https://github.com/coooolfan/xiaomialbumsyncer" target="_blank"
-              ><i class="pi pi-github text-black"
+              ><i class="pi pi-github text-black dark:text-slate-100"
             /></a>
           </div>
 
@@ -105,7 +115,7 @@ const versionTag = computed(() => {
     </main>
 
     <!-- Footer -->
-    <footer class="my-2 text-center text-xs text-slate-500">
+    <footer class="my-2 text-center text-xs text-slate-500 dark:text-slate-400">
       <p>
         {{ new Date().getFullYear() }} Xiaomi Album Syncer ©
         <a href="https://github.com/coooolfan/xiaomialbumsyncer" target="_blank"

@@ -151,13 +151,15 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Card class="overflow-hidden ring-1 ring-slate-200/60 h-full">
+  <Card class="overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-700/60 h-full">
     <template #title>
       <div class="flex items-center justify-between pb-4">
         <div class="flex items-center gap-3 min-w-0">
-          <span class="font-medium text-slate-700 text-base truncate">{{ crontab.name }}</span>
+          <span class="font-medium text-slate-700 dark:text-slate-200 text-base truncate">{{
+            crontab.name
+          }}</span>
         </div>
-        <div class="flex items-center gap-2 text-xs text-slate-600 shrink-0">
+        <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 shrink-0">
           <template v-if="!props.collapsed">
             <span class="hidden sm:inline">启用</span>
             <ToggleSwitch
@@ -197,7 +199,10 @@ onUnmounted(() => {
     </template>
 
     <template #content>
-      <div v-if="props.collapsed" class="flex flex-col gap-3 text-sm text-slate-600">
+      <div
+        v-if="props.collapsed"
+        class="flex flex-col gap-3 text-sm text-slate-600 dark:text-slate-300"
+      >
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <Tag
@@ -211,12 +216,12 @@ onUnmounted(() => {
             />
             <span
               v-if="recentHistories[0]?.detailsCount !== undefined"
-              class="text-xs text-slate-500"
+              class="text-xs text-slate-500 dark:text-slate-400"
             >
               {{ recentHistories[0].detailsCount }} 项
             </span>
           </div>
-          <span class="text-xs text-slate-400 font-mono">{{
+          <span class="text-xs text-slate-400 dark:text-slate-500 font-mono">{{
             formatTime(recentHistories[0]?.endTime || recentHistories[0]?.startTime)
           }}</span>
         </div>
@@ -227,20 +232,27 @@ onUnmounted(() => {
               class="pi pi-power-off text-xs shrink-0"
               :class="crontab.enabled ? 'text-green-500' : 'text-slate-300'"
             />
-            <span class="text-xs" :class="crontab.enabled ? 'text-slate-600' : 'text-slate-400'">
+            <span
+              class="text-xs"
+              :class="
+                crontab.enabled
+                  ? 'text-slate-600 dark:text-slate-300'
+                  : 'text-slate-400 dark:text-slate-500'
+              "
+            >
               {{ crontab.enabled ? '已启用' : '已禁用' }}
             </span>
           </div>
           <div class="flex items-center gap-2 w-full" title="Target Path">
-            <i class="pi pi-folder text-xs text-slate-400 shrink-0" />
+            <i class="pi pi-folder text-xs text-slate-400 dark:text-slate-500 shrink-0" />
             <span class="truncate font-mono text-xs">{{ crontab.config?.targetPath || '-' }}</span>
           </div>
           <div class="flex items-center gap-2" title="Cron Expression">
-            <i class="pi pi-clock text-xs text-slate-400 shrink-0" />
+            <i class="pi pi-clock text-xs text-slate-400 dark:text-slate-500 shrink-0" />
             <span class="font-mono text-xs">{{ crontab.config?.expression }}</span>
           </div>
           <div class="flex items-center gap-2" title="Account">
-            <i class="pi pi-user text-xs text-slate-400 shrink-0" />
+            <i class="pi pi-user text-xs text-slate-400 dark:text-slate-500 shrink-0" />
             <span class="truncate text-xs">{{ crontab.account?.nickname || '-' }}</span>
           </div>
         </div>
@@ -248,26 +260,32 @@ onUnmounted(() => {
 
       <div v-else class="text-sm md:flex md:items-start md:gap-6">
         <div class="flex-1 space-y-3">
-          <div v-if="crontab.description" class="text-slate-500">
+          <div v-if="crontab.description" class="text-slate-500 dark:text-slate-400">
             {{ crontab.description }}
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="flex items-center gap-2">
-              <i class="pi pi-user text-slate-400" />
-              <span class="text-slate-600">{{ crontab.account?.nickname || '-' }}</span>
+              <i class="pi pi-user text-slate-400 dark:text-slate-500" />
+              <span class="text-slate-600 dark:text-slate-300">{{
+                crontab.account?.nickname || '-'
+              }}</span>
             </div>
             <div class="flex items-center gap-2">
-              <i class="pi pi-clock text-slate-400" />
-              <span class="text-slate-600">{{ crontab.config?.expression }}</span>
+              <i class="pi pi-clock text-slate-400 dark:text-slate-500" />
+              <span class="text-slate-600 dark:text-slate-300">{{
+                crontab.config?.expression
+              }}</span>
             </div>
             <div class="flex items-center gap-2">
-              <i class="pi pi-globe text-slate-400" />
-              <span class="text-slate-600">{{ crontab.config?.timeZone }}</span>
+              <i class="pi pi-globe text-slate-400 dark:text-slate-500" />
+              <span class="text-slate-600 dark:text-slate-300">{{ crontab.config?.timeZone }}</span>
             </div>
             <div class="flex items-center gap-2 sm:col-span-1 col-span-1">
-              <i class="pi pi-folder text-slate-400" />
-              <span class="text-slate-600 truncate">{{ crontab.config?.targetPath || '-' }}</span>
+              <i class="pi pi-folder text-slate-400 dark:text-slate-500" />
+              <span class="text-slate-600 dark:text-slate-300 truncate">{{
+                crontab.config?.targetPath || '-'
+              }}</span>
             </div>
           </div>
 
@@ -317,7 +335,7 @@ onUnmounted(() => {
             />
             <span
               v-if="!crontab.albumIds || crontab.albumIds.length === 0"
-              class="text-xs text-slate-400"
+              class="text-xs text-slate-400 dark:text-slate-500"
               >无关联相册</span
             >
           </div>
@@ -326,7 +344,7 @@ onUnmounted(() => {
         <div class="mt-4 md:mt-0 md:w-1/2">
           <div
             v-if="crontab.running"
-            class="mb-3 rounded-md bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-200/60 p-3"
+            class="mb-3 rounded-md bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-200/60 dark:ring-blue-900/60 p-3"
           >
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-2">
@@ -336,9 +354,13 @@ onUnmounted(() => {
                 >
               </div>
               <div class="flex flex-col items-end">
-                <span class="text-[10px] text-blue-600/60 font-mono" title="数据获取时间">{{
-                  currentStats?.ts ? new Date(currentStats.ts).toLocaleTimeString() : ''
-                }}</span>
+                <span
+                  class="text-[10px] text-blue-600/60 dark:text-blue-300/70 font-mono"
+                  title="数据获取时间"
+                  >{{
+                    currentStats?.ts ? new Date(currentStats.ts).toLocaleTimeString() : ''
+                  }}</span
+                >
                 <span v-if="lastFetchTime" class="text-[9px] text-blue-400 font-mono">
                   {{ ((now - lastFetchTime) / 1000).toFixed(1) }}s ago
                 </span>
@@ -349,18 +371,18 @@ onUnmounted(() => {
               <div
                 class="text-xs flex justify-between items-center pb-1 border-b border-blue-100 dark:border-blue-800"
               >
-                <span class="text-slate-500">总计资产</span>
-                <span class="font-mono text-blue-700 font-bold">{{
+                <span class="text-slate-500 dark:text-slate-400">总计资产</span>
+                <span class="font-mono text-blue-700 dark:text-blue-300 font-bold">{{
                   currentStats.assetCount ?? '-'
                 }}</span>
               </div>
 
               <div v-if="currentStats.downloadCompletedCount !== undefined" class="text-xs">
                 <div class="flex justify-between items-center mb-1">
-                  <span class="text-slate-500">下载进度</span>
-                  <span class="font-mono text-slate-700"
+                  <span class="text-slate-500 dark:text-slate-400">下载进度</span>
+                  <span class="font-mono text-slate-700 dark:text-slate-200"
                     >{{ currentStats.downloadCompletedCount }}
-                    <span class="text-slate-400" v-if="currentStats.assetCount"
+                    <span class="text-slate-400 dark:text-slate-500" v-if="currentStats.assetCount"
                       >/ {{ currentStats.assetCount }}</span
                     ></span
                   >
@@ -381,8 +403,10 @@ onUnmounted(() => {
                 class="text-xs"
               >
                 <div class="flex justify-between items-center mb-1">
-                  <span class="text-slate-500">SHA1 校验</span>
-                  <span class="font-mono text-slate-700">{{ currentStats.sha1VerifiedCount }}</span>
+                  <span class="text-slate-500 dark:text-slate-400">SHA1 校验</span>
+                  <span class="font-mono text-slate-700 dark:text-slate-200">{{
+                    currentStats.sha1VerifiedCount
+                  }}</span>
                 </div>
                 <div
                   class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5"
@@ -400,8 +424,10 @@ onUnmounted(() => {
                 class="text-xs"
               >
                 <div class="flex justify-between items-center mb-1">
-                  <span class="text-slate-500">EXIF 填充</span>
-                  <span class="font-mono text-slate-700">{{ currentStats.exifFilledCount }}</span>
+                  <span class="text-slate-500 dark:text-slate-400">EXIF 填充</span>
+                  <span class="font-mono text-slate-700 dark:text-slate-200">{{
+                    currentStats.exifFilledCount
+                  }}</span>
                 </div>
                 <div
                   class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1.5"
@@ -422,8 +448,8 @@ onUnmounted(() => {
                 class="text-xs"
               >
                 <div class="flex justify-between items-center mb-1">
-                  <span class="text-slate-500">时间重写</span>
-                  <span class="font-mono text-slate-700">{{
+                  <span class="text-slate-500 dark:text-slate-400">时间重写</span>
+                  <span class="font-mono text-slate-700 dark:text-slate-200">{{
                     currentStats.fsTimeUpdatedCount
                   }}</span>
                 </div>
@@ -438,15 +464,24 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <div v-else class="text-xs text-slate-400 pl-6 py-2">
+              <div v-else class="text-xs text-slate-400 dark:text-slate-500 pl-6 py-2">
                 正在获取远程数据和资产差异检查...
               </div>
             </div>
           </div>
 
-          <div class="rounded-md bg-slate-50 dark:bg-slate-900/30 ring-1 ring-slate-200/60 p-3">
-            <div class="text-xs font-medium text-slate-500 mb-2">最近执行(本地时间)</div>
-            <div v-if="recentHistories.length === 0" class="text-xs text-slate-400">暂无历史</div>
+          <div
+            class="rounded-md bg-slate-50 dark:bg-slate-900/30 ring-1 ring-slate-200/60 dark:ring-slate-700/60 p-3"
+          >
+            <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+              最近执行(本地时间)
+            </div>
+            <div
+              v-if="recentHistories.length === 0"
+              class="text-xs text-slate-400 dark:text-slate-500"
+            >
+              暂无历史
+            </div>
             <ul v-else class="space-y-2">
               <li
                 v-for="(h, index) in recentHistories"
@@ -458,12 +493,15 @@ onUnmounted(() => {
                     class="inline-block w-2 h-2 rounded-full"
                     :class="h.isCompleted ? 'bg-emerald-500' : 'bg-amber-500'"
                   />
-                  <span class="text-slate-600"
+                  <span class="text-slate-600 dark:text-slate-300"
                     >{{ formatTime(h.startTime) }} → {{ formatTime(h.endTime) }}</span
                   >
                 </div>
                 <div class="flex items-center gap-2">
-                  <span class="text-xs text-slate-400" v-if="h.detailsCount !== undefined">
+                  <span
+                    class="text-xs text-slate-400 dark:text-slate-500"
+                    v-if="h.detailsCount !== undefined"
+                  >
                     {{ h.detailsCount }} 个资产
                   </span>
                   <Tag
