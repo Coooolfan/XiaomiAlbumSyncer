@@ -8,7 +8,6 @@ const props = defineProps<{
   modelValue: ArchiveMode
   archiveDays: number
   cloudSpaceThreshold: number
-  // 新增验证错误属性
   archiveDaysError?: string
   cloudSpaceThresholdError?: string
 }>()
@@ -17,7 +16,6 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: ArchiveMode): void
   (e: 'update:archiveDays', value: number): void
   (e: 'update:cloudSpaceThreshold', value: number): void
-  // 新增验证事件
   (e: 'validate'): void
 }>()
 
@@ -25,7 +23,6 @@ const selectedMode = computed({
   get: () => props.modelValue,
   set: (value: ArchiveMode) => {
     emit('update:modelValue', value)
-    // 模式切换时触发验证
     emit('validate')
   },
 })
@@ -34,7 +31,6 @@ const archiveDaysValue = computed({
   get: () => props.archiveDays,
   set: (value: number) => {
     emit('update:archiveDays', value)
-    // 值变化时触发验证
     emit('validate')
   },
 })
@@ -43,37 +39,25 @@ const cloudSpaceThresholdValue = computed({
   get: () => props.cloudSpaceThreshold,
   set: (value: number) => {
     emit('update:cloudSpaceThreshold', value)
-    // 值变化时触发验证
     emit('validate')
   },
 })
 
-// 验证逻辑
 const validateArchiveDays = (days: number): string | undefined => {
   if (props.modelValue !== 'TIME') return undefined
-
-  if (!Number.isInteger(days) || days <= 0) {
-    return '保留天数必须是正整数'
-  }
-
-  if (days > 365) {
-    return '保留天数不能超过365天'
-  }
-
+  if (!Number.isInteger(days) || days <= 0) return '保留天数必须是正整数'
+  if (days > 365) return '保留天数不能超过365天'
   return undefined
 }
 
 const validateCloudSpaceThreshold = (threshold: number): string | undefined => {
   if (props.modelValue !== 'SPACE') return undefined
-
   if (!Number.isInteger(threshold) || threshold < 1 || threshold > 100) {
     return '空间阈值必须在 1-100 之间'
   }
-
   return undefined
 }
 
-// 计算验证错误（如果没有传入外部错误，使用内部验证）
 const archiveDaysValidationError = computed(() => {
   return props.archiveDaysError || validateArchiveDays(props.archiveDays)
 })
@@ -82,17 +66,14 @@ const cloudSpaceThresholdValidationError = computed(() => {
   return props.cloudSpaceThresholdError || validateCloudSpaceThreshold(props.cloudSpaceThreshold)
 })
 
-// 检查是否有验证错误
 const hasValidationErrors = computed(() => {
   return !!(archiveDaysValidationError.value || cloudSpaceThresholdValidationError.value)
 })
 
-// 暴露验证方法给父组件
 defineExpose({
   validate: () => {
     const archiveDaysError = validateArchiveDays(props.archiveDays)
     const cloudSpaceThresholdError = validateCloudSpaceThreshold(props.cloudSpaceThreshold)
-
     return {
       isValid: !archiveDaysError && !cloudSpaceThresholdError,
       errors: {
@@ -104,7 +85,6 @@ defineExpose({
   hasErrors: hasValidationErrors,
 })
 
-// 归档模式选项配置
 const archiveModeOptions = [
   {
     value: 'DISABLED' as const,
@@ -143,7 +123,6 @@ const archiveModeOptions = [
           'border-slate-200': selectedMode !== option.value,
         }"
       >
-        <!-- 模式选择区域 -->
         <div class="flex items-start gap-3 p-3 cursor-pointer" @click="selectedMode = option.value">
           <RadioButton
             :value="option.value"
@@ -165,12 +144,10 @@ const archiveModeOptions = [
           </div>
         </div>
 
-        <!-- 配置区域 -->
         <div
           v-if="selectedMode === option.value && option.showConfig"
           class="px-3 pb-3 border-t border-slate-200 pt-3 mt-3"
         >
-          <!-- 时间模式配置 -->
           <div v-if="option.configType === 'days'" class="space-y-2">
             <label class="block text-xs font-medium text-slate-500">保留天数</label>
             <div class="flex items-center gap-2">
@@ -199,7 +176,6 @@ const archiveModeOptions = [
             <div class="text-[10px] text-slate-400">归档早于当前日期减去保留天数的照片</div>
           </div>
 
-          <!-- 空间模式配置 -->
           <div v-if="option.configType === 'threshold'" class="space-y-2">
             <label class="block text-xs font-medium text-slate-500">空间阈值</label>
             <div class="flex items-center gap-2">

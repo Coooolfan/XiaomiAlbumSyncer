@@ -26,9 +26,6 @@ export interface CrontabConfig {
      * 默认为 ADD_ONLY 以保持向后兼容
      */
     readonly syncMode: SyncMode;
-    /**
-     * 同步文件夹名称（相对于 targetPath）
-     */
     readonly syncFolder: string;
     /**
      * 归档模式
@@ -38,20 +35,8 @@ export interface CrontabConfig {
      * 默认为 DISABLED
      */
     readonly archiveMode: ArchiveMode;
-    /**
-     * 保留天数（时间模式）
-     */
     readonly archiveDays: number;
-    /**
-     * 云空间阈值百分比（空间模式）
-     */
     readonly cloudSpaceThreshold: number;
-    /**
-     * 归档文件夹名称（相对于 targetPath）
-     */
     readonly backupFolder: string;
-    /**
-     * 归档后是否删除云端
-     */
     readonly deleteCloudAfterArchive: boolean;
 }

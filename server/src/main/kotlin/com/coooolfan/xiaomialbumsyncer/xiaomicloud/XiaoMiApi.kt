@@ -305,7 +305,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         val usedDetailMap = mutableMapOf<String, SpaceUsageItem>()
         
         if (usedDetailNode != null && usedDetailNode.isObject) {
-            usedDetailNode.fields().forEach { (key, value) ->
+            usedDetailNode.properties().forEach { (key, value) ->
                 val size = value.get("size")?.asLong() ?: 0L
                 var text = value.get("text")?.asText() ?: key
                 

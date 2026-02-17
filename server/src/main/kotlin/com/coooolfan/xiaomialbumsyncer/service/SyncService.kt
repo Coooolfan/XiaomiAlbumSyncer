@@ -3,6 +3,7 @@ package com.coooolfan.xiaomialbumsyncer.service
 import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CRONTAB_WITH_ALBUMS_AND_ACCOUNT_FETCHER
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
+import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.desc
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
@@ -191,5 +192,25 @@ class SyncService(
         } else {
             SyncStatusInfo()
         }
+    }
+
+    /**
+     * 创建同步记录
+     */
+    fun createSyncRecord(
+        crontabId: Long,
+        addedCount: Int,
+        deletedCount: Int,
+        updatedCount: Int
+    ): SyncRecord {
+        val record = SyncRecord {
+            this.crontabId = crontabId
+            this.syncTime = Instant.now()
+            this.addedCount = addedCount
+            this.deletedCount = deletedCount
+            this.updatedCount = updatedCount
+            this.status = SyncStatus.COMPLETED
+        }
+        return sql.save(record, SaveMode.INSERT_ONLY).modifiedEntity
     }
 }

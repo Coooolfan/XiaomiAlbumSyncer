@@ -1,11 +1,9 @@
 package com.coooolfan.xiaomialbumsyncer.controller
 
 import cn.dev33.satoken.annotation.SaCheckLogin
-import com.coooolfan.xiaomialbumsyncer.model.Crontab
-import com.coooolfan.xiaomialbumsyncer.model.by
+import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput
 import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabUpdateInput
-import com.coooolfan.xiaomialbumsyncer.model.startTime
 import com.coooolfan.xiaomialbumsyncer.service.CrontabService
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.client.meta.Api
@@ -194,6 +192,22 @@ class CrontabController(private val service: CrontabService) {
                 isCompleted()
                 detailsCount()
                 timelineSnapshot()
+            }
+            // 获取最新的同步记录（用于显示统计信息）
+            syncRecords({
+                filter { orderBy(table.syncTime.desc()) }
+                batch(1)
+                limit(5)
+            }) {
+                allScalarFields()
+            }
+            // 获取最新的归档记录
+            archiveRecords({
+                filter { orderBy(table.archiveTime.desc()) }
+                batch(1)
+                limit(5)
+            }) {
+                allScalarFields()
             }
         }
 

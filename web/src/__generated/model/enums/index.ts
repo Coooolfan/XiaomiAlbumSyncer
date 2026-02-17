@@ -6,5 +6,7 @@ export type {AssetType} from './AssetType';
 export {AssetType_CONSTANTS} from './AssetType';
 export type {SyncMode} from './SyncMode';
 export {SyncMode_CONSTANTS} from './SyncMode';
+export type {SyncOperation} from './SyncOperation';
+export {SyncOperation_CONSTANTS} from './SyncOperation';
 export type {SyncStatus} from './SyncStatus';
 export {SyncStatus_CONSTANTS} from './SyncStatus';

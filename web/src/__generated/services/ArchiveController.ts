@@ -4,7 +4,6 @@ import type {ArchiveService_ArchivePlan, ExecuteArchiveRequest, ExecuteArchiveRe
 
 /**
  * 归档控制器
- * 提供智能归档功能 API
  */
 export class ArchiveController {
     

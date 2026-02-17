@@ -1,6 +1,6 @@
 import type {Executor} from '../';
 import type {SyncRecordDto} from '../model/dto/';
-import type {ExecuteSyncResponse, SyncService_ChangeSummary, SyncService_SyncStatusInfo} from '../model/static/';
+import type {SyncService_ChangeSummary, SyncService_SyncStatusInfo} from '../model/static/';
 
 /**
  * 同步控制器
@@ -24,22 +24,6 @@ export class SyncController {
         let _uri = '/api/sync/detect-changes/';
         _uri += encodeURIComponent(options.crontabId);
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<SyncService_ChangeSummary>;
-    }
-    
-    /**
-     * 执行同步任务
-     * 
-     * @parameter {SyncControllerOptions['executeSync']} options
-     * - crontabId 定时任务 ID
-     * @return 同步记录 ID
-     * 
-     */
-    readonly executeSync: (options: SyncControllerOptions['executeSync']) => Promise<
-        ExecuteSyncResponse
-    > = async(options) => {
-        let _uri = '/api/sync/execute/';
-        _uri += encodeURIComponent(options.crontabId);
-        return (await this.executor({uri: _uri, method: 'POST'})) as Promise<ExecuteSyncResponse>;
     }
     
     /**
@@ -76,12 +60,6 @@ export class SyncController {
 }
 
 export type SyncControllerOptions = {
-    'executeSync': {
-        /**
-         * 定时任务 ID
-         */
-        readonly crontabId: number
-    }, 
     'getSyncRecords': {
         /**
          * 定时任务 ID

@@ -54,6 +54,67 @@ const recentHistories = computed(() => {
   return list.slice(0, 5)
 })
 
+// 获取最新的同步记录（按时间排序）
+const recentSyncRecords = computed(() => {
+  const crontabAny = props.crontab as Record<string, unknown>
+  const list = [
+    ...((crontabAny.syncRecords as Array<{
+      syncTime: string
+      addedCount: number
+      deletedCount: number
+      updatedCount: number
+    }>) || []),
+  ]
+  list.sort((a, b) => (a.syncTime < b.syncTime ? 1 : -1))
+  return list
+})
+
+// 获取最新的归档记录（按时间排序）
+const recentArchiveRecords = computed(() => {
+  const crontabAny = props.crontab as Record<string, unknown>
+  const list = [
+    ...((crontabAny.archiveRecords as Array<{ archiveTime: string; archivedCount: number }>) || []),
+  ]
+  list.sort((a, b) => (a.archiveTime < b.archiveTime ? 1 : -1))
+  return list
+})
+
+// 根据历史记录的时间匹配对应的同步记录和归档记录
+function getStatsForHistory(history: (typeof recentHistories.value)[0]) {
+  // 找到在该历史记录时间范围内的同步记录
+  const syncRecord = recentSyncRecords.value.find((sr) => {
+    const syncTime = new Date(sr.syncTime).getTime()
+    const startTime = new Date(history.startTime).getTime()
+    const endTime = history.endTime ? new Date(history.endTime).getTime() : Date.now()
+    return syncTime >= startTime && syncTime <= endTime + 60000 // 允许1分钟误差
+  })
+
+  // 找到在该历史记录时间范围内的归档记录
+  const archiveRecord = recentArchiveRecords.value.find((ar) => {
+    const archiveTime = new Date(ar.archiveTime).getTime()
+    const startTime = new Date(history.startTime).getTime()
+    const endTime = history.endTime ? new Date(history.endTime).getTime() : Date.now()
+    return archiveTime >= startTime && archiveTime <= endTime + 60000
+  })
+
+  return {
+    addedCount: syncRecord?.addedCount ?? 0,
+    deletedCount: syncRecord?.deletedCount ?? 0,
+    updatedCount: syncRecord?.updatedCount ?? 0,
+    archivedCount: archiveRecord?.archivedCount ?? 0,
+  }
+}
+
+// 格式化统计信息显示
+function formatStatsText(stats: ReturnType<typeof getStatsForHistory>): string {
+  const parts: string[] = []
+  if (stats.addedCount > 0) parts.push(`${stats.addedCount}新增`)
+  if (stats.deletedCount > 0) parts.push(`${stats.deletedCount}删除`)
+  if (stats.updatedCount > 0) parts.push(`${stats.updatedCount}修改`)
+  if (stats.archivedCount > 0) parts.push(`${stats.archivedCount}归档`)
+  return parts.length > 0 ? parts.join('，') : '无变化'
+}
+
 const manualActionOptions = computed(() => {
   const actions: Array<{ label: string; icon: string; command: () => void }> = []
   if (props.crontab.running) {
@@ -214,11 +275,8 @@ onUnmounted(() => {
               "
               class="!text-xs !py-0 !px-2 !h-6"
             />
-            <span
-              v-if="recentHistories[0]?.detailsCount !== undefined"
-              class="text-xs text-slate-500 dark:text-slate-400"
-            >
-              {{ recentHistories[0].detailsCount }} 项
+            <span v-if="recentHistories[0]" class="text-xs text-slate-500 dark:text-slate-400">
+              {{ formatStatsText(getStatsForHistory(recentHistories[0])) }}
             </span>
           </div>
           <span class="text-xs text-slate-400 dark:text-slate-500 font-mono">{{
@@ -290,6 +348,21 @@ onUnmounted(() => {
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
+            <Tag
+              v-if="crontab.config?.syncMode"
+              :severity="crontab.config.syncMode === 'SYNC_ALL_CHANGES' ? 'success' : 'secondary'"
+              :value="crontab.config.syncMode === 'SYNC_ALL_CHANGES' ? '同步所有变化' : '仅新增'"
+            />
+            <Tag
+              :severity="crontab.config?.archiveMode && crontab.config.archiveMode !== 'DISABLED' ? 'success' : 'secondary'"
+              :value="
+                crontab.config?.archiveMode === 'TIME'
+                  ? `时间归档(${crontab.config.archiveDays}天)`
+                  : crontab.config?.archiveMode === 'SPACE'
+                    ? `空间归档(${crontab.config.cloudSpaceThreshold}%)`
+                    : '关闭归档'
+              "
+            />
             <Tag
               :severity="crontab.config?.downloadImages ? 'success' : 'secondary'"
               :value="crontab.config?.downloadImages ? '下载照片' : '不下载照片'"
@@ -498,11 +571,8 @@ onUnmounted(() => {
                   >
                 </div>
                 <div class="flex items-center gap-2">
-                  <span
-                    class="text-xs text-slate-400 dark:text-slate-500"
-                    v-if="h.detailsCount !== undefined"
-                  >
-                    {{ h.detailsCount }} 个资产
+                  <span class="text-xs text-slate-500 dark:text-slate-400">
+                    {{ formatStatsText(getStatsForHistory(h)) }}
                   </span>
                   <Tag
                     v-if="index === 0 && crontab.running"

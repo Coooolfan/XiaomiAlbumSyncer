@@ -194,6 +194,14 @@ class CrontabPipeline(
 
         crontabService.finishCrontabHistory(crontabHistory)
 
+        // 创建同步记录
+        syncService.createSyncRecord(
+            crontabId = crontab.id,
+            addedCount = success,
+            deletedCount = deletedCount,
+            updatedCount = updatedCount
+        )
+
         // 同步完成后，如果启用了归档，自动执行归档
         if (crontab.config.archiveMode != ArchiveMode.DISABLED) {
             try {

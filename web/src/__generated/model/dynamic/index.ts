@@ -1,6 +1,10 @@
 export type {Dynamic_Album} from './Dynamic_Album';
+export type {Dynamic_ArchiveDetail} from './Dynamic_ArchiveDetail';
+export type {Dynamic_ArchiveRecord} from './Dynamic_ArchiveRecord';
 export type {Dynamic_Asset} from './Dynamic_Asset';
 export type {Dynamic_Crontab} from './Dynamic_Crontab';
 export type {Dynamic_CrontabHistory} from './Dynamic_CrontabHistory';
 export type {Dynamic_CrontabHistoryDetail} from './Dynamic_CrontabHistoryDetail';
+export type {Dynamic_SyncRecord} from './Dynamic_SyncRecord';
+export type {Dynamic_SyncRecordDetail} from './Dynamic_SyncRecordDetail';
 export type {Dynamic_XiaomiAccount} from './Dynamic_XiaomiAccount';
