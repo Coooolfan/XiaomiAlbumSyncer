@@ -119,14 +119,16 @@ interface CrontabHistoryDetail {
         return Path(resolved).normalize().toString()
     }
 
-    // 旧逻辑：按 targetPath/album/fileName 生成，录音自动加 id 前缀
+    // 旧逻辑：按 targetPath/syncFolder/album/fileName 生成，录音自动加 id 前缀
     private fun legacyFilePath(history: CrontabHistory, asset: Asset): String {
+        val config = crontabHistory.crontab.config
         return if (asset.type != AssetType.AUDIO)
-            Path(crontabHistory.crontab.config.targetPath, asset.album.name, asset.fileName).toString()
+            Path(config.targetPath, config.syncFolder, asset.album.name, asset.fileName).toString()
         else
         // 录音文件会有普遍的文件名重复，需要在文件名前加上 id 以避免冲突
             Path(
-                crontabHistory.crontab.config.targetPath,
+                config.targetPath,
+                config.syncFolder,
                 asset.album.name,
                 "${asset.id}_${asset.fileName}"
             ).toString()

@@ -243,6 +243,16 @@ class CrontabService(private val sql: KSqlClient) {
     }
 
     /**
+     * 删除指定的 CrontabHistoryDetail 记录
+     * @param id CrontabHistoryDetail 的 ID
+     */
+    fun deleteCrontabHistoryDetail(id: Long) {
+        sql.executeDelete(CrontabHistoryDetail::class) {
+            where(table.id eq id)
+        }
+    }
+
+    /**
      * 获取需要重写 EXIF 时间的资产路径映射
      * @param crontabId 定时任务 ID
      * @return 资产到文件路径的映射

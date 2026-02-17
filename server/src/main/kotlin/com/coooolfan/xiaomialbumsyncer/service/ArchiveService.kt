@@ -141,7 +141,7 @@ class ArchiveService(
         }
     }
 
-    suspend fun executeArchive(crontabId: Long, confirmed: Boolean): Long {
+    suspend fun executeArchive(crontabId: Long, confirmed: Boolean): Int {
         log.info("开始执行归档任务，定时任务 ID=$crontabId")
 
         val crontab = sql.findById(CRONTAB_WITH_ALBUMS_FETCHER, crontabId)
@@ -207,9 +207,7 @@ class ArchiveService(
 
             updateArchiveStatus(archiveRecord.id, ArchiveStatus.COMPLETED, null)
 
-            log.info("归档任务完成，归档记录 ID=${archiveRecord.id}")
-
-            return archiveRecord.id
+            return plan.assetsToArchive.size
         } catch (e: Exception) {
             log.error("归档任务失败", e)
             updateArchiveStatus(archiveRecord.id, ArchiveStatus.FAILED, e.message)

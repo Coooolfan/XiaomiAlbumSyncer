@@ -35,6 +35,7 @@ class CrontabPipeline(
     private val fileService: FileService,
     private val postProcessingCoordinator: PostProcessingCoordinator,
     private val xiaoMiApi: com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi,
+    private val archiveService: ArchiveService,
 ) {
 
     private val log = LoggerFactory.getLogger(CrontabPipeline::class.java)
@@ -65,7 +66,7 @@ class CrontabPipeline(
         crontabService.finishCrontabHistoryFetchedAllAssets(crontabHistory)
 
         // 检测变更（新增、修改、删除）
-        val changes = syncService.detectSyncChanges(crontab.id, crontabHistory)
+        val changes = syncService.detectSyncChanges(crontab.id)
         log.info("检测到变更：新增 ${changes.addedAssets.size}，修改 ${changes.updatedAssets.size}，删除 ${changes.deletedAssets.size}")
 
         val systemConfig = systemConfigService.getConfig(NORMAL_SYSTEM_CONFIG)
@@ -82,18 +83,21 @@ class CrontabPipeline(
                 log.info("仅新增模式：跳过删除和修改操作")
             }
             SyncMode.SYNC_ALL_CHANGES -> {
-                changes.deletedAssets.forEach { asset ->
+                changes.deletedAssets.forEach { deletedInfo ->
                     try {
-                        val album = crontab.albums.find { it.id == asset.album.id }
-                            ?: throw IllegalStateException("找不到资产对应的相册: ${asset.album.id}")
-                        
-                        val filePath = Path.of(syncFolder.toString(), album.name, asset.fileName)
+                        val filePath = Path.of(deletedInfo.filePath)
                         if (filePath.exists()) {
                             fileService.deleteFile(filePath)
+                            log.info("删除文件：${deletedInfo.asset.fileName}，路径：${deletedInfo.filePath}")
+                        } else {
+                            log.warn("文件不存在，跳过删除：${deletedInfo.filePath}")
                         }
+                        // 删除 Asset 记录（会级联删除关联的 CrontabHistoryDetail），
+                        // 避免 getAssetsUndownloadByCrontab 将其当作未下载资产重新处理
+                        assetService.deleteAsset(deletedInfo.asset.id)
                         deletedCount++
                     } catch (e: Exception) {
-                        log.error("删除资产失败: ${asset.fileName}", e)
+                        log.error("删除资产失败: ${deletedInfo.asset.fileName}", e)
                     }
                 }
 
@@ -189,6 +193,17 @@ class CrontabPipeline(
         }.collect()
 
         crontabService.finishCrontabHistory(crontabHistory)
+
+        // 同步完成后，如果启用了归档，自动执行归档
+        if (crontab.config.archiveMode != ArchiveMode.DISABLED) {
+            try {
+                log.info("开始自动归档，模式: ${crontab.config.archiveMode}")
+                val archiveRecordId = archiveService.executeArchive(crontab.id, true)
+                log.info("自动归档完成，归档记录 ID=$archiveRecordId")
+            } catch (e: Exception) {
+                log.warn("自动归档跳过或失败: ${e.message}")
+            }
+        }
 
         // 异步发送通知
         CoroutineScope(Dispatchers.IO).launch { notifyService.send(crontab, success, total) }

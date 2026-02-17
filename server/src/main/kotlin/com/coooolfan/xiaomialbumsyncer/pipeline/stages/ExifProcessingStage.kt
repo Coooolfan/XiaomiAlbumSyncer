@@ -48,7 +48,6 @@ class ExifProcessingStage(
 
     fun process(context: CrontabHistoryDetail, systemConfig: SystemConfig): CrontabHistoryDetail {
         if (context.exifFilled) {
-            log.info("资源 {} 的 EXIF 已处理或者被标记为无需处理，跳过 EXIF 处理阶段", context.asset.id)
             return context
         }
 
@@ -64,7 +63,6 @@ class ExifProcessingStage(
                 rewriteExifTimeZone.toTimeZone()
             )
 
-            log.info("开始处理资源 {} 的 EXIF 时间", context.asset.id)
             try {
                 rewriteExifTime(context.asset, Path(context.filePath), config)
             } catch (e: RuntimeException) {
@@ -74,7 +72,6 @@ class ExifProcessingStage(
                     throw e
                 }
             }
-            log.info("资源 {} 的 EXIF 时间处理完成", context.asset.id)
 
         }
 

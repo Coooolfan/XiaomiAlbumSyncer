@@ -53,8 +53,8 @@ class ArchiveController(private val archiveService: ArchiveService) {
         @Path crontabId: Long,
         @Body request: ExecuteArchiveRequest
     ): ExecuteArchiveResponse = runBlocking {
-        val archiveRecordId = archiveService.executeArchive(crontabId, request.confirmed)
-        ExecuteArchiveResponse(archiveRecordId)
+        val archivedCount = archiveService.executeArchive(crontabId, request.confirmed)
+        ExecuteArchiveResponse(archivedCount)
     }
 
     /**
@@ -110,5 +110,5 @@ data class ExecuteArchiveRequest(
 
 // 执行归档响应
 data class ExecuteArchiveResponse(
-    val archiveRecordId: Long
+    val archivedCount: Int
 )
