@@ -79,17 +79,13 @@ const recentArchiveRecords = computed(() => {
   return list
 })
 
-// 根据历史记录的时间匹配对应的同步记录和归档记录
+// 根据历史记录的索引匹配对应的同步记录和归档记录
 function getStatsForHistory(history: (typeof recentHistories.value)[0]) {
-  // 找到在该历史记录时间范围内的同步记录
-  const syncRecord = recentSyncRecords.value.find((sr) => {
-    const syncTime = new Date(sr.syncTime).getTime()
-    const startTime = new Date(history.startTime).getTime()
-    const endTime = history.endTime ? new Date(history.endTime).getTime() : Date.now()
-    return syncTime >= startTime && syncTime <= endTime + 60000 // 允许1分钟误差
-  })
+  // 按索引匹配：histories 和 syncRecords 都按时间倒序排列，索引应该对应
+  const historyIndex = recentHistories.value.findIndex((h) => h.id === history.id)
+  const syncRecord = historyIndex >= 0 ? recentSyncRecords.value[historyIndex] : undefined
 
-  // 找到在该历史记录时间范围内的归档记录
+  // 归档记录通过时间范围匹配（归档可能在同步完成后执行）
   const archiveRecord = recentArchiveRecords.value.find((ar) => {
     const archiveTime = new Date(ar.archiveTime).getTime()
     const startTime = new Date(history.startTime).getTime()
