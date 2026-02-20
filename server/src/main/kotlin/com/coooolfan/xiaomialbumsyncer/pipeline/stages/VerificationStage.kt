@@ -12,9 +12,6 @@ import java.nio.file.Path
 import java.security.MessageDigest
 import kotlin.io.path.Path
 
-/**
- * 校验阶段处理器
- */
 @Managed
 class VerificationStage(
     private val sql: KSqlClient,
@@ -22,19 +19,23 @@ class VerificationStage(
 
     private val log = LoggerFactory.getLogger(VerificationStage::class.java)
 
+    fun verifySha1(asset: com.coooolfan.xiaomialbumsyncer.model.Asset, filePath: Path): Boolean {
+        val sha1 = computeSha1(filePath)
+        if (!sha1.equals(asset.sha1, ignoreCase = true)) {
+            throw RuntimeException("资源 ${asset.id} 的 SHA1 校验失败，期望 ${asset.sha1} 实际 $sha1")
+        }
+        return true
+    }
+
     fun process(context: CrontabHistoryDetail): CrontabHistoryDetail {
         if (context.sha1Verified) {
-            log.info("资源 {} 的 SHA1 校验已完成或者被标记为无需处理，跳过校验阶段", context.asset.id)
             return context
         }
 
-        log.info("开始校验资源 {} 的 SHA1", context.asset.id)
         val sha1 = computeSha1(Path(context.filePath))
         if (!sha1.equals(context.asset.sha1, ignoreCase = true)) {
-            // TODO: 这里需要思考一下怎么从头再来
             throw RuntimeException("资源 ${context.asset.id} 的 SHA1 校验失败，期望 ${context.asset.sha1} 实际 $sha1")
         }
-        log.info("资源 {} 的 SHA1 校验成功", context.asset.id)
 
         sql.executeUpdate(CrontabHistoryDetail::class) {
             set(table.sha1Verified, true)

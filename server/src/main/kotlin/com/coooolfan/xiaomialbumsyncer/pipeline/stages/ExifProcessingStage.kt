@@ -13,9 +13,6 @@ import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import kotlin.io.path.Path
 
-/**
- * EXIF 处理阶段
- */
 @Managed
 class ExifProcessingStage(
     private val sql: KSqlClient,
@@ -23,9 +20,34 @@ class ExifProcessingStage(
 
     private val log = LoggerFactory.getLogger(ExifProcessingStage::class.java)
 
+    fun fillExifTime(
+        asset: com.coooolfan.xiaomialbumsyncer.model.Asset,
+        filePath: java.nio.file.Path,
+        systemConfig: SystemConfig,
+        timeZone: String?
+    ) {
+        if (timeZone == null) {
+            return
+        }
+
+        val config = ExifRewriteConfig(
+            Path(systemConfig.exifToolPath),
+            timeZone.toTimeZone()
+        )
+
+        try {
+            rewriteExifTime(asset, filePath, config)
+        } catch (e: RuntimeException) {
+            if (e.message?.contains("Not a valid JPG") ?: false) {
+                log.warn("资源 {} 的 EXIF 处理失败，将跳过", asset.id)
+            } else {
+                throw e
+            }
+        }
+    }
+
     fun process(context: CrontabHistoryDetail, systemConfig: SystemConfig): CrontabHistoryDetail {
         if (context.exifFilled) {
-            log.info("资源 {} 的 EXIF 已处理或者被标记为无需处理，跳过 EXIF 处理阶段", context.asset.id)
             return context
         }
 
@@ -41,7 +63,6 @@ class ExifProcessingStage(
                 rewriteExifTimeZone.toTimeZone()
             )
 
-            log.info("开始处理资源 {} 的 EXIF 时间", context.asset.id)
             try {
                 rewriteExifTime(context.asset, Path(context.filePath), config)
             } catch (e: RuntimeException) {
@@ -51,7 +72,6 @@ class ExifProcessingStage(
                     throw e
                 }
             }
-            log.info("资源 {} 的 EXIF 时间处理完成", context.asset.id)
 
         }
 

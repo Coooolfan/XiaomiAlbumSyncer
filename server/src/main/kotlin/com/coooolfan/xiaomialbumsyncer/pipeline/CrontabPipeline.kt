@@ -1,17 +1,12 @@
 package com.coooolfan.xiaomialbumsyncer.pipeline
 
 import com.coooolfan.xiaomialbumsyncer.controller.SystemConfigController.Companion.NORMAL_SYSTEM_CONFIG
-import com.coooolfan.xiaomialbumsyncer.model.AlbumTimeline
-import com.coooolfan.xiaomialbumsyncer.model.Crontab
-import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
+import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.ExifProcessingStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.VerificationStage
-import com.coooolfan.xiaomialbumsyncer.service.AssetService
-import com.coooolfan.xiaomialbumsyncer.service.CrontabService
-import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
-import com.coooolfan.xiaomialbumsyncer.service.NotifyService
+import com.coooolfan.xiaomialbumsyncer.service.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,6 +14,9 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
+import java.nio.file.Path
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
 
 /**
  * 计划任务流水线管理器
@@ -33,6 +31,11 @@ class CrontabPipeline(
     private val assetService: AssetService,
     private val crontabService: CrontabService,
     private val notifyService: NotifyService,
+    private val syncService: SyncService,
+    private val fileService: FileService,
+    private val postProcessingCoordinator: PostProcessingCoordinator,
+    private val xiaoMiApi: com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi,
+    private val archiveService: ArchiveService,
 ) {
 
     private val log = LoggerFactory.getLogger(CrontabPipeline::class.java)
@@ -62,10 +65,74 @@ class CrontabPipeline(
         // 记录一下，以后如果支持恢复暂停的任务可以从这开始
         crontabService.finishCrontabHistoryFetchedAllAssets(crontabHistory)
 
+        // 检测变更（新增、修改、删除）
+        val changes = syncService.detectSyncChanges(crontab.id)
+        log.info("检测到变更：新增 ${changes.addedAssets.size}，修改 ${changes.updatedAssets.size}，删除 ${changes.deletedAssets.size}")
+
         val systemConfig = systemConfigService.getConfig(NORMAL_SYSTEM_CONFIG)
+        val syncFolder = Path.of(crontab.config.targetPath, crontab.config.syncFolder)
 
         var total = 0
         var success = 0
+        var deletedCount = 0
+        var updatedCount = 0
+
+        // 根据 syncMode 决定
+        when (crontab.config.syncMode) {
+            SyncMode.ADD_ONLY -> {
+                log.info("仅新增模式：跳过删除和修改操作")
+            }
+            SyncMode.SYNC_ALL_CHANGES -> {
+                changes.deletedAssets.forEach { deletedInfo ->
+                    try {
+                        val filePath = Path.of(deletedInfo.filePath)
+                        if (filePath.exists()) {
+                            fileService.deleteFile(filePath)
+                            log.info("删除文件：${deletedInfo.asset.fileName}，路径：${deletedInfo.filePath}")
+                        } else {
+                            log.warn("文件不存在，跳过删除：${deletedInfo.filePath}")
+                        }
+                        // 删除 Asset 记录（会级联删除关联的 CrontabHistoryDetail），
+                        // 避免 getAssetsUndownloadByCrontab 将其当作未下载资产重新处理
+                        assetService.deleteAsset(deletedInfo.asset.id)
+                        deletedCount++
+                    } catch (e: Exception) {
+                        log.error("删除资产失败: ${deletedInfo.asset.fileName}", e)
+                    }
+                }
+
+                changes.updatedAssets.forEach { asset ->
+                    try {
+                        val album = crontab.albums.find { it.id == asset.album.id }
+                            ?: throw IllegalStateException("找不到资产对应的相册: ${asset.album.id}")
+                        
+                        val filePath = Path.of(syncFolder.toString(), album.name, asset.fileName)
+                        
+                        if (fileService.fileExists(filePath)) {
+                            fileService.deleteFile(filePath)
+                        }
+                        
+                        xiaoMiApi.downloadAsset(crontab.accountId, asset, filePath)
+                        
+                        val postProcessingResult = postProcessingCoordinator.process(
+                            asset,
+                            filePath,
+                            crontab.config
+                        )
+                        
+                        if (postProcessingResult.success) {
+                            updatedCount++
+                            log.info("更新文件：${asset.fileName}")
+                        } else {
+                            log.error("更新文件后处理失败：${asset.fileName}, ${postProcessingResult.errorMessage}")
+                        }
+                    } catch (e: Exception) {
+                        log.error("更新资产失败: ${asset.fileName}", e)
+                    }
+                }
+            }
+        }
+
         channelFlow {
             var currentRows: Int
             var lastId = 0L
@@ -127,10 +194,32 @@ class CrontabPipeline(
 
         crontabService.finishCrontabHistory(crontabHistory)
 
+        // 创建同步记录
+        syncService.createSyncRecord(
+            crontabId = crontab.id,
+            addedCount = success,
+            deletedCount = deletedCount,
+            updatedCount = updatedCount
+        )
+
+        // 同步完成后，如果启用了归档，自动执行归档
+        if (crontab.config.archiveMode != ArchiveMode.DISABLED) {
+            try {
+                log.info("开始自动归档，模式: ${crontab.config.archiveMode}")
+                val archiveRecordId = archiveService.executeArchive(crontab.id, true)
+                log.info("自动归档完成，归档记录 ID=$archiveRecordId")
+            } catch (e: Exception) {
+                log.warn("自动归档跳过或失败: ${e.message}")
+            }
+        }
+
         // 异步发送通知
         CoroutineScope(Dispatchers.IO).launch { notifyService.send(crontab, success, total) }
 
-        log.info("Crontab {} 的流水线执行完毕, 成功 {}/{}", crontab.id, success, total)
+        log.info(
+            "Crontab {} 的流水线执行完毕, 新增成功 {}/{}, 删除 {}, 更新 {}",
+            crontab.id, success, total, deletedCount, updatedCount
+        )
     }
 
 

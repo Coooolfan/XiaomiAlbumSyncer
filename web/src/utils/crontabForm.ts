@@ -27,6 +27,15 @@ export function createDefaultCronConfig(defaultTz: string): CrontabConfig {
     verifiers: 2,
     exifProcessors: 2,
     fileTimeWorkers: 2,
+    // 同步配置
+    syncMode: 'ADD_ONLY',
+    syncFolder: 'sync',
+    // 归档配置
+    archiveMode: 'DISABLED',
+    archiveDays: 30,
+    cloudSpaceThreshold: 90,
+    backupFolder: 'backup',
+    deleteCloudAfterArchive: true,
   }
 }
 
@@ -66,6 +75,15 @@ export function mapCrontabToForm(item: Crontab, fallbackTz: string): LocalCronFo
       verifiers: item.config.verifiers ?? 2,
       exifProcessors: item.config.exifProcessors ?? 2,
       fileTimeWorkers: item.config.fileTimeWorkers ?? 2,
+      // 同步配置
+      syncMode: item.config.syncMode ?? 'ADD_ONLY',
+      syncFolder: item.config.syncFolder ?? 'sync',
+      // 归档配置
+      archiveMode: item.config.archiveMode ?? 'DISABLED',
+      archiveDays: item.config.archiveDays ?? 30,
+      cloudSpaceThreshold: item.config.cloudSpaceThreshold ?? 90,
+      backupFolder: item.config.backupFolder ?? 'backup',
+      deleteCloudAfterArchive: item.config.deleteCloudAfterArchive ?? true,
     },
     albumIds: [...item.albumIds],
   }

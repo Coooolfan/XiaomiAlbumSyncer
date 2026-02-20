@@ -12,6 +12,8 @@ import Button from 'primevue/button'
 import Message from 'primevue/message'
 import ExpressionPathHelp from '@/components/ExpressionPathHelp.vue'
 import CronHelp from '@/components/CronHelp.vue'
+import SyncModeSelector from '@/components/SyncModeSelector.vue'
+import ArchiveModeSelector from '@/components/ArchiveModeSelector.vue'
 import type { LocalCronForm } from '@/utils/crontabForm'
 
 const props = defineProps<{
@@ -29,6 +31,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void
   (e: 'submit'): void
+  (e: 'validate'): void
 }>()
 
 const visibleProxy = computed({
@@ -41,6 +44,11 @@ const formErrors = toRef(props, 'formErrors')
 const accountOptions = computed(() => [...props.accountOptions])
 const formAlbumOptions = computed(() => [...props.formAlbumOptions])
 const timeZones = computed(() => [...props.timeZones])
+
+// 处理验证事件
+function handleValidate() {
+  emit('validate')
+}
 
 const showExpressionHelp = ref(false)
 const showCronHelp = ref(false)
@@ -477,6 +485,64 @@ onBeforeUnmount(() => {
               </div>
             </div>
           </Panel>
+        </Panel>
+
+        <!-- 同步配置面板 -->
+        <Panel header="同步配置" toggleable collapsed class="mt-4">
+          <div class="space-y-4">
+            <SyncModeSelector v-model="form.config.syncMode" />
+
+            <div class="space-y-2">
+              <label class="block text-xs font-medium text-slate-500">同步文件夹名称</label>
+              <InputText v-model="form.config.syncFolder" placeholder="sync" class="w-full" />
+              <div class="text-[10px] text-slate-400">
+                相对于保存路径的文件夹名称，用于存放同步的照片
+              </div>
+            </div>
+          </div>
+        </Panel>
+
+        <!-- 归档配置面板 -->
+        <Panel header="归档配置" toggleable collapsed class="mt-4">
+          <div class="space-y-4">
+            <ArchiveModeSelector
+              v-model="form.config.archiveMode"
+              v-model:archiveDays="form.config.archiveDays"
+              v-model:cloudSpaceThreshold="form.config.cloudSpaceThreshold"
+              :archiveDaysError="formErrors.archiveDays"
+              :cloudSpaceThresholdError="formErrors.cloudSpaceThreshold"
+              @validate="handleValidate"
+            />
+
+            <div
+              v-if="form.config.archiveMode !== 'DISABLED'"
+              class="space-y-4 pt-4 border-t border-slate-200"
+            >
+              <div class="space-y-2">
+                <label class="block text-xs font-medium text-slate-500">归档文件夹名称</label>
+                <InputText v-model="form.config.backupFolder" placeholder="backup" class="w-full" />
+                <div class="text-[10px] text-slate-400">
+                  相对于保存路径的文件夹名称，用于存放归档的照片
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <div class="flex items-center gap-2 text-xs text-slate-600">
+                  <ToggleSwitch v-model="form.config.deleteCloudAfterArchive" />
+                  <span>归档后删除云端</span>
+                </div>
+                <div
+                  v-if="form.config.deleteCloudAfterArchive"
+                  class="flex items-start gap-2 p-2 bg-amber-50 border border-amber-200 rounded text-[10px] text-amber-700"
+                >
+                  <i class="pi pi-exclamation-triangle text-amber-500 mt-0.5" />
+                  <span>
+                    警告：启用此选项后，归档的照片将从小米云端永久删除，请确保本地备份安全可靠
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </Panel>
 
         <div class="flex items-center justify-between pt-1">
