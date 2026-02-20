@@ -132,7 +132,7 @@
 
 ### 初始化
 
-访问 `http://localhost:8232` ，输入一个强密码（此密码仅用于访问此项目，与任何外部服务或者小米无关），完成此项目的初始化。
+访问 `http://localhost:8232`（下文假设您在本地访问默认 Docker Compose 部署的版本，否则请访问您配置的真实端点） ，输入一个强密码（此密码仅用于访问此项目，与任何外部服务或者小米无关），完成此项目的初始化。
 
 
 ### 获取 PassToken 与 UserId
@@ -152,7 +152,7 @@
 
 ### 获取所有相册
 
-访问 `http://localhost:8080/#/dashboard/schedule` 选择 `从远程更新整个相册列表`
+访问 `http://localhost:8232/#/dashboard/schedule` 选择 `从远程更新整个相册列表`
 
 ![fetchlastestalbums](static/fetchlastestalbums.avif)
 
@@ -163,7 +163,7 @@
 
 ### 创建计划任务
 
-访问 `http://localhost:8080/#/dashboard/schedule` 单击 任务计划 卡片右上角的绿色 ➕ 号。按需要填写各项配置。
+访问 `http://localhost:8232/#/dashboard/schedule` 单击 任务计划 卡片右上角的绿色 ➕ 号。按需要填写各项配置。
 
 ![democrontab](./static/democrontab.avif)
 
