@@ -303,6 +303,10 @@ onUnmounted(() => {
               :value="crontab.config?.downloadAudios ? '下载录音' : '不下载录音'"
             />
             <Tag
+              :severity="crontab.config?.notify ? 'success' : 'secondary'"
+              :value="crontab.config?.notify ? '发送通知' : '不发送通知'"
+            />
+            <Tag
               :severity="crontab.config?.rewriteExifTime ? 'success' : 'secondary'"
               :value="crontab.config?.rewriteExifTime ? '填充 EXIF' : '不填充 EXIF 时间'"
             />

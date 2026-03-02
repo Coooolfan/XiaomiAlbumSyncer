@@ -17,4 +17,5 @@ export interface CrontabConfig {
     readonly fileTimeWorkers: number;
     readonly downloadAudios: boolean;
     readonly expressionTargetPath: string;
+    readonly notify: boolean;
 }

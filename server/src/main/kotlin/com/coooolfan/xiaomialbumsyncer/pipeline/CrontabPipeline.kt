@@ -10,8 +10,8 @@ import com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage
 import com.coooolfan.xiaomialbumsyncer.pipeline.stages.VerificationStage
 import com.coooolfan.xiaomialbumsyncer.service.AssetService
 import com.coooolfan.xiaomialbumsyncer.service.CrontabService
-import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
 import com.coooolfan.xiaomialbumsyncer.service.NotifyService
+import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -128,7 +128,8 @@ class CrontabPipeline(
         crontabService.finishCrontabHistory(crontabHistory)
 
         // 异步发送通知
-        CoroutineScope(Dispatchers.IO).launch { notifyService.send(crontab, success, total) }
+        if (crontab.config.notify)
+            CoroutineScope(Dispatchers.IO).launch { notifyService.send(crontab, success, total) }
 
         log.info("Crontab {} 的流水线执行完毕, 成功 {}/{}", crontab.id, success, total)
     }

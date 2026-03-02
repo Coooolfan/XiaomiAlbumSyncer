@@ -27,6 +27,7 @@ export function createDefaultCronConfig(defaultTz: string): CrontabConfig {
     verifiers: 2,
     exifProcessors: 2,
     fileTimeWorkers: 2,
+    notify: true,
   }
 }
 
@@ -66,6 +67,7 @@ export function mapCrontabToForm(item: Crontab, fallbackTz: string): LocalCronFo
       verifiers: item.config.verifiers ?? 2,
       exifProcessors: item.config.exifProcessors ?? 2,
       fileTimeWorkers: item.config.fileTimeWorkers ?? 2,
+      notify: item.config.notify ?? true,
     },
     albumIds: [...item.albumIds],
   }
