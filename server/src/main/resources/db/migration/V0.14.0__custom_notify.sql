@@ -21,7 +21,7 @@ SET notify_config = json_object(
                 || '.send'
         ELSE 'https://sctapi.ftqq.com/' || trim(ftqq_key) || '.send'
     END,
-    'headers', json('{}'),
+    'headers', json('{"Content-Type":"application/json"}'),
     'body',
     '{"text":"Xiaomi Album Syncer","desp":"定时任务 '
         || char(36) || '{crontab.name} 已完成同步，成功 '

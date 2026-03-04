@@ -1708,6 +1708,30 @@
       "type": "com.coooolfan.xiaomialbumsyncer.controller.LoginRequest"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.MountPathCheckRequest",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.MountPathCheckResponse",
+      "methods": [
+        {
+          "name": "getInDocker",
+          "parameterTypes": []
+        },
+        {
+          "name": "getMounted",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.PasskeyController",
       "methods": [
         {
@@ -1791,8 +1815,22 @@
           ]
         },
         {
+          "name": "<init>",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.SystemConfigService",
+            "com.coooolfan.xiaomialbumsyncer.service.DebugService",
+            "com.coooolfan.xiaomialbumsyncer.service.MountPathService"
+          ]
+        },
+        {
           "name": "access$getNORMAL_SYSTEM_CONFIG$cp",
           "parameterTypes": []
+        },
+        {
+          "name": "checkMountPath",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.controller.MountPathCheckRequest"
+          ]
         },
         {
           "name": "ftqqKeyIsInitd",
@@ -1800,6 +1838,10 @@
         },
         {
           "name": "getDebugService",
+          "parameterTypes": []
+        },
+        {
+          "name": "getNotifyConfig",
           "parameterTypes": []
         },
         {
@@ -1848,6 +1890,12 @@
           "name": "updateFtqqKey",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigFtqqKeyUpdate"
+          ]
+        },
+        {
+          "name": "updateNotifyConfig",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigNotifyConfigUpdate"
           ]
         },
         {
@@ -1993,6 +2041,9 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.XiaomiAccountController$Companion"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.exception.BadRequestException"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.exception.GlobalHandler",
@@ -3214,6 +3265,56 @@
           ]
         },
         {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
+            "boolean",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
+            "int",
+            "int",
+            "int",
+            "int",
+            "int",
+            "boolean",
+            "java.lang.String",
+            "boolean"
+          ]
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
+            "boolean",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
+            "int",
+            "int",
+            "int",
+            "int",
+            "int",
+            "boolean",
+            "java.lang.String",
+            "boolean",
+            "int",
+            "kotlin.jvm.internal.DefaultConstructorMarker"
+          ]
+        },
+        {
           "name": "getCheckSha1",
           "parameterTypes": []
         },
@@ -3255,6 +3356,10 @@
         },
         {
           "name": "getFileTimeWorkers",
+          "parameterTypes": []
+        },
+        {
+          "name": "getNotify",
           "parameterTypes": []
         },
         {
@@ -4230,6 +4335,31 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabPropsKt"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.NotifyConfig",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.util.Map",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getBody",
+          "parameterTypes": []
+        },
+        {
+          "name": "getHeaders",
+          "parameterTypes": []
+        },
+        {
+          "name": "getUrl",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredential"
     },
     {
@@ -4639,6 +4769,9 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$ID$1"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$NOTIFY_CONFIG$1"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$PASSWORD$1"
     },
     {
@@ -4974,6 +5107,37 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInitKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigNotifyConfigUpdate"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigNotifyConfigUpdate$Builder",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        },
+        {
+          "name": "build",
+          "parameterTypes": []
+        },
+        {
+          "name": "notifyConfig",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.NotifyConfig"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigNotifyConfigUpdate$Companion"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigNotifyConfigUpdate$toEntity$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigNotifyConfigUpdateKt"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPassTokenUpdate"
@@ -5944,6 +6108,28 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.MountPathService",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        },
+        {
+          "name": "checkExplicitMountPoint",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "isRunningInDockerContainer",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.MountPathService$Companion"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.service.NotifyService",
       "methods": [
         {
@@ -6236,6 +6422,10 @@
           "parameterTypes": []
         },
         {
+          "name": "getNotifyConfig",
+          "parameterTypes": []
+        },
+        {
           "name": "getSql",
           "parameterTypes": []
         },
@@ -6287,6 +6477,12 @@
           "name": "updateFtqqKey",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigFtqqKeyUpdate"
+          ]
+        },
+        {
+          "name": "updateNotifyConfig",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigNotifyConfigUpdate"
           ]
         },
         {

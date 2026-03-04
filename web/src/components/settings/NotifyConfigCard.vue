@@ -42,6 +42,11 @@ const server3SendKey = ref('')
 const customUrl = ref('')
 const bodyTemplate = ref('')
 const headerRows = ref<HeaderRow[]>([createHeaderRow()])
+const presetHeaderKey = 'Content-Type'
+const presetHeaderValue = 'application/json'
+const presetHeaders: Readonly<Record<string, string>> = {
+  [presetHeaderKey]: presetHeaderValue,
+}
 
 const channelOptions: Array<{ label: string; value: NotifyPresetMode }> = [
   { label: 'Server酱 Turbo', value: 'serverchanTurbo' },
@@ -73,7 +78,10 @@ const previewUrl = computed(() => {
   return buildServerChan3Url(server3SendKey.value)
 })
 
-const previewHeaders = computed(() => Object.entries(rowsToHeaderMap(headerRows.value)))
+const isPresetChannel = computed(() => selectedChannel.value !== 'custom')
+const previewHeaders = computed(() =>
+  Object.entries(isPresetChannel.value ? presetHeaders : rowsToHeaderMap(headerRows.value)),
+)
 const previewBody = computed(() => {
   if (bodyTemplate.value.trim() === '') return '(空)'
   const formatted = tryFormatJson(bodyTemplate.value)
@@ -210,6 +218,8 @@ async function fetchNotifyConfig() {
 
 async function saveNotifyConfig() {
   const url = previewUrl.value
+  const headers = isPresetChannel.value ? { ...presetHeaders } : rowsToHeaderMap(headerRows.value)
+
   if (selectedChannel.value === 'serverchanTurbo' && turboSendKey.value.trim() === '') {
     toast.add({
       severity: 'warn',
@@ -240,7 +250,7 @@ async function saveNotifyConfig() {
     return
   }
 
-  const headerError = validateHeaders()
+  const headerError = isPresetChannel.value ? null : validateHeaders()
   if (headerError) {
     toast.add({ severity: 'warn', summary: '提示', detail: headerError, life: 2800 })
     return
@@ -252,7 +262,7 @@ async function saveNotifyConfig() {
       body: {
         notifyConfig: {
           url,
-          headers: rowsToHeaderMap(headerRows.value),
+          headers,
           body: bodyTemplate.value,
         },
       },
@@ -404,37 +414,49 @@ onMounted(() => {
         <div class="space-y-2">
           <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">请求头</label>
 
-          <div class="space-y-2">
-            <div
-              v-for="item in headerRows"
-              :key="item.id"
-              class="grid grid-cols-1 gap-2 p-2 sm:grid-cols-[1fr_1fr_auto]"
-            >
-              <InputText v-model="item.key" placeholder="Header Key" class="text-xs" />
-              <InputText v-model="item.value" placeholder="Header Value" class="text-xs" />
-              <Button
-                icon="pi pi-trash"
-                text
-                rounded
-                severity="danger"
-                class="justify-self-end"
-                @click="removeHeader(item.id)"
-              />
+          <div v-if="selectedChannel !== 'custom'" class="space-y-2">
+            <div class="grid grid-cols-1 gap-2 p-2 sm:grid-cols-2">
+              <InputText :modelValue="presetHeaderKey" readonly disabled class="text-xs" />
+              <InputText :modelValue="presetHeaderValue" readonly disabled class="text-xs" />
+            </div>
+            <div class="text-[11px] text-slate-400 dark:text-slate-500">
+              Server酱预设固定使用 Content-Type: application/json，且不可修改。
             </div>
           </div>
-          <div class="flex justify-end pt-1">
-            <Button
-              icon="pi pi-plus"
-              label="添加请求头"
-              size="small"
-              severity="secondary"
-              text
-              @click="addHeader"
-            />
-          </div>
-          <div class="text-[11px] text-slate-400 dark:text-slate-500">
-            支持多个请求头；`value` 非空时 `key` 必填，且 key 不能重复。
-          </div>
+
+          <template v-else>
+            <div class="space-y-2">
+              <div
+                v-for="item in headerRows"
+                :key="item.id"
+                class="grid grid-cols-1 gap-2 p-2 sm:grid-cols-[1fr_1fr_auto]"
+              >
+                <InputText v-model="item.key" placeholder="Header Key" class="text-xs" />
+                <InputText v-model="item.value" placeholder="Header Value" class="text-xs" />
+                <Button
+                  icon="pi pi-trash"
+                  text
+                  rounded
+                  severity="danger"
+                  class="justify-self-end"
+                  @click="removeHeader(item.id)"
+                />
+              </div>
+            </div>
+            <div class="flex justify-end pt-1">
+              <Button
+                icon="pi pi-plus"
+                label="添加请求头"
+                size="small"
+                severity="secondary"
+                text
+                @click="addHeader"
+              />
+            </div>
+            <div class="text-[11px] text-slate-400 dark:text-slate-500">
+              支持多个请求头；`value` 非空时 `key` 必填，且 key 不能重复。
+            </div>
+          </template>
         </div>
 
         <div class="space-y-2">

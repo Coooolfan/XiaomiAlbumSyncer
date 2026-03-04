@@ -30,14 +30,14 @@ export function extractTurboUid(sendKey: string): string {
 export function buildServerChanTurboUrl(sendKey: string): string {
   const key = sendKey.trim()
   if (key === '') return ''
-  const uid = extractTurboUid(key)
-  return `https://${uid}.push.ft07.com/send/${key}.send`
+  return `https://sctapi.ftqq.com/${key}.send`
 }
 
 export function buildServerChan3Url(sendKey: string): string {
   const key = sendKey.trim()
   if (key === '') return ''
-  return `https://sctapi.ftqq.com/${key}.send`
+  const uid = extractTurboUid(key)
+  return `https://${uid}.push.ft07.com/send/${key}.send`
 }
 
 export function detectPresetFromUrl(url: string): NotifyPresetDetection {
@@ -48,7 +48,7 @@ export function detectPresetFromUrl(url: string): NotifyPresetDetection {
   if (serverchan3) {
     const sendKey = decodeURIComponent(serverchan3[1] ?? '')
     return {
-      mode: 'serverchan3',
+      mode: 'serverchanTurbo',
       sendKey,
     }
   }
@@ -59,7 +59,7 @@ export function detectPresetFromUrl(url: string): NotifyPresetDetection {
     const sendKey = decodeURIComponent(turbo[2] ?? '')
     const expectedHost = extractTurboUid(sendKey)
     if (expectedHost !== '' && expectedHost === host) {
-      return { mode: 'serverchanTurbo', sendKey }
+      return { mode: 'serverchan3', sendKey }
     }
   }
 
