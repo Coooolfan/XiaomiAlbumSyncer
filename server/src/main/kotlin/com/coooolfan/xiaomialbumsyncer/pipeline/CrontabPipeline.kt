@@ -214,7 +214,8 @@ class CrontabPipeline(
         }
 
         // 异步发送通知
-        CoroutineScope(Dispatchers.IO).launch { notifyService.send(crontab, success, total) }
+        if (crontab.config.notify)
+            CoroutineScope(Dispatchers.IO).launch { notifyService.send(crontab, success, total) }
 
         log.info(
             "Crontab {} 的流水线执行完毕, 新增成功 {}/{}, 删除 {}, 更新 {}",

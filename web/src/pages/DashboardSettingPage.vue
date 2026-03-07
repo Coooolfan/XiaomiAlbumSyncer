@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import SystemConfigCard from '@/components/settings/SystemConfigCard.vue'
+import NotifyConfigCard from '@/components/settings/NotifyConfigCard.vue'
 import AppearanceCard from '@/components/settings/AppearanceCard.vue'
 import PassTokenCard from '@/components/settings/PassTokenCard.vue'
 import PasswordCard from '@/components/settings/PasswordCard.vue'
@@ -11,6 +12,7 @@ import OpenSourceCard from '@/components/settings/OpenSourceCard.vue'
 <template>
   <div class="max-w-3xl mx-auto px-4 py-8">
     <SystemConfigCard />
+    <NotifyConfigCard />
     <AppearanceCard />
     <PassTokenCard />
     <PasswordCard />

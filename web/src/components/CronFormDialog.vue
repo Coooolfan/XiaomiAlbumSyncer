@@ -242,18 +242,22 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-          <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+        <div class="grid grid-cols-2 gap-4 pt-1 pb-2">
+          <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
             <ToggleSwitch v-model="form.config.downloadImages" />
             <span>下载照片</span>
           </div>
-          <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+          <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
             <ToggleSwitch v-model="form.config.downloadVideos" />
             <span>下载视频</span>
           </div>
-          <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+          <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
             <ToggleSwitch v-model="form.config.downloadAudios" />
             <span>下载录音</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+            <ToggleSwitch v-model="form.config.notify" />
+            <span>发送通知</span>
           </div>
         </div>
 

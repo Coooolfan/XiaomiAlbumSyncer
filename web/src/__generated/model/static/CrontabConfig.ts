@@ -39,4 +39,5 @@ export interface CrontabConfig {
     readonly cloudSpaceThreshold: number;
     readonly backupFolder: string;
     readonly deleteCloudAfterArchive: boolean;
+    readonly notify: boolean;
 }

@@ -17,5 +17,5 @@ interface SystemConfig {
 
     val assetsDateMapTimeZone: String
 
-    val ftqqKey: String
+    val notifyConfig: NotifyConfig
 }

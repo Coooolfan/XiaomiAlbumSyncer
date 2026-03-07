@@ -36,6 +36,7 @@ export function createDefaultCronConfig(defaultTz: string): CrontabConfig {
     cloudSpaceThreshold: 90,
     backupFolder: 'backup',
     deleteCloudAfterArchive: true,
+    notify: true,
   }
 }
 
@@ -84,6 +85,7 @@ export function mapCrontabToForm(item: Crontab, fallbackTz: string): LocalCronFo
       cloudSpaceThreshold: item.config.cloudSpaceThreshold ?? 90,
       backupFolder: item.config.backupFolder ?? 'backup',
       deleteCloudAfterArchive: item.config.deleteCloudAfterArchive ?? true,
+      notify: item.config.notify ?? true,
     },
     albumIds: [...item.albumIds],
   }

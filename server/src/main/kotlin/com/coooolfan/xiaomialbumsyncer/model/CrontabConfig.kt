@@ -66,4 +66,6 @@ data class CrontabConfig(
     val cloudSpaceThreshold: Int = 90,              // 云空间阈值百分比（空间模式）
     val backupFolder: String = "backup",            // 归档文件夹名称（相对于 targetPath）
     val deleteCloudAfterArchive: Boolean = true,    // 归档后是否删除云端
+
+    val notify: Boolean = true,
 )

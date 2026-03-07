@@ -4,9 +4,9 @@ import type {
     IsInitResponse, 
     MountPathCheckRequest, 
     MountPathCheckResponse, 
-    SystemConfigFtqqKeyIsInitResponse, 
-    SystemConfigFtqqKeyUpdate, 
+    NotifyConfig, 
     SystemConfigInit, 
+    SystemConfigNotifyConfigUpdate, 
     SystemConfigPasswordUpdate, 
     SystemConfigUpdate, 
     SystemInfoResponse
@@ -43,19 +43,19 @@ export class SystemConfigController {
     }
     
     /**
-     * 获取 Server酱（FTQQ）推送Key初始化状态
+     * 获取通知配置
      * 
-     * 此接口用于检查是否已配置 Server酱（FTQQ）推送Key
+     * 此接口用于获取系统当前的通知配置（URL、请求头、请求体模板）
      * 需要用户登录认证才能访问
      * 
-     * @return SystemConfigFtqqKeyIsInitResponse 返回初始化状态，包含布尔值表示是否已配置
+     * @return NotifyConfig 返回当前通知配置
      * 
      */
-    readonly ftqqKeyIsInitd: () => Promise<
-        SystemConfigFtqqKeyIsInitResponse
+    readonly getNotifyConfig: () => Promise<
+        NotifyConfig
     > = async() => {
-        let _uri = '/api/system-config/ftqq-key';
-        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<SystemConfigFtqqKeyIsInitResponse>;
+        let _uri = '/api/system-config/notify-config';
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<NotifyConfig>;
     }
     
     /**
@@ -154,19 +154,19 @@ export class SystemConfigController {
     }
     
     /**
-     * 更新 Server酱（FTQQ）推送Key
+     * 更新通知配置
      * 
-     * 此接口用于更新/设置 Server酱（FTQQ）推送Key
+     * 此接口用于更新系统通知配置（URL、请求头、请求体模板）
      * 需要用户登录认证才能访问
      * 
-     * @parameter {SystemConfigControllerOptions['updateFtqqKey']} options
-     * - update 推送Key更新参数，包含新的推送Key信息
+     * @parameter {SystemConfigControllerOptions['updateNotifyConfig']} options
+     * - update 通知配置更新参数
      * 
      */
-    readonly updateFtqqKey: (options: SystemConfigControllerOptions['updateFtqqKey']) => Promise<
+    readonly updateNotifyConfig: (options: SystemConfigControllerOptions['updateNotifyConfig']) => Promise<
         void
     > = async(options) => {
-        let _uri = '/api/system-config/ftqq-key';
+        let _uri = '/api/system-config/notify-config';
         return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<void>;
     }
     
@@ -238,12 +238,12 @@ export type SystemConfigControllerOptions = {
         readonly body: MountPathCheckRequest
     }, 
     'importFromV2Db': {}, 
-    'ftqqKeyIsInitd': {}, 
-    'updateFtqqKey': {
+    'getNotifyConfig': {}, 
+    'updateNotifyConfig': {
         /**
-         * 推送Key更新参数，包含新的推送Key信息
+         * 通知配置更新参数
          * 
          */
-        readonly body: SystemConfigFtqqKeyUpdate
+        readonly body: SystemConfigNotifyConfigUpdate
     }
 }

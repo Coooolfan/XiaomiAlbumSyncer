@@ -2,10 +2,9 @@ package com.coooolfan.xiaomialbumsyncer.service
 
 import cn.dev33.satoken.stp.StpUtil
 import com.coooolfan.xiaomialbumsyncer.controller.LoginRequest
-import com.coooolfan.xiaomialbumsyncer.controller.SystemConfigFtqqKeyIsInitResponse
 import com.coooolfan.xiaomialbumsyncer.model.*
-import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigFtqqKeyUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
+import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigNotifyConfigUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate
 import com.coooolfan.xiaomialbumsyncer.utils.DataImporter
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
@@ -32,6 +31,7 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
             password = hashPwd(create.password)
             exifToolPath = "exiftool"
             assetsDateMapTimeZone = "Asia/Shanghai"
+            notifyConfig = NotifyConfig(url = "", headers = emptyMap(), body = "")
         }, SaveMode.INSERT_ONLY).execute()
     }
 
@@ -97,20 +97,18 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
         return sql.findById(fetcher, CONFIG_ID) ?: throw IllegalStateException("System is not initialized")
     }
 
-    fun updateFtqqKey(update: SystemConfigFtqqKeyUpdate) {
-        sql.saveCommand(SystemConfig {
-            id = CONFIG_ID
-            ftqqKey = update.ftqqKey
-        }, SaveMode.UPDATE_ONLY).execute()
+    fun getNotifyConfig(): NotifyConfig {
+        return sql.findOneById(SystemConfig::class, CONFIG_ID).notifyConfig
     }
 
-    fun ftqqKeyIsInit(): SystemConfigFtqqKeyIsInitResponse {
-        val config = sql.findOneById(SystemConfig::class, CONFIG_ID)
-        return SystemConfigFtqqKeyIsInitResponse(config.ftqqKey.length > 1)
+    fun updateNotifyConfig(update: SystemConfigNotifyConfigUpdate) {
+        sql.saveCommand(SystemConfig {
+            id = CONFIG_ID
+            notifyConfig = update.notifyConfig
+        }, SaveMode.UPDATE_ONLY).execute()
     }
 
     companion object {
         const val CONFIG_ID = 0L
     }
 }
-

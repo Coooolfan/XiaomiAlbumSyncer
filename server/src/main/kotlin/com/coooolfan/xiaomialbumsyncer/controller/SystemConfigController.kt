@@ -1,10 +1,11 @@
 package com.coooolfan.xiaomialbumsyncer.controller
 
 import cn.dev33.satoken.annotation.SaCheckLogin
+import com.coooolfan.xiaomialbumsyncer.model.NotifyConfig
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.by
-import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigFtqqKeyUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
+import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigNotifyConfigUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate
 import com.coooolfan.xiaomialbumsyncer.service.DebugService
@@ -224,43 +225,43 @@ class SystemConfigController(
     }
 
     /**
-     * 获取 Server酱（FTQQ）推送Key初始化状态
+     * 获取通知配置
      *
-     * 此接口用于检查是否已配置 Server酱（FTQQ）推送Key
+     * 此接口用于获取系统当前的通知配置（URL、请求头、请求体模板）
      * 需要用户登录认证才能访问
      *
-     * @return SystemConfigFtqqKeyIsInitResponse 返回初始化状态，包含布尔值表示是否已配置
+     * @return NotifyConfig 返回当前通知配置
      *
-     * @api GET /api/system-config/ftqq-key
+     * @api GET /api/system-config/notify-config
      * @permission 需要登录认证
-     * @description 调用SystemConfigService.ftqqKeyIsInit()方法获取推送Key配置状态
+     * @description 调用SystemConfigService.getNotifyConfig()方法获取通知配置
      */
     @Api
-    @Mapping("/ftqq-key", method = [MethodType.GET])
+    @Mapping("/notify-config", method = [MethodType.GET])
     @SaCheckLogin
-    fun ftqqKeyIsInitd(): SystemConfigFtqqKeyIsInitResponse {
-        return service.ftqqKeyIsInit()
+    fun getNotifyConfig(): NotifyConfig {
+        return service.getNotifyConfig()
     }
 
     /**
-     * 更新 Server酱（FTQQ）推送Key
+     * 更新通知配置
      *
-     * 此接口用于更新/设置 Server酱（FTQQ）推送Key
+     * 此接口用于更新系统通知配置（URL、请求头、请求体模板）
      * 需要用户登录认证才能访问
      *
-     * @param update 推送Key更新参数，包含新的推送Key信息
+     * @param update 通知配置更新参数
      *
-     * @api POST /api/system-config/ftqq-key
+     * @api POST /api/system-config/notify-config
      * @permission 需要登录认证
-     * @description 调用SystemConfigService.updateFtqqKey()方法更新推送Key
+     * @description 调用SystemConfigService.updateNotifyConfig()方法更新通知配置
      */
     @Api
-    @Mapping("/ftqq-key", method = [MethodType.POST])
+    @Mapping("/notify-config", method = [MethodType.POST])
     @SaCheckLogin
-    fun updateFtqqKey(
-        @Body update: SystemConfigFtqqKeyUpdate
+    fun updateNotifyConfig(
+        @Body update: SystemConfigNotifyConfigUpdate
     ) {
-        service.updateFtqqKey(update)
+        service.updateNotifyConfig(update)
     }
 
     companion object {
@@ -292,10 +293,6 @@ data class SystemInfoResponse(
     val nativeImage: Boolean,
     val jvmVersion: String?,
     val appVersion: String = loadAppVersion()
-)
-
-data class SystemConfigFtqqKeyIsInitResponse(
-    val ftqqKey: Boolean
 )
 
 data class MountPathCheckRequest(
