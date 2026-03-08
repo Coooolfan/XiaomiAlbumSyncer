@@ -1,4 +1,4 @@
-import type {CrontabConfig} from '../static/';
+import type {AlbumTimeline, CrontabConfig} from '../static/';
 
 export type CrontabDto = {
     'CrontabController/DEFAULT_CRONTAB': {
@@ -21,6 +21,7 @@ export type CrontabDto = {
             readonly fetchedAllAssets: boolean;
             readonly isCompleted: boolean;
             readonly detailsCount: number;
+            readonly timelineSnapshot: {readonly [key:string]: AlbumTimeline};
         }>;
     }
 }

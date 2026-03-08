@@ -45,7 +45,7 @@ const emit = defineEmits<{
   >
     <template #title>
       <div class="flex items-center justify-between">
-        <div class="font-medium text-slate-600 dark:text-slate-300">计划任务</div>
+        <div class="font-medium text-slate-700 dark:text-white">计划任务</div>
         <div class="flex items-center gap-2">
           <Button
             :icon="collapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"

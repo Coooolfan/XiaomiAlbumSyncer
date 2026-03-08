@@ -143,6 +143,9 @@ watch(albums, () => {
 <template>
   <div class="max-w-5xl mx-auto px-4 py-8">
     <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mb-6">
+      <template #title>
+        <span class="font-medium text-slate-700 dark:text-white">一年活跃度</span>
+      </template>
       <template #content>
         <div class="w-full overflow-x-hidden">
           <ContributionHeatmap

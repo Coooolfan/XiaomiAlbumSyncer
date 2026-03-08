@@ -30,11 +30,15 @@ class Jackson {
 
         serializer.deserializeConfig.mapper.registerModule(immutableModule)
         serializer.deserializeConfig.mapper.registerModule(kotlinModule)
+        serializer.deserializeConfig.mapper.configure(
+            com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+            false
+        )
 
         serializer.addEncoder(Instant::class.java) { it.toString() }
         serializer.addDecoder(Instant::class.java) { Instant.parse(it) }
 
-        return serializer.serializeConfig.mapper
+        return serializer.deserializeConfig.mapper
     }
 }
 
