@@ -46,6 +46,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             // 处理当前页数据
             for (albumJson in albumArrayJson) {
                 val albumId = albumJson.get("albumId").asLong()
+
                 var albumName: String? = null
                 if (albumId == 1000L) continue // 私密相册，跳过
                 else if (albumId == 1L) albumName = "相机"
@@ -53,7 +54,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
 
                 allAlbums.add(Album {
                     remoteId = albumId
-                    name = albumName ?: albumJson.get("name").asText()
+                    name = albumName ?: albumJson.get("name")?.asText() ?: "Unknown Album"
                     assetCount = albumJson.get("mediaCount").asLong()
                     lastUpdateTime = Instant.ofEpochMilli(albumJson.get("lastUpdateTime")?.asLong() ?: 0L)
                     this.accountId = accountId
