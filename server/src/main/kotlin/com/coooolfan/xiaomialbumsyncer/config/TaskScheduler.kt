@@ -96,6 +96,8 @@ class TaskScheduler(
         }
         try {
             runBlocking(Dispatchers.IO) {
+                // 使用 Pipeline 执行任务，Pipeline 内部会根据 syncMode 决定行为
+                log.info("定时任务[${crontab.id}:${crontab.name}]开始执行，同步模式: ${crontab.config.syncMode}")
                 pipeline.execute(crontab)
             }
         } finally {
@@ -123,5 +125,4 @@ class TaskScheduler(
             singleStagePatch.rewriteFileSystemTime(assetPathMap)
         }
     }
-
 }

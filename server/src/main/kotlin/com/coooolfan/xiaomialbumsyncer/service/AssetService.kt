@@ -144,6 +144,13 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }
     }
 
+    /**
+     * 删除指定的 Asset 记录（会级联删除关联的 CrontabHistoryDetail）
+     */
+    fun deleteAsset(assetId: Long) {
+        sql.deleteById(Asset::class, assetId)
+    }
+
     fun getAssetsUndownloadByCrontab(
         crontab: Crontab,
         pageSize: Int,

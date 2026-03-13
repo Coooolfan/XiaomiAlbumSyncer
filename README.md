@@ -1,14 +1,37 @@
-# <img src="./static/xiaomi-album-syncer-logo.png" alt="logo" width="20rem"> Xiaomi Album Syncer
+# <img src="./static/xiaomi-album-syncer-logo.png" alt="logo" width="20rem"> Xiaomi Album Syncer (Fork)
 
-[![GitHub Stars](https://img.shields.io/github/stars/Coooolfan/XiaomiAlbumSyncer?style=flat)](https://github.com/Coooolfan/XiaomiAlbumSyncer/stargazers) [![Docker Pulls](https://img.shields.io/docker/pulls/coolfan1024/xiaomi-album-syncer?style=flat)](https://hub.docker.com/r/coolfan1024/xiaomi-album-syncer)
+> 本项目为 [Coooolfan/XiaomiAlbumSyncer](https://github.com/Coooolfan/XiaomiAlbumSyncer) 的  fork 版本，新增了云端同步与智能归档功能。
 
-发了 **issues** 记得常回来看看有没有回复，或者 >>>>> **[QQ 群聊：1059332701](https://qm.qq.com/q/H2trW6JWM4)**
+[![GitHub Stars](https://img.shields.io/github/stars/Acckion/XiaomiAlbumSyncer?style=flat)](https://github.com/Acckion/XiaomiAlbumSyncer/stargazers)
 
-![banner](./static/banner.avif)
+## Fork 新增功能
 
-发了 **issues** 记得常回来看看有没有回复，或者 >>>>> **[QQ 群聊：1059332701](https://qm.qq.com/q/H2trW6JWM4)**
+### 🔄 云端同步模式
+- **仅新增模式**：只下载云端新增的文件，不处理删除和修改
+- **同步所有变化模式**：完整同步云端变化，包括新增、删除、修改
 
-## Features/功能
+### 📦 智能归档
+- **按时间归档**：自动归档超过指定天数的照片，释放同步文件夹空间
+- **按空间阈值归档**：当云端空间使用率超过设定阈值时，自动归档旧照片
+- 归档后可选择删除云端副本以释放云端空间
+
+### ☁️ 云端空间监控
+- 新增云端空间使用情况展示
+- 分段式进度条显示各类型文件占用（相册、录音、云备份等）
+
+### 📊 同步统计
+- 每次同步后记录详细统计信息（新增、删除、修改、归档数量）
+- 历史记录中直接显示变化摘要
+
+### 与原版切换
+本 fork 支持与原版无缝切换，切换版本时数据不会丢失。如需切换回原版，建议先执行：
+```bash
+sqlite3 xiaomialbumsyncer.db "DELETE FROM flyway_schema_history WHERE version = '999.0.0';"
+```
+
+---
+
+## 原项目功能
 
 - [x] 📸 下载指定相册中的所有资产
 - [x] ⏭️ 自动跳过已下载的资产
@@ -226,24 +249,3 @@ docker run \
 ```
 
 容器本身不存储任何状态和数据，删除重启容器不影响任何数据。
-
-## Star History
-
-<picture>
-  <source
-    media="(prefers-color-scheme: dark)"
-    srcset="
-      https://api.star-history.com/svg?repos=Coooolfan/XiaomiAlbumSyncer&type=Date&theme=dark
-    "
-  />
-  <source
-    media="(prefers-color-scheme: light)"
-    srcset="
-      https://api.star-history.com/svg?repos=Coooolfan/XiaomiAlbumSyncer&type=Date
-    "
-  />
-  <img
-    alt="Star History Chart"
-    src="https://api.star-history.com/svg?repos=Coooolfan/XiaomiAlbumSyncer&type=Date"
-  />
-</picture>

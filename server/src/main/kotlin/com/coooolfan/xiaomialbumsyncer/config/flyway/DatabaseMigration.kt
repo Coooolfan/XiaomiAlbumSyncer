@@ -23,6 +23,7 @@ class DatabaseMigration {
             .locations(MIGRATION_SQL_PATH_IN_JVM)
             .baselineOnMigrate(true)
             .validateOnMigrate(true)
+            .ignoreMigrationPatterns("*:missing")  // 忽略缺失的迁移，支持 fork 版本与原版切换
 
         val flyway =
             if (inNativeImage() || isAotRuntime()) {
