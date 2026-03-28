@@ -5,6 +5,7 @@ import Card from 'primevue/card'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
+import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
 import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
@@ -12,6 +13,7 @@ import type { NotifyConfig } from '@/__generated/model/static'
 import { api } from '@/ApiInstance'
 import {
   buildPresetBodyTemplate,
+  buildPresetDailySummaryBodyTemplate,
   buildServerChan3Url,
   buildServerChanTurboUrl,
   createHeaderRow,
@@ -34,6 +36,9 @@ const config = ref<NotifyConfig>({
   url: '',
   headers: {},
   body: '',
+  dailySummaryBody: '',
+  dailySummaryCron: '',
+  dailySummaryTimeZone: '',
 })
 
 const selectedChannel = ref<NotifyPresetMode>('serverchanTurbo')
@@ -41,7 +46,11 @@ const turboSendKey = ref('')
 const server3SendKey = ref('')
 const customUrl = ref('')
 const bodyTemplate = ref('')
+const dailySummaryBody = ref('')
+const dailySummaryCron = ref('')
+const dailySummaryTimeZone = ref('')
 const headerRows = ref<HeaderRow[]>([createHeaderRow()])
+const timeZones = ref<string[]>([])
 const presetHeaderKey = 'Content-Type'
 const presetHeaderValue = 'application/json'
 const presetHeaders: Readonly<Record<string, string>> = {
@@ -59,6 +68,11 @@ const interpolationItems = [
   { token: '${crontab.id}', description: '计划任务 ID' },
   { token: '${success}', description: '本次同步成功数量' },
   { token: '${total}', description: '本次同步总数量' },
+]
+
+const dailySummaryInterpolationItems = [
+  { token: '${summary}', description: '过去 24h 所有任务的汇总文本' },
+  { token: '${date}', description: '报告日期（yyyy-MM-dd）' },
 ]
 
 const configured = computed(() => (config.value.url ?? '').trim() !== '')
@@ -87,6 +101,17 @@ const previewBody = computed(() => {
   const formatted = tryFormatJson(bodyTemplate.value)
   return formatted ?? bodyTemplate.value
 })
+const previewDailySummaryBody = computed(() => {
+  if (dailySummaryBody.value.trim() === '') return '(空)'
+  const formatted = tryFormatJson(dailySummaryBody.value)
+  return formatted ?? dailySummaryBody.value
+})
+const dailySummaryComplete = computed(
+  () =>
+    dailySummaryBody.value.trim() !== '' &&
+    dailySummaryCron.value.trim() !== '' &&
+    dailySummaryTimeZone.value.trim() !== '',
+)
 
 watch(selectedChannel, (mode) => {
   if (mode !== 'custom' && bodyTemplate.value.trim() === '') {
@@ -118,6 +143,9 @@ function setEditorFromConfig(target?: NotifyConfig) {
     draft.body = buildPresetBodyTemplate()
   }
   bodyTemplate.value = draft.body
+  dailySummaryBody.value = target?.dailySummaryBody ?? ''
+  dailySummaryCron.value = target?.dailySummaryCron || '0 0 23 * * ?'
+  dailySummaryTimeZone.value = target?.dailySummaryTimeZone || 'Asia/Shanghai'
   headerRows.value = headerMapToRows(draft.headers)
 }
 
@@ -140,6 +168,24 @@ function removeHeader(id: string) {
 
 function applyDefaultBodyTemplate() {
   bodyTemplate.value = buildPresetBodyTemplate()
+}
+
+function formatDailySummaryBodyAsJson() {
+  const formatted = tryFormatJson(dailySummaryBody.value)
+  if (formatted === null) {
+    toast.add({
+      severity: 'warn',
+      summary: '提示',
+      detail: '当前日报请求体不是有效 JSON，无法格式化',
+      life: 2600,
+    })
+    return
+  }
+  dailySummaryBody.value = formatted
+}
+
+function applyDefaultDailySummaryBodyTemplate() {
+  dailySummaryBody.value = buildPresetDailySummaryBodyTemplate()
 }
 
 function tryFormatJson(input: string): string | null {
@@ -202,6 +248,9 @@ async function fetchNotifyConfig() {
       url: result?.url ?? '',
       headers: { ...(result?.headers ?? {}) },
       body: result?.body ?? '',
+      dailySummaryBody: result?.dailySummaryBody ?? '',
+      dailySummaryCron: result?.dailySummaryCron ?? '',
+      dailySummaryTimeZone: result?.dailySummaryTimeZone ?? '',
     }
   } catch (error) {
     console.error('获取通知配置失败', error)
@@ -264,6 +313,9 @@ async function saveNotifyConfig() {
           url,
           headers,
           body: bodyTemplate.value,
+          dailySummaryBody: dailySummaryBody.value,
+          dailySummaryCron: dailySummaryCron.value,
+          dailySummaryTimeZone: dailySummaryTimeZone.value,
         },
       },
     })
@@ -278,8 +330,37 @@ async function saveNotifyConfig() {
   }
 }
 
+function resolveDefaultTimeZone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  } catch {
+    return 'UTC'
+  }
+}
+
+function buildTimeZones() {
+  const fallbackTimeZones = [
+    'UTC',
+    'Asia/Shanghai',
+    'Asia/Tokyo',
+    'Europe/Berlin',
+    'America/New_York',
+  ]
+  try {
+    const intl = Intl as unknown as { supportedValuesOf?: (key: 'timeZone') => string[] }
+    const list = intl.supportedValuesOf?.('timeZone')
+    timeZones.value = list && list.length > 0 ? list : fallbackTimeZones
+  } catch {
+    timeZones.value = fallbackTimeZones
+  }
+}
+
 onMounted(() => {
   fetchNotifyConfig()
+  buildTimeZones()
+  if (!dailySummaryTimeZone.value) {
+    dailySummaryTimeZone.value = resolveDefaultTimeZone()
+  }
 })
 </script>
 
@@ -491,6 +572,62 @@ onMounted(() => {
           />
         </div>
 
+        <div class="space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+              >每日汇总通知模板
+            </label>
+            <div class="flex flex-wrap items-center gap-1">
+              <Button
+                label="格式化 JSON"
+                severity="secondary"
+                text
+                size="small"
+                @click="formatDailySummaryBodyAsJson"
+              />
+              <Button
+                v-if="selectedChannel !== 'custom'"
+                label="恢复默认模板"
+                severity="secondary"
+                text
+                size="small"
+                @click="applyDefaultDailySummaryBodyTemplate"
+              />
+            </div>
+          </div>
+          <Textarea
+            v-model="dailySummaryBody"
+            rows="4"
+            autoResize
+            class="w-full text-xs body-default-mono"
+            placeholder="日报请求体模板，支持 ${summary} 和 ${date} 插值，留空表示不发送日报"
+          />
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="space-y-1">
+              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+                >Cron 表达式</label
+              >
+              <InputText
+                v-model="dailySummaryCron"
+                class="w-full font-mono text-xs"
+                placeholder="如 0 0 23 * * ?（必填）"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
+                >时区</label
+              >
+              <Select
+                v-model="dailySummaryTimeZone"
+                :options="timeZones"
+                placeholder="Asia/Shanghai"
+                filter
+                class="w-full"
+              />
+            </div>
+          </div>
+        </div>
+
         <div class="flex items-center justify-end gap-2 pt-2">
           <Button label="取消" severity="secondary" text @click="editing = false" />
           <Button label="保存" :loading="saving" @click="saveNotifyConfig" />
@@ -502,7 +639,9 @@ onMounted(() => {
       >
         <div class="space-y-5">
           <div class="space-y-2">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">插值项说明</h3>
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              单任务通知插值项
+            </h3>
             <div
               class="space-y-1 rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70"
             >
@@ -518,7 +657,25 @@ onMounted(() => {
           </div>
 
           <div class="space-y-2">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">请求预览</h3>
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">日报通知插值项</h3>
+            <div
+              class="space-y-1 rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70"
+            >
+              <div
+                v-for="item in dailySummaryInterpolationItems"
+                :key="item.token"
+                class="flex items-start justify-between gap-3"
+              >
+                <span class="font-mono text-slate-700 dark:text-slate-200">{{ item.token }}</span>
+                <span class="text-slate-500 dark:text-slate-400">{{ item.description }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              定时任务通知预览
+            </h3>
             <div class="rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70">
               <div class="space-y-1">
                 <div class="text-slate-400 dark:text-slate-500">Method</div>
@@ -552,6 +709,55 @@ onMounted(() => {
                 <pre
                   class="max-h-56 overflow-auto whitespace-pre-wrap rounded bg-slate-50 p-2 font-mono text-[11px] text-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
                 ><code>{{ previewBody }}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="space-y-2 transition-opacity duration-200"
+            :class="dailySummaryComplete ? '' : 'opacity-40 pointer-events-none select-none'"
+          >
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              每日汇总通知预览
+              <span
+                v-if="!dailySummaryComplete"
+                class="ml-1 text-xs font-normal text-slate-400 dark:text-slate-500"
+                >（请填写完整日报配置后预览）</span
+              >
+            </h3>
+            <div class="rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70">
+              <div class="space-y-1">
+                <div class="text-slate-400 dark:text-slate-500">Method</div>
+                <div class="font-mono text-slate-700 dark:text-slate-200">POST</div>
+              </div>
+
+              <div class="mt-3 space-y-1">
+                <div class="text-slate-400 dark:text-slate-500">URL</div>
+                <div class="break-all font-mono text-slate-700 dark:text-slate-200">
+                  {{ previewUrl || '(空 URL，表示关闭通知)' }}
+                </div>
+              </div>
+
+              <div class="mt-3 space-y-1">
+                <div class="text-slate-400 dark:text-slate-500">Headers</div>
+                <div
+                  v-if="previewHeaders.length === 0"
+                  class="font-mono text-slate-400 dark:text-slate-500"
+                >
+                  (无)
+                </div>
+                <div v-for="[key, value] in previewHeaders" :key="key" class="font-mono">
+                  <span class="text-slate-500 dark:text-slate-400">{{ key }}</span
+                  >:
+                  <span class="text-slate-700 dark:text-slate-200">{{ value || '(空)' }}</span>
+                </div>
+              </div>
+
+              <div class="mt-3 space-y-1">
+                <div class="text-slate-400 dark:text-slate-500">Body</div>
+                <pre
+                  class="max-h-56 overflow-auto whitespace-pre-wrap rounded bg-slate-50 p-2 font-mono text-[11px] text-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
+                ><code>{{ previewDailySummaryBody }}</code></pre>
               </div>
             </div>
           </div>

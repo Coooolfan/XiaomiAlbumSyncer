@@ -1,6 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
 import cn.dev33.satoken.stp.StpUtil
+import com.coooolfan.xiaomialbumsyncer.config.TaskScheduler
 import com.coooolfan.xiaomialbumsyncer.controller.LoginRequest
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
@@ -11,11 +12,18 @@ import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
+import org.noear.solon.annotation.Inject
 import org.noear.solon.annotation.Managed
 import java.security.MessageDigest
 
 @Managed
-class SystemConfigService(private val sql: KSqlClient, private val dataImporter: DataImporter) {
+class SystemConfigService(
+    private val sql: KSqlClient,
+    private val dataImporter: DataImporter,
+) {
+    // 避免一下循环依赖
+    @Inject
+    private lateinit var taskScheduler: TaskScheduler
 
     fun isInit(): Boolean {
         return sql.executeQuery(SystemConfig::class) {
@@ -31,7 +39,7 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
             password = hashPwd(create.password)
             exifToolPath = "exiftool"
             assetsDateMapTimeZone = "Asia/Shanghai"
-            notifyConfig = NotifyConfig(url = "", headers = emptyMap(), body = "")
+            notifyConfig = NotifyConfig(url = "", headers = emptyMap(), body = "", dailySummaryBody = null, dailySummaryCron = null, dailySummaryTimeZone = null)
         }, SaveMode.INSERT_ONLY).execute()
     }
 
@@ -106,6 +114,7 @@ class SystemConfigService(private val sql: KSqlClient, private val dataImporter:
             id = CONFIG_ID
             notifyConfig = update.notifyConfig
         }, SaveMode.UPDATE_ONLY).execute()
+        taskScheduler.initJobs()
     }
 
     companion object {

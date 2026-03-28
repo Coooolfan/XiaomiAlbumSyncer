@@ -10,4 +10,10 @@ data class NotifyConfig(
     val headers: Map<String, String>,
 
     val body: String,
+
+    val dailySummaryBody: String?,
+
+    val dailySummaryCron: String?,
+
+    val dailySummaryTimeZone: String?,
 )

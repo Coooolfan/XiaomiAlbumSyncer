@@ -1050,6 +1050,17 @@
             "org.babyfish.jimmer.sql.kt.KSqlClient",
             "com.coooolfan.xiaomialbumsyncer.utils.SingleStagePatch",
             "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline",
+            "com.coooolfan.xiaomialbumsyncer.service.NotifyService",
+            "java.util.concurrent.Executor"
+          ]
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.noear.solon.scheduling.scheduled.manager.IJobManager",
+            "org.babyfish.jimmer.sql.kt.KSqlClient",
+            "com.coooolfan.xiaomialbumsyncer.utils.SingleStagePatch",
+            "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline",
             "java.util.concurrent.Executor"
           ]
         },
@@ -4346,7 +4357,30 @@
           ]
         },
         {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.util.Map",
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        },
+        {
           "name": "getBody",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDailySummaryBody",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDailySummaryCron",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDailySummaryTimeZone",
           "parameterTypes": []
         },
         {
@@ -6145,8 +6179,15 @@
             "int",
             "int"
           ]
+        },
+        {
+          "name": "sendDailySummary",
+          "parameterTypes": []
         }
       ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.NotifyService$Companion"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.service.PasskeyAuthFinishRequest",

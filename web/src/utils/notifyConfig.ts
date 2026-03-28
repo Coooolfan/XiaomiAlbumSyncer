@@ -88,6 +88,10 @@ export function buildPresetBodyTemplate(): string {
   return '{"text":"Xiaomi Album Syncer","desp":"定时任务 ${crontab.name} 已完成同步，成功 ${success}/${total}"}'
 }
 
+export function buildPresetDailySummaryBodyTemplate(): string {
+  return '{"text":"Xiaomi Album Syncer 日报 ${date}","desp":"同步日报\\n${summary}"}'
+}
+
 export function createHeaderRow(seed = Date.now(), key = '', value = ''): HeaderRow {
   return {
     id: `header-${seed}-${Math.random().toString(36).slice(2, 8)}`,

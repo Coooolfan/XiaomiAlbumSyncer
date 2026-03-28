@@ -6,6 +6,8 @@ import com.coooolfan.xiaomialbumsyncer.model.Crontab
 import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import com.coooolfan.xiaomialbumsyncer.model.enabled
 import com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline
+import com.coooolfan.xiaomialbumsyncer.service.NotifyService
+import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService.Companion.CONFIG_ID
 import com.coooolfan.xiaomialbumsyncer.utils.SingleStagePatch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -27,6 +29,7 @@ class TaskScheduler(
     private val sql: KSqlClient,
     private val singleStagePatch: SingleStagePatch,
     private val pipeline: CrontabPipeline,
+    private val notifyService: NotifyService,
     private val thread: Executor
 ) {
 
@@ -70,6 +73,30 @@ class TaskScheduler(
 
 
         log.info("载入定时任务完成，共注册 ${registeredJobs.size} 个任务")
+
+        val dailySummaryNotifyConfig = sql.findOneById(SystemConfig::class, CONFIG_ID).notifyConfig
+        if (dailySummaryNotifyConfig.dailySummaryBody.isNullOrBlank()) return
+        val summaryCron = dailySummaryNotifyConfig.dailySummaryCron?.trim()
+        val summaryZone = dailySummaryNotifyConfig.dailySummaryTimeZone?.trim()
+        if (summaryCron.isNullOrBlank() || summaryZone.isNullOrBlank()) {
+            log.error("日报通知配置不完整：dailySummaryCron 和 dailySummaryTimeZone 均不能为空，已跳过注册")
+            return
+        }
+
+        try {
+            jobManager.jobAdd(
+                "daily-summary-notify",
+                Scheduled(cron = summaryCron, zone = summaryZone)
+            ) {
+                notifyService.sendDailySummary()
+            }
+            log.info("日报通知定时任务已注册，cron={}, zone={}", summaryCron, summaryZone)
+        } catch (e: IllegalArgumentException) {
+            if (e.cause is ParseException)
+                log.error("日报通知的 cron 表达式解析失败，已跳过注册，描述: ${e.message}. ${e.cause?.message}")
+            else
+                throw e
+        }
 
     }
 
