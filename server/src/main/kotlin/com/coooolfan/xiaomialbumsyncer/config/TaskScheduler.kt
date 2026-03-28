@@ -74,7 +74,7 @@ class TaskScheduler(
 
         log.info("载入定时任务完成，共注册 ${registeredJobs.size} 个任务")
 
-        val dailySummaryNotifyConfig = sql.findOneById(SystemConfig::class, CONFIG_ID).notifyConfig
+        val dailySummaryNotifyConfig = sql.findById(SystemConfig::class, CONFIG_ID)?.notifyConfig ?: return
         if (dailySummaryNotifyConfig.dailySummaryBody.isNullOrBlank()) return
         val summaryCron = dailySummaryNotifyConfig.dailySummaryCron?.trim()
         val summaryZone = dailySummaryNotifyConfig.dailySummaryTimeZone?.trim()
