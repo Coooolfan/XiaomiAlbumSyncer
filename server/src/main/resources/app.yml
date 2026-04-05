@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   ssl:
     keyStore: ${SSL_KEYSTORE:}
     keyStorePassword: ${SSL_KEYSTORE_PASSWORD:}
