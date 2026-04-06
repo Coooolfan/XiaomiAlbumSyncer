@@ -22,7 +22,7 @@ const crontabsStore = useCrontabsStore()
 const preferencesStore = usePreferencesStore()
 
 const { accounts } = storeToRefs(accountsStore)
-const { albums } = storeToRefs(albumsStore)
+const { albums, loaded: albumsLoaded } = storeToRefs(albumsStore)
 const { crontabs, loading: loadingCrons } = storeToRefs(crontabsStore)
 const { optimizeHeatmap } = storeToRefs(preferencesStore)
 
@@ -52,6 +52,7 @@ const allAlbumOptions = computed(() =>
   (albums.value || []).map((a) => ({
     label: a.name ?? `ID ${a.id}`,
     value: String(a.id),
+    shadow: a.shadow,
   })),
 )
 
@@ -72,9 +73,24 @@ const {
 const formAlbumOptions = computed(() => {
   if (!cronForm.value.accountId) return []
   return (albums.value || [])
-    .filter((a) => a.account.id === cronForm.value.accountId)
+    .filter((a) => a.account.id === cronForm.value.accountId && !a.shadow)
     .map((a) => ({ label: a.name ?? `ID ${a.id}`, value: a.id }))
 })
+
+watch(
+  [showCronDialog, albumsLoaded, formAlbumOptions],
+  ([visible, loaded]) => {
+    if (!visible || !loaded) return
+
+    const availableIds = new Set(formAlbumOptions.value.map((option) => option.value))
+    const filteredAlbumIds = cronForm.value.albumIds.filter((id) => availableIds.has(id))
+
+    if (filteredAlbumIds.length !== cronForm.value.albumIds.length) {
+      cronForm.value.albumIds = filteredAlbumIds
+    }
+  },
+  { immediate: true },
+)
 
 async function fetchCrontabs() {
   try {

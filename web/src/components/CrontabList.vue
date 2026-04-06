@@ -10,7 +10,7 @@ type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
 const props = defineProps<{
   crontabs?: ReadonlyArray<Crontab>
   loading?: boolean
-  albumOptions: ReadonlyArray<{ label: string; value: string }>
+  albumOptions: ReadonlyArray<{ label: string; value: string; shadow?: boolean }>
   updatingRow?: number | null
 }>()
 

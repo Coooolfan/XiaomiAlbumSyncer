@@ -42,6 +42,12 @@ class AlbumsService(
             select(table)
         }
 
+        sql.executeUpdate(Album::class){
+            where(table.accountId eq accountId)
+            set(table.shadow, true)
+        }
+
+        // TODO: 应该用 @Key 来一把 upsert
         // 使用 remoteId + accountId 组合进行 upsert
         for (remoteAlbum in remoteAlbums) {
             val existing = existingAlbums.find { it.remoteId == remoteAlbum.remoteId }
@@ -51,6 +57,7 @@ class AlbumsService(
                     set(table.name, remoteAlbum.name)
                     set(table.assetCount, remoteAlbum.assetCount)
                     set(table.lastUpdateTime, remoteAlbum.lastUpdateTime)
+                    set(table.shadow, false)
                     where(table.id eq existing.id)
                 }
             } else {

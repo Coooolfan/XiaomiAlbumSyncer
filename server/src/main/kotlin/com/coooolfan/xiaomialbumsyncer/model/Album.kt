@@ -21,6 +21,9 @@ interface Album {
     // 最后更新时间：指的是相册最后被修改的时间，不是XiaomiAlbumSyncer获取此相册的时间
     val lastUpdateTime: Instant
 
+    // 本地存在，但是远程不存在的相册。比如相册在小米云上被删除
+    val shadow: Boolean
+
     @ManyToOne
     @OnDissociate(DissociateAction.DELETE)
     val account: XiaomiAccount    // 关联的小米账号

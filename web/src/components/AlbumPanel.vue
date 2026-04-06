@@ -152,6 +152,7 @@ onMounted(() => {
             :name="a.name"
             :asset-count="a.assetCount"
             :last-update-time="a.lastUpdateTime"
+            :shadow="a.shadow"
           />
         </div>
         <div v-if="group.albums.length === 0" class="text-xs text-slate-500 dark:text-slate-400">

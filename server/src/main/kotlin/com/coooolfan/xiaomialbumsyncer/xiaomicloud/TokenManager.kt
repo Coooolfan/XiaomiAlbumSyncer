@@ -109,7 +109,7 @@ class TokenManager(private val sql: KSqlClient) {
 
         val serviceToken = setCookies.firstOrNull { it.startsWith("serviceToken=") }?.substringAfter("serviceToken=")
             ?.substringBefore(";")
-            ?: error("no serviceToken")
+            ?: error("no serviceToken from remote")
 
         log.info("serviceToken 获取成功")
 

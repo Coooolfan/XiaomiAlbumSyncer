@@ -14,7 +14,7 @@ type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
 
 const props = defineProps<{
   crontab: Crontab
-  albumOptions: ReadonlyArray<{ label: string; value: string }>
+  albumOptions: ReadonlyArray<{ label: string; value: string; shadow?: boolean }>
   busy?: boolean
   collapsed?: boolean
 }>()
@@ -29,13 +29,17 @@ const emit = defineEmits<{
   (e: 'refresh'): void
 }>()
 
-const albumMap = computed<Record<string, string>>(() => {
-  const map: Record<string, string> = {}
+const albumMap = computed<Record<string, { label: string; shadow: boolean }>>(() => {
+  const map: Record<string, { label: string; shadow: boolean }> = {}
   for (const opt of props.albumOptions || []) {
-    map[opt.value] = opt.label
+    map[opt.value] = { label: opt.label, shadow: opt.shadow === true }
   }
   return map
 })
+
+function isShadowAlbum(id: number) {
+  return albumMap.value[String(id)]?.shadow === true
+}
 
 function formatTime(t?: string) {
   if (!t) return '-'
@@ -334,8 +338,16 @@ onUnmounted(() => {
             <Chip
               v-for="id in crontab.albumIds"
               :key="id"
-              :label="albumMap[id] || String(id)"
+              :label="albumMap[String(id)]?.label || String(id)"
               class="text-xs"
+              v-tooltip="
+                isShadowAlbum(id) ? '此相册在远程不存在，请核查并编辑本计划任务' : undefined
+              "
+              :class="
+                isShadowAlbum(id)
+                  ? '!bg-red-50 !text-red-700 !line-through ring-1 ring-red-200 dark:!bg-red-950/30 dark:!text-red-300 dark:ring-red-900/70'
+                  : ''
+              "
             />
             <span
               v-if="!crontab.albumIds || crontab.albumIds.length === 0"

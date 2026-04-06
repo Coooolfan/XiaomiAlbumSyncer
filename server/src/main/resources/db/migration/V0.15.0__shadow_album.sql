@@ -1,0 +1,3 @@
+-- 影子相册
+ALTER TABLE album
+    ADD COLUMN shadow BOOLEAN NOT NULL DEFAULT FALSE;

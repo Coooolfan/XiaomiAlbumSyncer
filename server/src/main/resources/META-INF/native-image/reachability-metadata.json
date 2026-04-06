@@ -2282,6 +2282,10 @@
           "parameterTypes": []
         },
         {
+          "name": "getShadow",
+          "parameterTypes": []
+        },
+        {
           "name": "get__assetCountLoaded$XiaomiAlbumSyncer",
           "parameterTypes": []
         },
@@ -2421,6 +2425,9 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.AlbumProps$REMOTE_ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.AlbumProps$SHADOW$1"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.AlbumPropsKt"

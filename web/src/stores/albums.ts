@@ -7,6 +7,13 @@ type Album = AlbumDto['AlbumsController/DEFAULT_ALBUM']
 
 type FetchOptions = { force?: boolean }
 
+function sortAlbums(list: ReadonlyArray<Album>): ReadonlyArray<Album> {
+  return [...list].sort((a, b) => {
+    if (a.shadow === b.shadow) return 0
+    return a.shadow ? 1 : -1
+  })
+}
+
 export const useAlbumsStore = defineStore('albums', () => {
   const albums = ref<ReadonlyArray<Album>>([])
   const loading = ref(false)
@@ -19,9 +26,9 @@ export const useAlbumsStore = defineStore('albums', () => {
     error.value = null
     try {
       const list = await api.albumsController.listAlbums()
-      albums.value = list
+      albums.value = sortAlbums(list)
       loaded.value = true
-      return list
+      return albums.value
     } catch (err) {
       error.value = err
       throw err
@@ -37,9 +44,9 @@ export const useAlbumsStore = defineStore('albums', () => {
   async function refreshAlbumsForAccount(accountId: number) {
     const refreshedList = await api.albumsController.refreshAlbums({ accountId })
     const otherAccountAlbums = albums.value.filter((a) => a.account.id !== accountId)
-    albums.value = [...otherAccountAlbums, ...refreshedList]
+    albums.value = sortAlbums([...otherAccountAlbums, ...refreshedList])
     loaded.value = true
-    return refreshedList
+    return albums.value.filter((a) => a.account.id === accountId)
   }
 
   function reset() {
