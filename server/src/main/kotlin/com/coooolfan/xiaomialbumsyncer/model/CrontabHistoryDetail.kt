@@ -1,16 +1,10 @@
 package com.coooolfan.xiaomialbumsyncer.model
 
-import org.babyfish.jimmer.sql.DissociateAction
-import org.babyfish.jimmer.sql.Entity
-import org.babyfish.jimmer.sql.GeneratedValue
-import org.babyfish.jimmer.sql.GenerationType
-import org.babyfish.jimmer.sql.Id
-import org.babyfish.jimmer.sql.ManyToOne
-import org.babyfish.jimmer.sql.OnDissociate
+import org.babyfish.jimmer.sql.*
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Locale
+import java.util.*
 import kotlin.io.path.Path
 
 @Entity
@@ -43,6 +37,8 @@ interface CrontabHistoryDetail {
 
     // 修改时间更新
     val fsTimeUpdated: Boolean
+
+    val message: String?
 
     companion object {
         private val TOKEN_REGEX = Regex("""\$\{([^}]+)}""")

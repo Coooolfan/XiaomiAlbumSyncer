@@ -1605,6 +1605,10 @@
           ]
         },
         {
+          "name": "access$getCRONTAB_HISTORY_DETAIL_FETCHER$cp",
+          "parameterTypes": []
+        },
+        {
           "name": "access$getCRONTAB_WITH_ALBUMS_FETCHER$cp",
           "parameterTypes": []
         },
@@ -1647,6 +1651,14 @@
         {
           "name": "getService",
           "parameterTypes": []
+        },
+        {
+          "name": "listCrontabHistoryDetails",
+          "parameterTypes": [
+            "long",
+            "java.lang.Integer",
+            "java.lang.Integer"
+          ]
         },
         {
           "name": "listCrontabs",
@@ -3949,7 +3961,45 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft$$$DraftImpl"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft$$$Impl"
+      "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft$$$Impl",
+      "methods": [
+        {
+          "name": "getAsset",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDownloadCompleted",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDownloadTime",
+          "parameterTypes": []
+        },
+        {
+          "name": "getExifFilled",
+          "parameterTypes": []
+        },
+        {
+          "name": "getFilePath",
+          "parameterTypes": []
+        },
+        {
+          "name": "getFsTimeUpdated",
+          "parameterTypes": []
+        },
+        {
+          "name": "getId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getMessage",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSha1Verified",
+          "parameterTypes": []
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailDraft$$$Implementor"
@@ -3998,6 +4048,9 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$MESSAGE$1"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetailProps$SHA1_VERIFIED$1"
@@ -5452,6 +5505,15 @@
           ]
         },
         {
+          "name": "access$saveAndLogErr",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline",
+            "java.lang.String",
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail",
+            "java.lang.Throwable"
+          ]
+        },
+        {
           "name": "execute",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.model.Crontab",
@@ -6093,6 +6155,15 @@
           ]
         },
         {
+          "name": "listCrontabHistoryDetails",
+          "parameterTypes": [
+            "long",
+            "int",
+            "int",
+            "org.babyfish.jimmer.sql.fetcher.Fetcher"
+          ]
+        },
+        {
           "name": "queryCrontab",
           "parameterTypes": [
             "org.babyfish.jimmer.sql.fetcher.Fetcher"
@@ -6121,6 +6192,13 @@
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.model.Crontab",
             "org.babyfish.jimmer.sql.fetcher.Fetcher"
+          ]
+        },
+        {
+          "name": "updateDetailMessage",
+          "parameterTypes": [
+            "long",
+            "java.lang.String"
           ]
         }
       ]
@@ -9957,6 +10035,9 @@
       "type": "java.util.Collection"
     },
     {
+      "type": "java.util.Collections$EmptyList"
+    },
+    {
       "type": "java.util.Collections$SingletonList",
       "allDeclaredFields": true
     },
@@ -10825,6 +10906,9 @@
       "type": "kotlin.collections.MutableCollection"
     },
     {
+      "type": "kotlin.collections.MutableList"
+    },
+    {
       "type": "kotlin.collections.MutableMap"
     },
     {
@@ -11191,6 +11275,23 @@
     {
       "type": "org.babyfish.jimmer.Input",
       "allDeclaredFields": true
+    },
+    {
+      "type": "org.babyfish.jimmer.Page",
+      "methods": [
+        {
+          "name": "getRows",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTotalPageCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTotalRowCount",
+          "parameterTypes": []
+        }
+      ]
     },
     {
       "type": "org.babyfish.jimmer.View",

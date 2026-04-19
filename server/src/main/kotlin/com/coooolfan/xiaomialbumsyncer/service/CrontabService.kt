@@ -5,6 +5,7 @@ import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CR
 import com.coooolfan.xiaomialbumsyncer.controller.CrontabCurrentStats
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput
+import org.babyfish.jimmer.Page
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
@@ -242,6 +243,25 @@ class CrontabService(private val sql: KSqlClient) {
         val assetPathMap = fetchAssetPathMapBy(crontab.id)
 
         taskScheduler.executeCrontabRewriteFileSystemTime(true, assetPathMap)
+    }
+
+    fun listCrontabHistoryDetails(
+        historyId: Long,
+        pageIndex: Int,
+        pageSize: Int,
+        fetcher: Fetcher<CrontabHistoryDetail>
+    ): Page<CrontabHistoryDetail> {
+        return sql.createQuery(CrontabHistoryDetail::class) {
+            where(table.crontabHistoryId eq historyId)
+            select(table.fetch(fetcher))
+        }.fetchPage(pageIndex, pageSize)
+    }
+
+    fun updateDetailMessage(detailId: Long, message: String) {
+        sql.executeUpdate(CrontabHistoryDetail::class) {
+            set(table.message, message)
+            where(table.id eq detailId)
+        }
     }
 
     private fun fetchAssetPathMapBy(crontabId: Long): Map<Asset, Path> {

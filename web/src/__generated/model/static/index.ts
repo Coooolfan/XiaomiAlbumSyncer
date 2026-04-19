@@ -11,6 +11,7 @@ export type {IsInitResponse} from './IsInitResponse';
 export type {MountPathCheckRequest} from './MountPathCheckRequest';
 export type {MountPathCheckResponse} from './MountPathCheckResponse';
 export type {NotifyConfig} from './NotifyConfig';
+export type {Page} from './Page';
 export type {PasskeyAuthFinishRequest} from './PasskeyAuthFinishRequest';
 export type {PasskeyAuthStartResponse} from './PasskeyAuthStartResponse';
 export type {PasskeyCredentialInfo} from './PasskeyCredentialInfo';

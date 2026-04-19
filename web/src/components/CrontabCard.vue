@@ -11,6 +11,7 @@ import { computed, onUnmounted, ref, watch } from 'vue'
 import { api } from '@/ApiInstance'
 
 type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
+type CrontabHistory = Crontab['histories'][number]
 
 const props = defineProps<{
   crontab: Crontab
@@ -26,6 +27,7 @@ const emit = defineEmits<{
   (e: 'execute'): void
   (e: 'executeExif'): void
   (e: 'executeRewriteFsTime'): void
+  (e: 'viewHistoryDetails', history: CrontabHistory): void
   (e: 'refresh'): void
 }>()
 
@@ -50,6 +52,10 @@ function formatTime(t?: string) {
   } catch {
     return t
   }
+}
+
+function openHistoryDetails(history: CrontabHistory) {
+  emit('viewHistoryDetails', history)
 }
 
 const recentHistories = computed(() => {
@@ -207,7 +213,12 @@ onUnmounted(() => {
         v-if="props.collapsed"
         class="flex flex-col gap-3 text-sm text-slate-600 dark:text-slate-300"
       >
-        <div class="flex items-center justify-between">
+        <button
+          v-if="recentHistories[0]"
+          type="button"
+          class="flex items-center justify-between rounded-md px-2 py-1.5 -mx-2 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/70 text-left"
+          @click="openHistoryDetails(recentHistories[0])"
+        >
           <div class="flex items-center gap-2">
             <Tag
               :severity="
@@ -228,6 +239,9 @@ onUnmounted(() => {
           <span class="text-xs text-slate-400 dark:text-slate-500 font-mono">{{
             formatTime(recentHistories[0]?.endTime || recentHistories[0]?.startTime)
           }}</span>
+        </button>
+        <div v-else class="flex items-center justify-between">
+          <span class="text-xs text-slate-400 dark:text-slate-500">暂无历史</span>
         </div>
 
         <div class="flex flex-col gap-1.5">
@@ -499,38 +513,40 @@ onUnmounted(() => {
               暂无历史
             </div>
             <ul v-else class="space-y-2">
-              <li
-                v-for="(h, index) in recentHistories"
-                :key="h.id"
-                class="flex items-center justify-between"
-              >
-                <div class="flex items-center gap-2">
-                  <span
-                    class="inline-block w-2 h-2 rounded-full"
-                    :class="h.isCompleted ? 'bg-emerald-500' : 'bg-amber-500'"
-                  />
-                  <span class="text-slate-600 dark:text-slate-300"
-                    >{{ formatTime(h.startTime) }} → {{ formatTime(h.endTime) }}</span
-                  >
-                </div>
-                <div class="flex items-center gap-2">
-                  <span
-                    class="text-xs text-slate-400 dark:text-slate-500"
-                    v-if="h.detailsCount !== undefined"
-                  >
-                    {{ h.detailsCount }} 个资产
-                  </span>
-                  <Tag
-                    v-if="index === 0 && crontab.running"
-                    :severity="h.isCompleted ? 'success' : 'info'"
-                    :value="h.isCompleted ? '完成' : '进行中'"
-                  />
-                  <Tag
-                    v-else
-                    :severity="h.isCompleted ? 'success' : 'warn'"
-                    :value="h.isCompleted ? '完成' : '终止'"
-                  />
-                </div>
+              <li v-for="(h, index) in recentHistories" :key="h.id" class="list-none">
+                <button
+                  type="button"
+                  class="flex w-full items-center justify-between rounded-md px-2 -mx-2 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/70 text-left cursor-pointer"
+                  @click="openHistoryDetails(h)"
+                >
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="inline-block w-2 h-2 rounded-full"
+                      :class="h.isCompleted ? 'bg-emerald-500' : 'bg-amber-500'"
+                    />
+                    <span class="text-slate-600 dark:text-slate-300"
+                      >{{ formatTime(h.startTime) }} → {{ formatTime(h.endTime) }}</span
+                    >
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="text-xs text-slate-400 dark:text-slate-500"
+                      v-if="h.detailsCount !== undefined"
+                    >
+                      {{ h.detailsCount }} 个资产
+                    </span>
+                    <Tag
+                      v-if="index === 0 && crontab.running"
+                      :severity="h.isCompleted ? 'success' : 'info'"
+                      :value="h.isCompleted ? '完成' : '进行中'"
+                    />
+                    <Tag
+                      v-else
+                      :severity="h.isCompleted ? 'success' : 'warn'"
+                      :value="h.isCompleted ? '完成' : '终止'"
+                    />
+                  </div>
+                </button>
               </li>
             </ul>
           </div>

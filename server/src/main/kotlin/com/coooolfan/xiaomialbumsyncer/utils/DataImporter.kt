@@ -110,6 +110,7 @@ class DataImporter(private val sql: KSqlClient) {
                     this.assetId = it
                     filePath = "./unknown"
                     downloadTime = Instant.now()
+                    message = "导入自 < 0.2.0"
                 }
             )
         }

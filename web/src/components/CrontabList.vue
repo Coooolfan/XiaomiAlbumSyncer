@@ -6,6 +6,7 @@ import type { CrontabDto } from '@/__generated/model/dto'
 import { ref, watch } from 'vue'
 
 type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
+type CrontabHistory = Crontab['histories'][number]
 
 const props = defineProps<{
   crontabs?: ReadonlyArray<Crontab>
@@ -35,6 +36,7 @@ const emit = defineEmits<{
   (e: 'execute', item: Crontab): void
   (e: 'executeExif', item: Crontab): void
   (e: 'executeRewriteFsTime', item: Crontab): void
+  (e: 'viewHistoryDetails', history: CrontabHistory): void
 }>()
 </script>
 
@@ -91,6 +93,7 @@ const emit = defineEmits<{
               @execute="emit('execute', item)"
               @execute-exif="emit('executeExif', item)"
               @execute-rewrite-fs-time="emit('executeRewriteFsTime', item)"
+              @view-history-details="emit('viewHistoryDetails', $event)"
               @refresh="emit('refresh')"
             />
           </div>

@@ -22,14 +22,14 @@ class FileTimeStage(
 
     fun process(context: CrontabHistoryDetail): CrontabHistoryDetail {
         if (context.fsTimeUpdated) {
-            log.info("资源 {} 的文件时间已更新或者被标记为无需处理，跳过文件时间阶段", context.asset.id)
+            log.info("资产 {} 的文件时间已更新或者被标记为无需处理，跳过文件时间阶段", context.asset.id)
             return context
         }
 
         if (context.crontabHistory.crontab.config.rewriteFileSystemTime) {
-            log.info("开始处理资源 {} 的文件系统时间", context.asset.id)
+            log.info("开始处理资产 {} 的文件系统时间", context.asset.id)
             rewriteFSTime(Path(context.filePath), context.asset.dateTaken)
-            log.info("资源 {} 的文件系统时间处理完成", context.asset.id)
+            log.info("资产 {} 的文件系统时间处理完成", context.asset.id)
         }
 
         sql.executeUpdate(CrontabHistoryDetail::class) {

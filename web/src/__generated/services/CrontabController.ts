@@ -1,6 +1,11 @@
 import type {Executor} from '../';
-import type {CrontabDto} from '../model/dto/';
-import type {CrontabCreateInput, CrontabCurrentStats, CrontabUpdateInput} from '../model/static/';
+import type {CrontabDto, CrontabHistoryDetailDto} from '../model/dto/';
+import type {
+    CrontabCreateInput, 
+    CrontabCurrentStats, 
+    CrontabUpdateInput, 
+    Page
+} from '../model/static/';
 
 /**
  * 定时任务管理控制器
@@ -127,6 +132,41 @@ export class CrontabController {
     }
     
     /**
+     * 分页获取指定执行历史的明细记录
+     * 
+     * 此接口用于查看某次定时任务执行过程中产生的资源级明细数据，
+     * 例如下载、校验、EXIF 填充等步骤对应的处理结果。
+     * 需要用户登录认证才能访问（类级别注解）。
+     * 
+     * @parameter {CrontabControllerOptions['listCrontabHistoryDetails']} options
+     * - id 定时任务执行历史 ID，用于指定要查询的那次执行记录
+     * - pageIndex 页码参数，作为接口入参保留
+     * - pageSize 分页大小参数，作为接口入参保留
+     * @return Page<CrontabHistoryDetail> 返回该次执行历史对应的明细分页数据
+     * 
+     */
+    readonly listCrontabHistoryDetails: (options: CrontabControllerOptions['listCrontabHistoryDetails']) => Promise<
+        Page<CrontabHistoryDetailDto['CrontabController/CRONTAB_HISTORY_DETAIL_FETCHER']>
+    > = async(options) => {
+        let _uri = '/api/crontab/history/';
+        _uri += encodeURIComponent(options.id);
+        _uri += '/details';
+        let _separator = _uri.indexOf('?') === -1 ? '?' : '&';
+        let _value: any = undefined;
+        _value = options.pageIndex;
+        _uri += _separator
+        _uri += 'pageIndex='
+        _uri += encodeURIComponent(_value);
+        _separator = '&';
+        _value = options.pageSize;
+        _uri += _separator
+        _uri += 'pageSize='
+        _uri += encodeURIComponent(_value);
+        _separator = '&';
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<Page<CrontabHistoryDetailDto['CrontabController/CRONTAB_HISTORY_DETAIL_FETCHER']>>;
+    }
+    
+    /**
      * 获取所有定时任务列表
      * 
      * 此接口用于获取系统中配置的所有定时任务信息
@@ -214,5 +254,19 @@ export type CrontabControllerOptions = {
          * 
          */
         readonly crontabId: number
+    }, 
+    'listCrontabHistoryDetails': {
+        /**
+         * 定时任务执行历史 ID，用于指定要查询的那次执行记录
+         */
+        readonly id: number, 
+        /**
+         * 页码参数，作为接口入参保留
+         */
+        readonly pageIndex: number, 
+        /**
+         * 分页大小参数，作为接口入参保留
+         */
+        readonly pageSize: number
     }
 }

@@ -100,29 +100,29 @@ class CrontabPipeline(
             flow {
                 emit(downloadStage.process(context))
             }.catch {
-                log.error("资源 {} 的下载失败, 将跳过后续处理", context.asset.id, it)
+                saveAndLogErr("下载", context, it)
             }
         }.flatMapMerge(crontab.config.verifiers) { context ->
             flow {
                 emit(verificationStage.process(context))
             }.catch {
-                log.error("资源 {} 的校验失败, 将跳过后续处理", context.asset.id, it)
+                saveAndLogErr("校验", context, it)
             }
         }.flatMapMerge(crontab.config.exifProcessors) { context ->
             flow {
                 emit(exifProcessingStage.process(context, systemConfig))
             }.catch {
-                log.error("资源 {} 的 EXIF 处理失败, 将跳过后续处理", context.asset.id, it)
+                saveAndLogErr("EXIF", context, it)
             }
         }.flatMapMerge(crontab.config.fileTimeWorkers) { context ->
             flow {
                 emit(fileTimeStage.process(context))
             }.catch {
-                log.error("资源 {} 的文件时间阶段处理失败, 将跳过后续处理", context.asset.id, it)
+                saveAndLogErr("文件时间", context, it)
             }
         }.onEach { context ->
             success++
-            log.info("资源 {} 处理完成", context.asset.id)
+            log.info("资产 {} 处理完成", context.asset.id)
         }.collect()
 
         crontabService.finishCrontabHistory(crontabHistory)
@@ -132,6 +132,12 @@ class CrontabPipeline(
             CoroutineScope(Dispatchers.IO).launch { notifyService.send(crontab, success, total) }
 
         log.info("Crontab {} 的流水线执行完毕, 成功 {}/{}", crontab.id, success, total)
+    }
+
+    private fun saveAndLogErr(stageStr: String, context: CrontabHistoryDetail, err: Throwable) {
+        val errMsg = "资产 ${context.asset.id} 的${stageStr}阶段处理失败, 将跳过后续处理."
+        crontabService.updateDetailMessage(context.id, err.message ?: errMsg)
+        log.error(errMsg, err)
     }
 
 

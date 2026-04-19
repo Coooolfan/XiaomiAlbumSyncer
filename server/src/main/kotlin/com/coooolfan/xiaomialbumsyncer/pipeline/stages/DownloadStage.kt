@@ -25,7 +25,7 @@ class DownloadStage(
 
     fun process(context: CrontabHistoryDetail): CrontabHistoryDetail {
         if (context.downloadCompleted) {
-            log.info("资源 {} 的下载已完成或者被标记为无需处理，跳过下载阶段", context.asset.id)
+            log.info("资产 {} 的下载已完成或者被标记为无需处理，跳过下载阶段", context.asset.id)
             return context
         }
 
@@ -35,10 +35,10 @@ class DownloadStage(
         if (context.crontabHistory.crontab.config.skipExistingFile && Files.exists(targetPath))
             log.info("跳过已存在文件 {}", targetPath)
         else {
-            log.info("开始下载资源 {}", context.asset.id)
+            log.info("开始下载资产 {}", context.asset.id)
             val accountId = context.crontabHistory.crontab.accountId
             api.downloadAsset(accountId, context.asset, targetPath)
-            log.info("下载资源 {} 完成", context.asset.id)
+            log.info("下载资产 {} 完成", context.asset.id)
         }
 
         sql.executeUpdate(CrontabHistoryDetail::class) {

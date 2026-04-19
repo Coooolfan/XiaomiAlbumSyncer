@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import Card from 'primevue/card'
 import ContributionHeatmap from '@/components/ContributionHeatmap.vue'
 import AlbumPanel from '@/components/AlbumPanel.vue'
 import CrontabList from '@/components/CrontabList.vue'
 import CronFormDialog from '@/components/CronFormDialog.vue'
 import ExecutionDialogs from '@/components/ExecutionDialogs.vue'
+import CrontabHistoryDetailsDialog from '@/components/CrontabHistoryDetailsDialog.vue'
 import { useToast } from 'primevue/usetoast'
 import { storeToRefs } from 'pinia'
 import { useAccountsStore } from '@/stores/accounts'
@@ -15,11 +16,17 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { useHeatmapTimeline } from '@/composables/useHeatmapTimeline'
 import { useCronForm } from '@/composables/useCronForm'
 import { useCronActions } from '@/composables/useCronActions'
+import { api } from '@/ApiInstance'
+import type { CrontabDto, CrontabHistoryDetailDto } from '@/__generated/model/dto'
 
 const accountsStore = useAccountsStore()
 const albumsStore = useAlbumsStore()
 const crontabsStore = useCrontabsStore()
 const preferencesStore = usePreferencesStore()
+
+type CrontabHistory = CrontabDto['CrontabController/DEFAULT_CRONTAB']['histories'][number]
+type CrontabHistoryDetail =
+  CrontabHistoryDetailDto['CrontabController/CRONTAB_HISTORY_DETAIL_FETCHER']
 
 const { accounts } = storeToRefs(accountsStore)
 const { albums, loaded: albumsLoaded } = storeToRefs(albumsStore)
@@ -139,6 +146,77 @@ const { visible: showExecuteVisible, loading: executing } = executeDialog
 const { visible: showExecuteExifVisible, loading: executingExif } = executeExifDialog
 const { visible: showExecuteRewriteFsVisible, loading: executingRewriteFs } = executeRewriteFsDialog
 
+const showHistoryDetailsDialog = ref(false)
+const selectedHistory = ref<CrontabHistory | null>(null)
+const historyDetailRows = ref<ReadonlyArray<CrontabHistoryDetail>>([])
+const historyDetailsPageIndex = ref(0)
+const historyDetailsPageSize = ref(10)
+const historyDetailsTotalRowCount = ref(0)
+const historyDetailsLoading = ref(false)
+const historyDetailsError = ref<string | null>(null)
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = (error as { message?: unknown }).message
+    if (typeof message === 'string' && message.trim()) return message
+  }
+  try {
+    return JSON.stringify(error)
+  } catch {
+    return '无法加载执行明细'
+  }
+}
+
+async function loadHistoryDetails() {
+  const historyId = selectedHistory.value?.id
+  if (historyId === null || historyId === undefined) {
+    historyDetailRows.value = []
+    historyDetailsTotalRowCount.value = 0
+    historyDetailsError.value = '历史记录不存在，无法加载执行明细'
+    return
+  }
+
+  historyDetailsLoading.value = true
+  historyDetailsError.value = null
+  try {
+    const page = await api.crontabController.listCrontabHistoryDetails({
+      id: historyId,
+      pageIndex: historyDetailsPageIndex.value,
+      pageSize: historyDetailsPageSize.value,
+    })
+    historyDetailRows.value = page.rows
+    historyDetailsTotalRowCount.value = page.totalRowCount
+  } catch (error) {
+    historyDetailRows.value = []
+    historyDetailsTotalRowCount.value = 0
+    historyDetailsError.value = getErrorMessage(error)
+  } finally {
+    historyDetailsLoading.value = false
+  }
+}
+
+async function openHistoryDetails(history: CrontabHistory) {
+  selectedHistory.value = history
+  historyDetailsPageIndex.value = 0
+  historyDetailsError.value = null
+  historyDetailRows.value = []
+  historyDetailsTotalRowCount.value = 0
+  showHistoryDetailsDialog.value = true
+  await loadHistoryDetails()
+}
+
+async function handleHistoryDetailsPage(payload: { pageIndex: number; pageSize: number }) {
+  historyDetailsPageIndex.value = payload.pageIndex
+  historyDetailsPageSize.value = payload.pageSize
+  await loadHistoryDetails()
+}
+
+async function refreshHistoryDetails() {
+  await loadHistoryDetails()
+}
+
 onMounted(async () => {
   await Promise.all([
     accountsStore.fetchAccounts(),
@@ -153,6 +231,15 @@ onMounted(async () => {
 
 watch(albums, () => {
   scheduleFetch()
+})
+
+watch(showHistoryDetailsDialog, (visible) => {
+  if (visible) return
+  selectedHistory.value = null
+  historyDetailRows.value = []
+  historyDetailsPageIndex.value = 0
+  historyDetailsError.value = null
+  historyDetailsTotalRowCount.value = 0
 })
 </script>
 
@@ -192,6 +279,7 @@ watch(albums, () => {
       @execute="requestExecute"
       @execute-exif="requestExecuteExif"
       @execute-rewrite-fs-time="requestExecuteRewriteFs"
+      @view-history-details="openHistoryDetails"
     />
 
     <AlbumPanel />
@@ -226,6 +314,19 @@ watch(albums, () => {
       @confirm-execute="confirmExecute"
       @confirm-execute-exif="confirmExecuteExif"
       @confirm-execute-rewrite-fs="confirmExecuteRewriteFs"
+    />
+
+    <CrontabHistoryDetailsDialog
+      v-model:visible="showHistoryDetailsDialog"
+      :history="selectedHistory"
+      :rows="historyDetailRows"
+      :page-index="historyDetailsPageIndex"
+      :page-size="historyDetailsPageSize"
+      :total-row-count="historyDetailsTotalRowCount"
+      :loading="historyDetailsLoading"
+      :error="historyDetailsError"
+      @page="handleHistoryDetailsPage"
+      @refresh="refreshHistoryDetails"
     />
   </div>
 </template>

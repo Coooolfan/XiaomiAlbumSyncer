@@ -2,11 +2,13 @@ package com.coooolfan.xiaomialbumsyncer.controller
 
 import cn.dev33.satoken.annotation.SaCheckLogin
 import com.coooolfan.xiaomialbumsyncer.model.Crontab
+import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
 import com.coooolfan.xiaomialbumsyncer.model.by
 import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput
 import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabUpdateInput
 import com.coooolfan.xiaomialbumsyncer.model.startTime
 import com.coooolfan.xiaomialbumsyncer.service.CrontabService
+import org.babyfish.jimmer.Page
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.client.meta.Api
 import org.babyfish.jimmer.sql.kt.ast.expression.desc
@@ -178,6 +180,32 @@ class CrontabController(private val service: CrontabService) {
         service.executeCrontabRewriteFileSystemTime(crontabId)
     }
 
+    /**
+     * 分页获取指定执行历史的明细记录
+     *
+     * 此接口用于查看某次定时任务执行过程中产生的资源级明细数据，
+     * 例如下载、校验、EXIF 填充等步骤对应的处理结果。
+     * 需要用户登录认证才能访问（类级别注解）。
+     *
+     * @param id 定时任务执行历史 ID，用于指定要查询的那次执行记录
+     * @param pageIndex 页码参数，作为接口入参保留
+     * @param pageSize 分页大小参数，作为接口入参保留
+     * @return Page<CrontabHistoryDetail> 返回该次执行历史对应的明细分页数据
+     *
+     * @api GET /api/crontab/history/{id}/details
+     * @permission 需要登录认证
+     * @description 调用 CrontabService.listCrontabHistoryDetails() 获取指定执行历史的明细列表
+     */
+    @Api
+    @Mapping("/history/{id}/details", method = [MethodType.GET])
+    fun listCrontabHistoryDetails(
+        @Path id: Long,
+        @Param pageIndex: Int?,
+        @Param pageSize: Int?
+    ): Page<@FetchBy("CRONTAB_HISTORY_DETAIL_FETCHER") CrontabHistoryDetail> {
+        return service.listCrontabHistoryDetails(id, pageIndex ?: 0, pageSize ?: 10, CRONTAB_HISTORY_DETAIL_FETCHER)
+    }
+
     companion object {
         private val DEFAULT_CRONTAB = newFetcher(Crontab::class).by {
             allScalarFields()
@@ -202,6 +230,15 @@ class CrontabController(private val service: CrontabService) {
             accountId()
             albumIds()
             albums { allScalarFields() }
+        }
+
+        val CRONTAB_HISTORY_DETAIL_FETCHER = newFetcher(CrontabHistoryDetail::class).by {
+            allScalarFields()
+            asset {
+                album {
+                    name()
+                }
+            }
         }
     }
 }
