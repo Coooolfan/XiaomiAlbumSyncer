@@ -2,12 +2,36 @@ name: Xiaomi Album Syncer CI
 on:
   release:
     types: [ published ]
+  workflow_call:
+    inputs:
+      version:
+        description: "版本号"
+        required: true
+        type: string
+      prerelease:
+        description: "是否为预发布版本"
+        required: false
+        default: "false"
+        type: string
+      publish_release_assets:
+        description: "是否上传构建产物到已存在的 Release 并推送 Docker 镜像"
+        required: false
+        default: "false"
+        type: string
   workflow_dispatch:
     inputs:
       version:
         description: "版本号"
         required: true
         default: "dev"
+      prerelease:
+        description: "是否为预发布版本"
+        required: false
+        default: "false"
+      publish_release_assets:
+        description: "是否上传构建产物到已存在的 Release 并推送 Docker 镜像"
+        required: false
+        default: "false"
 
 permissions:
   contents: write
@@ -69,7 +93,7 @@ jobs:
           if [ "${{ github.event_name }}" = "release" ]; then
             echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
           else
-            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
           fi
 
       - name: 设置 JDK 环境
@@ -147,7 +171,7 @@ jobs:
           if [ "${{ github.event_name }}" = "release" ]; then
             echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
           else
-            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
           fi
 
       - name: 设置 GraalVM 环境
@@ -208,13 +232,21 @@ jobs:
 
   upload-release-assets:
     name: 上传产物到 Release
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || inputs.publish_release_assets == 'true'
     needs:
       - build-jar
       - build-native
     runs-on: ubuntu-latest
 
     steps:
+      - name: 设置发布元信息
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+          fi
+
       - name: 下载 JAR 产物
         uses: actions/download-artifact@v4
         with:
@@ -263,7 +295,7 @@ jobs:
       - name: 打包为 ZIP
         working-directory: dist
         run: |
-          TAG=${{ github.event.release.tag_name }}
+          TAG=${VERSION}
           
           # Linux
           zip "xiaomi-album-syncer-linux-arm64-v${TAG}.zip" "xiaomi-album-syncer-linux-arm64-v${TAG}"
@@ -282,26 +314,36 @@ jobs:
       - name: 上传到 Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.event.release.tag_name }}
+          tag_name: ${{ env.VERSION }}
           files: |
-            dist/xiaomi-album-syncer-linux-x64-v${{ github.event.release.tag_name }}.zip
-            dist/xiaomi-album-syncer-linux-arm64-v${{ github.event.release.tag_name }}.zip
-            dist/xiaomi-album-syncer-macos-x64-v${{ github.event.release.tag_name }}.zip
-            dist/xiaomi-album-syncer-macos-arm64-v${{ github.event.release.tag_name }}.zip
-            dist/xiaomi-album-syncer-windows-x64-v${{ github.event.release.tag_name }}.exe.zip
-            dist/xiaomi-album-syncer-v${{ github.event.release.tag_name }}.jar.zip
+            dist/xiaomi-album-syncer-linux-x64-v${{ env.VERSION }}.zip
+            dist/xiaomi-album-syncer-linux-arm64-v${{ env.VERSION }}.zip
+            dist/xiaomi-album-syncer-macos-x64-v${{ env.VERSION }}.zip
+            dist/xiaomi-album-syncer-macos-arm64-v${{ env.VERSION }}.zip
+            dist/xiaomi-album-syncer-windows-x64-v${{ env.VERSION }}.exe.zip
+            dist/xiaomi-album-syncer-v${{ env.VERSION }}.jar.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-docker-for-jvm:
     name: 构建并推送 Docker 镜像(JVM)
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || inputs.publish_release_assets == 'true'
     needs: build-jar
     runs-on: ubuntu-latest
 
     steps:
       - name: 检出代码
         uses: actions/checkout@v5
+
+      - name: 设置发布元信息
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+            echo "PRERELEASE=${{ github.event.release.prerelease }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+            echo "PRERELEASE=${{ inputs.prerelease }}" >> $GITHUB_ENV
+          fi
 
       - name: 设置 QEMU
         uses: docker/setup-qemu-action@v3
@@ -324,8 +366,8 @@ jobs:
       - name: 生成 Docker 标签
         id: docker-tags-jvm
         run: |
-          TAGS="${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${{ github.event.release.tag_name }}"
-          if [ "${{ github.event.release.prerelease }}" != "true" ]; then
+          TAGS="${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${VERSION}"
+          if [ "${PRERELEASE}" != "true" ]; then
             TAGS="${TAGS},${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:latest"
           fi
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
@@ -339,17 +381,27 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.docker-tags-jvm.outputs.tags }}
           build-args: |
-            JAR_FILE=dist/xiaomi-album-syncer-v${{ github.event.release.tag_name }}.jar
+            JAR_FILE=dist/xiaomi-album-syncer-v${{ env.VERSION }}.jar
 
   build-docker-for-native:
     name: 构建并推送 Docker 镜像(Native)
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || inputs.publish_release_assets == 'true'
     needs: build-native
     runs-on: ubuntu-latest
 
     steps:
       - name: 检出代码
         uses: actions/checkout@v5
+
+      - name: 设置发布元信息
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+            echo "PRERELEASE=${{ github.event.release.prerelease }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+            echo "PRERELEASE=${{ inputs.prerelease }}" >> $GITHUB_ENV
+          fi
 
       - name: 下载 Native 产物 (linux-x64)
         uses: actions/download-artifact@v4
@@ -378,15 +430,15 @@ jobs:
       - name: 为 Native 二进制文件准备 Docker 上下文
         run: |
           mkdir -p docker/native-dist
-          mv dist/xiaomi-album-syncer-linux-x64-v${{ github.event.release.tag_name }} dist/xiaomi-album-syncer-amd64
-          mv dist/xiaomi-album-syncer-linux-arm64-v${{ github.event.release.tag_name }} dist/xiaomi-album-syncer-arm64
+          mv dist/xiaomi-album-syncer-linux-x64-v${VERSION} dist/xiaomi-album-syncer-amd64
+          mv dist/xiaomi-album-syncer-linux-arm64-v${VERSION} dist/xiaomi-album-syncer-arm64
           ls -al dist
 
       - name: 生成 Docker 标签
         id: docker-tags-native
         run: |
-          TAGS="${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${{ github.event.release.tag_name }}-native"
-          if [ "${{ github.event.release.prerelease }}" != "true" ]; then
+          TAGS="${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${VERSION}-native"
+          if [ "${PRERELEASE}" != "true" ]; then
             TAGS="${TAGS},${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:latest-native"
           fi
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT

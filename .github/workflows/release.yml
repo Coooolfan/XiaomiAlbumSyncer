@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      tag: ${{ steps.parse-version.outputs.tag }}
+      prerelease: ${{ steps.parse-version.outputs.prerelease }}
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
@@ -16,15 +19,19 @@ jobs:
         uses: actions/checkout@v5
 
       - name: 解析版本信息
+        id: parse-version
         run: |
           TAG="${GITHUB_REF_NAME}"
           echo "TAG=${TAG}" >> $GITHUB_ENV
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
 
           # 判断是否为 pre-release
           if [[ "$TAG" =~ -rc-|-beta-|-alpha- ]]; then
             echo "PRERELEASE=true" >> $GITHUB_ENV
+            echo "prerelease=true" >> $GITHUB_OUTPUT
           else
             echo "PRERELEASE=false" >> $GITHUB_ENV
+            echo "prerelease=false" >> $GITHUB_OUTPUT
           fi
 
       - name: 校验 Release Notes 文件
@@ -45,3 +52,12 @@ jobs:
           make_latest: ${{ env.PRERELEASE == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-assets:
+    needs: create-release
+    uses: ./.github/workflows/builder.yml
+    with:
+      version: ${{ needs.create-release.outputs.tag }}
+      prerelease: ${{ needs.create-release.outputs.prerelease }}
+      publish_release_assets: 'true'
+    secrets: inherit
