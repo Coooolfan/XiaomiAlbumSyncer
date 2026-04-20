@@ -280,7 +280,7 @@ jobs:
           zip "xiaomi-album-syncer-v${TAG}.jar.zip" "xiaomi-album-syncer-v${TAG}.jar"
 
       - name: 上传到 Release
-        uses: softprops/action-gh-release@v2.4.2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.release.tag_name }}
           files: |
@@ -321,6 +321,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: 生成 Docker 标签
+        id: docker-tags-jvm
+        run: |
+          TAGS="${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${{ github.event.release.tag_name }}"
+          if [ "${{ github.event.release.prerelease }}" != "true" ]; then
+            TAGS="${TAGS},${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:latest"
+          fi
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+
       - name: 构建并推送 Docker 镜像
         uses: docker/build-push-action@v6
         with:
@@ -328,9 +337,7 @@ jobs:
           file: ./docker/Dockerfile.jvm
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${{ github.event.release.tag_name }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:latest
+          tags: ${{ steps.docker-tags-jvm.outputs.tags }}
           build-args: |
             JAR_FILE=dist/xiaomi-album-syncer-v${{ github.event.release.tag_name }}.jar
 
@@ -375,6 +382,15 @@ jobs:
           mv dist/xiaomi-album-syncer-linux-arm64-v${{ github.event.release.tag_name }} dist/xiaomi-album-syncer-arm64
           ls -al dist
 
+      - name: 生成 Docker 标签
+        id: docker-tags-native
+        run: |
+          TAGS="${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${{ github.event.release.tag_name }}-native"
+          if [ "${{ github.event.release.prerelease }}" != "true" ]; then
+            TAGS="${TAGS},${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:latest-native"
+          fi
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+
       - name: 构建并推送 Docker 镜像 (Native)
         uses: docker/build-push-action@v6
         with:
@@ -382,6 +398,4 @@ jobs:
           file: ./docker/Dockerfile.native
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${{ github.event.release.tag_name }}-native
-            ${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:latest-native
+          tags: ${{ steps.docker-tags-native.outputs.tags }}

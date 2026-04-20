@@ -1,0 +1,47 @@
+name: 创建 Release
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v5
+
+      - name: 解析版本信息
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+
+          # 判断是否为 pre-release
+          if [[ "$TAG" =~ -rc-|-beta-|-alpha- ]]; then
+            echo "PRERELEASE=true" >> $GITHUB_ENV
+          else
+            echo "PRERELEASE=false" >> $GITHUB_ENV
+          fi
+
+      - name: 校验 Release Notes 文件
+        run: |
+          NOTES_FILE="docs/release_notes/${TAG}.md"
+          if [ ! -f "$NOTES_FILE" ]; then
+            echo "::error::Release notes 文件不存在: $NOTES_FILE"
+            exit 1
+          fi
+
+      - name: 创建 GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ env.TAG }}
+          name: ${{ env.TAG }}
+          body_path: docs/release_notes/${{ env.TAG }}.md
+          prerelease: ${{ env.PRERELEASE == 'true' }}
+          make_latest: ${{ env.PRERELEASE == 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
