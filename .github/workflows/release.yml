@@ -55,6 +55,8 @@ jobs:
 
   build-assets:
     needs: create-release
+    permissions:
+      contents: write
     uses: ./.github/workflows/builder.yml
     with:
       version: ${{ needs.create-release.outputs.tag }}
