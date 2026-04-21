@@ -1,14 +1,15 @@
-name: 创建 Release
+name: Release
+run-name: Release ${{ github.ref_name }}
 on:
   push:
     tags:
       - '*.*.*'
 
 jobs:
-  create-release:
+  prepare-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     outputs:
       tag: ${{ steps.parse-version.outputs.tag }}
       prerelease: ${{ steps.parse-version.outputs.prerelease }}
@@ -42,24 +43,126 @@ jobs:
             exit 1
           fi
 
-      - name: 创建 GitHub Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ env.TAG }}
-          name: ${{ env.TAG }}
-          body_path: docs/release_notes/${{ env.TAG }}.md
-          prerelease: ${{ env.PRERELEASE == 'true' }}
-          make_latest: ${{ env.PRERELEASE == 'false' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-assets:
-    needs: create-release
+    needs: prepare-release
     permissions:
       contents: write
     uses: ./.github/workflows/builder.yml
     with:
-      version: ${{ needs.create-release.outputs.tag }}
-      prerelease: ${{ needs.create-release.outputs.prerelease }}
-      publish_release_assets: 'true'
+      version: ${{ needs.prepare-release.outputs.tag }}
+      prerelease: ${{ needs.prepare-release.outputs.prerelease }}
+      publish_docker: 'true'
     secrets: inherit
+
+  create-draft-release:
+    name: 创建草稿 Release
+    needs:
+      - prepare-release
+      - build-assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v5
+
+      - name: 创建草稿 Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.prepare-release.outputs.tag }}
+          name: ${{ needs.prepare-release.outputs.tag }}
+          body_path: docs/release_notes/${{ needs.prepare-release.outputs.tag }}.md
+          prerelease: ${{ needs.prepare-release.outputs.prerelease == 'true' }}
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  upload-release-assets:
+    name: 上传产物到 Release
+    needs:
+      - prepare-release
+      - create-draft-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 设置发布元信息
+        run: |
+          echo "VERSION=${{ needs.prepare-release.outputs.tag }}" >> $GITHUB_ENV
+
+      - name: 下载 Release 产物
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '{jar,native-*}'
+          path: dist
+          merge-multiple: true
+
+      - name: 查看产物结构
+        run: |
+          ls -R dist
+
+      - name: 安装 zip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zip
+
+      - name: 打包为 ZIP
+        working-directory: dist
+        run: |
+          TAG=${VERSION}
+
+          # Linux
+          zip "xiaomi-album-syncer-linux-arm64-v${TAG}.zip" "xiaomi-album-syncer-linux-arm64-v${TAG}"
+          zip "xiaomi-album-syncer-linux-x64-v${TAG}.zip"   "xiaomi-album-syncer-linux-x64-v${TAG}"
+
+          # macOS
+          zip "xiaomi-album-syncer-macos-arm64-v${TAG}.zip" "xiaomi-album-syncer-macos-arm64-v${TAG}"
+          zip "xiaomi-album-syncer-macos-x64-v${TAG}.zip"   "xiaomi-album-syncer-macos-x64-v${TAG}"
+
+          # Windows
+          zip "xiaomi-album-syncer-windows-x64-v${TAG}.exe.zip" "xiaomi-album-syncer-windows-x64-v${TAG}.exe"
+
+          # JAR
+          zip "xiaomi-album-syncer-v${TAG}.jar.zip" "xiaomi-album-syncer-v${TAG}.jar"
+
+      - name: 上传到 Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.prepare-release.outputs.tag }}
+          draft: true
+          files: |
+            dist/xiaomi-album-syncer-linux-x64-v${{ needs.prepare-release.outputs.tag }}.zip
+            dist/xiaomi-album-syncer-linux-arm64-v${{ needs.prepare-release.outputs.tag }}.zip
+            dist/xiaomi-album-syncer-macos-x64-v${{ needs.prepare-release.outputs.tag }}.zip
+            dist/xiaomi-album-syncer-macos-arm64-v${{ needs.prepare-release.outputs.tag }}.zip
+            dist/xiaomi-album-syncer-windows-x64-v${{ needs.prepare-release.outputs.tag }}.exe.zip
+            dist/xiaomi-album-syncer-v${{ needs.prepare-release.outputs.tag }}.jar.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-release:
+    name: 公开 Release
+    needs:
+      - prepare-release
+      - upload-release-assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 设置发布元信息
+        run: |
+          echo "VERSION=${{ needs.prepare-release.outputs.tag }}" >> $GITHUB_ENV
+          echo "PRERELEASE=${{ needs.prepare-release.outputs.prerelease }}" >> $GITHUB_ENV
+
+      - name: 公开 Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "$PRERELEASE" = "true" ]; then
+            gh release edit "$VERSION" --draft=false --prerelease
+          else
+            gh release edit "$VERSION" --draft=false --latest
+          fi
