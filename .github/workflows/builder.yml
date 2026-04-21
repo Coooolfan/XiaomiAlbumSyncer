@@ -1,4 +1,4 @@
-name: Xiaomi Album Syncer CI
+name: build
 on:
   workflow_call:
     inputs:
