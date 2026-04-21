@@ -11,11 +11,6 @@ on:
         required: false
         default: "false"
         type: string
-      publish_release_assets:
-        description: "是否上传构建产物到 Release"
-        required: false
-        default: "false"
-        type: string
       publish_docker:
         description: "是否推送 Docker 镜像"
         required: false
@@ -29,10 +24,6 @@ on:
         default: "dev"
       prerelease:
         description: "是否为预发布版本"
-        required: false
-        default: "false"
-      publish_release_assets:
-        description: "是否上传构建产物到 Release"
         required: false
         default: "false"
       publish_docker:
@@ -228,74 +219,6 @@ jobs:
         with:
           name: native-${{ matrix.os_name }}-${{ matrix.arch }}
           path: server/build/native/nativeCompile/xiaomi-album-syncer-${{ matrix.os_name }}-${{ matrix.arch }}-v${{ inputs.version }}*
-
-  upload-release-assets:
-    name: 上传产物到 Release
-    if: inputs.publish_release_assets == 'true'
-    needs:
-      - build-jar
-      - build-native
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 设置发布元信息
-        run: |
-          echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
-
-      - name: 下载 Release 产物
-        uses: actions/download-artifact@v4
-        with:
-          pattern: '{jar,native-*}'
-          path: dist
-          merge-multiple: true
-
-      - name: 查看产物结构
-        run: |
-          ls -R dist
-
-      - name: 校验 Release 已存在
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release view "${{ inputs.version }}"
-
-      - name: 安装 zip
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y zip
-
-      - name: 打包为 ZIP
-        working-directory: dist
-        run: |
-          TAG=${VERSION}
-          
-          # Linux
-          zip "xiaomi-album-syncer-linux-arm64-v${TAG}.zip" "xiaomi-album-syncer-linux-arm64-v${TAG}"
-          zip "xiaomi-album-syncer-linux-x64-v${TAG}.zip"   "xiaomi-album-syncer-linux-x64-v${TAG}"
-          
-          # macOS
-          zip "xiaomi-album-syncer-macos-arm64-v${TAG}.zip" "xiaomi-album-syncer-macos-arm64-v${TAG}"
-          zip "xiaomi-album-syncer-macos-x64-v${TAG}.zip"   "xiaomi-album-syncer-macos-x64-v${TAG}"
-          
-          # Windows
-          zip "xiaomi-album-syncer-windows-x64-v${TAG}.exe.zip" "xiaomi-album-syncer-windows-x64-v${TAG}.exe"
-          
-          # JAR
-          zip "xiaomi-album-syncer-v${TAG}.jar.zip" "xiaomi-album-syncer-v${TAG}.jar"
-
-      - name: 上传到 Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ inputs.version }}
-          files: |
-            dist/xiaomi-album-syncer-linux-x64-v${{ inputs.version }}.zip
-            dist/xiaomi-album-syncer-linux-arm64-v${{ inputs.version }}.zip
-            dist/xiaomi-album-syncer-macos-x64-v${{ inputs.version }}.zip
-            dist/xiaomi-album-syncer-macos-arm64-v${{ inputs.version }}.zip
-            dist/xiaomi-album-syncer-windows-x64-v${{ inputs.version }}.exe.zip
-            dist/xiaomi-album-syncer-v${{ inputs.version }}.jar.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-docker-for-jvm:
     name: 构建并推送 Docker 镜像(JVM)
