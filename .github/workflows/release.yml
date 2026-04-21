@@ -7,6 +7,7 @@ on:
 
 jobs:
   prepare-release:
+    name: 预检
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -44,6 +45,7 @@ jobs:
           fi
 
   build-assets:
+    name: 构建
     needs: prepare-release
     permissions:
       contents: write
@@ -162,7 +164,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "$PRERELEASE" = "true" ]; then
-            gh release edit "$VERSION" --draft=false --prerelease
+            gh release edit "$VERSION" --draft=false --prerelease --repo "$GITHUB_REPOSITORY"
           else
-            gh release edit "$VERSION" --draft=false --latest
+            gh release edit "$VERSION" --draft=false --latest --repo "$GITHUB_REPOSITORY"
           fi
