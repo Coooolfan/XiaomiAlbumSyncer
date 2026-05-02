@@ -325,8 +325,8 @@ onBeforeUnmount(() => {
                 <span>校验 SHA1</span>
               </div>
               <div class="text-[10px] text-slate-400 dark:text-slate-500">
-                对下载的文件进行 SHA1 校验，失败则重新下载。<span class="font-bold"
-                  >没必要开。</span
+                比对文件 SHA1，校验失败会终止对应资产后续处理。<span class="font-bold"
+                  >有BUG，别开。对已存在的文件无效。</span
                 >
               </div>
             </div>
