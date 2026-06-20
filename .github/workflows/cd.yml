@@ -140,6 +140,7 @@ jobs:
       - name: 上传到 Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           VERSION: ${{ needs.prepare-release.outputs.version }}
         run: |
           set -euo pipefail
@@ -163,6 +164,7 @@ jobs:
       - name: 公开 Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           VERSION: ${{ needs.prepare-release.outputs.version }}
           PRERELEASE: ${{ needs.prepare-release.outputs.prerelease }}
           PUBLISH_LATEST: ${{ needs.prepare-release.outputs.publish_latest }}
