@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 
+import com.coooolfan.xiaomialbumsyncer.config.XiaomiApiProperties
 import com.coooolfan.xiaomialbumsyncer.model.Album
 import com.coooolfan.xiaomialbumsyncer.model.AlbumTimeline
 import com.coooolfan.xiaomialbumsyncer.model.Asset
@@ -9,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import okhttp3.FormBody
 import okhttp3.Request
 import org.noear.solon.Solon
+import org.noear.solon.annotation.Inject
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
@@ -21,6 +23,9 @@ import kotlin.io.path.Path
 @Managed
 class XiaoMiApi(private val tokenManager: TokenManager) {
 
+    @Inject
+    private lateinit var apiProperties: XiaomiApiProperties
+
     private val log = LoggerFactory.getLogger(XiaoMiApi::class.java)
 
     fun fetchAllAlbums(accountId: Long): List<Album> {
@@ -30,7 +35,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
 
         while (hasMorePages) {
             val req = Request.Builder()
-                .url("https://i.mi.com/gallery/user/album/list?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=10&isShared=false&numOfThumbnails=1")
+                .url(apiProperties.url("gallery/user/album/list?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=10&isShared=false&numOfThumbnails=1"))
                 .ua()
                 .authHeader(tokenManager.getAuthPair(accountId))
                 .get()
@@ -94,9 +99,9 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         while (hasMorePages) {
             val url =
                 if (album.isAudioAlbum())
-                    "https://i.mi.com/sfs/ns/recorder/dir/0/list?ts=${System.currentTimeMillis()}&limit=$pageSize&offset=${pageNum * pageSize}"
+                    apiProperties.url("sfs/ns/recorder/dir/0/list?ts=${System.currentTimeMillis()}&limit=$pageSize&offset=${pageNum * pageSize}")
                 else
-                    "https://i.mi.com/gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.remoteId}"
+                    apiProperties.url("gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.remoteId}")
 
 
             val req = Request.Builder()
@@ -151,7 +156,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
 
     fun fetchAlbumTimeline(accountId: Long, albumId: Long): AlbumTimeline {
         val req = Request.Builder()
-            .url("https://i.mi.com/gallery/user/timeline?ts=${System.currentTimeMillis()}&albumId=$albumId")
+            .url(apiProperties.url("gallery/user/timeline?ts=${System.currentTimeMillis()}&albumId=$albumId"))
             .ua()
             .authHeader(tokenManager.getAuthPair(accountId))
             .get()
@@ -172,9 +177,9 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
     fun downloadAsset(accountId: Long, asset: Asset, targetPath: Path): Boolean {
         val url =
             if (asset.type == AssetType.AUDIO)
-                "https://i.mi.com/sfs/ns/recorder/file/${asset.id}/cb/dl_sfs_cb_${System.currentTimeMillis()}_0/storage?ts=${System.currentTimeMillis()}"
+                apiProperties.url("sfs/ns/recorder/file/${asset.id}/cb/dl_sfs_cb_${System.currentTimeMillis()}_0/storage?ts=${System.currentTimeMillis()}")
             else
-                "https://i.mi.com/gallery/storage?ts=${System.currentTimeMillis()}&id=${asset.id}"
+                apiProperties.url("gallery/storage?ts=${System.currentTimeMillis()}&id=${asset.id}")
 
         // 这里的 resp 还是需要 close 一下，因为后面的 saveToFile 可能会阻塞很久，okhttp3 会报 warning
         // 1. 获取 OSS URL

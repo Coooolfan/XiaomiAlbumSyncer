@@ -1260,6 +1260,30 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.config.XiaomiApiProperties",
+      "fields": [
+        {
+          "name": "configuredBaseUrl"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        },
+        {
+          "name": "getBaseUrl",
+          "parameterTypes": []
+        },
+        {
+          "name": "url",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.config.flyway.DatabaseMigration",
       "allDeclaredFields": true,
       "methods": [

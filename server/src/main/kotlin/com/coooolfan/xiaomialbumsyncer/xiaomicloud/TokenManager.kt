@@ -1,18 +1,25 @@
 package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 
 
+import com.coooolfan.xiaomialbumsyncer.config.XiaomiApiProperties
 import com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount
 import com.coooolfan.xiaomialbumsyncer.utils.*
 import okhttp3.Request
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.noear.solon.Solon
+import org.noear.solon.annotation.Inject
 import org.noear.solon.annotation.Managed
 import java.time.Instant
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 @Managed
 class TokenManager(private val sql: KSqlClient) {
+
+    @Inject
+    private lateinit var apiProperties: XiaomiApiProperties
 
     private val log = org.slf4j.LoggerFactory.getLogger(TokenManager::class.java)
 
@@ -64,8 +71,9 @@ class TokenManager(private val sql: KSqlClient) {
         val deviceId = "wb_" + UUID.randomUUID().toString()
 
         // 步骤一 ：获取 loginUrl
+        val followUp = URLEncoder.encode(apiProperties.baseUrl.toString(), StandardCharsets.UTF_8)
         val preLoginReq = Request.Builder().url(
-            "https://i.mi.com/api/user/login?ts=${System.currentTimeMillis()}&followUp=https%3A%2F%2Fi.mi.com%2F&_locale=zh_CN"
+            apiProperties.url("api/user/login?ts=${System.currentTimeMillis()}&followUp=$followUp&_locale=zh_CN")
         ).ua()
             .header("Cookie", withCookie("userId" to userId, "deviceId" to deviceId, "passToken" to passToken)).get()
             .build()
