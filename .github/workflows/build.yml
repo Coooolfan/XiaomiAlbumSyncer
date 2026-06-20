@@ -1,4 +1,4 @@
-name: build
+name: XAS Build
 on:
   workflow_call:
     inputs:

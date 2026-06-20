@@ -1,4 +1,4 @@
-name: API E2E
+name: XAS E2E
 
 on:
   pull_request:

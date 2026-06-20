@@ -1,5 +1,5 @@
-name: release
-run-name: Release ${{ inputs.version }}
+name: XAS CD
+run-name: XAS CD ${{ inputs.version }}
 on:
   workflow_dispatch:
     inputs:
@@ -17,7 +17,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: release-${{ inputs.version }}
+  group: cd-${{ inputs.version }}
   cancel-in-progress: false
 
 jobs:
@@ -60,7 +60,7 @@ jobs:
   build-assets:
     name: 构建
     needs: prepare-release
-    uses: ./.github/workflows/builder.yml
+    uses: ./.github/workflows/build.yml
     with:
       version: ${{ needs.prepare-release.outputs.version }}
       prerelease: ${{ needs.prepare-release.outputs.prerelease }}
