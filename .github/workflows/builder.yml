@@ -16,6 +16,11 @@ on:
         required: false
         default: "false"
         type: string
+      publish_latest:
+        description: "是否推送 Docker latest 标签"
+        required: false
+        default: "false"
+        type: string
   workflow_dispatch:
     inputs:
       version:
@@ -28,6 +33,10 @@ on:
         default: "false"
       publish_docker:
         description: "是否推送 Docker 镜像"
+        required: false
+        default: "false"
+      publish_latest:
+        description: "是否推送 Docker latest 标签"
         required: false
         default: "false"
 
@@ -233,7 +242,7 @@ jobs:
       - name: 设置发布元信息
         run: |
           echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
-          echo "PRERELEASE=${{ inputs.prerelease }}" >> $GITHUB_ENV
+          echo "PUBLISH_LATEST=${{ inputs.publish_latest }}" >> $GITHUB_ENV
 
       - name: 设置 QEMU
         uses: docker/setup-qemu-action@v3
@@ -257,7 +266,7 @@ jobs:
         id: docker-tags-jvm
         run: |
           TAGS="${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${VERSION}"
-          if [ "${PRERELEASE}" != "true" ]; then
+          if [ "${PUBLISH_LATEST}" = "true" ]; then
             TAGS="${TAGS},${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:latest"
           fi
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
@@ -286,7 +295,7 @@ jobs:
       - name: 设置发布元信息
         run: |
           echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
-          echo "PRERELEASE=${{ inputs.prerelease }}" >> $GITHUB_ENV
+          echo "PUBLISH_LATEST=${{ inputs.publish_latest }}" >> $GITHUB_ENV
 
       - name: 下载 Native 产物 (linux-x64)
         uses: actions/download-artifact@v4
@@ -323,7 +332,7 @@ jobs:
         id: docker-tags-native
         run: |
           TAGS="${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:${VERSION}-native"
-          if [ "${PRERELEASE}" != "true" ]; then
+          if [ "${PUBLISH_LATEST}" = "true" ]; then
             TAGS="${TAGS},${{ secrets.DOCKERHUB_USERNAME }}/xiaomi-album-syncer:latest-native"
           fi
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
