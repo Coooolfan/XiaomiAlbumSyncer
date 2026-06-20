@@ -1,0 +1,61 @@
+name: API E2E
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  jvm-api-e2e:
+    name: JVM API E2E
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v5
+
+      - name: 设置 JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: 执行 JVM API E2E
+        working-directory: server
+        run: ./gradlew clean apiE2eJvm --no-daemon
+
+  native-api-e2e:
+    name: Native API E2E
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v5
+
+      - name: 设置 GraalVM 25
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: graalvm
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: gradle
+
+      - name: 检查 Native Image 元数据
+        working-directory: server
+        run: ./gradlew checkNativeMetadata --no-daemon
+
+      - name: 上传 tracing agent 合并结果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-agent-metadata
+          path: server/build/native-agent-merged
+          if-no-files-found: ignore
+
+      - name: 构建并测试 Native Image
+        working-directory: server
+        run: ./gradlew apiE2eNative --no-daemon

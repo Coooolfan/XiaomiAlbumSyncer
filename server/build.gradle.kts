@@ -1,5 +1,7 @@
 import org.graalvm.buildtools.gradle.tasks.BuildNativeImageTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.gradle.jvm.toolchain.JvmVendorSpec
+import java.nio.file.Path as NioPath
 
 plugins {
     java
@@ -19,6 +21,21 @@ repositories {
 group = "com.coooolfan"
 version = getGitVersion()
 description = "A tool to download albums from Xiaomi Cloud."
+
+val apiE2eTest = sourceSets.create("apiE2eTest") {
+    resources.srcDir("src/apiE2eTest/resources")
+    compileClasspath += sourceSets.main.get().output + configurations.testRuntimeClasspath.get()
+    runtimeClasspath += output + compileClasspath
+}
+
+kotlin.sourceSets.named(apiE2eTest.name) {
+    kotlin.srcDir("src/apiE2eTest/kotlin")
+}
+
+configurations[apiE2eTest.implementationConfigurationName]
+    .extendsFrom(configurations.testImplementation.get())
+configurations[apiE2eTest.runtimeOnlyConfigurationName]
+    .extendsFrom(configurations.testRuntimeOnly.get())
 
 dependencies {
     implementation(platform(libs.solon.parent))
@@ -114,6 +131,114 @@ sourceSets {
 
 tasks.named("processResources") {
     dependsOn(generateVersionProperties)
+}
+
+val nativeMetadataSource = layout.projectDirectory.dir("src/main/resources/META-INF/native-image")
+val nativeAgentMerged = layout.buildDirectory.dir("native-agent-merged")
+val graalVmLauncher = javaToolchains.launcherFor {
+    languageVersion.set(JavaLanguageVersion.of(25))
+    vendor.set(JvmVendorSpec.GRAAL_VM)
+}
+
+val prepareNativeMetadataMerge by tasks.registering(Sync::class) {
+    group = "native"
+    description = "复制当前 Native Image 元数据，供 tracing agent 增量合并"
+    from(nativeMetadataSource)
+    into(nativeAgentMerged)
+}
+
+fun Test.configureApiE2e(target: String) {
+    group = "verification"
+    testClassesDirs = apiE2eTest.output.classesDirs
+    classpath = apiE2eTest.runtimeClasspath
+    dependsOn(tasks.named(apiE2eTest.classesTaskName), tasks.named("classes"))
+    useJUnitPlatform()
+    maxParallelForks = 1
+    outputs.upToDateWhen { false }
+    systemProperty("xiaomi.e2e.target", target)
+}
+
+val apiE2eJvm by tasks.registering(Test::class) {
+    description = "在普通 JVM 应用进程上执行黑盒 API E2E 测试"
+    configureApiE2e("jvm")
+    doFirst {
+        systemProperty("xiaomi.e2e.appClasspath", sourceSets.main.get().runtimeClasspath.asPath)
+        systemProperty(
+            "xiaomi.e2e.javaExecutable",
+            NioPath.of(System.getProperty("java.home"), "bin", "java").toString()
+        )
+    }
+}
+
+val collectNativeMetadata by tasks.registering(Test::class) {
+    description = "使用 Native Image tracing agent 执行 API E2E 并合并元数据到 build 目录"
+    configureApiE2e("jvm")
+    dependsOn(prepareNativeMetadataMerge)
+    doFirst {
+        val currentJavaHome = NioPath.of(System.getProperty("java.home"))
+        val currentJavaHasAgent = currentJavaHome.resolve("lib").toFile()
+            .listFiles()
+            ?.any { it.name.contains("native-image-agent") }
+            ?: false
+        val agentJavaExecutable = if (currentJavaHasAgent) {
+            currentJavaHome.resolve("bin/java").toString()
+        } else {
+            graalVmLauncher.get().executablePath.asFile.absolutePath
+        }
+        systemProperty("xiaomi.e2e.appClasspath", sourceSets.main.get().runtimeClasspath.asPath)
+        systemProperty("xiaomi.e2e.javaExecutable", agentJavaExecutable)
+        systemProperty("xiaomi.e2e.agentConfigDir", nativeAgentMerged.get().asFile.absolutePath)
+    }
+}
+
+val apiE2eNative by tasks.registering(Test::class) {
+    description = "在 Native Image 可执行文件上执行黑盒 API E2E 测试"
+    configureApiE2e("native")
+    dependsOn(tasks.named("nativeCompile"))
+    doFirst {
+        val executableName = if (System.getProperty("os.name").startsWith("Windows")) {
+            "XiaomiAlbumSyncer.exe"
+        } else {
+            "XiaomiAlbumSyncer"
+        }
+        systemProperty(
+            "xiaomi.e2e.appExecutable",
+            layout.buildDirectory.file("native/nativeCompile/$executableName").get().asFile.absolutePath
+        )
+    }
+}
+
+tasks.register<Sync>("updateNativeMetadata") {
+    group = "native"
+    description = "执行 API E2E 收集，并将合并后的 Native Image 元数据更新到源码目录"
+    dependsOn(collectNativeMetadata)
+    from(nativeAgentMerged)
+    into(nativeMetadataSource)
+}
+
+tasks.register("checkNativeMetadata") {
+    group = "verification"
+    description = "执行 API E2E 收集，并检查已提交的 Native Image 元数据是否最新"
+    dependsOn(collectNativeMetadata)
+    doLast {
+        val sourceRoot = nativeMetadataSource.asFile
+        val mergedRoot = nativeAgentMerged.get().asFile
+        val sourceFiles = sourceRoot.walkTopDown()
+            .filter { it.isFile }
+            .associateBy { it.relativeTo(sourceRoot).invariantSeparatorsPath }
+        val mergedFiles = mergedRoot.walkTopDown()
+            .filter { it.isFile }
+            .associateBy { it.relativeTo(mergedRoot).invariantSeparatorsPath }
+
+        val differentFiles = (sourceFiles.keys + mergedFiles.keys).filter { relativePath ->
+            val sourceFile = sourceFiles[relativePath]
+            val mergedFile = mergedFiles[relativePath]
+            sourceFile == null || mergedFile == null || !sourceFile.readBytes().contentEquals(mergedFile.readBytes())
+        }
+        check(differentFiles.isEmpty()) {
+            "Native Image 元数据需要更新: ${differentFiles.joinToString()}。请执行 ./gradlew updateNativeMetadata"
+        }
+    }
 }
 
 fun getGitVersion(): String = try {
