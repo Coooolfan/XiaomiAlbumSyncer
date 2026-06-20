@@ -19,7 +19,7 @@ repositories {
 }
 
 group = "com.coooolfan"
-version = getGitVersion()
+version = (findProperty("appVersion") as String?)?.takeIf { it.isNotBlank() } ?: getGitVersion()
 description = "A tool to download albums from Xiaomi Cloud."
 
 val apiE2eTest = sourceSets.create("apiE2eTest") {

@@ -117,7 +117,7 @@ jobs:
           if [ "$RUNNER_OS" != "Windows" ]; then
             chmod +x ./gradlew
           fi
-          ./gradlew solonJar
+          ./gradlew solonJar -PappVersion="${VERSION}"
           ./gradlew --stop || true
 
       - name: 整理 JAR 产物
@@ -208,7 +208,7 @@ jobs:
           if [ "$RUNNER_OS" != "Windows" ]; then
             chmod +x ./gradlew
           fi
-          ./gradlew nativeCompile
+          ./gradlew nativeCompile -PappVersion="${VERSION}"
           ./gradlew --stop || true
 
       - name: 整理 Native 产物
