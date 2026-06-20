@@ -8,6 +8,8 @@ declare global {
   }
 }
 
+let unauthorizedHandled = false
+
 // 导出全局变量`api`
 export const api = new Api(async ({ uri, method, headers, body }) => {
   const tenant = window.__tenant
@@ -26,13 +28,15 @@ export const api = new Api(async ({ uri, method, headers, body }) => {
     headers: fetchHeaders,
   })
 
-  // 401处理：排除获取token的接口，避免循环
+  // 401处理：排除获取token的接口，避免循环；并发的多次 401 只提示并跳转一次
   if (response.status === 401 && !(uri.includes('/api/token') && method.includes('GET'))) {
-    // 清除 token
-    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-
-    window.alert('登录已过期，请重新登录')
-    window.location.replace('/')
+    if (!unauthorizedHandled) {
+      unauthorizedHandled = true
+      document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      window.alert('登录已过期，请重新登录')
+      window.location.replace('/')
+    }
+    throw new Error('登录已过期')
   }
 
   if (Math.floor(response.status / 100) === 5) {
