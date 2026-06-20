@@ -9,7 +9,11 @@ import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
+import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption.ATOMIC_MOVE
+import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import kotlin.io.path.Path
 
 /**
@@ -31,13 +35,26 @@ class DownloadStage(
 
         val targetPath = Path(context.filePath)
         targetPath.parent?.let { Files.createDirectories(it) }
+        val tempPath = targetPath.resolveSibling("${targetPath.fileName}.${context.id}.tmp")
+        cleanupTempFile(tempPath)
 
         if (context.crontabHistory.crontab.config.skipExistingFile && Files.exists(targetPath))
             log.info("跳过已存在文件 {}", targetPath)
         else {
             log.info("开始下载资产 {}", context.asset.id)
-            val accountId = context.crontabHistory.crontab.accountId
-            api.downloadAsset(accountId, context.asset, targetPath)
+            val downloaded = try {
+                api.downloadAsset(
+                    context.crontabHistory.crontab.accountId,
+                    context.asset,
+                    tempPath
+                )
+            } catch (e: Exception) {
+                cleanupTempFile(tempPath)
+                throw e
+            }
+            if (downloaded) {
+                moveCompletedDownload(tempPath, targetPath)
+            }
             log.info("下载资产 {} 完成", context.asset.id)
         }
 
@@ -51,5 +68,23 @@ class DownloadStage(
         }
     }
 
+    private fun cleanupTempFile(tempPath: Path) {
+        try {
+            if (Files.deleteIfExists(tempPath)) {
+                log.info("已清理下载临时文件 {}", tempPath)
+            }
+        } catch (e: Exception) {
+            log.warn("清理下载临时文件失败: {}", tempPath, e)
+        }
+    }
+
+    private fun moveCompletedDownload(tempPath: Path, targetPath: Path) {
+        try {
+            Files.move(tempPath, targetPath, ATOMIC_MOVE, REPLACE_EXISTING)
+        } catch (_: AtomicMoveNotSupportedException) {
+            // 兼容不支持原子移动的网络或挂载文件系统。
+            Files.move(tempPath, targetPath, REPLACE_EXISTING)
+        }
+    }
 
 }

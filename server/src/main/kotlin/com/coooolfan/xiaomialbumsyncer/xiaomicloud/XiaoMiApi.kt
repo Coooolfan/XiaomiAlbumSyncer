@@ -169,7 +169,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         return AlbumTimeline(indexHash, dayCountMap)
     }
 
-    fun downloadAsset(accountId: Long, asset: Asset, targetPath: Path): Path {
+    fun downloadAsset(accountId: Long, asset: Asset, targetPath: Path): Boolean {
         val url =
             if (asset.type == AssetType.AUDIO)
                 "https://i.mi.com/sfs/ns/recorder/file/${asset.id}/cb/dl_sfs_cb_${System.currentTimeMillis()}_0/storage?ts=${System.currentTimeMillis()}"
@@ -189,10 +189,10 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             Solon.context().objectMapper.readTree(resp.body.string())
         }
 
-        // 文件已经被删掉了，直接返回一个无效值，避免后续反复请求
+        // 文件已经被删掉了，返回未下载，避免后续反复请求
         if (fetchOssUrlJson.at("/code").asInt() == 50050) {
             log.warn("文件: ${asset.fileName} id: ${asset.id} 已经被删除，跳过下载")
-            return Path("/tmp/DELETED")
+            return false
         }
 
         val ossUrl = fetchOssUrlJson.at("/data/url").asText()
@@ -217,7 +217,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             downloadResp.body.saveToFile(targetPath)
         }
 
-        return targetPath
+        return true
     }
 
     private fun parseJsonNode(jsonNode: JsonNode, album: Album): Asset {
@@ -259,4 +259,3 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         }
     }
 }
-
