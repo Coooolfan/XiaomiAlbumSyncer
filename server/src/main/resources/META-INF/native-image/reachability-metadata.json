@@ -1637,6 +1637,12 @@
           "parameterTypes": []
         },
         {
+          "name": "clearCrontabHistory",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
           "name": "createCrontab",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput"
@@ -6097,6 +6103,12 @@
           "parameterTypes": [
             "org.babyfish.jimmer.sql.kt.KSqlClient",
             "com.coooolfan.xiaomialbumsyncer.config.TaskScheduler"
+          ]
+        },
+        {
+          "name": "clearCrontabHistory",
+          "parameterTypes": [
+            "long"
           ]
         },
         {
