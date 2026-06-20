@@ -167,6 +167,15 @@ class ApiE2eSuite {
         assertTrue(paths.contains("/mock/oss/101"))
         assertTrue(paths.contains("/mock/download/101"))
 
+        api.delete("/api/crontab/$crontabId/histories").expect(200)
+        val historiesAfterClear = api.json(api.get("/api/crontab").expect(200))
+            .first { it.path("id").asLong() == crontabId }
+            .path("histories")
+        assertTrue(
+            historiesAfterClear.isArray && historiesAfterClear.size() == 0,
+            "清理历史后 histories 应为空: $historiesAfterClear"
+        )
+
         api.delete("/api/crontab/$crontabId").expect(200)
         api.delete("/api/account/$accountId").expect(200)
         api.post(

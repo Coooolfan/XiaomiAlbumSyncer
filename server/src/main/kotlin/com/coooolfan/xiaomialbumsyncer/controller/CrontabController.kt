@@ -107,6 +107,21 @@ class CrontabController(private val service: CrontabService) {
     }
 
     /**
+     * 清理指定定时任务的全部执行历史
+     *
+     * 删除该定时任务名下所有 CrontabHistory 与级联的 CrontabHistoryDetail，
+     * 但保留定时任务本身。
+     *
+     * @api DELETE /api/crontab/{crontabId}/histories
+     * @permission 需要登录认证
+     */
+    @Api
+    @Mapping("/{crontabId}/histories", method = [MethodType.DELETE])
+    fun clearCrontabHistory(@Path crontabId: Long) {
+        service.clearCrontabHistory(crontabId)
+    }
+
+    /**
      * 立即执行指定定时任务
      *
      * 此接口用于立即执行指定的定时任务，不等待预定的执行时间

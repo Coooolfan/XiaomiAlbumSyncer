@@ -27,6 +27,7 @@ const emit = defineEmits<{
   (e: 'execute'): void
   (e: 'executeExif'): void
   (e: 'executeRewriteFsTime'): void
+  (e: 'clearHistory'): void
   (e: 'viewHistoryDetails', history: CrontabHistory): void
   (e: 'refresh'): void
 }>()
@@ -84,6 +85,11 @@ const manualActionOptions = computed(() => {
       command: () => emit('executeRewriteFsTime'),
     })
   }
+  actions.push({
+    label: '清理任务历史',
+    icon: 'pi pi-trash',
+    command: () => emit('clearHistory'),
+  })
   return actions
 })
 
@@ -181,22 +187,12 @@ onUnmounted(() => {
           </template>
 
           <SplitButton
-            v-if="manualActionOptions.length > 0"
             size="small"
             severity="warning"
             class="mr-1"
             label="立即执行"
             icon="pi pi-play"
             :model="manualActionOptions"
-            @click="emit('execute')"
-          />
-          <Button
-            v-else
-            icon="pi pi-play"
-            size="small"
-            severity="warning"
-            class="mr-1"
-            v-tooltip="'立即执行'"
             @click="emit('execute')"
           />
 

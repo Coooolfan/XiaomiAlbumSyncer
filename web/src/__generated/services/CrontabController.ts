@@ -19,6 +19,22 @@ export class CrontabController {
     constructor(private executor: Executor) {}
     
     /**
+     * 清理指定定时任务的全部执行历史
+     * 
+     * 删除该定时任务名下所有 CrontabHistory 与级联的 CrontabHistoryDetail，
+     * 但保留定时任务本身。
+     * 
+     */
+    readonly clearCrontabHistory: (options: CrontabControllerOptions['clearCrontabHistory']) => Promise<
+        void
+    > = async(options) => {
+        let _uri = '/api/crontab/';
+        _uri += encodeURIComponent(options.crontabId);
+        _uri += '/histories';
+        return (await this.executor({uri: _uri, method: 'DELETE'})) as Promise<void>;
+    }
+    
+    /**
      * 创建新的定时任务
      * 
      * 此接口用于在系统中创建新的定时任务配置
@@ -226,6 +242,9 @@ export type CrontabControllerOptions = {
          * 定时任务ID，用于指定要删除的任务
          * 
          */
+        readonly crontabId: number
+    }, 
+    'clearCrontabHistory': {
         readonly crontabId: number
     }, 
     'executeCrontab': {

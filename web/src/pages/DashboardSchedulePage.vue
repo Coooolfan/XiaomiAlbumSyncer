@@ -120,16 +120,19 @@ const {
   executeDialog,
   executeExifDialog,
   executeRewriteFsDialog,
+  clearHistoryDialog,
   requestDelete,
   requestExecute,
   requestExecuteExif,
   requestExecuteRewriteFs,
+  requestClearHistory,
   submitCron,
   toggleEnabled,
   confirmDelete,
   confirmExecute,
   confirmExecuteExif,
   confirmExecuteRewriteFs,
+  confirmClearHistory,
 } = useCronActions({
   crontabsStore,
   toast,
@@ -145,6 +148,7 @@ const { visible: showDeleteVisible, loading: deleting } = deleteDialog
 const { visible: showExecuteVisible, loading: executing } = executeDialog
 const { visible: showExecuteExifVisible, loading: executingExif } = executeExifDialog
 const { visible: showExecuteRewriteFsVisible, loading: executingRewriteFs } = executeRewriteFsDialog
+const { visible: showClearHistoryVisible, loading: clearingHistory } = clearHistoryDialog
 
 const showHistoryDetailsDialog = ref(false)
 const selectedHistory = ref<CrontabHistory | null>(null)
@@ -279,6 +283,7 @@ watch(showHistoryDetailsDialog, (visible) => {
       @execute="requestExecute"
       @execute-exif="requestExecuteExif"
       @execute-rewrite-fs-time="requestExecuteRewriteFs"
+      @clear-history="requestClearHistory"
       @view-history-details="openHistoryDetails"
     />
 
@@ -302,18 +307,22 @@ watch(showHistoryDetailsDialog, (visible) => {
       v-model:execute-visible="showExecuteVisible"
       v-model:execute-exif-visible="showExecuteExifVisible"
       v-model:execute-rewrite-fs-visible="showExecuteRewriteFsVisible"
+      v-model:clear-history-visible="showClearHistoryVisible"
       :deleting="deleting"
       :executing="executing"
       :executing-exif="executingExif"
       :executing-rewrite-fs="executingRewriteFs"
+      :clearing-history="clearingHistory"
       @close-delete="deleteDialog.close()"
       @close-execute="executeDialog.close()"
       @close-execute-exif="executeExifDialog.close()"
       @close-execute-rewrite-fs="executeRewriteFsDialog.close()"
+      @close-clear-history="clearHistoryDialog.close()"
       @confirm-delete="confirmDelete"
       @confirm-execute="confirmExecute"
       @confirm-execute-exif="confirmExecuteExif"
       @confirm-execute-rewrite-fs="confirmExecuteRewriteFs"
+      @confirm-clear-history="confirmClearHistory"
     />
 
     <CrontabHistoryDetailsDialog

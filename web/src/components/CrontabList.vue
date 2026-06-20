@@ -36,6 +36,7 @@ const emit = defineEmits<{
   (e: 'execute', item: Crontab): void
   (e: 'executeExif', item: Crontab): void
   (e: 'executeRewriteFsTime', item: Crontab): void
+  (e: 'clearHistory', item: Crontab): void
   (e: 'viewHistoryDetails', history: CrontabHistory): void
 }>()
 </script>
@@ -93,6 +94,7 @@ const emit = defineEmits<{
               @execute="emit('execute', item)"
               @execute-exif="emit('executeExif', item)"
               @execute-rewrite-fs-time="emit('executeRewriteFsTime', item)"
+              @clear-history="emit('clearHistory', item)"
               @view-history-details="emit('viewHistoryDetails', $event)"
               @refresh="emit('refresh')"
             />

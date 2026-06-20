@@ -48,6 +48,12 @@ class CrontabService(private val sql: KSqlClient) {
         taskScheduler.initJobs()
     }
 
+    fun clearCrontabHistory(crontabId: Long) {
+        sql.executeDelete(CrontabHistory::class) {
+            where(table.crontabId eq crontabId)
+        }
+    }
+
     fun getCrontabCurrentStats(crontabId: Long): CrontabCurrentStats {
         if (!taskScheduler.checkIsRunning(crontabId))
             return CrontabCurrentStats() // 没有正在运行

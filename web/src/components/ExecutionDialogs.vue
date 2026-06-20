@@ -8,10 +8,12 @@ const props = defineProps<{
   executeVisible: boolean
   executeExifVisible: boolean
   executeRewriteFsVisible: boolean
+  clearHistoryVisible: boolean
   deleting: boolean
   executing: boolean
   executingExif: boolean
   executingRewriteFs: boolean
+  clearingHistory: boolean
 }>()
 
 const emit = defineEmits<{
@@ -19,14 +21,17 @@ const emit = defineEmits<{
   (e: 'update:executeVisible', value: boolean): void
   (e: 'update:executeExifVisible', value: boolean): void
   (e: 'update:executeRewriteFsVisible', value: boolean): void
+  (e: 'update:clearHistoryVisible', value: boolean): void
   (e: 'closeDelete'): void
   (e: 'closeExecute'): void
   (e: 'closeExecuteExif'): void
   (e: 'closeExecuteRewriteFs'): void
+  (e: 'closeClearHistory'): void
   (e: 'confirmDelete'): void
   (e: 'confirmExecute'): void
   (e: 'confirmExecuteExif'): void
   (e: 'confirmExecuteRewriteFs'): void
+  (e: 'confirmClearHistory'): void
 }>()
 
 const deleteVisible = computed({
@@ -49,6 +54,11 @@ const executeRewriteFsVisible = computed({
   set: (value: boolean) => emit('update:executeRewriteFsVisible', value),
 })
 
+const clearHistoryVisible = computed({
+  get: () => props.clearHistoryVisible,
+  set: (value: boolean) => emit('update:clearHistoryVisible', value),
+})
+
 function closeDelete() {
   deleteVisible.value = false
   emit('closeDelete')
@@ -67,6 +77,11 @@ function closeExecuteExif() {
 function closeExecuteRewriteFs() {
   executeRewriteFsVisible.value = false
   emit('closeExecuteRewriteFs')
+}
+
+function closeClearHistory() {
+  clearHistoryVisible.value = false
+  emit('closeClearHistory')
 }
 </script>
 
@@ -149,6 +164,31 @@ function closeExecuteRewriteFs() {
           severity="info"
           :loading="props.executingRewriteFs"
           @click="emit('confirmExecuteRewriteFs')"
+        />
+      </div>
+    </template>
+  </Dialog>
+
+  <!-- 清理任务历史 -->
+  <Dialog v-model:visible="clearHistoryVisible" modal header="清理任务历史" class="w-full sm:w-105">
+    <div class="text-sm text-slate-700 dark:text-slate-200 space-y-2">
+      <div>确定要清空该任务的执行历史与下载记录吗？</div>
+      <div>
+        下次执行将把所有资源视为新增重新评估。时间线比对基线会丢失，下次执行回退为全量比对，耗时更长。
+      </div>
+      <div>
+        仅删除数据库记录，
+        <bold class="text-amber-700 dark:text-amber-400">不会清理</bold> 文件系统/磁盘 上的文件
+      </div>
+    </div>
+    <template #footer>
+      <div class="flex items-center justify-end gap-2 w-full">
+        <Button label="取消" severity="secondary" text @click="closeClearHistory" />
+        <Button
+          label="清理"
+          severity="danger"
+          :loading="props.clearingHistory"
+          @click="emit('confirmClearHistory')"
         />
       </div>
     </template>

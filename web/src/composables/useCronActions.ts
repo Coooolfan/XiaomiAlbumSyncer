@@ -17,6 +17,7 @@ type CrontabsStore = {
   executeCrontab: (crontabId: number) => Promise<unknown>
   executeCrontabExifTime: (crontabId: number) => Promise<unknown>
   executeCrontabRewriteFileSystemTime: (crontabId: number) => Promise<unknown>
+  clearCrontabHistory: (crontabId: number) => Promise<unknown>
 }
 
 type UseCronActionsOptions = {
@@ -49,6 +50,7 @@ export function useCronActions(options: UseCronActionsOptions) {
   const executeDialog = useActionDialog()
   const executeExifDialog = useActionDialog()
   const executeRewriteFsDialog = useActionDialog()
+  const clearHistoryDialog = useActionDialog()
 
   function requestDelete(row: Crontab) {
     deleteDialog.open(row.id)
@@ -64,6 +66,10 @@ export function useCronActions(options: UseCronActionsOptions) {
 
   function requestExecuteRewriteFs(row: Crontab) {
     executeRewriteFsDialog.open(row.id)
+  }
+
+  function requestClearHistory(row: Crontab) {
+    clearHistoryDialog.open(row.id)
   }
 
   async function submitCron() {
@@ -191,6 +197,27 @@ export function useCronActions(options: UseCronActionsOptions) {
     }
   }
 
+  async function confirmClearHistory() {
+    if (clearHistoryDialog.targetId.value === null) return
+    clearHistoryDialog.loading.value = true
+    try {
+      await crontabsStore.clearCrontabHistory(clearHistoryDialog.targetId.value)
+      toast.add({ severity: 'success', summary: '已清理历史', life: 1800 })
+      clearHistoryDialog.close()
+      await fetchCrontabs()
+    } catch (err) {
+      console.error('清理任务历史失败', err)
+      toast.add({
+        severity: 'error',
+        summary: '清理失败',
+        detail: err instanceof Error ? err.message : String(err),
+        life: 2200,
+      })
+    } finally {
+      clearHistoryDialog.loading.value = false
+    }
+  }
+
   return {
     saving,
     updatingRow,
@@ -198,15 +225,18 @@ export function useCronActions(options: UseCronActionsOptions) {
     executeDialog,
     executeExifDialog,
     executeRewriteFsDialog,
+    clearHistoryDialog,
     requestDelete,
     requestExecute,
     requestExecuteExif,
     requestExecuteRewriteFs,
+    requestClearHistory,
     submitCron,
     toggleEnabled,
     confirmDelete,
     confirmExecute,
     confirmExecuteExif,
     confirmExecuteRewriteFs,
+    confirmClearHistory,
   }
 }

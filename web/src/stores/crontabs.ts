@@ -64,6 +64,10 @@ export const useCrontabsStore = defineStore('crontabs', () => {
     return api.crontabController.executeCrontabRewriteFileSystemTime({ crontabId })
   }
 
+  async function clearCrontabHistory(crontabId: number) {
+    await api.crontabController.clearCrontabHistory({ crontabId })
+  }
+
   function reset() {
     crontabs.value = []
     loaded.value = false
@@ -83,6 +87,7 @@ export const useCrontabsStore = defineStore('crontabs', () => {
     executeCrontab,
     executeCrontabExifTime,
     executeCrontabRewriteFileSystemTime,
+    clearCrontabHistory,
     reset,
   }
 })
