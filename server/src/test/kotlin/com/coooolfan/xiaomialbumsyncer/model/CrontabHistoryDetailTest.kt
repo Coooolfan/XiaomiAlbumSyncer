@@ -229,6 +229,58 @@ class CrontabHistoryDetailTest {
     }
 
     @Test
+    fun expressionInterpolatesRecordingType() {
+        val template = "\${recordingTypeId}/\${recordingType}/\${assetId}_\${fileName}"
+        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
+        val album = buildAlbum("Recordings")
+        val asset = buildAsset(
+            AssetType.AUDIO,
+            "call.mp3",
+            album,
+            id = 12345L,
+            recordingType = RecordingType.PHONE_CALL,
+        )
+
+        val detail = CrontabHistoryDetail.init(history, asset)
+
+        val expected = Path("1/通话录音/12345_call.mp3").toString()
+        assertEquals(expected, detail.filePath)
+    }
+
+    @Test
+    fun expressionInterpolatesBlankRecordingTypeForNonAudioAsset() {
+        val template = "media/\${recordingType}/\${fileName}"
+        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
+        val album = buildAlbum("Photos")
+        val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
+
+        val detail = CrontabHistoryDetail.init(history, asset)
+
+        val expected = Path("media/photo.jpg").toString()
+        assertEquals(expected, detail.filePath)
+    }
+
+    @Test
+    fun expressionOnlyContainingRecordingTypeIsSupported() {
+        val template = "\${recordingType}"
+        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
+        val album = buildAlbum("Recordings")
+        val asset = buildAsset(
+            AssetType.AUDIO,
+            "app.aac",
+            album,
+            recordingType = RecordingType.APP,
+        )
+
+        val detail = CrontabHistoryDetail.init(history, asset)
+
+        assertEquals("应用录音", detail.filePath)
+    }
+
+    @Test
     fun expressionInterpolatesSha1() {
         val template = "\${album}/\${sha1}_\${fileName}"
         val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
@@ -783,11 +835,13 @@ class CrontabHistoryDetailTest {
         fileName: String,
         album: Album,
         id: Long = 100L,
+        recordingType: RecordingType? = null,
     ): Asset {
         return Asset {
             this.id = id
             this.fileName = fileName
             this.type = type
+            this.recordingType = recordingType
             dateTaken = Instant.parse("2024-04-01T00:00:00Z")
             this.album = album
             sha1 = "deadbeef"
@@ -802,11 +856,13 @@ class CrontabHistoryDetailTest {
         fileName: String,
         album: Album,
         id: Long = 100L,
+        recordingType: RecordingType? = null,
     ): Asset {
         return Asset {
             this.id = id
             this.fileName = fileName
             this.type = type
+            this.recordingType = recordingType
             dateTaken = Instant.parse("2024-04-01T00:00:00Z")
             this.album = album
             sha1 = "deadbeef"

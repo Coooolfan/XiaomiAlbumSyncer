@@ -94,6 +94,8 @@ interface CrontabHistoryDetail {
             put("fileExt", fileExt)
             put("assetId", asset.id.toString())
             put("assetType", asset.type.name.lowercase(Locale.ROOT))
+            put("recordingTypeId", asset.recordingType?.code?.toString() ?: "")
+            put("recordingType", asset.recordingType?.label ?: "")
             put("sha1", asset.sha1)
             put("title", sanitizeSegment(asset.title))
             put("size", asset.size.toString())
