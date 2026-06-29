@@ -282,10 +282,9 @@ internal fun parseXiaomiRecordingName(name: String): XiaomiRecordingName {
         )
     }
 
-    val fileName = "${match.groupValues[1]}.${match.groupValues[2]}"
-    val recordingTypeCode = match.groupValues[4].toIntOrNull()
+    val (base, ext, _, typeCode) = match.destructured
     return XiaomiRecordingName(
-        fileName = fileName,
-        recordingType = recordingTypeCode?.let(RecordingType::fromCode) ?: RecordingType.UNKNOWN,
+        fileName = "$base.$ext",
+        recordingType = RecordingType.fromCode(typeCode.toIntOrNull() ?: -1),
     )
 }
