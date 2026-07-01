@@ -5,6 +5,7 @@ import com.coooolfan.xiaomialbumsyncer.model.Album
 import com.coooolfan.xiaomialbumsyncer.model.AlbumTimeline
 import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.AssetType
+import com.coooolfan.xiaomialbumsyncer.model.RecordingType
 import com.coooolfan.xiaomialbumsyncer.utils.*
 import com.fasterxml.jackson.databind.JsonNode
 import okhttp3.FormBody
@@ -245,22 +246,45 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
 
             true -> {
                 val name = jsonNode.get("name").asText()
-                // 从名字尾部开始匹配可以避免文件名中包含“_”的场景
-                val fileName =
-                    name.substringBeforeLast("_").substringBeforeLast("_").substringBeforeLast("_")
-                        .substringBeforeLast("_")
+                val recordingName = parseXiaomiRecordingName(name)
                 Asset {
                     this.id = jsonNode.get("id").asLong()
-                    this.fileName = fileName
+                    this.fileName = recordingName.fileName
                     this.type = AssetType.AUDIO
+                    this.recordingType = recordingName.recordingType
                     this.dateTaken = Instant.ofEpochMilli(jsonNode.get("create_time").asLong())
                     this.albumId = album.id
                     this.sha1 = jsonNode.get("sha1").asText()
-                    this.mimeType = Files.probeContentType(Path(fileName)) ?: "application/octet-stream"
-                    this.title = fileName.substringBeforeLast(".")
+                    this.mimeType = Files.probeContentType(Path(recordingName.fileName)) ?: "application/octet-stream"
+                    this.title = recordingName.fileName.substringBeforeLast(".")
                     this.size = jsonNode.get("size").asLong()
                 }
             }
         }
     }
+}
+
+private val XIAOMI_RECORDING_NAME_REGEX = Regex("""^(.+)\.([^._]+)_(\d+)_(\d+)_(\d+)_(\d+)$""")
+
+internal data class XiaomiRecordingName(
+    val fileName: String,
+    val recordingType: RecordingType,
+)
+
+internal fun parseXiaomiRecordingName(name: String): XiaomiRecordingName {
+    val match = XIAOMI_RECORDING_NAME_REGEX.matchEntire(name)
+    if (match == null) {
+        // 兼容历史/异常格式：仍按旧逻辑从右侧剥离四段尾缀。
+        return XiaomiRecordingName(
+            fileName = name.substringBeforeLast("_").substringBeforeLast("_").substringBeforeLast("_")
+                .substringBeforeLast("_"),
+            recordingType = RecordingType.UNKNOWN,
+        )
+    }
+
+    val (base, ext, _, typeCode) = match.destructured
+    return XiaomiRecordingName(
+        fileName = "$base.$ext",
+        recordingType = RecordingType.fromCode(typeCode.toIntOrNull() ?: -1),
+    )
 }

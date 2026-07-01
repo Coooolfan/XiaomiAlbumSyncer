@@ -20,6 +20,8 @@ interface Asset {
 
     val type: AssetType
 
+    val recordingType: RecordingType?
+
     val dateTaken: Instant
 
     @OnDissociate(DissociateAction.DELETE)

@@ -63,6 +63,18 @@
             <div
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
+              <div class="font-mono text-blue-600 mb-0.5">${recordingTypeId}</div>
+              <div class="text-slate-500 dark:text-slate-400 text-[10px]">录音分类 ID</div>
+            </div>
+            <div
+              class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
+            >
+              <div class="font-mono text-blue-600 mb-0.5">${recordingType}</div>
+              <div class="text-slate-500 dark:text-slate-400 text-[10px]">录音分类</div>
+            </div>
+            <div
+              class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
+            >
               <div class="font-mono text-blue-600 mb-0.5">${title}</div>
               <div class="text-slate-500 dark:text-slate-400 text-[10px]">资源标题</div>
             </div>
