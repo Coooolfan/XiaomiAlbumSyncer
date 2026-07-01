@@ -2762,6 +2762,10 @@
           "parameterTypes": []
         },
         {
+          "name": "getRecordingType",
+          "parameterTypes": []
+        },
+        {
           "name": "getSha1",
           "parameterTypes": []
         },
@@ -2955,6 +2959,9 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.AssetProps$MIME_TYPE$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.AssetProps$RECORDING_TYPE$1"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.AssetProps$SHA1$1"
@@ -4562,6 +4569,12 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.PasskeyCredentialPropsKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.RecordingType"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.RecordingType$Companion"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.SystemConfig",
@@ -7061,6 +7074,12 @@
           ]
         }
       ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApiKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiRecordingName"
     },
     {
       "type": "com.fasterxml.jackson.core.ObjectCodec",
