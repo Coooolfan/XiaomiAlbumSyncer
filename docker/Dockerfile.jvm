@@ -14,9 +14,19 @@ COPY ${JAR_FILE} app.jar
 # 暴露应用端口(默认Spring Boot端口)
 EXPOSE 8080
 
-# 允许通过环境变量传递JVM参数
-# 隐藏 SQLite 的警告信息
-ENV JAVA_OPTS="-Xmx768m --enable-native-access=ALL-UNNAMED"
+# 限制 glibc arena，降低多线程 native 内存碎片
+ENV MALLOC_ARENA_MAX=2
+
+# 应用级 JVM 默认值；容量参数由 JAVA_OPTS 按部署环境覆盖
+ENV JAVA_BASE_OPTS="-XX:+UseG1GC \
+    -XX:G1PeriodicGCInterval=60000 \
+    -XX:-G1PeriodicGCInvokesConcurrent \
+    -XX:G1PeriodicGCSystemLoadThreshold=0 \
+    -XX:MaxHeapFreeRatio=20 \
+    -XX:MinHeapFreeRatio=5 \
+    -XX:TrimNativeHeapInterval=60000 \
+    --enable-native-access=ALL-UNNAMED"
+ENV JAVA_OPTS="-Xmx768m"
 
 # 启动应用
-ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_BASE_OPTS $JAVA_OPTS -jar app.jar"]

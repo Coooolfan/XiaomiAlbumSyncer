@@ -7,12 +7,13 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
+import java.sql.Connection
 import java.sql.DriverManager
 
 class DatabaseMigrationTest {
 
     @Test
-    fun addsIndexForLatestCompletedCrontabHistory(@TempDir tempDir: Path) {
+    fun addsQueryIndexes(@TempDir tempDir: Path) {
         val databaseUrl = "jdbc:sqlite:${tempDir.resolve("migration.db").toAbsolutePath()}"
 
         flyway(databaseUrl, target = "0.16.2").migrate()
@@ -34,29 +35,18 @@ class DatabaseMigrationTest {
         assertEquals(1, flyway(databaseUrl).migrate().migrationsExecuted)
 
         DriverManager.getConnection(databaseUrl).use { connection ->
-            val indexSql = connection.prepareStatement(
-                "SELECT sql FROM sqlite_master WHERE type = 'index' AND name = ?"
-            ).use { statement ->
-                statement.setString(1, INDEX_NAME)
-                statement.executeQuery().use { result ->
-                    assertTrue(result.next())
-                    result.getString("sql")
-                }
-            }
-            assertTrue(indexSql.contains("(crontab_id, start_time DESC)"))
-            assertTrue(indexSql.contains("WHERE end_time IS NOT NULL"))
+            val indexNames = connection.indexNames()
+            assertTrue(indexNames.containsAll(EXPECTED_INDEX_NAMES))
+            assertFalse(LEGACY_INDEX_NAME in indexNames)
 
-            val queryPlan = connection.createStatement().use { statement ->
-                statement.executeQuery("EXPLAIN QUERY PLAN $LATEST_COMPLETED_HISTORY_QUERY").use { result ->
-                    buildList {
-                        while (result.next()) {
-                            add(result.getString("detail"))
-                        }
-                    }
-                }
-            }
-            assertTrue(queryPlan.any { it.contains("USING INDEX $INDEX_NAME") })
-            assertFalse(queryPlan.any { it.contains("USE TEMP B-TREE") })
+            connection.assertUsesIndex(LATEST_COMPLETED_HISTORY_QUERY, HISTORY_INDEX_NAME)
+            connection.assertUsesIndex(ASSET_BY_ALBUM_QUERY, ASSET_ALBUM_INDEX_NAME)
+            connection.assertUsesIndex(ASSET_BY_DATE_QUERY, ASSET_DATE_INDEX_NAME)
+            connection.assertUsesIndex(DETAIL_BY_HISTORY_QUERY, DETAIL_HISTORY_INDEX_NAME)
+            connection.assertUsesIndex(DETAIL_BY_ASSET_QUERY, DETAIL_ASSET_HISTORY_INDEX_NAME)
+
+            val latestHistoryPlan = connection.queryPlan(LATEST_COMPLETED_HISTORY_QUERY)
+            assertFalse(latestHistoryPlan.any { it.contains("USE TEMP B-TREE") })
 
             val snapshot = connection.createStatement().use { statement ->
                 statement.executeQuery(LATEST_COMPLETED_HISTORY_QUERY).use { result ->
@@ -69,7 +59,7 @@ class DatabaseMigrationTest {
     }
 
     @Test
-    fun acceptsIndexCreatedBeforeFlywayMigration(@TempDir tempDir: Path) {
+    fun replacesIndexCreatedBeforeFlywayMigration(@TempDir tempDir: Path) {
         val databaseUrl = "jdbc:sqlite:${tempDir.resolve("preindexed.db").toAbsolutePath()}"
 
         flyway(databaseUrl, target = "0.16.2").migrate()
@@ -77,7 +67,7 @@ class DatabaseMigrationTest {
             connection.createStatement().use { statement ->
                 statement.executeUpdate(
                     """
-                    CREATE INDEX $INDEX_NAME
+                    CREATE INDEX $LEGACY_INDEX_NAME
                         ON crontab_history (crontab_id, start_time DESC)
                         WHERE end_time IS NOT NULL
                     """.trimIndent()
@@ -88,6 +78,10 @@ class DatabaseMigrationTest {
         assertEquals(1, flyway(databaseUrl).migrate().migrationsExecuted)
 
         DriverManager.getConnection(databaseUrl).use { connection ->
+            val indexNames = connection.indexNames()
+            assertTrue(indexNames.containsAll(EXPECTED_INDEX_NAMES))
+            assertFalse(LEGACY_INDEX_NAME in indexNames)
+
             val appliedVersion = connection.createStatement().use { statement ->
                 statement.executeQuery(
                     "SELECT version FROM flyway_schema_history ORDER BY installed_rank DESC LIMIT 1"
@@ -110,8 +104,51 @@ class DatabaseMigrationTest {
         return configuration.load()
     }
 
+    private fun Connection.indexNames(): Set<String> =
+        createStatement().use { statement ->
+            statement.executeQuery("SELECT name FROM sqlite_master WHERE type = 'index'").use { result ->
+                buildSet {
+                    while (result.next()) {
+                        add(result.getString("name"))
+                    }
+                }
+            }
+        }
+
+    private fun Connection.assertUsesIndex(query: String, indexName: String) {
+        assertTrue(
+            queryPlan(query).any { it.contains("USING") && it.contains("INDEX $indexName") },
+            "Expected query plan to use $indexName",
+        )
+    }
+
+    private fun Connection.queryPlan(query: String): List<String> =
+        createStatement().use { statement ->
+            statement.executeQuery("EXPLAIN QUERY PLAN $query").use { result ->
+                buildList {
+                    while (result.next()) {
+                        add(result.getString("detail"))
+                    }
+                }
+            }
+        }
+
     private companion object {
-        const val INDEX_NAME = "idx_crontab_history_latest_completed"
+        const val LEGACY_INDEX_NAME = "idx_crontab_history_latest_completed"
+        const val HISTORY_INDEX_NAME = "idx_crontab_history_crontab_start_time"
+        const val ASSET_ALBUM_INDEX_NAME = "idx_asset_album_id"
+        const val ASSET_DATE_INDEX_NAME = "idx_asset_date_taken"
+        const val DETAIL_HISTORY_INDEX_NAME = "idx_crontab_history_detail_history_id"
+        const val DETAIL_ASSET_HISTORY_INDEX_NAME = "idx_crontab_history_detail_asset_history"
+
+        val EXPECTED_INDEX_NAMES = setOf(
+            HISTORY_INDEX_NAME,
+            ASSET_ALBUM_INDEX_NAME,
+            ASSET_DATE_INDEX_NAME,
+            DETAIL_HISTORY_INDEX_NAME,
+            DETAIL_ASSET_HISTORY_INDEX_NAME,
+        )
+
         const val LATEST_COMPLETED_HISTORY_QUERY = """
             SELECT timeline_snapshot
             FROM crontab_history
@@ -121,5 +158,11 @@ class DatabaseMigrationTest {
             ORDER BY start_time DESC
             LIMIT 1
         """
+        const val ASSET_BY_ALBUM_QUERY = "SELECT id FROM asset WHERE album_id = 1"
+        const val ASSET_BY_DATE_QUERY = "SELECT id FROM asset WHERE date_taken BETWEEN 0 AND 1"
+        const val DETAIL_BY_HISTORY_QUERY =
+            "SELECT id FROM crontab_history_detail WHERE crontab_history_id = 1"
+        const val DETAIL_BY_ASSET_QUERY =
+            "SELECT id FROM crontab_history_detail WHERE asset_id = 1 AND crontab_history_id = 1"
     }
 }
