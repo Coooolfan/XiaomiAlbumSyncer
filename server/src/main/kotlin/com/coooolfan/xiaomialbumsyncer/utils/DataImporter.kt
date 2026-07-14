@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.utils
 
+import com.coooolfan.xiaomialbumsyncer.config.SQLiteUrlProperties
 import com.coooolfan.xiaomialbumsyncer.config.buildSQLiteUrl
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.zaxxer.hikari.HikariConfig
@@ -14,7 +15,10 @@ import java.time.Instant
 import java.util.Locale.getDefault
 
 @Managed
-class DataImporter(private val sql: KSqlClient) {
+class DataImporter(
+    private val sql: KSqlClient,
+    private val sqliteUrlProperties: SQLiteUrlProperties,
+) {
 
     private val log = LoggerFactory.getLogger(DataImporter::class.java)
 
@@ -22,10 +26,11 @@ class DataImporter(private val sql: KSqlClient) {
 
     fun exec() {
         val oldDsConfig = HikariConfig()
+        val oldDsJdbcUrl = buildSQLiteUrl(Paths.get(oldDsUrl), sqliteUrlProperties.toOptions())
 
-        log.info("开始导入旧版本数据，旧版本数据库jdbcUrl：${buildSQLiteUrl(Paths.get(oldDsUrl))}")
+        log.info("开始导入旧版本数据，旧版本数据库jdbcUrl：$oldDsJdbcUrl")
 
-        oldDsConfig.jdbcUrl = buildSQLiteUrl(Paths.get(oldDsUrl))
+        oldDsConfig.jdbcUrl = oldDsJdbcUrl
         oldDsConfig.driverClassName = "org.sqlite.JDBC"
         oldDsConfig.maximumPoolSize = 1
         oldDsConfig.connectionTestQuery = "SELECT 1"

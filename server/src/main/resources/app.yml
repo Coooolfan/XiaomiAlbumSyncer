@@ -9,6 +9,12 @@ solon:
     name: 'XiaomiAlbumSyncer'
     group: 'com.coooolfan'
     db: ${APP_DB_PATH:./db/xiaomialbumsyncer.db}
+    sqlite:
+      journal-mode: ${SQLITE_JOURNAL_MODE:WAL}
+      synchronous: ${SQLITE_SYNCHRONOUS:NORMAL}
+      cache-size: ${SQLITE_CACHE_SIZE:10000}
+      temp-store: ${SQLITE_TEMP_STORE:memory}
+      mmap-size: ${SQLITE_MMAP_SIZE:268435456}
     jimmer-log: false
     webauthn:
       rpId: ${WEBAUTHN_RP_ID:localhost}

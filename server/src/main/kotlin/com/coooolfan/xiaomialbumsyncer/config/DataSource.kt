@@ -17,11 +17,11 @@ class DataSource {
     lateinit var sqlite: String
 
     @Managed(index = 100)
-    fun defaultDataSource(): DataSource {
+    fun defaultDataSource(sqliteUrlProperties: SQLiteUrlProperties): DataSource {
         val dbPath = Paths.get(sqlite)
         Files.createDirectories(dbPath.parent)
         val config = HikariConfig()
-        config.jdbcUrl = buildSQLiteUrl(dbPath)
+        config.jdbcUrl = buildSQLiteUrl(dbPath, sqliteUrlProperties.toOptions())
         config.driverClassName = "org.sqlite.JDBC"
         config.maximumPoolSize = 4 // SQLite通常不需要太多连接
         config.connectionTestQuery = "SELECT 1"
@@ -31,11 +31,68 @@ class DataSource {
 
 }
 
-fun buildSQLiteUrl(dbPath: Path): String {
+@Managed
+class SQLiteUrlProperties {
+
+    @Inject(value = $$"${solon.app.sqlite.journal-mode}")
+    lateinit var journalMode: String
+
+    @Inject(value = $$"${solon.app.sqlite.synchronous}")
+    lateinit var synchronous: String
+
+    @Inject(value = $$"${solon.app.sqlite.cache-size}")
+    var cacheSize: Int = 10_000
+
+    @Inject(value = $$"${solon.app.sqlite.temp-store}")
+    lateinit var tempStore: String
+
+    @Inject(value = $$"${solon.app.sqlite.mmap-size}")
+    var mmapSize: Long = 268_435_456
+
+    fun toOptions() = SQLiteUrlOptions(
+        journalMode = journalMode,
+        synchronous = synchronous,
+        cacheSize = cacheSize,
+        tempStore = tempStore,
+        mmapSize = mmapSize,
+    )
+}
+
+class SQLiteUrlOptions(
+    journalMode: String = "WAL",
+    synchronous: String = "NORMAL",
+    val cacheSize: Int = 10_000,
+    tempStore: String = "memory",
+    val mmapSize: Long = 268_435_456,
+) {
+    val journalMode = validateChoice("journal_mode", journalMode, JOURNAL_MODES)
+    val synchronous = validateChoice("synchronous", synchronous, SYNCHRONOUS_MODES)
+    val tempStore = validateChoice("temp_store", tempStore, TEMP_STORE_MODES).lowercase()
+
+    init {
+        require(mmapSize >= 0) { "mmap_size must not be negative: $mmapSize" }
+    }
+
+    private fun validateChoice(name: String, value: String, choices: Set<String>): String {
+        val normalized = value.trim().uppercase()
+        require(normalized in choices) {
+            "$name must be one of ${choices.joinToString()}, but was: $value"
+        }
+        return normalized
+    }
+
+    private companion object {
+        val JOURNAL_MODES = setOf("DELETE", "TRUNCATE", "PERSIST", "MEMORY", "WAL", "OFF")
+        val SYNCHRONOUS_MODES = setOf("OFF", "NORMAL", "FULL", "EXTRA", "0", "1", "2", "3")
+        val TEMP_STORE_MODES = setOf("DEFAULT", "FILE", "MEMORY", "0", "1", "2")
+    }
+}
+
+fun buildSQLiteUrl(dbPath: Path, options: SQLiteUrlOptions = SQLiteUrlOptions()): String {
     return "jdbc:sqlite:${dbPath.toAbsolutePath()}" +
-            "?journal_mode=WAL" +           // WAL模式，更好的并发性能
-            "&synchronous=NORMAL" +         // 平衡性能和安全性
-            "&cache_size=10000" +           // 缓存大小
-            "&temp_store=memory" +          // 临时表存储在内存
-            "&mmap_size=268435456"          // 内存映射大小(256MB)
+            "?journal_mode=${options.journalMode}" +
+            "&synchronous=${options.synchronous}" +
+            "&cache_size=${options.cacheSize}" +
+            "&temp_store=${options.tempStore}" +
+            "&mmap_size=${options.mmapSize}"
 }

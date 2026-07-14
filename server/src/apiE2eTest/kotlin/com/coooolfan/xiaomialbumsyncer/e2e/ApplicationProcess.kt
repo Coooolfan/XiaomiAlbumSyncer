@@ -59,6 +59,11 @@ class ApplicationProcess private constructor(
             processBuilder.environment().apply {
                 put("SERVER_PORT", port.toString())
                 put("APP_DB_PATH", workDir.resolve("db/xiaomialbumsyncer.db").toString())
+                put("SQLITE_JOURNAL_MODE", "WAL")
+                put("SQLITE_SYNCHRONOUS", "FULL")
+                put("SQLITE_CACHE_SIZE", "-8192")
+                put("SQLITE_TEMP_STORE", "file")
+                put("SQLITE_MMAP_SIZE", "67108864")
                 put("XIAOMI_API_BASE_URL", mockBaseUrl)
                 put("WEBAUTHN_RP_ID", "localhost")
             }

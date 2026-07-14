@@ -2,7 +2,19 @@
 
 ## development
 
-直接使用 `./gradlew run` 启动即可
+直接使用 `./gradlew run` 启动即可。
+
+SQLite 默认参数与此前保持一致，可以按部署环境通过环境变量覆盖：
+
+| 环境变量 | 默认值 | 说明 |
+|---|---:|---|
+| `SQLITE_JOURNAL_MODE` | `WAL` | SQLite journal mode |
+| `SQLITE_SYNCHRONOUS` | `NORMAL` | 落盘同步级别 |
+| `SQLITE_CACHE_SIZE` | `10000` | page cache；正数单位为 page，负数单位为 KiB |
+| `SQLITE_TEMP_STORE` | `memory` | 临时表和索引存储位置 |
+| `SQLITE_MMAP_SIZE` | `268435456` | mmap 上限，单位 byte |
+
+枚举参数使用 SQLite 支持的名称，不区分大小写；数值参数格式错误或 `SQLITE_MMAP_SIZE` 为负数时，应用会在启动阶段失败。
 
 ## publishing
 

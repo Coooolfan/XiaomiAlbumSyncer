@@ -149,13 +149,13 @@ class CrontabService(private val sql: KSqlClient) {
     }
 
     fun getAlbumTimelinesHistory(history: CrontabHistory): Map<Long, AlbumTimeline> {
-        return sql.executeQuery(CrontabHistory::class) {
+        return sql.createQuery(CrontabHistory::class) {
             orderBy(table.startTime.desc())
             where(table.crontabId eq history.crontab.id)
             where(table.id ne history.id)
             where(table.endTime ne null)
             select(table.timelineSnapshot)
-        }.firstOrNull() ?: emptyMap()
+        }.limit(1).execute().firstOrNull() ?: emptyMap()
     }
 
     fun insertCrontabHistoryDetails(details: List<CrontabHistoryDetail>): List<CrontabHistoryDetail> {
