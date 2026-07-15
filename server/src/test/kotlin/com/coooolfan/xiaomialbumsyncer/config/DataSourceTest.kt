@@ -20,7 +20,7 @@ class DataSourceTest {
                     "&synchronous=NORMAL" +
                     "&cache_size=10000" +
                     "&temp_store=memory" +
-                    "&mmap_size=67108864",
+                    "&mmap_size=0",
             buildSQLiteUrl(dbPath),
         )
     }
