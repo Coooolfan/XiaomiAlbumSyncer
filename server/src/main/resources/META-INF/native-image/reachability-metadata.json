@@ -903,6 +903,12 @@
           "parameterTypes": []
         },
         {
+          "name": "defaultDataSource",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.config.SQLiteUrlProperties"
+          ]
+        },
+        {
           "name": "getSqlite",
           "parameterTypes": []
         },
@@ -1002,6 +1008,118 @@
           "parameterTypes": [
             "org.slf4j.Logger"
           ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.config.SQLiteUrlOptions"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.config.SQLiteUrlOptions$Companion"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.config.SQLiteUrlProperties",
+      "fields": [
+        {
+          "name": "busyTimeout"
+        },
+        {
+          "name": "cacheSize"
+        },
+        {
+          "name": "journalMode"
+        },
+        {
+          "name": "mmapSize"
+        },
+        {
+          "name": "synchronous"
+        },
+        {
+          "name": "tempStore"
+        },
+        {
+          "name": "url"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        },
+        {
+          "name": "getBusyTimeout",
+          "parameterTypes": []
+        },
+        {
+          "name": "getCacheSize",
+          "parameterTypes": []
+        },
+        {
+          "name": "getJournalMode",
+          "parameterTypes": []
+        },
+        {
+          "name": "getMmapSize",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSynchronous",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTempStore",
+          "parameterTypes": []
+        },
+        {
+          "name": "getUrl",
+          "parameterTypes": []
+        },
+        {
+          "name": "setBusyTimeout",
+          "parameterTypes": [
+            "int"
+          ]
+        },
+        {
+          "name": "setCacheSize",
+          "parameterTypes": [
+            "int"
+          ]
+        },
+        {
+          "name": "setJournalMode",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "setMmapSize",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "setSynchronous",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "setTempStore",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "setUrl",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "toOptions",
+          "parameterTypes": []
         }
       ]
     },
@@ -2094,6 +2212,9 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.XiaomiAccountController$Companion"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.exception.AuthenticationException"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.exception.BadRequestException"
@@ -6773,6 +6894,13 @@
           "name": "<init>",
           "parameterTypes": [
             "org.babyfish.jimmer.sql.kt.KSqlClient"
+          ]
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.KSqlClient",
+            "com.coooolfan.xiaomialbumsyncer.config.SQLiteUrlProperties"
           ]
         },
         {
