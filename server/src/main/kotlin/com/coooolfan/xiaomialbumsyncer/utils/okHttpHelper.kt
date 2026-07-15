@@ -1,5 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.utils
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -31,6 +33,20 @@ private val httpClient: OkHttpClient by lazy {
 }
 
 fun client(): OkHttpClient = httpClient
+
+fun ObjectMapper.readTree(body: ResponseBody): JsonNode =
+    body.byteStream().use { input -> readTree(input) }
+
+fun ObjectMapper.readJsonpTree(body: ResponseBody): JsonNode =
+    body.charStream().buffered().use { input ->
+        while (true) {
+            when (input.read()) {
+                '('.code -> break
+                -1 -> error("JSONP callback opening parenthesis not found")
+            }
+        }
+        readTree(input)
+    }
 
 // 超时时自动重试一次
 fun OkHttpClient.executeWithRetry(request: Request): Response {

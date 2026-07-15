@@ -77,14 +77,10 @@ class TokenManager(private val sql: KSqlClient) {
         ).ua()
             .header("Cookie", withCookie("userId" to userId, "deviceId" to deviceId, "passToken" to passToken)).get()
             .build()
-        val preLoginBodyString = client().newCall(preLoginReq).execute().use { res ->
+        val loginUrl = client().newCall(preLoginReq).execute().use { res ->
             throwIfNotSuccess(res.code)
-            res.body.string()
-        }
-        val loginUrl = Solon.context().objectMapper
-            .readTree(preLoginBodyString)
-            .at("/data/loginUrl")
-            .asText()
+            Solon.context().objectMapper.readTree(res.body)
+        }.at("/data/loginUrl").asText()
 
         // 步骤二：向 loginUrl 发起请求，获取 签名参数
         val loginReq = Request.Builder().url(loginUrl).ua()
