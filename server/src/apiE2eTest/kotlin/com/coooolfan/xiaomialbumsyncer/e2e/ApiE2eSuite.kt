@@ -35,6 +35,7 @@ class ApiE2eSuite {
     private fun executeWorkflow(api: ApiClient, mock: MockXiaomiApiServer, workDir: Path) {
         assertFalse(api.json(api.get("/api/system-config").expect(200)).path("init").asBoolean())
         api.post("/api/system-config", mapOf("password" to "e2e-password")).expect(200)
+        api.get("/api/token?password=${api.encode("wrong-password")}").expect(401)
         api.get("/api/token?password=${api.encode("e2e-password")}").expect(200)
 
         assertTrue(api.json(api.get("/api/system-config").expect(200)).path("init").asBoolean())

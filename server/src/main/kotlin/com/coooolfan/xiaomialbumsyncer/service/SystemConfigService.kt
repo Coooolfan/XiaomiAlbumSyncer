@@ -3,6 +3,7 @@ package com.coooolfan.xiaomialbumsyncer.service
 import cn.dev33.satoken.stp.StpUtil
 import com.coooolfan.xiaomialbumsyncer.config.TaskScheduler
 import com.coooolfan.xiaomialbumsyncer.controller.LoginRequest
+import com.coooolfan.xiaomialbumsyncer.exception.AuthenticationException
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit
 import com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigNotifyConfigUpdate
@@ -52,7 +53,7 @@ class SystemConfigService(
             selectCount()
         }[0]
 
-        if (lng != 1.toLong()) throw IllegalStateException("Auth failed")
+        if (lng != 1.toLong()) throw AuthenticationException("Auth failed")
 
         StpUtil.login(0)
 
@@ -73,7 +74,7 @@ class SystemConfigService(
             where(table.password eq hashPwd(update.oldPassword))
         }
 
-        if (rows != 1) throw IllegalStateException("Auth failed")
+        if (rows != 1) throw AuthenticationException("Auth failed")
     }
 
 

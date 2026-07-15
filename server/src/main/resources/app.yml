@@ -16,6 +16,7 @@ solon:
       cache-size: ${SQLITE_CACHE_SIZE:10000}
       temp-store: ${SQLITE_TEMP_STORE:memory}
       mmap-size: ${SQLITE_MMAP_SIZE:0}
+      busy-timeout: ${SQLITE_BUSY_TIMEOUT:30000}
     jimmer-log: false
     webauthn:
       rpId: ${WEBAUTHN_RP_ID:localhost}

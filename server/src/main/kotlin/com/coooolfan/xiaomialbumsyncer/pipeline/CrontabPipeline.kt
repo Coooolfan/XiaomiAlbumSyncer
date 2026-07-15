@@ -136,8 +136,12 @@ class CrontabPipeline(
 
     private fun saveAndLogErr(stageStr: String, context: CrontabHistoryDetail, err: Throwable) {
         val errMsg = "资产 ${context.asset.id} 的${stageStr}阶段处理失败, 将跳过后续处理."
-        crontabService.updateDetailMessage(context.id, err.message ?: errMsg)
         log.error(errMsg, err)
+        try {
+            crontabService.updateDetailMessage(context.id, err.message ?: errMsg)
+        } catch (persistError: Exception) {
+            log.error("记录资产 ${context.asset.id} 的失败信息时发生异常，流水线将继续处理其他资产", persistError)
+        }
     }
 
 

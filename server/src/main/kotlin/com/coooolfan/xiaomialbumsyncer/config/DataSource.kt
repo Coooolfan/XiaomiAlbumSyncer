@@ -54,12 +54,16 @@ class SQLiteUrlProperties {
     @Inject(value = $$"${solon.app.sqlite.mmap-size}")
     var mmapSize: Long = 0
 
+    @Inject(value = $$"${solon.app.sqlite.busy-timeout}")
+    var busyTimeout: Int = 30_000
+
     fun toOptions() = SQLiteUrlOptions(
         journalMode = journalMode,
         synchronous = synchronous,
         cacheSize = cacheSize,
         tempStore = tempStore,
         mmapSize = mmapSize,
+        busyTimeout = busyTimeout,
     )
 }
 
@@ -69,6 +73,7 @@ class SQLiteUrlOptions(
     val cacheSize: Int = 10_000,
     tempStore: String = "memory",
     val mmapSize: Long = 0,
+    val busyTimeout: Int = 30_000,
 ) {
     val journalMode = validateChoice("journal_mode", journalMode, JOURNAL_MODES)
     val synchronous = validateChoice("synchronous", synchronous, SYNCHRONOUS_MODES)
@@ -76,6 +81,7 @@ class SQLiteUrlOptions(
 
     init {
         require(mmapSize >= 0) { "mmap_size must not be negative: $mmapSize" }
+        require(busyTimeout >= 0) { "busy_timeout must not be negative: $busyTimeout" }
     }
 
     private fun validateChoice(name: String, value: String, choices: Set<String>): String {
@@ -112,5 +118,6 @@ fun buildSQLiteUrl(dbPath: Path, options: SQLiteUrlOptions = SQLiteUrlOptions())
             "&synchronous=${options.synchronous}" +
             "&cache_size=${options.cacheSize}" +
             "&temp_store=${options.tempStore}" +
-            "&mmap_size=${options.mmapSize}"
+            "&mmap_size=${options.mmapSize}" +
+            "&busy_timeout=${options.busyTimeout}"
 }

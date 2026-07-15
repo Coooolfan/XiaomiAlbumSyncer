@@ -1,12 +1,17 @@
 package com.coooolfan.xiaomialbumsyncer.config
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
 import java.sql.Connection
 import java.sql.DriverManager
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class DataSourceTest {
 
@@ -20,7 +25,8 @@ class DataSourceTest {
                     "&synchronous=NORMAL" +
                     "&cache_size=10000" +
                     "&temp_store=memory" +
-                    "&mmap_size=0",
+                    "&mmap_size=0" +
+                    "&busy_timeout=30000",
             buildSQLiteUrl(dbPath),
         )
     }
@@ -80,6 +86,7 @@ class DataSourceTest {
             cacheSize = -8_192,
             tempStore = "file",
             mmapSize = 67_108_864,
+            busyTimeout = 12_345,
         )
 
         assertEquals(
@@ -88,7 +95,8 @@ class DataSourceTest {
                     "&synchronous=FULL" +
                     "&cache_size=-8192" +
                     "&temp_store=file" +
-                    "&mmap_size=67108864",
+                    "&mmap_size=67108864" +
+                    "&busy_timeout=12345",
             buildSQLiteUrl(dbPath, options),
         )
     }
@@ -107,6 +115,9 @@ class DataSourceTest {
         assertThrows(IllegalArgumentException::class.java) {
             SQLiteUrlOptions(mmapSize = -1)
         }
+        assertThrows(IllegalArgumentException::class.java) {
+            SQLiteUrlOptions(busyTimeout = -1)
+        }
     }
 
     @Test
@@ -117,6 +128,7 @@ class DataSourceTest {
             cacheSize = -8_192,
             tempStore = "file",
             mmapSize = 67_108_864,
+            busyTimeout = 12_345,
         )
 
         DriverManager.getConnection(buildSQLiteUrl(tempDir.resolve("pragma.db"), options)).use { connection ->
@@ -125,6 +137,40 @@ class DataSourceTest {
             assertEquals(-8_192, connection.pragmaLong("cache_size"))
             assertEquals(1, connection.pragmaLong("temp_store"))
             assertEquals(67_108_864, connection.pragmaLong("mmap_size"))
+            assertEquals(12_345, connection.pragmaLong("busy_timeout"))
+        }
+    }
+
+    @Test
+    fun waitsForAnotherWriterWithinBusyTimeout(@TempDir tempDir: Path) {
+        val url = buildSQLiteUrl(
+            tempDir.resolve("busy.db"),
+            SQLiteUrlOptions(busyTimeout = 2_000),
+        )
+
+        DriverManager.getConnection(url).use { writer ->
+            DriverManager.getConnection(url).use { waitingWriter ->
+                writer.createStatement().use { it.executeUpdate("CREATE TABLE value_holder(value INTEGER)") }
+                writer.autoCommit = false
+                writer.createStatement().use { it.executeUpdate("INSERT INTO value_holder VALUES (1)") }
+
+                Executors.newSingleThreadExecutor().use { executor ->
+                    val started = CountDownLatch(1)
+                    val waitingInsert = executor.submit<Int> {
+                        started.countDown()
+                        waitingWriter.createStatement().use {
+                            it.executeUpdate("INSERT INTO value_holder VALUES (2)")
+                        }
+                    }
+
+                    assertTrue(started.await(1, TimeUnit.SECONDS))
+                    Thread.sleep(100)
+                    assertFalse(waitingInsert.isDone)
+
+                    writer.commit()
+                    assertEquals(1, waitingInsert.get(2, TimeUnit.SECONDS))
+                }
+            }
         }
     }
 

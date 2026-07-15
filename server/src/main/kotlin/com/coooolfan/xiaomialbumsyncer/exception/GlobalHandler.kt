@@ -23,6 +23,11 @@ class GlobalHandler : Filter {
             ctx.returnValue(
                 Result.failure<Any>(401, e.message)
             )
+        } catch (e: AuthenticationException) {
+            ctx.status(401)
+            ctx.returnValue(
+                Result.failure<Any>(401, e.message)
+            )
         } catch (e: BadRequestException) {
             ctx.status(400)
             ctx.returnValue(
@@ -38,7 +43,7 @@ class GlobalHandler : Filter {
             }
             throw e
         } catch (e: Exception) {
-            e.printStackTrace()
+            log.error("未处理的服务端异常", e)
             ctx.status(500)
             ctx.returnValue(
                 Result.failure<Any>(500, e.message)
