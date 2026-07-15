@@ -50,6 +50,9 @@ class ApplicationProcess private constructor(
         fun start(mockBaseUrl: String, workDir: Path): ApplicationProcess {
             Files.createDirectories(workDir)
             val port = findFreePort()
+            val databasePath = workDir.resolve("db/xiaomialbumsyncer.db")
+            val fallbackDatabasePath = workDir.resolve("fallback/xiaomialbumsyncer.db")
+            Files.createDirectories(databasePath.parent)
             val command = buildCommand()
             val output = Collections.synchronizedList(mutableListOf<String>())
             val processBuilder = ProcessBuilder(command)
@@ -58,7 +61,13 @@ class ApplicationProcess private constructor(
 
             processBuilder.environment().apply {
                 put("SERVER_PORT", port.toString())
-                put("APP_DB_PATH", workDir.resolve("db/xiaomialbumsyncer.db").toString())
+                put("APP_DB_PATH", fallbackDatabasePath.toString())
+                put(
+                    "SQLITE_URL",
+                    "jdbc:sqlite:${databasePath.toAbsolutePath()}" +
+                            "?journal_mode=WAL&synchronous=FULL&cache_size=-8192" +
+                            "&temp_store=file&mmap_size=67108864"
+                )
                 put("SQLITE_JOURNAL_MODE", "WAL")
                 put("SQLITE_SYNCHRONOUS", "FULL")
                 put("SQLITE_CACHE_SIZE", "-8192")
@@ -78,6 +87,10 @@ class ApplicationProcess private constructor(
             val application = ApplicationProcess(process, output, ApiClient("http://127.0.0.1:$port"))
             try {
                 application.awaitReady()
+                check(Files.exists(databasePath)) { "SQLITE_URL 指定的数据库未创建: $databasePath" }
+                check(Files.notExists(fallbackDatabasePath)) {
+                    "SQLITE_URL 生效时不应创建 APP_DB_PATH 数据库: $fallbackDatabasePath"
+                }
             } catch (e: Exception) {
                 application.close()
                 throw e

@@ -10,6 +10,7 @@ solon:
     group: 'com.coooolfan'
     db: ${APP_DB_PATH:./db/xiaomialbumsyncer.db}
     sqlite:
+      url: ${SQLITE_URL:}
       journal-mode: ${SQLITE_JOURNAL_MODE:WAL}
       synchronous: ${SQLITE_SYNCHRONOUS:NORMAL}
       cache-size: ${SQLITE_CACHE_SIZE:10000}

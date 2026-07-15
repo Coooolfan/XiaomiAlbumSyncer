@@ -18,10 +18,12 @@ class DataSource {
 
     @Managed(index = 100)
     fun defaultDataSource(sqliteUrlProperties: SQLiteUrlProperties): DataSource {
-        val dbPath = Paths.get(sqlite)
-        Files.createDirectories(dbPath.parent)
         val config = HikariConfig()
-        config.jdbcUrl = buildSQLiteUrl(dbPath, sqliteUrlProperties.toOptions())
+        config.jdbcUrl = resolveSQLiteUrl(sqliteUrlProperties.url) {
+            val dbPath = Paths.get(sqlite)
+            Files.createDirectories(dbPath.parent)
+            buildSQLiteUrl(dbPath, sqliteUrlProperties.toOptions())
+        }
         config.driverClassName = "org.sqlite.JDBC"
         config.maximumPoolSize = 4 // SQLite通常不需要太多连接
         config.connectionTestQuery = "SELECT 1"
@@ -33,6 +35,9 @@ class DataSource {
 
 @Managed
 class SQLiteUrlProperties {
+
+    @Inject(value = $$"${solon.app.sqlite.url}")
+    var url: String = ""
 
     @Inject(value = $$"${solon.app.sqlite.journal-mode}")
     lateinit var journalMode: String
@@ -87,6 +92,19 @@ class SQLiteUrlOptions(
         val TEMP_STORE_MODES = setOf("DEFAULT", "FILE", "MEMORY", "0", "1", "2")
     }
 }
+
+fun resolveSQLiteUrl(configuredUrl: String?, fallback: () -> String): String {
+    val url = configuredUrl?.trim().orEmpty()
+    if (url.isEmpty()) {
+        return fallback()
+    }
+    require(url.startsWith(SQLITE_JDBC_PREFIX) && url.length > SQLITE_JDBC_PREFIX.length) {
+        "SQLITE_URL must be a complete SQLite JDBC URL starting with $SQLITE_JDBC_PREFIX"
+    }
+    return url
+}
+
+private const val SQLITE_JDBC_PREFIX = "jdbc:sqlite:"
 
 fun buildSQLiteUrl(dbPath: Path, options: SQLiteUrlOptions = SQLiteUrlOptions()): String {
     return "jdbc:sqlite:${dbPath.toAbsolutePath()}" +
