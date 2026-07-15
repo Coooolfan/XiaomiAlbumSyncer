@@ -15,7 +15,7 @@ solon:
       synchronous: ${SQLITE_SYNCHRONOUS:NORMAL}
       cache-size: ${SQLITE_CACHE_SIZE:10000}
       temp-store: ${SQLITE_TEMP_STORE:memory}
-      mmap-size: ${SQLITE_MMAP_SIZE:268435456}
+      mmap-size: ${SQLITE_MMAP_SIZE:67108864}
     jimmer-log: false
     webauthn:
       rpId: ${WEBAUTHN_RP_ID:localhost}

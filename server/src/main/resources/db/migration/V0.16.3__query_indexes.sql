@@ -14,3 +14,5 @@ CREATE INDEX IF NOT EXISTS idx_crontab_history_detail_history_id
 
 CREATE INDEX IF NOT EXISTS idx_crontab_history_detail_asset_history
     ON crontab_history_detail (asset_id, crontab_history_id);
+
+PRAGMA optimize=0x10002;

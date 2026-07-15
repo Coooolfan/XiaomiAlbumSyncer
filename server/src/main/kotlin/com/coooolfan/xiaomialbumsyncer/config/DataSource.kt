@@ -52,7 +52,7 @@ class SQLiteUrlProperties {
     lateinit var tempStore: String
 
     @Inject(value = $$"${solon.app.sqlite.mmap-size}")
-    var mmapSize: Long = 268_435_456
+    var mmapSize: Long = 67_108_864
 
     fun toOptions() = SQLiteUrlOptions(
         journalMode = journalMode,
@@ -68,7 +68,7 @@ class SQLiteUrlOptions(
     synchronous: String = "NORMAL",
     val cacheSize: Int = 10_000,
     tempStore: String = "memory",
-    val mmapSize: Long = 268_435_456,
+    val mmapSize: Long = 67_108_864,
 ) {
     val journalMode = validateChoice("journal_mode", journalMode, JOURNAL_MODES)
     val synchronous = validateChoice("synchronous", synchronous, SYNCHRONOUS_MODES)

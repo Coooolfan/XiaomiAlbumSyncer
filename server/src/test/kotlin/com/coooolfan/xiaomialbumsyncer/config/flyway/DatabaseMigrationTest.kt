@@ -29,6 +29,25 @@ class DatabaseMigrationTest {
                         (1, 300, NULL, '{"id":3}', 0)
                     """.trimIndent()
                 )
+                statement.executeUpdate(
+                    """
+                    INSERT INTO asset
+                        (id, file_name, type, date_taken, album_id, sha1, mime_type, title, size)
+                    VALUES
+                        (1, 'one.jpg', 'IMAGE', 100, 1, 'sha1-1', 'image/jpeg', 'one', 100),
+                        (2, 'two.jpg', 'IMAGE', 200, 1, 'sha1-2', 'image/jpeg', 'two', 200)
+                    """.trimIndent()
+                )
+                statement.executeUpdate(
+                    """
+                    INSERT INTO crontab_history_detail
+                        (crontab_history_id, asset_id, download_time, file_path,
+                         download_completed, sha1_verified, exif_filled, fs_time_updated)
+                    VALUES
+                        (1, 1, 100, '/one.jpg', 1, 1, 1, 1),
+                        (2, 2, 200, '/two.jpg', 1, 1, 1, 1)
+                    """.trimIndent()
+                )
             }
         }
 
@@ -38,6 +57,7 @@ class DatabaseMigrationTest {
             val indexNames = connection.indexNames()
             assertTrue(indexNames.containsAll(EXPECTED_INDEX_NAMES))
             assertFalse(LEGACY_INDEX_NAME in indexNames)
+            assertTrue(connection.analyzedIndexNames().containsAll(EXPECTED_INDEX_NAMES))
 
             connection.assertUsesIndex(LATEST_COMPLETED_HISTORY_QUERY, HISTORY_INDEX_NAME)
             connection.assertUsesIndex(ASSET_BY_ALBUM_QUERY, ASSET_ALBUM_INDEX_NAME)
@@ -110,6 +130,17 @@ class DatabaseMigrationTest {
                 buildSet {
                     while (result.next()) {
                         add(result.getString("name"))
+                    }
+                }
+            }
+        }
+
+    private fun Connection.analyzedIndexNames(): Set<String> =
+        createStatement().use { statement ->
+            statement.executeQuery("SELECT idx FROM sqlite_stat1 WHERE idx IS NOT NULL").use { result ->
+                buildSet {
+                    while (result.next()) {
+                        add(result.getString("idx"))
                     }
                 }
             }
