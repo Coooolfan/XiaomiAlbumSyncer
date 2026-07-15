@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SEMVER_REGEX='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-(alpha|beta|rc)-(0|[1-9][0-9]*))?$'
+SEMVER_REGEX='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-(alpha|beta|rc)[.-](0|[1-9][0-9]*))?$'
 if [[ ! "$INPUT_VERSION" =~ $SEMVER_REGEX ]]; then
-  echo "::error::版本号必须是 0.1.0 或 0.1.0-rc-1 形式，预发布标签仅允许 alpha、beta、rc"
+  echo "::error::版本号必须是 0.1.0、0.1.0-rc.1 或兼容格式 0.1.0-rc-1，预发布标签仅允许 alpha、beta、rc"
   exit 1
 fi
 

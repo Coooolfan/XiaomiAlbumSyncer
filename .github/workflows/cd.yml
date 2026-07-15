@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "发布版本号，例如 0.16.0 或 0.16.0-rc-1"
+        description: "发布版本号，例如 0.16.0 或 0.16.0-rc.1"
         required: true
         type: string
       latest:

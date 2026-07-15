@@ -53,7 +53,7 @@ build_sort_key() {
     return
   fi
 
-  if [[ "$tag" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)-rc-([0-9]+)$ ]]; then
+  if [[ "$tag" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)-rc[.-]([0-9]+)$ ]]; then
     major="${BASH_REMATCH[1]}"
     minor="${BASH_REMATCH[2]}"
     patch="${BASH_REMATCH[3]}"
@@ -64,7 +64,7 @@ build_sort_key() {
     return
   fi
 
-  if [[ "$tag" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)-beta-([0-9]+)$ ]]; then
+  if [[ "$tag" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)-beta[.-]([0-9]+)$ ]]; then
     major="${BASH_REMATCH[1]}"
     minor="${BASH_REMATCH[2]}"
     patch="${BASH_REMATCH[3]}"
@@ -75,7 +75,7 @@ build_sort_key() {
     return
   fi
 
-  if [[ "$tag" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)-alpha-([0-9]+)$ ]]; then
+  if [[ "$tag" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)-alpha[.-]([0-9]+)$ ]]; then
     major="${BASH_REMATCH[1]}"
     minor="${BASH_REMATCH[2]}"
     patch="${BASH_REMATCH[3]}"
