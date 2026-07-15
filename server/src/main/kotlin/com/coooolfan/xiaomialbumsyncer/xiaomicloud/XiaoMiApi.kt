@@ -7,9 +7,12 @@ import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.AssetType
 import com.coooolfan.xiaomialbumsyncer.model.RecordingType
 import com.coooolfan.xiaomialbumsyncer.utils.*
-import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.JsonToken
+import com.fasterxml.jackson.databind.ObjectMapper
 import okhttp3.FormBody
 import okhttp3.Request
+import okhttp3.ResponseBody
 import org.noear.solon.Solon
 import org.noear.solon.annotation.Inject
 import org.noear.solon.annotation.Managed
@@ -112,32 +115,17 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 .get()
                 .build()
 
-            val responseTree = client().executeWithRetry(req).use { res ->
+            val page = client().executeWithRetry(req).use { res ->
                 throwIfNotSuccess(res.code)
-                Solon.context().objectMapper.readTree(res.body)
+                parseXiaomiAssetPage(Solon.context().objectMapper, res.body, album.id, album.isAudioAlbum())
             }
-            val assetArrayJson =
-                if (album.isAudioAlbum())
-                    responseTree.at("/data/list")
-                else
-                    responseTree.at("/data/galleries")
 
-            log.info("解析用户 ${album.accountId} 的相册 ${album.name} ID=${album.remoteId}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
+            log.info("解析用户 ${album.accountId} 的相册 ${album.name} ID=${album.remoteId}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${page.assets.size} 个资源")
 
-            // 处理当前页数据
-            val pageAssets = assetArrayJson.map { parseJsonNode(it, album) }
+            handler(page.assets)
+            totalCount += page.assets.size
 
-            // 立即处理这一页，避免累积
-            handler(pageAssets)
-            totalCount += pageAssets.size
-
-
-            // 检查是否还有更多页面
-            hasMorePages = !responseTree.at("/data/isLastPage").asBoolean()
-
-            // 兜底，免得小米骗我。录音也用这个结束循环
-            if (assetArrayJson.isEmpty) break
-
+            hasMorePages = shouldFetchNextAssetPage(album.isAudioAlbum(), page.assets.size, pageSize, page.isLastPage)
             pageNum++
         }
 
@@ -226,41 +214,127 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         return true
     }
 
-    private fun parseJsonNode(jsonNode: JsonNode, album: Album): Asset {
-        return when (album.isAudioAlbum()) {
-            false -> {
-                val fullFileName = jsonNode.get("fileName").asText()
+}
 
-                Asset {
-                    id = jsonNode.get("id").asLong()
-                    fileName = fullFileName
-                    type = AssetType.valueOf(jsonNode.get("type").asText().uppercase())
-                    dateTaken = Instant.ofEpochMilli(jsonNode.get("dateTaken").asLong())
-                    albumId = album.id
-                    sha1 = jsonNode.get("sha1").asText()
-                    mimeType = jsonNode.get("mimeType").asText()
-                    title = jsonNode.get("title")?.asText() ?: fullFileName.substringBeforeLast('.')
-                    size = jsonNode.get("size")?.asLong() ?: 0L
-                }
-            }
+internal fun shouldFetchNextAssetPage(
+    audioAlbum: Boolean,
+    assetCount: Int,
+    pageSize: Int,
+    isLastPage: Boolean,
+): Boolean =
+    if (audioAlbum) assetCount == pageSize
+    else assetCount > 0 && !isLastPage
 
-            true -> {
-                val name = jsonNode.get("name").asText()
-                val recordingName = parseXiaomiRecordingName(name)
-                Asset {
-                    this.id = jsonNode.get("id").asLong()
-                    this.fileName = recordingName.fileName
-                    this.type = AssetType.AUDIO
-                    this.recordingType = recordingName.recordingType
-                    this.dateTaken = Instant.ofEpochMilli(jsonNode.get("create_time").asLong())
-                    this.albumId = album.id
-                    this.sha1 = jsonNode.get("sha1").asText()
-                    this.mimeType = Files.probeContentType(Path(recordingName.fileName)) ?: "application/octet-stream"
-                    this.title = recordingName.fileName.substringBeforeLast(".")
-                    this.size = jsonNode.get("size").asLong()
+internal data class XiaomiAssetPage(
+    val assets: List<Asset>,
+    val isLastPage: Boolean,
+)
+
+internal fun parseXiaomiAssetPage(
+    objectMapper: ObjectMapper,
+    body: ResponseBody,
+    albumId: Long,
+    audioAlbum: Boolean,
+): XiaomiAssetPage =
+    body.byteStream().use { input ->
+        objectMapper.factory.createParser(input).use { parser ->
+            check(parser.nextToken() == JsonToken.START_OBJECT) { "Xiaomi asset response must be a JSON object" }
+            while (parser.nextToken() != JsonToken.END_OBJECT) {
+                val fieldName = parser.currentName()
+                val token = parser.nextToken()
+                if (fieldName == "data" && token == JsonToken.START_OBJECT) {
+                    return@use parseXiaomiAssetData(parser, albumId, audioAlbum)
                 }
+                parser.skipChildren()
             }
+            error("Xiaomi asset response data object not found")
         }
+    }
+
+private fun parseXiaomiAssetData(parser: JsonParser, albumId: Long, audioAlbum: Boolean): XiaomiAssetPage {
+    val assetFieldName = if (audioAlbum) "list" else "galleries"
+    val assets = ArrayList<Asset>(if (audioAlbum) 500 else 200)
+    var assetsFound = false
+    var isLastPage = false
+
+    while (parser.nextToken() != JsonToken.END_OBJECT) {
+        val fieldName = parser.currentName()
+        val token = parser.nextToken()
+        when {
+            fieldName == assetFieldName && token == JsonToken.START_ARRAY -> {
+                assetsFound = true
+                while (parser.nextToken() != JsonToken.END_ARRAY) {
+                    check(parser.currentToken == JsonToken.START_OBJECT) { "Xiaomi asset must be a JSON object" }
+                    assets += parseXiaomiAsset(parser, albumId, audioAlbum)
+                }
+            }
+
+            fieldName == "isLastPage" -> isLastPage = parser.valueAsBoolean
+            else -> parser.skipChildren()
+        }
+    }
+
+    check(assetsFound) { "Xiaomi asset response field data.$assetFieldName not found" }
+    return XiaomiAssetPage(assets, isLastPage)
+}
+
+private fun parseXiaomiAsset(parser: JsonParser, albumId: Long, audio: Boolean): Asset {
+    var id: Long? = null
+    var fileName: String? = null
+    var type: String? = null
+    var dateTaken: Long? = null
+    var sha1: String? = null
+    var mimeType: String? = null
+    var title: String? = null
+    var size: Long? = null
+
+    while (parser.nextToken() != JsonToken.END_OBJECT) {
+        val fieldName = parser.currentName()
+        parser.nextToken()
+        when (fieldName) {
+            "id" -> id = parser.valueAsLong
+            "fileName", "name" -> fileName = parser.valueAsString
+            "type" -> type = parser.valueAsString
+            "dateTaken", "create_time" -> dateTaken = parser.valueAsLong
+            "sha1" -> sha1 = parser.valueAsString
+            "mimeType" -> mimeType = parser.valueAsString
+            "title" -> title = parser.valueAsString
+            "size" -> size = parser.valueAsLong
+            else -> parser.skipChildren()
+        }
+    }
+
+    val requiredId = requireNotNull(id) { "Xiaomi asset id not found" }
+    val requiredFileName = requireNotNull(fileName) { "Xiaomi asset file name not found" }
+    val requiredDateTaken = requireNotNull(dateTaken) { "Xiaomi asset date not found" }
+    val requiredSha1 = requireNotNull(sha1) { "Xiaomi asset sha1 not found" }
+
+    if (!audio) {
+        return Asset {
+            this.id = requiredId
+            this.fileName = requiredFileName
+            this.type = AssetType.valueOf(requireNotNull(type) { "Xiaomi asset type not found" }.uppercase())
+            this.dateTaken = Instant.ofEpochMilli(requiredDateTaken)
+            this.albumId = albumId
+            this.sha1 = requiredSha1
+            this.mimeType = requireNotNull(mimeType) { "Xiaomi asset mimeType not found" }
+            this.title = title ?: requiredFileName.substringBeforeLast('.')
+            this.size = size ?: 0L
+        }
+    }
+
+    val recordingName = parseXiaomiRecordingName(requiredFileName)
+    return Asset {
+        this.id = requiredId
+        this.fileName = recordingName.fileName
+        this.type = AssetType.AUDIO
+        this.recordingType = recordingName.recordingType
+        this.dateTaken = Instant.ofEpochMilli(requiredDateTaken)
+        this.albumId = albumId
+        this.sha1 = requiredSha1
+        this.mimeType = Files.probeContentType(Path(recordingName.fileName)) ?: "application/octet-stream"
+        this.title = recordingName.fileName.substringBeforeLast(".")
+        this.size = requireNotNull(size) { "Xiaomi recording size not found" }
     }
 }
 
