@@ -25,8 +25,11 @@ ENV JAVA_BASE_OPTS="-XX:+UseG1GC \
     -XX:MaxHeapFreeRatio=20 \
     -XX:MinHeapFreeRatio=5 \
     -XX:TrimNativeHeapInterval=60000 \
+    -XX:+UseCompactObjectHeaders \
+    -XX:TieredStopAtLevel=1 \
+    -XX:ReservedCodeCacheSize=48m \
     --enable-native-access=ALL-UNNAMED"
-ENV JAVA_OPTS="-Xmx768m"
+ENV JAVA_OPTS="-Xmx512m -XX:SoftMaxHeapSize=384m"
 
 # 启动应用
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_BASE_OPTS $JAVA_OPTS -jar app.jar"]
