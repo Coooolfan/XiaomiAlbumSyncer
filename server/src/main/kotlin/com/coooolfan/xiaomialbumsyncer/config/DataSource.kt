@@ -25,7 +25,7 @@ class DataSource {
             buildSQLiteUrl(dbPath, sqliteUrlProperties.toOptions())
         }
         config.driverClassName = "org.sqlite.JDBC"
-        config.maximumPoolSize = 4 // SQLite通常不需要太多连接
+        config.maximumPoolSize = validateSQLiteMaximumPoolSize(sqliteUrlProperties.maximumPoolSize)
         config.connectionTestQuery = "SELECT 1"
         config.poolName = "SQLitePool"
         return HikariDataSource(config)
@@ -56,6 +56,9 @@ class SQLiteUrlProperties {
 
     @Inject(value = $$"${solon.app.sqlite.busy-timeout}")
     var busyTimeout: Int = 30_000
+
+    @Inject(value = $$"${solon.app.sqlite.maximum-pool-size}")
+    var maximumPoolSize: Int = 4
 
     fun toOptions() = SQLiteUrlOptions(
         journalMode = journalMode,
@@ -111,6 +114,11 @@ fun resolveSQLiteUrl(configuredUrl: String?, fallback: () -> String): String {
 }
 
 private const val SQLITE_JDBC_PREFIX = "jdbc:sqlite:"
+
+fun validateSQLiteMaximumPoolSize(value: Int): Int {
+    require(value in 1..64) { "SQLITE_MAXIMUM_POOL_SIZE must be between 1 and 64: $value" }
+    return value
+}
 
 fun buildSQLiteUrl(dbPath: Path, options: SQLiteUrlOptions = SQLiteUrlOptions()): String {
     return "jdbc:sqlite:${dbPath.toAbsolutePath()}" +

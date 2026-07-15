@@ -73,6 +73,7 @@ class ApplicationProcess private constructor(
                 put("SQLITE_CACHE_SIZE", "-8192")
                 put("SQLITE_TEMP_STORE", "file")
                 put("SQLITE_MMAP_SIZE", "67108864")
+                put("SQLITE_MAXIMUM_POOL_SIZE", "2")
                 put("XIAOMI_API_BASE_URL", mockBaseUrl)
                 put("WEBAUTHN_RP_ID", "localhost")
             }

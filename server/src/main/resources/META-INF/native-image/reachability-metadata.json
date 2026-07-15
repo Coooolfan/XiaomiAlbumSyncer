@@ -1030,6 +1030,9 @@
           "name": "journalMode"
         },
         {
+          "name": "maximumPoolSize"
+        },
+        {
           "name": "mmapSize"
         },
         {
@@ -1057,6 +1060,10 @@
         },
         {
           "name": "getJournalMode",
+          "parameterTypes": []
+        },
+        {
+          "name": "getMaximumPoolSize",
           "parameterTypes": []
         },
         {
@@ -1091,6 +1098,12 @@
           "name": "setJournalMode",
           "parameterTypes": [
             "java.lang.String"
+          ]
+        },
+        {
+          "name": "setMaximumPoolSize",
+          "parameterTypes": [
+            "int"
           ]
         },
         {

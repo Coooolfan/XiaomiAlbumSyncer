@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.config
 
+import com.zaxxer.hikari.HikariDataSource
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -117,6 +118,27 @@ class DataSourceTest {
         }
         assertThrows(IllegalArgumentException::class.java) {
             SQLiteUrlOptions(busyTimeout = -1)
+        }
+    }
+
+    @Test
+    fun validatesMaximumPoolSize() {
+        assertEquals(1, validateSQLiteMaximumPoolSize(1))
+        assertEquals(4, validateSQLiteMaximumPoolSize(4))
+        assertEquals(64, validateSQLiteMaximumPoolSize(64))
+        assertThrows(IllegalArgumentException::class.java) { validateSQLiteMaximumPoolSize(0) }
+        assertThrows(IllegalArgumentException::class.java) { validateSQLiteMaximumPoolSize(65) }
+    }
+
+    @Test
+    fun appliesMaximumPoolSizeToHikari(@TempDir tempDir: Path) {
+        val properties = SQLiteUrlProperties().apply {
+            url = "jdbc:sqlite:${tempDir.resolve("pool.db").toAbsolutePath()}"
+            maximumPoolSize = 2
+        }
+
+        (DataSource().defaultDataSource(properties) as HikariDataSource).use { dataSource ->
+            assertEquals(2, dataSource.maximumPoolSize)
         }
     }
 
