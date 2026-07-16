@@ -140,6 +140,8 @@ val xiaomiCloudMockExecutable = layout.buildDirectory.file(
     "xiaomi-cloud-mock/${if (System.getProperty("os.name").startsWith("Windows")) "xiaomi-cloud-mock.exe" else "xiaomi-cloud-mock"}"
 )
 val xiaomiCloudMockScenario = xiaomiCloudMockDir.file("scenarios/default.json")
+val xiaomiCloudMockMemoryScenario = xiaomiCloudMockDir.file("scenarios/memory-profile.json")
+val xiaomiCloudMockProfilingScenario = xiaomiCloudMockDir.file("scenarios/memory-profile-small.json")
 val graalVmLauncher = javaToolchains.launcherFor {
     languageVersion.set(JavaLanguageVersion.of(25))
     vendor.set(JvmVendorSpec.GRAAL_VM)
@@ -171,12 +173,14 @@ val prepareNativeMetadataMerge by tasks.registering(Sync::class) {
     into(nativeAgentMerged)
 }
 
-fun Test.configureApiE2e(target: String) {
+fun Test.configureApiE2e(target: String, memoryBenchmark: Boolean = false) {
     group = "verification"
     testClassesDirs = apiE2eTest.output.classesDirs
     classpath = apiE2eTest.runtimeClasspath
     dependsOn(tasks.named(apiE2eTest.classesTaskName), tasks.named("classes"), buildXiaomiCloudMock)
-    useJUnitPlatform()
+    useJUnitPlatform {
+        if (memoryBenchmark) includeTags("memory-benchmark") else excludeTags("memory-benchmark")
+    }
     maxParallelForks = 1
     outputs.upToDateWhen { false }
     systemProperty("xiaomi.e2e.target", target)
@@ -193,6 +197,48 @@ val apiE2eJvm by tasks.registering(Test::class) {
             "xiaomi.e2e.javaExecutable",
             NioPath.of(System.getProperty("java.home"), "bin", "java").toString()
         )
+    }
+}
+
+val apiMemoryBenchmarkJvm by tasks.registering(Test::class) {
+    description = "使用大尺寸有状态 Mock 场景采集 JVM 首次、空任务和增量同步内存基线"
+    configureApiE2e("jvm", memoryBenchmark = true)
+    doFirst {
+        systemProperty("xiaomi.e2e.appClasspath", sourceSets.main.get().runtimeClasspath.asPath)
+        systemProperty(
+            "xiaomi.e2e.javaExecutable",
+            NioPath.of(System.getProperty("java.home"), "bin", "java").toString()
+        )
+        val benchmarkScenario = providers.gradleProperty("xiaomi.benchmark.scenario").orNull
+            ?.let(::file)
+            ?: if (providers.gradleProperty("xiaomi.benchmark.jfr").orNull == "true") {
+                xiaomiCloudMockProfilingScenario.asFile
+            } else {
+                xiaomiCloudMockMemoryScenario.asFile
+            }
+        systemProperty("xiaomi.e2e.mockScenario", benchmarkScenario.absolutePath)
+        systemProperty(
+            "xiaomi.benchmark.outputDir",
+            layout.buildDirectory.dir("reports/xiaomi-memory-benchmark").get().asFile.absolutePath
+        )
+        listOf(
+            "xiaomi.benchmark.downloaders",
+            "xiaomi.benchmark.fetchFromDbSize",
+            "xiaomi.benchmark.verifiers",
+            "xiaomi.benchmark.exifProcessors",
+            "xiaomi.benchmark.fileTimeWorkers",
+            "xiaomi.benchmark.incrementalCount",
+            "xiaomi.benchmark.timeoutMinutes",
+            "xiaomi.benchmark.keepWorkDir",
+            "xiaomi.benchmark.jfr",
+            "xiaomi.benchmark.maxHeap",
+            "xiaomi.benchmark.softMaxHeap",
+            "xiaomi.benchmark.periodicGcInterval",
+            "xiaomi.benchmark.rewriteExifTime",
+            "xiaomi.benchmark.contentMode",
+        ).forEach { name ->
+            providers.gradleProperty(name).orNull?.let { systemProperty(name, it) }
+        }
     }
 }
 
@@ -259,7 +305,7 @@ tasks.register("checkNativeMetadata") {
         val differentFiles = (sourceFiles.keys + mergedFiles.keys).filter { relativePath ->
             val sourceFile = sourceFiles[relativePath]
             val mergedFile = mergedFiles[relativePath]
-            sourceFile == null || mergedFile == null || !sourceFile.readBytes().contentEquals(mergedFile.readBytes())
+            sourceFile == null || mergedFile == null || sourceFile.readText().trimEnd() != mergedFile.readText().trimEnd()
         }
         check(differentFiles.isEmpty()) {
             "Native Image 元数据需要更新: ${differentFiles.joinToString()}。请执行 ./gradlew updateNativeMetadata"

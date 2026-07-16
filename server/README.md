@@ -83,3 +83,43 @@ APP_DB_PATH=/tmp/xiaomi-album-syncer.db
 
 需要手工执行真实新增资产、下载限速或内存测试矩阵时，参见 `../xiaomi-cloud-mock/README.md`。模拟服务支持
 固定 seed 场景、原子 mutation、reset、下载网络参数和调用统计。
+
+仓库还提供可重复的 JVM 下载内存基准。默认场景会先下载 1000 个 16 MiB 文件，执行一次无变化空任务，
+再新增并下载 100 个 16 MiB 文件；并发参数使用生产默认值 `fetch=2 / download=8 / verify=2 / EXIF=2 / fileTime=2`，
+完整运行需要约 18 GiB 磁盘空间：
+
+```shell
+./gradlew apiMemoryBenchmarkJvm -Pxiaomi.benchmark.keepWorkDir=true
+```
+
+报告写入 `build/reports/xiaomi-memory-benchmark`，包括各阶段耗时、100 ms 采样的 JVM RSS 峰值、
+JVM 与 ExifTool 等子进程的进程树 RSS 峰值、NMT 摘要、Mock 实际发送字节数和并发下载数。
+进程树 RSS 是各进程 RSS 之和，可能重复计算共享页，主要用于和容器总体内存趋势对照。常用矩阵参数包括：
+
+```shell
+# 保留 512 MiB 硬上限，只比较较低的 G1 软上限
+./gradlew apiMemoryBenchmarkJvm \
+  -Pxiaomi.benchmark.maxHeap=512m \
+  -Pxiaomi.benchmark.softMaxHeap=192m \
+  -Pxiaomi.benchmark.keepWorkDir=true
+
+# 使用 200 个初始文件和 20 个增量文件采集 JFR
+./gradlew apiMemoryBenchmarkJvm \
+  -Pxiaomi.benchmark.jfr=true \
+  -Pxiaomi.benchmark.incrementalCount=20 \
+  -Pxiaomi.benchmark.keepWorkDir=true
+
+# 复现默认并发下开启“填充 EXIF 时间”的真实图片处理链路
+./gradlew apiMemoryBenchmarkJvm \
+  -Pxiaomi.benchmark.scenario=../xiaomi-cloud-mock/scenarios/memory-profile-exif.json \
+  -Pxiaomi.benchmark.rewriteExifTime=true \
+  -Pxiaomi.benchmark.contentMode=jpeg \
+  -Pxiaomi.benchmark.keepWorkDir=true
+```
+
+还可以使用 `xiaomi.benchmark.downloaders`、`xiaomi.benchmark.fetchFromDbSize`、
+`xiaomi.benchmark.verifiers`、`xiaomi.benchmark.exifProcessors`、`xiaomi.benchmark.fileTimeWorkers`、
+`xiaomi.benchmark.incrementalCount`、`xiaomi.benchmark.periodicGcInterval`、`xiaomi.benchmark.rewriteExifTime`、
+`xiaomi.benchmark.contentMode` 和 `xiaomi.benchmark.scenario`
+覆盖矩阵参数。基准下载目录位于报告目录下，
+成功后仅在 `keepWorkDir=true` 时保留。

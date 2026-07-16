@@ -16,7 +16,19 @@ class ApplicationProcess private constructor(
     val api: ApiClient,
 ) : AutoCloseable {
 
+    enum class DatabaseProfile {
+        E2E,
+        PRODUCTION_DEFAULT,
+    }
+
+    val pid: Long
+        get() = process.pid()
+
     fun logs(): String = synchronized(output) { output.joinToString(System.lineSeparator()) }
+
+    fun logsTail(maxLines: Int): String = synchronized(output) {
+        output.takeLast(maxLines).joinToString(System.lineSeparator())
+    }
 
     private fun awaitReady(timeout: Duration = Duration.ofSeconds(30)) {
         val deadline = System.nanoTime() + timeout.toNanos()
@@ -47,13 +59,19 @@ class ApplicationProcess private constructor(
     companion object {
         private const val MAIN_CLASS = "com.coooolfan.xiaomialbumsyncer.App"
 
-        fun start(mockBaseUrl: String, workDir: Path): ApplicationProcess {
+        fun start(
+            mockBaseUrl: String,
+            workDir: Path,
+            databaseProfile: DatabaseProfile = DatabaseProfile.E2E,
+            extraJvmArgs: List<String> = emptyList(),
+            extraEnvironment: Map<String, String> = emptyMap(),
+        ): ApplicationProcess {
             Files.createDirectories(workDir)
             val port = findFreePort()
             val databasePath = workDir.resolve("db/xiaomialbumsyncer.db")
             val fallbackDatabasePath = workDir.resolve("fallback/xiaomialbumsyncer.db")
             Files.createDirectories(databasePath.parent)
-            val command = buildCommand()
+            val command = buildCommand(extraJvmArgs)
             val output = Collections.synchronizedList(mutableListOf<String>())
             val processBuilder = ProcessBuilder(command)
                 .directory(workDir.toFile())
@@ -61,21 +79,38 @@ class ApplicationProcess private constructor(
 
             processBuilder.environment().apply {
                 put("SERVER_PORT", port.toString())
-                put("APP_DB_PATH", fallbackDatabasePath.toString())
-                put(
-                    "SQLITE_URL",
-                    "jdbc:sqlite:${databasePath.toAbsolutePath()}" +
-                            "?journal_mode=WAL&synchronous=FULL&cache_size=-8192" +
-                            "&temp_store=file&mmap_size=67108864"
-                )
-                put("SQLITE_JOURNAL_MODE", "WAL")
-                put("SQLITE_SYNCHRONOUS", "FULL")
-                put("SQLITE_CACHE_SIZE", "-8192")
-                put("SQLITE_TEMP_STORE", "file")
-                put("SQLITE_MMAP_SIZE", "67108864")
-                put("SQLITE_MAXIMUM_POOL_SIZE", "2")
+                when (databaseProfile) {
+                    DatabaseProfile.E2E -> {
+                        put("APP_DB_PATH", fallbackDatabasePath.toString())
+                        put(
+                            "SQLITE_URL",
+                            "jdbc:sqlite:${databasePath.toAbsolutePath()}" +
+                                    "?journal_mode=WAL&synchronous=FULL&cache_size=-8192" +
+                                    "&temp_store=file&mmap_size=67108864"
+                        )
+                        put("SQLITE_JOURNAL_MODE", "WAL")
+                        put("SQLITE_SYNCHRONOUS", "FULL")
+                        put("SQLITE_CACHE_SIZE", "-8192")
+                        put("SQLITE_TEMP_STORE", "file")
+                        put("SQLITE_MMAP_SIZE", "67108864")
+                        put("SQLITE_MAXIMUM_POOL_SIZE", "2")
+                    }
+
+                    DatabaseProfile.PRODUCTION_DEFAULT -> {
+                        remove("SQLITE_URL")
+                        put("APP_DB_PATH", databasePath.toString())
+                        put("SQLITE_JOURNAL_MODE", "WAL")
+                        put("SQLITE_SYNCHRONOUS", "NORMAL")
+                        put("SQLITE_CACHE_SIZE", "10000")
+                        put("SQLITE_TEMP_STORE", "memory")
+                        put("SQLITE_MMAP_SIZE", "0")
+                        put("SQLITE_BUSY_TIMEOUT", "30000")
+                        put("SQLITE_MAXIMUM_POOL_SIZE", "4")
+                    }
+                }
                 put("XIAOMI_API_BASE_URL", mockBaseUrl)
                 put("WEBAUTHN_RP_ID", "localhost")
+                putAll(extraEnvironment)
             }
 
             val process = processBuilder.start()
@@ -88,9 +123,11 @@ class ApplicationProcess private constructor(
             val application = ApplicationProcess(process, output, ApiClient("http://127.0.0.1:$port"))
             try {
                 application.awaitReady()
-                check(Files.exists(databasePath)) { "SQLITE_URL 指定的数据库未创建: $databasePath" }
-                check(Files.notExists(fallbackDatabasePath)) {
-                    "SQLITE_URL 生效时不应创建 APP_DB_PATH 数据库: $fallbackDatabasePath"
+                check(Files.exists(databasePath)) { "应用数据库未创建: $databasePath" }
+                if (databaseProfile == DatabaseProfile.E2E) {
+                    check(Files.notExists(fallbackDatabasePath)) {
+                        "SQLITE_URL 生效时不应创建 APP_DB_PATH 数据库: $fallbackDatabasePath"
+                    }
                 }
             } catch (e: Exception) {
                 application.close()
@@ -99,9 +136,9 @@ class ApplicationProcess private constructor(
             return application
         }
 
-        private fun buildCommand(): List<String> {
+        private fun buildCommand(extraJvmArgs: List<String>): List<String> {
             return when (val target = System.getProperty("xiaomi.e2e.target", "jvm")) {
-                "jvm" -> buildJvmCommand()
+                "jvm" -> buildJvmCommand(extraJvmArgs)
                 "native" -> {
                     val executable = requiredProperty("xiaomi.e2e.appExecutable")
                     check(Files.isRegularFile(Path.of(executable))) { "Native 可执行文件不存在: $executable" }
@@ -112,12 +149,13 @@ class ApplicationProcess private constructor(
             }
         }
 
-        private fun buildJvmCommand(): List<String> {
+        private fun buildJvmCommand(extraJvmArgs: List<String>): List<String> {
             val command = mutableListOf(
                 requiredProperty("xiaomi.e2e.javaExecutable"),
                 "--enable-native-access=ALL-UNNAMED",
                 "-Dfile.encoding=UTF-8",
             )
+            command += extraJvmArgs
             System.getProperty("xiaomi.e2e.agentConfigDir")
                 ?.takeIf { it.isNotBlank() }
                 ?.let { configDir ->

@@ -55,13 +55,26 @@ class MockXiaomiApiServer private constructor(
         error("等待请求超时: $path，stats=${stats()}\nlogs=${logs()}")
     }
 
-    private fun stats(): JsonNode {
+    fun stats(): JsonNode {
         val request = HttpRequest.newBuilder(URI.create("$baseUrl/_control/v1/stats"))
             .timeout(Duration.ofSeconds(2))
             .GET()
             .build()
         val response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))
         check(response.statusCode() == 200) { "读取 mock stats 失败: ${response.statusCode()} ${response.body()}" }
+        return objectMapper.readTree(response.body())
+    }
+
+    fun mutate(body: Any): JsonNode {
+        val request = HttpRequest.newBuilder(URI.create("$baseUrl/_control/v1/mutations"))
+            .timeout(Duration.ofSeconds(5))
+            .header("Content-Type", "application/json; charset=utf-8")
+            .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body)))
+            .build()
+        val response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))
+        check(response.statusCode() == 200) {
+            "修改 mock 状态失败: ${response.statusCode()} ${response.body()}"
+        }
         return objectMapper.readTree(response.body())
     }
 
