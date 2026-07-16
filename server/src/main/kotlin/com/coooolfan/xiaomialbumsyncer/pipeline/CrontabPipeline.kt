@@ -154,11 +154,11 @@ class CrontabPipeline(
         }
 
         val crontabAlbumRemoteIds = crontab.albums.mapTo(mutableSetOf()) { it.remoteId }
-        if (albumTimelinesHistory.keys != crontabAlbumRemoteIds) {
-            return "相册列表有变更"
-        }
         if (crontabAlbumRemoteIds.contains(-1L)) {
             return "\"录音\"不支持时间线对比"
+        }
+        if (albumTimelinesHistory.keys != crontabAlbumRemoteIds) {
+            return "相册列表有变更"
         }
         return null
     }

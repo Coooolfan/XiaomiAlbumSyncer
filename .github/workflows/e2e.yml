@@ -11,6 +11,25 @@ permissions:
   contents: read
 
 jobs:
+  mock-contract:
+    name: Mock Xiaomi Contract
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v5
+
+      - name: 设置 Go 1.25
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.25.x'
+          cache-dependency-path: xiaomi-cloud-mock/go.mod
+
+      - name: 执行模拟服务测试
+        working-directory: xiaomi-cloud-mock
+        run: |
+          go test -race ./...
+          go vet ./...
+
   jvm-api-e2e:
     name: JVM API E2E
     runs-on: ubuntu-latest
@@ -24,6 +43,12 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: gradle
+
+      - name: 设置 Go 1.25
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.25.x'
+          cache-dependency-path: xiaomi-cloud-mock/go.mod
 
       - name: 执行 JVM API E2E
         working-directory: server
@@ -43,6 +68,12 @@ jobs:
           distribution: graalvm
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: gradle
+
+      - name: 设置 Go 1.25
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.25.x'
+          cache-dependency-path: xiaomi-cloud-mock/go.mod
 
       - name: 检查 Native Image 元数据
         working-directory: server

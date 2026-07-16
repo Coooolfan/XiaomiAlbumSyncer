@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "seed": 20260716,
+  "logicalClock": 1714564800000,
+  "network": {
+    "responseDelayMs": 0,
+    "chunkSizeBytes": 32768,
+    "bytesPerSecondPerDownload": 0
+  },
+  "accounts": [
+    {
+      "userId": "mock-user",
+      "passToken": "mock-pass-token",
+      "galleryAlbums": [
+        {
+          "albumId": 1,
+          "name": "Camera",
+          "assets": [
+            {
+              "id": 101,
+              "type": "image",
+              "fileName": "sample-photo.jpg",
+              "title": "sample-photo",
+              "mimeType": "image/jpeg",
+              "dateTaken": 1714564800000,
+              "size": 28,
+              "sha1Mode": "exact",
+              "contentPattern": "xiaomi-album-syncer-api-e2e\n"
+            }
+          ]
+        },
+        {
+          "albumId": 2,
+          "name": "Screenshots",
+          "generate": {
+            "count": 0,
+            "sizeBytes": 1048576,
+            "startTime": 1714564800000,
+            "intervalSeconds": 60
+          }
+        }
+      ],
+      "recordings": [
+        {
+          "id": 201,
+          "fileName": "sample-audio.m4a",
+          "recordingType": 0,
+          "createTime": 1714564800000,
+          "size": 28,
+          "sha1Mode": "exact",
+          "contentPattern": "xiaomi-album-syncer-api-e2e\n"
+        }
+      ]
+    }
+  ]
+}

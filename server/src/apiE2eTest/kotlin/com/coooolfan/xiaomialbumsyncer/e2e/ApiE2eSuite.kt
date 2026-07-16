@@ -49,7 +49,7 @@ class ApiE2eSuite {
             "/api/system-config/notify-config",
             mapOf(
                 "notifyConfig" to linkedMapOf<String, Any?>(
-                    "url" to "${mock.baseUrl}/mock/notify",
+                    "url" to "${mock.baseUrl}/_control/v1/notify",
                     "headers" to mapOf("Content-Type" to "application/json"),
                     "body" to "{\"text\":\"${'$'}{crontab.name}\",\"success\":\"${'$'}{success}/${'$'}{total}\"}",
                     "dailySummaryBody" to null,
@@ -158,15 +158,14 @@ class ApiE2eSuite {
         val downloadedFile = Path.of(detail.path("filePath").asText())
         assertTrue(Files.isRegularFile(downloadedFile), "下载文件不存在: $downloadedFile")
         assertArrayEquals(mock.mediaBytes, Files.readAllBytes(downloadedFile))
-        mock.awaitRequest("/mock/notify", Duration.ofSeconds(10))
+        mock.awaitRequest("/_control/v1/notify", Duration.ofSeconds(10))
 
-        val paths = mock.requests().map { it.path }
-        assertEquals(2, paths.count { it == "/gallery/user/album/list" })
-        assertTrue(paths.count { it == "/gallery/user/galleries" } >= 2)
-        assertTrue(paths.contains("/gallery/user/timeline"))
-        assertTrue(paths.contains("/gallery/storage"))
-        assertTrue(paths.contains("/mock/oss/101"))
-        assertTrue(paths.contains("/mock/download/101"))
+        assertEquals(1, mock.routeCount("/gallery/user/album/list"))
+        assertTrue(mock.routeCount("/gallery/user/galleries") >= 2)
+        assertTrue(mock.routeCount("/gallery/user/timeline") >= 1)
+        assertTrue(mock.routeCount("/gallery/storage") >= 1)
+        assertTrue(mock.routeCount("/mock/oss/101") >= 1)
+        assertTrue(mock.routeCount("/mock/download/101") >= 1)
 
         api.delete("/api/crontab/$crontabId/histories").expect(200)
         val historiesAfterClear = api.json(api.get("/api/crontab").expect(200))
@@ -178,6 +177,17 @@ class ApiE2eSuite {
         )
 
         api.delete("/api/crontab/$crontabId").expect(200)
+
+        executeRecordingWorkflows(
+            api = api,
+            mock = mock,
+            workDir = workDir,
+            accountId = accountId,
+            cameraAlbumId = cameraAlbumId,
+            audioAlbumId = audioAlbumId,
+            baseConfig = config,
+        )
+
         api.delete("/api/account/$accountId").expect(200)
         api.post(
             "/api/system-config/password",
@@ -185,6 +195,87 @@ class ApiE2eSuite {
         ).expect(200)
         api.delete("/api/token").expect(200)
         api.get("/api/account").expect(401)
+    }
+
+    private fun executeRecordingWorkflows(
+        api: ApiClient,
+        mock: MockXiaomiApiServer,
+        workDir: Path,
+        accountId: Long,
+        cameraAlbumId: Long,
+        audioAlbumId: Long,
+        baseConfig: LinkedHashMap<String, Any?>,
+    ) {
+        val recordingConfig = LinkedHashMap(baseConfig).apply {
+            this["targetPath"] = workDir.resolve("recording-downloads").toString()
+            this["downloadImages"] = false
+            this["downloadVideos"] = false
+            this["downloadAudios"] = true
+            this["notify"] = false
+            this["diffByTimeline"] = true
+        }
+        val recordingCrontab = api.json(
+            api.post(
+                "/api/crontab",
+                linkedMapOf<String, Any?>(
+                    "name" to "Recording API E2E",
+                    "description" to "Recorder is independent from gallery",
+                    "enabled" to false,
+                    "config" to recordingConfig,
+                    "accountId" to accountId,
+                    "albumIds" to listOf(audioAlbumId),
+                )
+            ).expect(200)
+        )
+        val recordingCrontabId = recordingCrontab.path("id").asLong()
+        api.post("/api/crontab/$recordingCrontabId/executions").expect(200)
+        val recordingHistoryId = awaitCompletedHistory(api, recordingCrontabId)
+        assertCompletedDetailCount(api, recordingHistoryId, 1)
+        api.delete("/api/crontab/$recordingCrontabId").expect(200)
+
+        val mixedConfig = LinkedHashMap(baseConfig).apply {
+            this["targetPath"] = workDir.resolve("mixed-downloads").toString()
+            this["downloadImages"] = true
+            this["downloadVideos"] = false
+            this["downloadAudios"] = true
+            this["notify"] = false
+            this["diffByTimeline"] = true
+        }
+        val mixedCrontab = api.json(
+            api.post(
+                "/api/crontab",
+                linkedMapOf<String, Any?>(
+                    "name" to "Mixed API E2E",
+                    "description" to "Gallery and recorder full refresh",
+                    "enabled" to false,
+                    "config" to mixedConfig,
+                    "accountId" to accountId,
+                    "albumIds" to listOf(cameraAlbumId, audioAlbumId),
+                )
+            ).expect(200)
+        )
+        val mixedCrontabId = mixedCrontab.path("id").asLong()
+        api.post("/api/crontab/$mixedCrontabId/executions").expect(200)
+        val mixedHistoryId = awaitCompletedHistory(api, mixedCrontabId)
+        assertCompletedDetailCount(api, mixedHistoryId, 2)
+        api.delete("/api/crontab/$mixedCrontabId").expect(200)
+
+        assertTrue(mock.routeCount("/sfs/ns/recorder/dir/0/list") >= 3)
+        assertTrue(mock.routePrefixCount("/sfs/ns/recorder/file/201/cb/") >= 2)
+        assertEquals(0, mock.timelineCount(-1), "录音是独立远端资源，不应请求 gallery timeline 的 -1")
+        assertTrue(mock.timelineCount(1) >= 2, "混合任务应只为真实相册请求时间线")
+    }
+
+    private fun assertCompletedDetailCount(api: ApiClient, historyId: Long, expected: Int) {
+        val detailPage = api.json(
+            api.get("/api/crontab/history/$historyId/details?pageIndex=0&pageSize=10").expect(200)
+        )
+        assertEquals(expected, detailPage.path("totalRowCount").asInt())
+        detailPage.path("rows").forEach { detail ->
+            assertTrue(detail.path("downloadCompleted").asBoolean())
+            assertTrue(detail.path("sha1Verified").asBoolean())
+            assertTrue(detail.path("message").isMissingNode || detail.path("message").isNull)
+        }
     }
 
     private fun findAlbumId(albums: JsonNode, remoteId: String): Long {

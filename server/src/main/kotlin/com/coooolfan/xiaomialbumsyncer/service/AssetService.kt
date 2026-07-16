@@ -1,6 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
 import com.coooolfan.xiaomialbumsyncer.model.*
+import com.coooolfan.xiaomialbumsyncer.utils.isAudioAlbum
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -177,7 +178,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
 
     private fun fetchAlbumsTimelineSnapshot(accountId: Long, albums: List<Album>): Map<Long, AlbumTimeline> {
         val albumTimelines = mutableMapOf<Long, AlbumTimeline>()
-        albums.forEach { album ->
+        albums.filterNot { it.isAudioAlbum() }.forEach { album ->
             // remoteID -> AlbumTimeline
             albumTimelines[album.remoteId] = api.fetchAlbumTimeline(accountId, album.remoteId)
         }

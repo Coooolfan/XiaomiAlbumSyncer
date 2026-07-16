@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "seed": 20260716,
+  "logicalClock": 1784131200000,
+  "network": {
+    "responseDelayMs": 25,
+    "chunkSizeBytes": 32768,
+    "bytesPerSecondPerDownload": 8388608
+  },
+  "accounts": [
+    {
+      "userId": "memory-user",
+      "passToken": "memory-pass-token",
+      "galleryAlbums": [
+        {
+          "albumId": 1,
+          "name": "Camera",
+          "generate": {
+            "count": 1000,
+            "typeCycle": ["image", "video"],
+            "sizeBytes": 16777216,
+            "startTime": 1784131200000,
+            "intervalSeconds": 60,
+            "namePrefix": "media-"
+          }
+        }
+      ],
+      "recordings": []
+    }
+  ]
+}

@@ -135,9 +135,33 @@ tasks.named("processResources") {
 
 val nativeMetadataSource = layout.projectDirectory.dir("src/main/resources/META-INF/native-image")
 val nativeAgentMerged = layout.buildDirectory.dir("native-agent-merged")
+val xiaomiCloudMockDir = layout.projectDirectory.dir("../xiaomi-cloud-mock")
+val xiaomiCloudMockExecutable = layout.buildDirectory.file(
+    "xiaomi-cloud-mock/${if (System.getProperty("os.name").startsWith("Windows")) "xiaomi-cloud-mock.exe" else "xiaomi-cloud-mock"}"
+)
+val xiaomiCloudMockScenario = xiaomiCloudMockDir.file("scenarios/default.json")
 val graalVmLauncher = javaToolchains.launcherFor {
     languageVersion.set(JavaLanguageVersion.of(25))
     vendor.set(JvmVendorSpec.GRAAL_VM)
+}
+
+val buildXiaomiCloudMock by tasks.registering(Exec::class) {
+    group = "verification"
+    description = "构建有状态小米云模拟服务，供 API E2E 使用"
+    workingDir(xiaomiCloudMockDir)
+    inputs.dir(xiaomiCloudMockDir.dir("cmd"))
+    inputs.dir(xiaomiCloudMockDir.dir("internal"))
+    inputs.file(xiaomiCloudMockDir.file("go.mod"))
+    outputs.file(xiaomiCloudMockExecutable)
+    doFirst {
+        xiaomiCloudMockExecutable.get().asFile.parentFile.mkdirs()
+        environment("GOCACHE", layout.buildDirectory.dir("go-build-cache").get().asFile.absolutePath)
+        commandLine(
+            "go", "build", "-trimpath", "-o",
+            xiaomiCloudMockExecutable.get().asFile.absolutePath,
+            "./cmd/xiaomi-cloud-mock"
+        )
+    }
 }
 
 val prepareNativeMetadataMerge by tasks.registering(Sync::class) {
@@ -151,11 +175,13 @@ fun Test.configureApiE2e(target: String) {
     group = "verification"
     testClassesDirs = apiE2eTest.output.classesDirs
     classpath = apiE2eTest.runtimeClasspath
-    dependsOn(tasks.named(apiE2eTest.classesTaskName), tasks.named("classes"))
+    dependsOn(tasks.named(apiE2eTest.classesTaskName), tasks.named("classes"), buildXiaomiCloudMock)
     useJUnitPlatform()
     maxParallelForks = 1
     outputs.upToDateWhen { false }
     systemProperty("xiaomi.e2e.target", target)
+    systemProperty("xiaomi.e2e.mockExecutable", xiaomiCloudMockExecutable.get().asFile.absolutePath)
+    systemProperty("xiaomi.e2e.mockScenario", xiaomiCloudMockScenario.asFile.absolutePath)
 }
 
 val apiE2eJvm by tasks.registering(Test::class) {

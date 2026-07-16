@@ -1,0 +1,9 @@
+name: xiaomi-cloud-mock
+
+services:
+  mock:
+    build: .
+    ports:
+      - "18080:18080"
+    command: ["--listen", "0.0.0.0:18080", "--scenario", "/scenarios/default.json"]
+    restart: unless-stopped
