@@ -5682,6 +5682,16 @@
           ]
         },
         {
+          "name": "access$processStageContext",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline",
+            "java.lang.String",
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail",
+            "kotlin.jvm.functions.Function1",
+            "kotlin.coroutines.Continuation"
+          ]
+        },
+        {
           "name": "access$saveAndLogErr",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline",
@@ -5838,6 +5848,21 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$9"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$processStage$$inlined$transform$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$processStage$$inlined$transform$1$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$processStage$$inlined$transform$1$1$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$processStage$3"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$processStage$3$1"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage",

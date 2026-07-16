@@ -34,7 +34,11 @@ class DownloadStage(
         }
 
         val targetPath = Path(context.filePath)
-        targetPath.parent?.let { Files.createDirectories(it) }
+        targetPath.parent?.let { parent ->
+            // Files.createDirectories 会先尝试 mkdir，并以 FileAlreadyExistsException 走正常分支。
+            // 下载器并发处理同一目录里的大量资产时，预检查可避免每个文件都分配一次异常及其堆栈。
+            if (!Files.isDirectory(parent)) Files.createDirectories(parent)
+        }
         val tempPath = targetPath.resolveSibling("${targetPath.fileName}.${context.id}.tmp")
         cleanupTempFile(tempPath)
 

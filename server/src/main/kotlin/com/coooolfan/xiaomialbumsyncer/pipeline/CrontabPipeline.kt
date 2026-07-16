@@ -15,6 +15,8 @@ import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.noear.solon.annotation.Managed
@@ -66,7 +68,7 @@ class CrontabPipeline(
 
         var total = 0
         var success = 0
-        channelFlow {
+        var pipeline: Flow<CrontabHistoryDetail> = channelFlow {
             var currentRows: Int
             var lastId = 0L
             val pageSize = crontab.config.fetchFromDbSize
@@ -96,31 +98,22 @@ class CrontabPipeline(
             } while (currentRows > 0)
         }.onEach {
             total++
-        }.flatMapMerge(crontab.config.downloaders) { context ->
-            flow {
-                emit(downloadStage.process(context))
-            }.catch {
-                saveAndLogErr("下载", context, it)
+        }.processStage("下载", crontab.config.downloaders, downloadStage::process)
+
+        // init 已将关闭功能对应的完成标记设为 true，无需再让每个资产穿过空的并发阶段。
+        if (crontab.config.checkSha1) {
+            pipeline = pipeline.processStage("校验", crontab.config.verifiers, verificationStage::process)
+        }
+        if (crontab.config.rewriteExifTime) {
+            pipeline = pipeline.processStage("EXIF", crontab.config.exifProcessors) { context ->
+                exifProcessingStage.process(context, systemConfig)
             }
-        }.flatMapMerge(crontab.config.verifiers) { context ->
-            flow {
-                emit(verificationStage.process(context))
-            }.catch {
-                saveAndLogErr("校验", context, it)
-            }
-        }.flatMapMerge(crontab.config.exifProcessors) { context ->
-            flow {
-                emit(exifProcessingStage.process(context, systemConfig))
-            }.catch {
-                saveAndLogErr("EXIF", context, it)
-            }
-        }.flatMapMerge(crontab.config.fileTimeWorkers) { context ->
-            flow {
-                emit(fileTimeStage.process(context))
-            }.catch {
-                saveAndLogErr("文件时间", context, it)
-            }
-        }.onEach { context ->
+        }
+        if (crontab.config.rewriteFileSystemTime) {
+            pipeline = pipeline.processStage("文件时间", crontab.config.fileTimeWorkers, fileTimeStage::process)
+        }
+
+        pipeline.onEach { context ->
             success++
             log.info("资产 {} 处理完成", context.asset.id)
         }.collect()
@@ -132,6 +125,38 @@ class CrontabPipeline(
             CoroutineScope(Dispatchers.IO).launch { notifyService.send(crontab, success, total) }
 
         log.info("Crontab {} 的流水线执行完毕, 成功 {}/{}", crontab.id, success, total)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun Flow<CrontabHistoryDetail>.processStage(
+        stage: String,
+        concurrency: Int,
+        process: (CrontabHistoryDetail) -> CrontabHistoryDetail,
+    ): Flow<CrontabHistoryDetail> {
+        require(concurrency > 0) { "$stage 阶段并发数必须大于 0" }
+        if (concurrency == 1) {
+            return transform { context ->
+                processStageContext(stage, context, process)?.let { emit(it) }
+            }
+        }
+        return flatMapMerge(concurrency) { context ->
+            flow {
+                processStageContext(stage, context, process)?.let { emit(it) }
+            }
+        }
+    }
+
+    private suspend fun processStageContext(
+        stage: String,
+        context: CrontabHistoryDetail,
+        process: (CrontabHistoryDetail) -> CrontabHistoryDetail,
+    ): CrontabHistoryDetail? = try {
+        process(context)
+    } catch (err: Throwable) {
+        // Flow.catch 不处理协程取消；串行快路径也保持相同语义。
+        currentCoroutineContext().ensureActive()
+        saveAndLogErr(stage, context, err)
+        null
     }
 
     private fun saveAndLogErr(stageStr: String, context: CrontabHistoryDetail, err: Throwable) {
