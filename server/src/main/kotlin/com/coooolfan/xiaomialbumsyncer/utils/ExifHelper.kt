@@ -23,25 +23,21 @@ fun rewriteExifTime(asset: Asset, path: Path, config: ExifRewriteConfig) {
 }
 
 fun rewriteImageExifTime(asset: Asset, path: Path, config: ExifRewriteConfig) {
-    val imageExistTagJson =
-        Solon.context().objectMapper.readTree(runExifTool(config.exifToolPath, listOf("-j", "-G", path.toString())))[0]
-    val tagValue = imageExistTagJson.get(IMAGE_DATA_TAG)?.asText()
-
-    if (tagValue != null && !tagValue.startsWith("0000:00:00 00:00:00")) return
-
     //  格式为 YYYY:MM:DD HH:MM:SS 的字符串(UTC时间)
     val zoneOffset = config.timeZone.toZoneId().rules.getOffset(asset.dateTaken)
     val rewriteTagValue: String =
         asset.dateTaken.formatExif(zoneOffset)
     val rewriteArgs =
         listOf(
+            "-if",
+            IMAGE_TIME_MISSING_CONDITION,
             "-$IMAGE_DATA_TAG=$rewriteTagValue",
             "-$IMAGE_TIMEZONE_TAG=$zoneOffset",
             "-overwrite_original",
             path.toString()
         )
 
-    runExifTool(config.exifToolPath, rewriteArgs)
+    runExifTool(config.exifToolPath, rewriteArgs, failedConditionIsSuccess = true)
 }
 
 fun rewriteVideoExifTime(asset: Asset, path: Path, config: ExifRewriteConfig) {
@@ -62,7 +58,7 @@ fun rewriteVideoExifTime(asset: Asset, path: Path, config: ExifRewriteConfig) {
     runExifTool(config.exifToolPath, rewriteArgs)
 }
 
-fun runExifTool(binPath: Path, args: List<String>): String {
+fun runExifTool(binPath: Path, args: List<String>, failedConditionIsSuccess: Boolean = false): String {
     val command = listOf(binPath.toString()) + args
 
     val process = ProcessBuilder(command)
@@ -89,7 +85,10 @@ fun runExifTool(binPath: Path, args: List<String>): String {
 
     val exitCode = process.exitValue()
     val outputText = output.toString().trim()
-    if (exitCode != 0) {
+    val skippedByCondition = failedConditionIsSuccess &&
+            exitCode == EXIF_TOOL_FAILED_CONDITION_EXIT_CODE &&
+            EXIF_TOOL_FAILED_CONDITION_REGEX.containsMatchIn(outputText)
+    if (exitCode != 0 && !skippedByCondition) {
         throw RuntimeException("ExifTool failed (exit code: $exitCode): $outputText")
     }
 
@@ -108,6 +107,13 @@ data class ExifRewriteConfig(
 const val IMAGE_DATA_TAG: String = "EXIF:DateTimeOriginal"
 
 const val IMAGE_TIMEZONE_TAG: String = "EXIF:OffsetTimeOriginal"
+
+const val IMAGE_TIME_MISSING_CONDITION: String =
+    "not defined \$DateTimeOriginal or \$DateTimeOriginal =~ /^0000:00:00 00:00:00/"
+
+private const val EXIF_TOOL_FAILED_CONDITION_EXIT_CODE = 2
+
+private val EXIF_TOOL_FAILED_CONDITION_REGEX = Regex("""\b\d+ files? failed condition\b""")
 
 val VIDEO_DATA_TAG = listOf(
     "QuickTime:MediaCreateDate",
