@@ -36,6 +36,7 @@ type GalleryAssetSpec struct {
 	SHA1           string `json:"sha1,omitempty"`
 	SHA1Mode       string `json:"sha1Mode,omitempty"`
 	ContentPattern string `json:"contentPattern,omitempty"`
+	ContentMode    string `json:"contentMode,omitempty"`
 }
 
 type RecordingSpec struct {
@@ -58,6 +59,7 @@ type GeneratorSpec struct {
 	IntervalSeconds int64    `json:"intervalSeconds"`
 	NamePrefix      string   `json:"namePrefix,omitempty"`
 	RecordingType   int      `json:"recordingType,omitempty"`
+	ContentMode     string   `json:"contentMode,omitempty"`
 }
 
 type NetworkProfile struct {
@@ -102,6 +104,7 @@ type GalleryAsset struct {
 	Size           int64
 	SHA1           string
 	ContentPattern string
+	ContentMode    string
 	Version        int64
 }
 

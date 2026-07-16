@@ -38,6 +38,8 @@ XIAOMI_API_BASE_URL=http://127.0.0.1:18080
 相册资产可以逐个填写，也可以使用 `generate` 批量生成。下载字节不会在启动时分配；服务只保存元数据，
 下载时使用一个有上限的缓冲区重复输出确定性内容。`sha1Mode: "exact"` 会在加载场景时计算真实 SHA-1，
 只适合 E2E 中的小文件；内存矩阵默认使用稳定但不匹配下载字节的声明 SHA-1，并关闭任务的 `checkSha1`。
+图片资产或生成规则可以设置 `contentMode: "jpeg"`，模拟器会流式生成可被 ExifTool 读取和改写、长度精确且
+内容稳定的 JPEG；该模式只接受 `type: "image"`。`memory-profile-exif.json` 和它的小场景版本用于 EXIF 内存基准。
 
 小米云录音远端没有相册 ID。`-1` 只由 XiaomiAlbumSyncer 在本地合成，因此：
 

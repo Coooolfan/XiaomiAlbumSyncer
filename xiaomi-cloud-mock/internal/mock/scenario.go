@@ -182,7 +182,7 @@ func generateGallerySpecs(g GeneratorSpec) []GalleryAssetSpec {
 		result = append(result, GalleryAssetSpec{
 			Type: types[i%len(types)], Size: g.SizeBytes,
 			DateTaken: g.StartTime + int64(i)*interval*1000,
-			FileName:  fmt.Sprintf("%s%06d", g.NamePrefix, i+1),
+			FileName:  fmt.Sprintf("%s%06d", g.NamePrefix, i+1), ContentMode: g.ContentMode,
 		})
 	}
 	return result
@@ -198,6 +198,15 @@ func galleryAssetFromSpec(seed, id int64, spec GalleryAssetSpec, ordinal int) (*
 	}
 	if spec.Size < 0 {
 		return nil, errors.New("size cannot be negative")
+	}
+	if spec.ContentMode != "" && spec.ContentMode != "jpeg" {
+		return nil, fmt.Errorf("unsupported gallery content mode %q", spec.ContentMode)
+	}
+	if spec.ContentMode == "jpeg" && typeName != "image" {
+		return nil, errors.New("jpeg content mode is only valid for image assets")
+	}
+	if spec.ContentMode == "jpeg" && spec.Size < int64(len(baseJPEG))+4 {
+		return nil, fmt.Errorf("jpeg content requires at least %d bytes", len(baseJPEG)+4)
 	}
 	fileName := spec.FileName
 	if fileName == "" {
@@ -225,8 +234,8 @@ func galleryAssetFromSpec(seed, id int64, spec GalleryAssetSpec, ordinal int) (*
 	if title == "" {
 		title = strings.TrimSuffix(fileName, "."+extension(fileName))
 	}
-	asset := &GalleryAsset{ID: id, Type: typeName, FileName: fileName, Title: title, MimeType: mimeType, DateTaken: spec.DateTaken, Size: spec.Size, ContentPattern: spec.ContentPattern, Version: 1}
-	asset.SHA1 = resolveSHA1(seed, id, asset.Version, asset.Size, asset.ContentPattern, spec.SHA1, spec.SHA1Mode)
+	asset := &GalleryAsset{ID: id, Type: typeName, FileName: fileName, Title: title, MimeType: mimeType, DateTaken: spec.DateTaken, Size: spec.Size, ContentPattern: spec.ContentPattern, ContentMode: spec.ContentMode, Version: 1}
+	asset.SHA1 = resolveSHA1(seed, id, asset.Version, asset.Size, asset.ContentPattern, asset.ContentMode, spec.SHA1, spec.SHA1Mode)
 	return asset, nil
 }
 
@@ -243,17 +252,17 @@ func recordingFromSpec(seed, id int64, spec RecordingSpec, ordinal int) (*Record
 		rawName = fmt.Sprintf("%s_%d_%d_%d_%d", fileName, 4054, spec.RecordingType, id, spec.CreateTime)
 	}
 	recording := &Recording{ID: id, FileName: fileName, RawName: rawName, RecordingType: spec.RecordingType, CreateTime: spec.CreateTime, Size: spec.Size, ContentPattern: spec.ContentPattern, Version: 1}
-	recording.SHA1 = resolveSHA1(seed, id, recording.Version, recording.Size, recording.ContentPattern, spec.SHA1, spec.SHA1Mode)
+	recording.SHA1 = resolveSHA1(seed, id, recording.Version, recording.Size, recording.ContentPattern, "", spec.SHA1, spec.SHA1Mode)
 	return recording, nil
 }
 
-func resolveSHA1(seed, id, version, size int64, pattern, declared, mode string) string {
+func resolveSHA1(seed, id, version, size int64, pattern, contentMode, declared, mode string) string {
 	if declared != "" {
 		return declared
 	}
 	if mode == "exact" {
 		h := sha1.New()
-		_ = writePattern(h, seed, id, version, size, pattern, 32768, 0)
+		_ = writeContent(h, seed, id, version, size, pattern, contentMode, 32768, 0)
 		return hex.EncodeToString(h.Sum(nil))
 	}
 	sum := sha1.Sum([]byte(fmt.Sprintf("declared:%d:%d:%d", seed, id, version)))
@@ -275,4 +284,8 @@ func serviceToken(seed int64, userID string) string {
 
 func writePattern(w io.Writer, seed, id, version, size int64, literal string, chunkSize int, bytesPerSecond int64) error {
 	return streamPattern(w, seed, id, version, size, literal, chunkSize, bytesPerSecond, nil)
+}
+
+func writeContent(w io.Writer, seed, id, version, size int64, literal, mode string, chunkSize int, bytesPerSecond int64) error {
+	return streamContent(w, seed, id, version, size, literal, mode, chunkSize, bytesPerSecond, nil)
 }

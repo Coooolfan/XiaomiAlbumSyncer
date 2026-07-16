@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"os/exec"
 	"reflect"
 	"strings"
 	"testing"
@@ -34,7 +36,13 @@ func TestScenarioIsReproducibleAndRecordingIsNotAlbum(t *testing.T) {
 }
 
 func TestCheckedInScenariosLoad(t *testing.T) {
-	for _, path := range []string{"../../scenarios/default.json", "../../scenarios/memory-profile.json"} {
+	for _, path := range []string{
+		"../../scenarios/default.json",
+		"../../scenarios/memory-profile.json",
+		"../../scenarios/memory-profile-small.json",
+		"../../scenarios/memory-profile-exif.json",
+		"../../scenarios/memory-profile-exif-small.json",
+	} {
 		scenario, err := LoadScenario(path)
 		if err != nil {
 			t.Fatalf("load %s: %v", path, err)
@@ -199,6 +207,65 @@ func TestPatternWriterUsesBoundedChunks(t *testing.T) {
 	}
 	if !bytes.Equal(first.Bytes(), second.Bytes()) {
 		t.Fatal("download bytes must not depend on network chunk size")
+	}
+}
+
+func TestJPEGWriterIsExactDeterministicAndBounded(t *testing.T) {
+	const size = int64(16 * 1024 * 1024)
+	writer := &maxChunkWriter{}
+	if err := writeContent(writer, 7, 99, 1, size, "", "jpeg", 8192, 0); err != nil {
+		t.Fatal(err)
+	}
+	if writer.total != size {
+		t.Fatalf("total=%d", writer.total)
+	}
+	if writer.max > 8192 {
+		t.Fatalf("max chunk=%d", writer.max)
+	}
+
+	var first, second bytes.Buffer
+	jpegSize := int64(len(baseJPEG) + 80_000)
+	if err := writeContent(&first, 7, 99, 1, jpegSize, "", "jpeg", 997, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeContent(&second, 7, 99, 1, jpegSize, "", "jpeg", 32768, 0); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(first.Bytes(), second.Bytes()) {
+		t.Fatal("jpeg bytes must not depend on network chunk size")
+	}
+	if !bytes.HasPrefix(first.Bytes(), []byte{0xff, 0xd8}) || !bytes.HasSuffix(first.Bytes(), []byte{0xff, 0xd9}) {
+		t.Fatal("jpeg content must preserve SOI and EOI markers")
+	}
+}
+
+func TestJPEGContentCanBeReadAndUpdatedByExifTool(t *testing.T) {
+	exifTool, err := exec.LookPath("exiftool")
+	if err != nil {
+		t.Skip("exiftool is not installed")
+	}
+	file, err := os.CreateTemp(t.TempDir(), "xiaomi-mock-*.jpg")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := writeContent(file, 7, 99, 1, 2*1024*1024, "", "jpeg", 32768, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatal(err)
+	}
+	output, err := exec.Command(exifTool, "-j", "-G", file.Name()).CombinedOutput()
+	if err != nil || !bytes.Contains(output, []byte(`"File:FileType": "JPEG"`)) {
+		t.Fatalf("exiftool read failed: %v\n%s", err, output)
+	}
+	output, err = exec.Command(
+		exifTool,
+		"-overwrite_original",
+		"-DateTimeOriginal=2026:07:16 12:00:00",
+		file.Name(),
+	).CombinedOutput()
+	if err != nil {
+		t.Fatalf("exiftool update failed: %v\n%s", err, output)
 	}
 }
 

@@ -223,7 +223,7 @@ func (s *Server) galleryStorage(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, album := range account.GalleryAlbums {
 		if asset := album.Assets[id]; asset != nil {
-			s.writeStorage(w, r, signedMedia{ID: asset.ID, Kind: "gallery", Size: asset.Size, MimeType: asset.MimeType, Version: asset.Version, Pattern: asset.ContentPattern})
+			s.writeStorage(w, r, signedMedia{ID: asset.ID, Kind: "gallery", Size: asset.Size, MimeType: asset.MimeType, Version: asset.Version, Pattern: asset.ContentPattern, ContentMode: asset.ContentMode})
 			return
 		}
 	}
@@ -262,16 +262,17 @@ func (s *Server) recordingStorage(w http.ResponseWriter, r *http.Request) {
 }
 
 type signedMedia struct {
-	ID       int64
-	Kind     string
-	Size     int64
-	MimeType string
-	Version  int64
-	Pattern  string
+	ID          int64
+	Kind        string
+	Size        int64
+	MimeType    string
+	Version     int64
+	Pattern     string
+	ContentMode string
 }
 
 func (s *Server) writeStorage(w http.ResponseWriter, r *http.Request, media signedMedia) {
-	query := url.Values{"kind": {media.Kind}, "size": {strconv.FormatInt(media.Size, 10)}, "version": {strconv.FormatInt(media.Version, 10)}, "mime": {media.MimeType}, "pattern": {media.Pattern}}
+	query := url.Values{"kind": {media.Kind}, "size": {strconv.FormatInt(media.Size, 10)}, "version": {strconv.FormatInt(media.Version, 10)}, "mime": {media.MimeType}, "pattern": {media.Pattern}, "contentMode": {media.ContentMode}}
 	query.Set("sig", s.signature(media.ID, query))
 	writeJSON(w, http.StatusOK, map[string]any{"code": 0, "data": map[string]any{"url": fmt.Sprintf("%s/mock/oss/%d?%s", s.baseURL(r), media.ID, query.Encode())}})
 }
@@ -317,7 +318,7 @@ func (s *Server) download(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	s.state.stats.BeginDownload()
 	counting := &countingWriter{Writer: w}
-	err := streamPattern(counting, s.seed(), id, version, size, params.Get("pattern"), profile.ChunkSizeBytes, profile.BytesPerSecond, r.Context())
+	err := streamContent(counting, s.seed(), id, version, size, params.Get("pattern"), params.Get("contentMode"), profile.ChunkSizeBytes, profile.BytesPerSecond, r.Context())
 	s.state.stats.EndDownload(counting.N)
 	if err != nil && !errors.Is(err, r.Context().Err()) {
 		s.state.stats.Unexpected()

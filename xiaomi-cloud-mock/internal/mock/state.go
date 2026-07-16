@@ -280,7 +280,7 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 			return nil, err
 		}
 		updated.Version = current.Version + 1
-		updated.SHA1 = resolveSHA1(seed, updated.ID, updated.Version, updated.Size, updated.ContentPattern, op.Asset.SHA1, op.Asset.SHA1Mode)
+		updated.SHA1 = resolveSHA1(seed, updated.ID, updated.Version, updated.Size, updated.ContentPattern, updated.ContentMode, op.Asset.SHA1, op.Asset.SHA1Mode)
 		album.Assets[updated.ID] = updated
 		album.LastUpdateTime = data.Clock
 		return []int64{updated.ID}, nil
@@ -336,7 +336,7 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 			return nil, err
 		}
 		updated.Version = current.Version + 1
-		updated.SHA1 = resolveSHA1(seed, updated.ID, updated.Version, updated.Size, updated.ContentPattern, op.Recording.SHA1, op.Recording.SHA1Mode)
+		updated.SHA1 = resolveSHA1(seed, updated.ID, updated.Version, updated.Size, updated.ContentPattern, "", op.Recording.SHA1, op.Recording.SHA1Mode)
 		account.Recordings[updated.ID] = updated
 		return []int64{updated.ID}, nil
 	case "deleteRecordings":
@@ -496,7 +496,7 @@ func selectRecordingIDs(items map[int64]*Recording, op MutationOperation) ([]int
 }
 
 func mergeGallerySpec(current *GalleryAsset, update GalleryAssetSpec) GalleryAssetSpec {
-	spec := GalleryAssetSpec{ID: current.ID, Type: current.Type, FileName: current.FileName, Title: current.Title, MimeType: current.MimeType, DateTaken: current.DateTaken, Size: current.Size, SHA1: current.SHA1, ContentPattern: current.ContentPattern}
+	spec := GalleryAssetSpec{ID: current.ID, Type: current.Type, FileName: current.FileName, Title: current.Title, MimeType: current.MimeType, DateTaken: current.DateTaken, Size: current.Size, SHA1: current.SHA1, ContentPattern: current.ContentPattern, ContentMode: current.ContentMode}
 	if update.Type != "" {
 		spec.Type = update.Type
 	}
@@ -520,6 +520,9 @@ func mergeGallerySpec(current *GalleryAsset, update GalleryAssetSpec) GalleryAss
 	}
 	if update.ContentPattern != "" {
 		spec.ContentPattern = update.ContentPattern
+	}
+	if update.ContentMode != "" {
+		spec.ContentMode = update.ContentMode
 	}
 	return spec
 }
