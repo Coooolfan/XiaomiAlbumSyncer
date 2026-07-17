@@ -1,4 +1,4 @@
-name: xiaomi-cloud-mock
+name: xas-mock
 
 services:
   mock:

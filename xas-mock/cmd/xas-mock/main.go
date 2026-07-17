@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Coooolfan/XiaomiAlbumSyncer/xiaomi-cloud-mock/internal/mock"
+	"github.com/Coooolfan/XiaomiAlbumSyncer/xas-mock/internal/mock"
 )
 
 func main() {
@@ -37,7 +37,7 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("xiaomi-cloud-mock listening on http://%s seed=%d", *listen, scenario.Seed)
+		log.Printf("xas-mock listening on http://%s seed=%d", *listen, scenario.Seed)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("serve: %v", err)
 		}

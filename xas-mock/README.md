@@ -1,12 +1,12 @@
-# Xiaomi Cloud Mock
+# XAS Mock
 
-`xiaomi-cloud-mock` 是 XiaomiAlbumSyncer 的有状态小米云模拟服务。它只实现当前后端实际消费的接口，
+`xas-mock` 是 XiaomiAlbumSyncer 的有状态远端媒体模拟服务。它只实现当前后端实际消费的接口，
 把云相册与云录音作为两套独立资源，并提供无需鉴权的控制 API，供下载链路、增量同步和内存测试矩阵使用。
 
 ## 启动
 
 ```bash
-go run ./cmd/xiaomi-cloud-mock \
+go run ./cmd/xas-mock \
   --listen 127.0.0.1:18080 \
   --scenario ./scenarios/default.json
 ```
@@ -41,7 +41,7 @@ XIAOMI_API_BASE_URL=http://127.0.0.1:18080
 图片资产或生成规则可以设置 `contentMode: "jpeg"`，模拟器会流式生成可被 ExifTool 读取和改写、长度精确且
 内容稳定的 JPEG；该模式只接受 `type: "image"`。`memory-profile-exif.json` 和它的小场景版本用于 EXIF 内存基准。
 
-小米云录音远端没有相册 ID。`-1` 只由 XiaomiAlbumSyncer 在本地合成，因此：
+远端录音资源没有相册 ID。`-1` 只由 XiaomiAlbumSyncer 在本地合成，因此：
 
 - `galleryAlbums` 中禁止配置 `albumId: -1`。
 - 录音只通过 `recordings` 和 `/sfs/ns/recorder/...` 接口访问。

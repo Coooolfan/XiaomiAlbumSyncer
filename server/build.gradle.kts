@@ -135,33 +135,33 @@ tasks.named("processResources") {
 
 val nativeMetadataSource = layout.projectDirectory.dir("src/main/resources/META-INF/native-image")
 val nativeAgentMerged = layout.buildDirectory.dir("native-agent-merged")
-val xiaomiCloudMockDir = layout.projectDirectory.dir("../xiaomi-cloud-mock")
-val xiaomiCloudMockExecutable = layout.buildDirectory.file(
-    "xiaomi-cloud-mock/${if (System.getProperty("os.name").startsWith("Windows")) "xiaomi-cloud-mock.exe" else "xiaomi-cloud-mock"}"
+val xasMockDir = layout.projectDirectory.dir("../xas-mock")
+val xasMockExecutable = layout.buildDirectory.file(
+    "xas-mock/${if (System.getProperty("os.name").startsWith("Windows")) "xas-mock.exe" else "xas-mock"}"
 )
-val xiaomiCloudMockScenario = xiaomiCloudMockDir.file("scenarios/default.json")
-val xiaomiCloudMockMemoryScenario = xiaomiCloudMockDir.file("scenarios/memory-profile.json")
-val xiaomiCloudMockProfilingScenario = xiaomiCloudMockDir.file("scenarios/memory-profile-small.json")
+val xasMockScenario = xasMockDir.file("scenarios/default.json")
+val xasMockMemoryScenario = xasMockDir.file("scenarios/memory-profile.json")
+val xasMockProfilingScenario = xasMockDir.file("scenarios/memory-profile-small.json")
 val graalVmLauncher = javaToolchains.launcherFor {
     languageVersion.set(JavaLanguageVersion.of(25))
     vendor.set(JvmVendorSpec.GRAAL_VM)
 }
 
-val buildXiaomiCloudMock by tasks.registering(Exec::class) {
+val buildXasMock by tasks.registering(Exec::class) {
     group = "verification"
-    description = "构建有状态小米云模拟服务，供 API E2E 使用"
-    workingDir(xiaomiCloudMockDir)
-    inputs.dir(xiaomiCloudMockDir.dir("cmd"))
-    inputs.dir(xiaomiCloudMockDir.dir("internal"))
-    inputs.file(xiaomiCloudMockDir.file("go.mod"))
-    outputs.file(xiaomiCloudMockExecutable)
+    description = "构建有状态远端媒体模拟服务，供 API E2E 使用"
+    workingDir(xasMockDir)
+    inputs.dir(xasMockDir.dir("cmd"))
+    inputs.dir(xasMockDir.dir("internal"))
+    inputs.file(xasMockDir.file("go.mod"))
+    outputs.file(xasMockExecutable)
     doFirst {
-        xiaomiCloudMockExecutable.get().asFile.parentFile.mkdirs()
+        xasMockExecutable.get().asFile.parentFile.mkdirs()
         environment("GOCACHE", layout.buildDirectory.dir("go-build-cache").get().asFile.absolutePath)
         commandLine(
             "go", "build", "-trimpath", "-o",
-            xiaomiCloudMockExecutable.get().asFile.absolutePath,
-            "./cmd/xiaomi-cloud-mock"
+            xasMockExecutable.get().asFile.absolutePath,
+            "./cmd/xas-mock"
         )
     }
 }
@@ -177,15 +177,15 @@ fun Test.configureApiE2e(target: String, memoryBenchmark: Boolean = false) {
     group = "verification"
     testClassesDirs = apiE2eTest.output.classesDirs
     classpath = apiE2eTest.runtimeClasspath
-    dependsOn(tasks.named(apiE2eTest.classesTaskName), tasks.named("classes"), buildXiaomiCloudMock)
+    dependsOn(tasks.named(apiE2eTest.classesTaskName), tasks.named("classes"), buildXasMock)
     useJUnitPlatform {
         if (memoryBenchmark) includeTags("memory-benchmark") else excludeTags("memory-benchmark")
     }
     maxParallelForks = 1
     outputs.upToDateWhen { false }
     systemProperty("xiaomi.e2e.target", target)
-    systemProperty("xiaomi.e2e.mockExecutable", xiaomiCloudMockExecutable.get().asFile.absolutePath)
-    systemProperty("xiaomi.e2e.mockScenario", xiaomiCloudMockScenario.asFile.absolutePath)
+    systemProperty("xiaomi.e2e.mockExecutable", xasMockExecutable.get().asFile.absolutePath)
+    systemProperty("xiaomi.e2e.mockScenario", xasMockScenario.asFile.absolutePath)
 }
 
 val apiE2eJvm by tasks.registering(Test::class) {
@@ -212,9 +212,9 @@ val apiMemoryBenchmarkJvm by tasks.registering(Test::class) {
         val benchmarkScenario = providers.gradleProperty("xiaomi.benchmark.scenario").orNull
             ?.let(::file)
             ?: if (providers.gradleProperty("xiaomi.benchmark.jfr").orNull == "true") {
-                xiaomiCloudMockProfilingScenario.asFile
+                xasMockProfilingScenario.asFile
             } else {
-                xiaomiCloudMockMemoryScenario.asFile
+                xasMockMemoryScenario.asFile
             }
         systemProperty("xiaomi.e2e.mockScenario", benchmarkScenario.absolutePath)
         systemProperty(
