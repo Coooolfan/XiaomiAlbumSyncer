@@ -43,9 +43,6 @@ on:
 permissions:
   contents: write
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build-frontend:
     name: 构建前端资源
@@ -55,7 +52,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: 设置 node 环境
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
 
@@ -65,7 +62,7 @@ jobs:
           corepack prepare yarn@4.9.2 --activate
 
       - name: 缓存 Yarn 包缓存
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: web/.yarn/cache
           key: ${{ runner.os }}-yarn-${{ hashFiles('web/yarn.lock') }}
@@ -80,7 +77,7 @@ jobs:
           yarn build
 
       - name: 上传前端产物
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-dist
           path: web/dist
@@ -106,7 +103,7 @@ jobs:
           distribution: 'temurin'
 
       - name: 下载前端产物
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: frontend-dist
           path: server/src/main/resources/static
@@ -128,7 +125,7 @@ jobs:
           mv "$JAR_FILE" "xiaomi-album-syncer-v${VERSION}.jar"
 
       - name: 上传编译产物
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jar
           path: server/build/libs/xiaomi-album-syncer-v${{ inputs.version }}.jar
@@ -181,7 +178,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 缓存 Gradle 依赖
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.gradle/caches
@@ -191,7 +188,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: 下载前端产物
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: frontend-dist
           path: server/src/main/resources/static
@@ -224,7 +221,7 @@ jobs:
           ls -al
 
       - name: 上传编译产物
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-${{ matrix.os_name }}-${{ matrix.arch }}
           path: server/build/native/nativeCompile/xiaomi-album-syncer-${{ matrix.os_name }}-${{ matrix.arch }}-v${{ inputs.version }}*
@@ -245,19 +242,19 @@ jobs:
           echo "PUBLISH_LATEST=${{ inputs.publish_latest }}" >> $GITHUB_ENV
 
       - name: 设置 QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: 设置 Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: 下载 JAR 产物
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: jar
           path: dist
 
       - name: 登陆到 DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -272,7 +269,7 @@ jobs:
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
 
       - name: 构建并推送 Docker 镜像
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./docker/Dockerfile.jvm
@@ -298,25 +295,25 @@ jobs:
           echo "PUBLISH_LATEST=${{ inputs.publish_latest }}" >> $GITHUB_ENV
 
       - name: 下载 Native 产物 (linux-x64)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: native-linux-x64
           path: dist
 
       - name: 下载 Native 产物 (linux-arm64)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: native-linux-arm64
           path: dist
 
       - name: 设置 QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: 设置 Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: 登陆到 DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -338,7 +335,7 @@ jobs:
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
 
       - name: 构建并推送 Docker 镜像 (Native)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./docker/Dockerfile.native

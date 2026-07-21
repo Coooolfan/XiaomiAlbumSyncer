@@ -29,8 +29,6 @@ jobs:
       target_sha: ${{ steps.prepare.outputs.target_sha }}
       prerelease: ${{ steps.prepare.outputs.prerelease }}
       publish_latest: ${{ steps.prepare.outputs.publish_latest }}
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: 检出代码
         uses: actions/checkout@v5
@@ -96,6 +94,10 @@ jobs:
       - prepare-release
       - create-draft-release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
 
     steps:
       - name: 设置发布元信息
@@ -103,7 +105,7 @@ jobs:
           echo "VERSION=${{ needs.prepare-release.outputs.version }}" >> $GITHUB_ENV
 
       - name: 下载 Release 产物
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: '{jar,native-*}'
           path: dist
@@ -136,6 +138,17 @@ jobs:
 
           # JAR
           zip "xiaomi-album-syncer-v${TAG}.jar.zip" "xiaomi-album-syncer-v${TAG}.jar"
+
+      - name: 生成构建来源证明
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            dist/xiaomi-album-syncer-v${{ needs.prepare-release.outputs.version }}.jar.zip
+            dist/xiaomi-album-syncer-linux-x64-v${{ needs.prepare-release.outputs.version }}.zip
+            dist/xiaomi-album-syncer-linux-arm64-v${{ needs.prepare-release.outputs.version }}.zip
+            dist/xiaomi-album-syncer-macos-x64-v${{ needs.prepare-release.outputs.version }}.zip
+            dist/xiaomi-album-syncer-macos-arm64-v${{ needs.prepare-release.outputs.version }}.zip
+            dist/xiaomi-album-syncer-windows-x64-v${{ needs.prepare-release.outputs.version }}.exe.zip
 
       - name: 上传到 Release
         env:
