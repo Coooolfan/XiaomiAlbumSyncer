@@ -5850,6 +5850,15 @@
       "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$9"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$pipeline$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$pipeline$2"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$pipeline$3"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$processStage$$inlined$transform$1"
     },
     {
