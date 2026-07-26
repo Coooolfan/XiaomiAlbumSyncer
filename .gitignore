@@ -35,3 +35,6 @@ logs/
 /server/src/main/resources/static/
 /download/
 /db/
+
+.claude/*
+!.claude/skills

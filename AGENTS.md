@@ -10,7 +10,3 @@ Xiaomi Album Syncer : 全量/增量/定时 下载小米云服务中的 相册/�
   - 除非用户要求，每次更改此子工程后都应当执行`./gradlew clean compileKotlin`以确保编译通过，如果因为JVM版本不兼容导致编译失败，请用户自行解决
 - **前端**: 于 `./web` 文件夹. Vue, TypeScript, Vite, Pinia, Tailwind CSS.
   - 除非用户要求，每次更改此子工程后都应当执行`yarn lint`, `yarn format`, `yarn build`以确保编译通过
-
-# 规范
-
-- **创建release note**: 回顾与上个tag相比，撰写更新日志。具体参阅 `./skills/release_note_creator/SKILL.md`

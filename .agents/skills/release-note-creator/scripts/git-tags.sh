@@ -21,6 +21,8 @@ Examples:
 Notes:
   - Standard release tags are sorted by version precedence DESC (highest first):
     Release > RC > Beta > Alpha.
+  - Prerelease separators "." and "-" are both recognized and treated as
+    equivalent (e.g. 0.16.3-beta.1 and 0.15.2-beta-1).
   - Non-standard tags fall back to creatordate DESC.
   - For annotated tags, tag_time = taggerdate.
   - For lightweight tags, tag_time falls back to the target commit's committer date,
