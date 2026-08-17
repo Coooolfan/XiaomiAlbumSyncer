@@ -221,15 +221,21 @@ func (s *Server) galleryStorage(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, 40004, "invalid id")
 		return
 	}
+	// 先查配置的 storage 错误（如 retriable=true 的瞬时错误），再查删除状态
+	if storageErr, exists := s.state.storageError(id); exists && storageErr.UserID == account.UserID && storageErr.Kind == "gallery" {
+		s.writeStorageError(w, storageErr.Code, storageErr.Description, storageErr.Reason, storageErr.Retriable)
+		return
+	}
+	// 删除状态：被删除的资产可能仍出现在列表中，但 storage 已不可用
+	if deleted, exists := s.state.deleted(id); exists && deleted.UserID == account.UserID && deleted.Kind == "gallery" {
+		s.writeStorageError(w, 50050, "文件已删除", "media deleted", false)
+		return
+	}
 	for _, album := range account.GalleryAlbums {
 		if asset := album.Assets[id]; asset != nil {
 			s.writeStorage(w, r, signedMedia{ID: asset.ID, Kind: "gallery", Size: asset.Size, MimeType: asset.MimeType, Version: asset.Version, Pattern: asset.ContentPattern, ContentMode: asset.ContentMode})
 			return
 		}
-	}
-	if deleted, exists := s.state.deleted(id); exists && deleted.UserID == account.UserID && deleted.Kind == "gallery" {
-		writeJSON(w, http.StatusOK, map[string]any{"code": 50050, "message": "media deleted"})
-		return
 	}
 	writeError(w, http.StatusNotFound, 40402, "gallery asset not found")
 }
@@ -250,12 +256,18 @@ func (s *Server) recordingStorage(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, 40004, "invalid recording id")
 		return
 	}
-	if recording := account.Recordings[id]; recording != nil {
-		s.writeStorage(w, r, signedMedia{ID: recording.ID, Kind: "recording", Size: recording.Size, MimeType: "audio/mp4", Version: recording.Version, Pattern: recording.ContentPattern})
+	// 先查配置的 storage 错误（如 retriable=true 的瞬时错误），再查删除状态
+	if storageErr, exists := s.state.storageError(id); exists && storageErr.UserID == account.UserID && storageErr.Kind == "recording" {
+		s.writeStorageError(w, storageErr.Code, storageErr.Description, storageErr.Reason, storageErr.Retriable)
 		return
 	}
+	// 录音被删除后 storage 返回 code=50202, retriable=false
 	if deleted, exists := s.state.deleted(id); exists && deleted.UserID == account.UserID && deleted.Kind == "recording" {
-		writeJSON(w, http.StatusOK, map[string]any{"code": 50050, "message": "media deleted"})
+		s.writeStorageError(w, 50202, "文件或目录不存在", "file not exist", false)
+		return
+	}
+	if recording := account.Recordings[id]; recording != nil {
+		s.writeStorage(w, r, signedMedia{ID: recording.ID, Kind: "recording", Size: recording.Size, MimeType: "audio/mp4", Version: recording.Version, Pattern: recording.ContentPattern})
 		return
 	}
 	writeError(w, http.StatusNotFound, 40403, "recording not found")
@@ -269,6 +281,19 @@ type signedMedia struct {
 	Version     int64
 	Pattern     string
 	ContentMode string
+}
+
+// writeStorageError 模拟真实小米 storage 错误响应：
+// {"result":"error","reason":"...","retriable":...,"code":...,"description":"...","ts":...}
+func (s *Server) writeStorageError(w http.ResponseWriter, code int, description, reason string, retriable bool) {
+	writeJSON(w, http.StatusOK, map[string]any{
+		"result":      "error",
+		"reason":      reason,
+		"retriable":   retriable,
+		"code":        code,
+		"description": description,
+		"ts":          time.Now().UnixMilli(),
+	})
 }
 
 func (s *Server) writeStorage(w http.ResponseWriter, r *http.Request, media signedMedia) {

@@ -75,18 +75,22 @@ type MutationRequest struct {
 }
 
 type MutationOperation struct {
-	Op         string             `json:"op"`
-	UserID     string             `json:"userId"`
-	AlbumID    int64              `json:"albumId,omitempty"`
-	Album      *GalleryAlbumSpec  `json:"album,omitempty"`
-	Asset      *GalleryAssetSpec  `json:"asset,omitempty"`
-	Assets     []GalleryAssetSpec `json:"assets,omitempty"`
-	Recording  *RecordingSpec     `json:"recording,omitempty"`
-	Recordings []RecordingSpec    `json:"recordings,omitempty"`
-	Count      int                `json:"count,omitempty"`
-	Template   json.RawMessage    `json:"template,omitempty"`
-	IDs        []int64            `json:"ids,omitempty"`
-	Selection  string             `json:"selection,omitempty"`
+	Op          string             `json:"op"`
+	UserID      string             `json:"userId"`
+	AlbumID     int64              `json:"albumId,omitempty"`
+	Album       *GalleryAlbumSpec  `json:"album,omitempty"`
+	Asset       *GalleryAssetSpec  `json:"asset,omitempty"`
+	Assets      []GalleryAssetSpec `json:"assets,omitempty"`
+	Recording   *RecordingSpec     `json:"recording,omitempty"`
+	Recordings  []RecordingSpec    `json:"recordings,omitempty"`
+	Count       int                `json:"count,omitempty"`
+	Template    json.RawMessage    `json:"template,omitempty"`
+	IDs         []int64            `json:"ids,omitempty"`
+	Selection   string             `json:"selection,omitempty"`
+	Code        int                `json:"code,omitempty"`
+	Retriable   bool               `json:"retriable,omitempty"`
+	Description string             `json:"description,omitempty"`
+	Reason      string             `json:"reason,omitempty"`
 }
 
 type MutationResult struct {
@@ -140,9 +144,20 @@ type deletedMedia struct {
 	Kind   string
 }
 
+// storageError 表示针对特定媒体配置的 storage 错误响应（如 retriable=true 的瞬时错误）
+type storageError struct {
+	UserID      string
+	Kind        string
+	Code        int
+	Retriable   bool
+	Description string
+	Reason      string
+}
+
 type runtimeData struct {
-	Accounts    map[string]*Account
-	Deleted     map[int64]deletedMedia
-	NextMediaID int64
-	Clock       int64
+	Accounts      map[string]*Account
+	Deleted       map[int64]deletedMedia
+	StorageErrors map[int64]storageError
+	NextMediaID   int64
+	Clock         int64
 }

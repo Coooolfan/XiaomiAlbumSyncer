@@ -195,13 +195,28 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             Solon.context().objectMapper.readTree(resp.body)
         }
 
-        // 文件已经被删掉了，返回未下载，避免后续反复请求
-        if (fetchOssUrlJson.at("/code").asInt() == 50050) {
-            log.warn("文件: ${asset.fileName} id: ${asset.id} 已经被删除，跳过下载")
+        // 与官方前端约定一致：只有 code == 0 才是成功，其余一律视为失败
+        val code = fetchOssUrlJson.at("/code").asInt()
+        if (code != 0) {
+            val retriable = fetchOssUrlJson.at("/retriable").asBoolean()
+            val reason = fetchOssUrlJson.at("/description").asText()
+                .ifBlank { fetchOssUrlJson.at("/reason").asText() }
+            if (retriable) {
+                // 瞬时错误，抛异常交给流水线在下一个周期重试
+                throw IllegalStateException("小米返回错误码 $code ($reason), retriable=true")
+            }
+            // 文件已被删除或不可下载（如相册 code=50050、录音 code=50202，retriable=false），
+            // 跳过并标记为完成，避免后续周期反复请求
+            log.warn("文件: {} id: {} 不可下载: code={} retriable=false ({}), 跳过下载", asset.fileName, asset.id, code, reason)
             return false
         }
 
         val ossUrl = fetchOssUrlJson.at("/data/url").asText()
+        if (!ossUrl.startsWith("http")) {
+            // code=0 却缺少合法下载地址属于反常响应，记录原始响应体后抛异常等待重试
+            log.warn("文件: {} id: {} 的 storage 响应缺少合法 data.url: {}", asset.fileName, asset.id, fetchOssUrlJson)
+            throw IllegalStateException("storage 响应缺少合法的 data.url")
+        }
 
         // 2. 请求签名直链
         val fetchSignedUrlReq = Request.Builder().url(ossUrl).ua().get().build()

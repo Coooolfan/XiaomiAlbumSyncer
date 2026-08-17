@@ -83,6 +83,13 @@ func (s *State) deleted(id int64) (deletedMedia, bool) {
 	return deleted, ok
 }
 
+func (s *State) storageError(id int64) (storageError, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	storageErr, ok := s.data.StorageErrors[id]
+	return storageErr, ok
+}
+
 func (s *State) networkFor(id int64) NetworkProfile {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -349,8 +356,71 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 			data.Deleted[id] = deletedMedia{UserID: account.UserID, Kind: "recording"}
 		}
 		return ids, nil
+	case "markDeleted":
+		// 仅标记存储层不可用，资产仍保留在列表中，模拟"列表可见但无法下载"的场景
+		if op.AlbumID > 0 {
+			album := account.GalleryAlbums[op.AlbumID]
+			if album == nil {
+				return nil, fmt.Errorf("album %d not found", op.AlbumID)
+			}
+			ids, err := selectGalleryIDs(album.Assets, op)
+			if err != nil {
+				return nil, err
+			}
+			for _, id := range ids {
+				data.Deleted[id] = deletedMedia{UserID: account.UserID, Kind: "gallery"}
+			}
+			return ids, nil
+		}
+		ids, err := selectRecordingIDs(account.Recordings, op)
+		if err != nil {
+			return nil, err
+		}
+		for _, id := range ids {
+			data.Deleted[id] = deletedMedia{UserID: account.UserID, Kind: "recording"}
+		}
+		return ids, nil
+	case "setStorageError":
+		// 配置指定媒体的 storage 错误响应（如 retriable=true 的瞬时错误）；code=0 表示清除错误
+		if op.AlbumID > 0 {
+			album := account.GalleryAlbums[op.AlbumID]
+			if album == nil {
+				return nil, fmt.Errorf("album %d not found", op.AlbumID)
+			}
+			ids, err := selectGalleryIDs(album.Assets, op)
+			if err != nil {
+				return nil, err
+			}
+			for _, id := range ids {
+				setOrClearStorageError(data, id, account.UserID, "gallery", op)
+			}
+			return ids, nil
+		}
+		ids, err := selectRecordingIDs(account.Recordings, op)
+		if err != nil {
+			return nil, err
+		}
+		for _, id := range ids {
+			setOrClearStorageError(data, id, account.UserID, "recording", op)
+		}
+		return ids, nil
 	default:
 		return nil, fmt.Errorf("unknown mutation op %q", op.Op)
+	}
+}
+
+func setOrClearStorageError(data *runtimeData, id int64, userID, kind string, op MutationOperation) {
+	if op.Code == 0 {
+		delete(data.StorageErrors, id)
+		return
+	}
+	data.StorageErrors[id] = storageError{
+		UserID:      userID,
+		Kind:        kind,
+		Code:        op.Code,
+		Retriable:   op.Retriable,
+		Description: op.Description,
+		Reason:      op.Reason,
 	}
 }
 
@@ -554,9 +624,18 @@ func mergeRecordingSpec(current *Recording, update RecordingSpec) RecordingSpec 
 }
 
 func cloneRuntime(data *runtimeData) *runtimeData {
-	copyData := &runtimeData{Accounts: map[string]*Account{}, Deleted: map[int64]deletedMedia{}, NextMediaID: data.NextMediaID, Clock: data.Clock}
+	copyData := &runtimeData{
+		Accounts:      map[string]*Account{},
+		Deleted:       map[int64]deletedMedia{},
+		StorageErrors: map[int64]storageError{},
+		NextMediaID:   data.NextMediaID,
+		Clock:         data.Clock,
+	}
 	for id, deleted := range data.Deleted {
 		copyData.Deleted[id] = deleted
+	}
+	for id, storageErr := range data.StorageErrors {
+		copyData.StorageErrors[id] = storageErr
 	}
 	for userID, account := range data.Accounts {
 		copyData.Accounts[userID] = cloneAccount(account)

@@ -188,6 +188,25 @@ class ApiE2eSuite {
             baseConfig = config,
         )
 
+        executeDeletedMediaWorkflows(
+            api = api,
+            mock = mock,
+            workDir = workDir,
+            accountId = accountId,
+            cameraAlbumId = cameraAlbumId,
+            audioAlbumId = audioAlbumId,
+            baseConfig = config,
+        )
+
+        executeTransientStorageErrorWorkflow(
+            api = api,
+            mock = mock,
+            workDir = workDir,
+            accountId = accountId,
+            cameraAlbumId = cameraAlbumId,
+            baseConfig = config,
+        )
+
         api.delete("/api/account/$accountId").expect(200)
         api.post(
             "/api/system-config/password",
@@ -264,6 +283,284 @@ class ApiE2eSuite {
         assertTrue(mock.routePrefixCount("/sfs/ns/recorder/file/201/cb/") >= 2)
         assertEquals(0, mock.timelineCount(-1), "录音是独立远端资源，不应请求 gallery timeline 的 -1")
         assertTrue(mock.timelineCount(1) >= 2, "混合任务应只为真实相册请求时间线")
+    }
+
+    /**
+     * 云端已删除资产（列表仍可见但 storage 不可用）的下载应被优雅跳过，
+     * 而不是抛异常导致流水线在每个周期反复失败。
+     * 相册删除 → code=50050；录音删除 → code=50202；两者均 retriable=false。
+     */
+    private fun executeDeletedMediaWorkflows(
+        api: ApiClient,
+        mock: MockXiaomiApiServer,
+        workDir: Path,
+        accountId: Long,
+        cameraAlbumId: Long,
+        audioAlbumId: Long,
+        baseConfig: LinkedHashMap<String, Any?>,
+    ) {
+        // ============ 相册：storage 返回 code=50050 ============
+        val galleryConfig = LinkedHashMap(baseConfig).apply {
+            this["targetPath"] = workDir.resolve("deleted-gallery-downloads").toString()
+            this["downloadImages"] = true
+            this["downloadVideos"] = false
+            this["downloadAudios"] = false
+            this["notify"] = false
+            this["diffByTimeline"] = false
+            this["skipExistingFile"] = false
+        }
+        val galleryCrontab = api.json(
+            api.post(
+                "/api/crontab",
+                linkedMapOf<String, Any?>(
+                    "name" to "Deleted Gallery E2E",
+                    "description" to "云端已删除的相册资产应被跳过而非反复失败",
+                    "enabled" to false,
+                    "config" to galleryConfig,
+                    "accountId" to accountId,
+                    "albumIds" to listOf(cameraAlbumId),
+                )
+            ).expect(200)
+        )
+        val galleryCrontabId = galleryCrontab.path("id").asLong()
+
+        // 第一轮：正常下载资产 101
+        api.post("/api/crontab/$galleryCrontabId/executions").expect(200)
+        awaitCompletedHistory(api, galleryCrontabId)
+
+        // 云端新增资产 103 后被删除：仍出现在列表中，但 storage 返回 code=50050
+        mock.mutate(
+            mapOf(
+                "operations" to listOf(
+                    mapOf(
+                        "op" to "addAssets",
+                        "userId" to "mock-user",
+                        "albumId" to 1,
+                        "assets" to listOf(
+                            mapOf(
+                                "id" to 103,
+                                "type" to "image",
+                                "fileName" to "deleted-photo.jpg",
+                                "dateTaken" to 1714651200000L,
+                                "size" to 28,
+                                "sha1Mode" to "exact",
+                                "contentPattern" to "xiaomi-album-syncer-api-e2e\n",
+                            )
+                        ),
+                    ),
+                    mapOf(
+                        "op" to "markDeleted",
+                        "userId" to "mock-user",
+                        "albumId" to 1,
+                        "ids" to listOf(103),
+                    ),
+                )
+            )
+        )
+
+        // 清空下载历史，让 101 与 103 同时进入第二轮流水线
+        api.delete("/api/crontab/$galleryCrontabId/histories").expect(200)
+        api.post("/api/crontab/$galleryCrontabId/executions").expect(200)
+        val galleryHistoryId = awaitCompletedHistory(api, galleryCrontabId)
+        val galleryDetails = api.json(
+            api.get("/api/crontab/history/$galleryHistoryId/details?pageIndex=0&pageSize=10").expect(200)
+        )
+        assertEquals(2, galleryDetails.path("totalRowCount").asInt())
+        galleryDetails.path("rows").forEach { detail ->
+            assertTrue(detail.path("downloadCompleted").asBoolean(), "资产 ${detail.path("asset").path("id")} 应标记下载完成")
+            assertTrue(detail.path("message").isMissingNode || detail.path("message").isNull, "跳过不应产生错误消息")
+        }
+        val deletedGallery = galleryDetails.path("rows").first { it.path("asset").path("id").asText() == "103" }
+        assertFalse(Files.exists(Path.of(deletedGallery.path("filePath").asText())), "已删除资产不应产出文件")
+        assertEquals(0, mock.routePrefixCount("/mock/oss/103"), "已删除资产不应请求 OSS 签名直链")
+        api.delete("/api/crontab/$galleryCrontabId").expect(200)
+
+        // ============ 录音：storage 返回 code=50202 ============
+        val recordingConfig = LinkedHashMap(baseConfig).apply {
+            this["targetPath"] = workDir.resolve("deleted-recording-downloads").toString()
+            this["downloadImages"] = false
+            this["downloadVideos"] = false
+            this["downloadAudios"] = true
+            this["notify"] = false
+            this["diffByTimeline"] = false
+            this["skipExistingFile"] = false
+        }
+        val recordingCrontab = api.json(
+            api.post(
+                "/api/crontab",
+                linkedMapOf<String, Any?>(
+                    "name" to "Deleted Recording E2E",
+                    "description" to "云端已删除的录音应被跳过而非反复失败",
+                    "enabled" to false,
+                    "config" to recordingConfig,
+                    "accountId" to accountId,
+                    "albumIds" to listOf(audioAlbumId),
+                )
+            ).expect(200)
+        )
+        val recordingCrontabId = recordingCrontab.path("id").asLong()
+
+        api.post("/api/crontab/$recordingCrontabId/executions").expect(200)
+        awaitCompletedHistory(api, recordingCrontabId)
+
+        // 云端新增录音 203 后被删除：列表可见，storage 返回 code=50202
+        mock.mutate(
+            mapOf(
+                "operations" to listOf(
+                    mapOf(
+                        "op" to "addRecordings",
+                        "userId" to "mock-user",
+                        "recordings" to listOf(
+                            mapOf(
+                                "id" to 203,
+                                "fileName" to "deleted-recording.m4a",
+                                "recordingType" to 0,
+                                "createTime" to 1714651200000L,
+                                "size" to 28,
+                                "sha1Mode" to "exact",
+                                "contentPattern" to "xiaomi-album-syncer-api-e2e\n",
+                            )
+                        ),
+                    ),
+                    mapOf(
+                        "op" to "markDeleted",
+                        "userId" to "mock-user",
+                        "ids" to listOf(203),
+                    ),
+                )
+            )
+        )
+
+        api.delete("/api/crontab/$recordingCrontabId/histories").expect(200)
+        api.post("/api/crontab/$recordingCrontabId/executions").expect(200)
+        val recordingHistoryId = awaitCompletedHistory(api, recordingCrontabId)
+        val recordingDetails = api.json(
+            api.get("/api/crontab/history/$recordingHistoryId/details?pageIndex=0&pageSize=10").expect(200)
+        )
+        assertEquals(2, recordingDetails.path("totalRowCount").asInt())
+        recordingDetails.path("rows").forEach { detail ->
+            assertTrue(detail.path("downloadCompleted").asBoolean(), "资产 ${detail.path("asset").path("id")} 应标记下载完成")
+            assertTrue(detail.path("message").isMissingNode || detail.path("message").isNull, "跳过不应产生错误消息")
+        }
+        val deletedRecording = recordingDetails.path("rows").first { it.path("asset").path("id").asText() == "203" }
+        assertFalse(Files.exists(Path.of(deletedRecording.path("filePath").asText())), "已删除录音不应产出文件")
+        assertEquals(0, mock.routePrefixCount("/mock/oss/203"), "已删除录音不应请求 OSS 签名直链")
+        api.delete("/api/crontab/$recordingCrontabId").expect(200)
+    }
+
+    /**
+     * storage 返回 retriable=true 的瞬时错误时，资产应被记录为失败并在下一个周期重试，
+     * 错误恢复后下载成功——区别于 retriable=false 的永久跳过。
+     */
+    private fun executeTransientStorageErrorWorkflow(
+        api: ApiClient,
+        mock: MockXiaomiApiServer,
+        workDir: Path,
+        accountId: Long,
+        cameraAlbumId: Long,
+        baseConfig: LinkedHashMap<String, Any?>,
+    ) {
+        val config = LinkedHashMap(baseConfig).apply {
+            this["targetPath"] = workDir.resolve("transient-downloads").toString()
+            this["downloadImages"] = true
+            this["downloadVideos"] = false
+            this["downloadAudios"] = false
+            this["notify"] = false
+            this["diffByTimeline"] = false
+            this["skipExistingFile"] = false
+        }
+        val crontab = api.json(
+            api.post(
+                "/api/crontab",
+                linkedMapOf<String, Any?>(
+                    "name" to "Transient Storage Error E2E",
+                    "description" to "retriable=true 的瞬时错误应在下个周期重试并最终成功",
+                    "enabled" to false,
+                    "config" to config,
+                    "accountId" to accountId,
+                    "albumIds" to listOf(cameraAlbumId),
+                )
+            ).expect(200)
+        )
+        val crontabId = crontab.path("id").asLong()
+
+        // 第一轮：基线运行（相册中此时还有上一场景遗留的已删除资产，应被跳过而非失败）
+        api.post("/api/crontab/$crontabId/executions").expect(200)
+        awaitCompletedHistory(api, crontabId)
+
+        // 注入瞬时错误：资产 104 的 storage 返回 code=50051, retriable=true
+        mock.mutate(
+            mapOf(
+                "operations" to listOf(
+                    mapOf(
+                        "op" to "addAssets",
+                        "userId" to "mock-user",
+                        "albumId" to 1,
+                        "assets" to listOf(
+                            mapOf(
+                                "id" to 104,
+                                "type" to "image",
+                                "fileName" to "transient-photo.jpg",
+                                "dateTaken" to 1714651200000L,
+                                "size" to 28,
+                                "sha1Mode" to "exact",
+                                "contentPattern" to "xiaomi-album-syncer-api-e2e\n",
+                            )
+                        ),
+                    ),
+                    mapOf(
+                        "op" to "setStorageError",
+                        "userId" to "mock-user",
+                        "albumId" to 1,
+                        "ids" to listOf(104),
+                        "code" to 50051,
+                        "retriable" to true,
+                        "description" to "系统繁忙，请稍后重试",
+                        "reason" to "service busy",
+                    ),
+                )
+            )
+        )
+
+        // 第二轮：104 下载失败，应记录错误消息且不标记完成，但流水线整体正常结束
+        api.post("/api/crontab/$crontabId/executions").expect(200)
+        val failedHistoryId = awaitCompletedHistory(api, crontabId)
+        val failedDetails = api.json(
+            api.get("/api/crontab/history/$failedHistoryId/details?pageIndex=0&pageSize=10").expect(200)
+        )
+        assertEquals(1, failedDetails.path("totalRowCount").asInt())
+        val failedDetail = failedDetails.path("rows").first()
+        assertEquals("104", failedDetail.path("asset").path("id").asText())
+        assertFalse(failedDetail.path("downloadCompleted").asBoolean(), "瞬时错误不应标记下载完成")
+        assertTrue(failedDetail.path("message").asText().contains("50051"), "失败消息应包含错误码")
+
+        // 云端恢复后，下一周期应重试并下载成功
+        mock.mutate(
+            mapOf(
+                "operations" to listOf(
+                    mapOf(
+                        "op" to "setStorageError",
+                        "userId" to "mock-user",
+                        "albumId" to 1,
+                        "ids" to listOf(104),
+                        "code" to 0,
+                    )
+                )
+            )
+        )
+        api.post("/api/crontab/$crontabId/executions").expect(200)
+        val recoveredHistoryId = awaitCompletedHistory(api, crontabId)
+        val recoveredDetails = api.json(
+            api.get("/api/crontab/history/$recoveredHistoryId/details?pageIndex=0&pageSize=10").expect(200)
+        )
+        assertEquals(1, recoveredDetails.path("totalRowCount").asInt())
+        val recoveredDetail = recoveredDetails.path("rows").first()
+        assertEquals("104", recoveredDetail.path("asset").path("id").asText())
+        assertTrue(recoveredDetail.path("downloadCompleted").asBoolean(), "恢复后应下载成功")
+        assertTrue(recoveredDetail.path("message").isMissingNode || recoveredDetail.path("message").isNull)
+        assertTrue(Files.exists(Path.of(recoveredDetail.path("filePath").asText())), "恢复后应产出文件")
+        assertTrue(mock.routePrefixCount("/mock/oss/104") >= 1, "恢复后应请求 OSS 签名直链")
+        api.delete("/api/crontab/$crontabId").expect(200)
     }
 
     private fun assertCompletedDetailCount(api: ApiClient, historyId: Long, expected: Int) {

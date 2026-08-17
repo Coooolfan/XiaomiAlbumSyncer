@@ -2,8 +2,11 @@ package com.coooolfan.xiaomialbumsyncer.pipeline.stages
 
 import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
 import com.coooolfan.xiaomialbumsyncer.model.downloadCompleted
+import com.coooolfan.xiaomialbumsyncer.model.exifFilled
 import com.coooolfan.xiaomialbumsyncer.model.filePath
+import com.coooolfan.xiaomialbumsyncer.model.fsTimeUpdated
 import com.coooolfan.xiaomialbumsyncer.model.id
+import com.coooolfan.xiaomialbumsyncer.model.sha1Verified
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
@@ -42,11 +45,12 @@ class DownloadStage(
         val tempPath = targetPath.resolveSibling("${targetPath.fileName}.${context.id}.tmp")
         cleanupTempFile(tempPath)
 
-        if (context.crontabHistory.crontab.config.skipExistingFile && Files.exists(targetPath))
+        val downloaded = if (context.crontabHistory.crontab.config.skipExistingFile && Files.exists(targetPath)) {
             log.info("跳过已存在文件 {}", targetPath)
-        else {
+            true
+        } else {
             log.info("开始下载资产 {}", context.asset.id)
-            val downloaded = try {
+            val ok = try {
                 api.downloadAsset(
                     context.crontabHistory.crontab.accountId,
                     context.asset,
@@ -56,19 +60,37 @@ class DownloadStage(
                 cleanupTempFile(tempPath)
                 throw e
             }
-            if (downloaded) {
+            if (ok) {
                 moveCompletedDownload(tempPath, targetPath)
             }
             log.info("下载资产 {} 完成", context.asset.id)
+            ok
         }
 
         sql.executeUpdate(CrontabHistoryDetail::class) {
             set(table.downloadCompleted, true)
             set(table.filePath, targetPath.toString())
+            if (!downloaded) {
+                // 文件在云端已不可下载（如已删除，storage 返回 retriable=false），
+                // 后续校验/EXIF/文件时间阶段无可处理内容，一并标记完成，
+                // 否则该资产会在每个周期被重新拾取并再次失败
+                set(table.sha1Verified, true)
+                set(table.exifFilled, true)
+                set(table.fsTimeUpdated, true)
+            }
             where(table.id eq context.id)
         }
-        return CrontabHistoryDetail(context) {
-            downloadCompleted = true
+        return if (downloaded) {
+            CrontabHistoryDetail(context) {
+                downloadCompleted = true
+            }
+        } else {
+            CrontabHistoryDetail(context) {
+                downloadCompleted = true
+                sha1Verified = true
+                exifFilled = true
+                fsTimeUpdated = true
+            }
         }
     }
 

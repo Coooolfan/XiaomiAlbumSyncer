@@ -69,9 +69,10 @@ func buildRuntime(s Scenario) (*runtimeData, error) {
 		return nil, errors.New("scenario must contain at least one account")
 	}
 	data := &runtimeData{
-		Accounts: map[string]*Account{},
-		Deleted:  map[int64]deletedMedia{},
-		Clock:    s.LogicalClock,
+		Accounts:      map[string]*Account{},
+		Deleted:       map[int64]deletedMedia{},
+		StorageErrors: map[int64]storageError{},
+		Clock:         s.LogicalClock,
 	}
 	if data.Clock == 0 {
 		data.Clock = 1714564800000

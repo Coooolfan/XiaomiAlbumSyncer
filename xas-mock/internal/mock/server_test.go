@@ -147,6 +147,137 @@ func TestMutationIsAtomicAndDeletedMediaReturns50050(t *testing.T) {
 	}
 }
 
+func TestMarkDeletedKeepsAssetInListAndMirrorsStorageErrorCodes(t *testing.T) {
+	server, state := newTestServer(t)
+	defer server.Close()
+	mutate := func(ops ...MutationOperation) {
+		t.Helper()
+		body, _ := json.Marshal(MutationRequest{Operations: ops})
+		response := doRequest(t, http.MethodPost, server.URL+"/_control/v1/mutations", bytes.NewReader(body), "")
+		if response.StatusCode != http.StatusOK {
+			t.Fatalf("mutation status=%d body=%s", response.StatusCode, readBody(response))
+		}
+		response.Body.Close()
+	}
+	mutate(
+		MutationOperation{Op: "addAssets", UserID: "mock-user", AlbumID: 1, Assets: []GalleryAssetSpec{{ID: 303, Type: "image", FileName: "del.jpg", DateTaken: 1714651200000, Size: 1024}}},
+		MutationOperation{Op: "addRecordings", UserID: "mock-user", Recordings: []RecordingSpec{{ID: 304, FileName: "del.m4a", RecordingType: 3, CreateTime: 1714651200000, Size: 2048}}},
+		MutationOperation{Op: "markDeleted", UserID: "mock-user", AlbumID: 1, IDs: []int64{303}},
+		MutationOperation{Op: "markDeleted", UserID: "mock-user", IDs: []int64{304}},
+	)
+
+	cookie := cloudCookie(state, "mock-user")
+
+	// markDeleted 后资产仍保留在列表中（列表可见但无法下载）
+	galleriesResponse := doRequest(t, http.MethodGet, server.URL+"/gallery/user/galleries?albumId=1&pageNum=0&pageSize=200", nil, cookie)
+	var galleries struct {
+		Data struct {
+			Galleries []struct {
+				ID int64 `json:"id"`
+			} `json:"galleries"`
+		} `json:"data"`
+	}
+	decodeResponse(t, galleriesResponse, &galleries)
+	found := false
+	for _, asset := range galleries.Data.Galleries {
+		if asset.ID == 303 {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("markDeleted 后资产 303 应仍在相册列表中")
+	}
+
+	// 相册删除 → code=50050；录音删除 → code=50202；均为 result=error 且 retriable=false
+	var galleryErr struct {
+		Code      int    `json:"code"`
+		Result    string `json:"result"`
+		Retriable bool   `json:"retriable"`
+	}
+	galleryStorage := doRequest(t, http.MethodGet, server.URL+"/gallery/storage?id=303", nil, cookie)
+	decodeResponse(t, galleryStorage, &galleryErr)
+	if galleryErr.Code != 50050 || galleryErr.Result != "error" || galleryErr.Retriable {
+		t.Fatalf("gallery deleted storage=%+v", galleryErr)
+	}
+
+	var recordingErr struct {
+		Code      int    `json:"code"`
+		Result    string `json:"result"`
+		Retriable bool   `json:"retriable"`
+	}
+	recordingStorage := doRequest(t, http.MethodGet, server.URL+"/sfs/ns/recorder/file/304/cb/dl_sfs_cb_1_0/storage", nil, cookie)
+	decodeResponse(t, recordingStorage, &recordingErr)
+	if recordingErr.Code != 50202 || recordingErr.Result != "error" || recordingErr.Retriable {
+		t.Fatalf("recording deleted storage=%+v", recordingErr)
+	}
+}
+
+func TestSetStorageErrorConfiguresTransientErrorAndClearRecovers(t *testing.T) {
+	server, state := newTestServer(t)
+	defer server.Close()
+	mutate := func(ops ...MutationOperation) {
+		t.Helper()
+		body, _ := json.Marshal(MutationRequest{Operations: ops})
+		response := doRequest(t, http.MethodPost, server.URL+"/_control/v1/mutations", bytes.NewReader(body), "")
+		if response.StatusCode != http.StatusOK {
+			t.Fatalf("mutation status=%d body=%s", response.StatusCode, readBody(response))
+		}
+		response.Body.Close()
+	}
+	mutate(
+		MutationOperation{Op: "addAssets", UserID: "mock-user", AlbumID: 1, Assets: []GalleryAssetSpec{{ID: 305, Type: "image", FileName: "busy.jpg", DateTaken: 1714651200000, Size: 1024}}},
+		MutationOperation{Op: "setStorageError", UserID: "mock-user", AlbumID: 1, IDs: []int64{305}, Code: 50051, Retriable: true, Description: "系统繁忙，请稍后重试", Reason: "service busy"},
+	)
+
+	cookie := cloudCookie(state, "mock-user")
+
+	// 瞬时错误：code != 0 且 retriable=true
+	var transientErr struct {
+		Code      int    `json:"code"`
+		Result    string `json:"result"`
+		Retriable bool   `json:"retriable"`
+	}
+	storage := doRequest(t, http.MethodGet, server.URL+"/gallery/storage?id=305", nil, cookie)
+	decodeResponse(t, storage, &transientErr)
+	if transientErr.Code != 50051 || transientErr.Result != "error" || !transientErr.Retriable {
+		t.Fatalf("transient storage=%+v", transientErr)
+	}
+
+	// 资产仍可正常下载（storage 错误不影响列表）
+	galleriesResponse := doRequest(t, http.MethodGet, server.URL+"/gallery/user/galleries?albumId=1&pageNum=0&pageSize=200", nil, cookie)
+	var galleries struct {
+		Data struct {
+			Galleries []struct {
+				ID int64 `json:"id"`
+			} `json:"galleries"`
+		} `json:"data"`
+	}
+	decodeResponse(t, galleriesResponse, &galleries)
+	found := false
+	for _, asset := range galleries.Data.Galleries {
+		if asset.ID == 305 {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("setStorageError 后资产 305 应仍在相册列表中")
+	}
+
+	// code=0 清除错误后 storage 恢复正常
+	mutate(MutationOperation{Op: "setStorageError", UserID: "mock-user", AlbumID: 1, IDs: []int64{305}, Code: 0})
+	var recovered struct {
+		Code int `json:"code"`
+		Data struct {
+			URL string `json:"url"`
+		} `json:"data"`
+	}
+	storage = doRequest(t, http.MethodGet, server.URL+"/gallery/storage?id=305", nil, cookie)
+	decodeResponse(t, storage, &recovered)
+	if recovered.Code != 0 || recovered.Data.URL == "" {
+		t.Fatalf("recovered storage=%+v", recovered)
+	}
+}
+
 func TestDownloadStreamsExactLengthAndHonorsRateLimit(t *testing.T) {
 	server, state := newTestServer(t)
 	defer server.Close()
