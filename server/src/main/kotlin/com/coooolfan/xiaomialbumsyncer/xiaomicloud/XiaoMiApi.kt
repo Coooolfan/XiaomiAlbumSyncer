@@ -21,6 +21,27 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter.BASIC_ISO_DATE
 import kotlin.io.path.Path
 
+private const val XIAOMI_PRIVATE_ALBUM_ID = 1000L
+
+internal fun parseGalleryAlbum(albumJson: JsonNode, accountId: Long): Album {
+    val albumId = albumJson.get("albumId").asLong()
+    val albumName = when (albumId) {
+        XIAOMI_PRIVATE_ALBUM_ID -> "隐私相册"
+        1L -> "相机"
+        2L -> "屏幕截图"
+        else -> albumJson.get("name")?.asText() ?: "Unknown Album"
+    }
+
+    return Album {
+        remoteId = albumId
+        name = albumName
+        assetCount = albumJson.get("mediaCount").asLong()
+        lastUpdateTime = Instant.ofEpochMilli(albumJson.get("lastUpdateTime")?.asLong() ?: 0L)
+        this.accountId = accountId
+        shadow = false
+    }
+}
+
 @Managed
 class XiaoMiApi(private val tokenManager: TokenManager) {
 
@@ -51,21 +72,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             log.info("解析第 ${pageNum + 1} 页相册数据，此页共 ${albumArrayJson.size()} 个相册")
             // 处理当前页数据
             for (albumJson in albumArrayJson) {
-                val albumId = albumJson.get("albumId").asLong()
-
-                var albumName: String? = null
-                if (albumId == 1000L) continue // 私密相册，跳过
-                else if (albumId == 1L) albumName = "相机"
-                else if (albumId == 2L) albumName = "屏幕截图"
-
-                allAlbums.add(Album {
-                    remoteId = albumId
-                    name = albumName ?: albumJson.get("name")?.asText() ?: "Unknown Album"
-                    assetCount = albumJson.get("mediaCount").asLong()
-                    lastUpdateTime = Instant.ofEpochMilli(albumJson.get("lastUpdateTime")?.asLong() ?: 0L)
-                    this.accountId = accountId
-                    shadow = false
-                })
+                allAlbums.add(parseGalleryAlbum(albumJson, accountId))
             }
 
             // 检查是否还有更多页面
