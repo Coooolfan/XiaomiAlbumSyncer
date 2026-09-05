@@ -486,7 +486,7 @@ class ApiE2eSuite {
 
         // 第一轮：基线运行（相册中此时还有上一场景遗留的已删除资产，应被跳过而非失败）
         api.post("/api/crontab/$crontabId/executions").expect(200)
-        awaitCompletedHistory(api, crontabId)
+        val baselineHistoryId = awaitCompletedHistory(api, crontabId)
 
         // 注入瞬时错误：资产 104 的 storage 返回 code=50051, retriable=true
         mock.mutate(
@@ -524,7 +524,7 @@ class ApiE2eSuite {
 
         // 第二轮：104 下载失败，应记录错误消息且不标记完成，但流水线整体正常结束
         api.post("/api/crontab/$crontabId/executions").expect(200)
-        val failedHistoryId = awaitCompletedHistory(api, crontabId)
+        val failedHistoryId = awaitCompletedHistory(api, crontabId, afterHistoryId = baselineHistoryId)
         val failedDetails = api.json(
             api.get("/api/crontab/history/$failedHistoryId/details?pageIndex=0&pageSize=10").expect(200)
         )
@@ -549,7 +549,7 @@ class ApiE2eSuite {
             )
         )
         api.post("/api/crontab/$crontabId/executions").expect(200)
-        val recoveredHistoryId = awaitCompletedHistory(api, crontabId)
+        val recoveredHistoryId = awaitCompletedHistory(api, crontabId, afterHistoryId = failedHistoryId)
         val recoveredDetails = api.json(
             api.get("/api/crontab/history/$recoveredHistoryId/details?pageIndex=0&pageSize=10").expect(200)
         )
@@ -582,13 +582,16 @@ class ApiE2eSuite {
             ?: error("未找到 remoteId=$remoteId 的相册，响应: $albums")
     }
 
-    private fun awaitCompletedHistory(api: ApiClient, crontabId: Long): Long {
+    private fun awaitCompletedHistory(api: ApiClient, crontabId: Long, afterHistoryId: Long? = null): Long {
         val deadline = System.nanoTime() + Duration.ofSeconds(30).toNanos()
         while (System.nanoTime() < deadline) {
             val crontabs = api.json(api.get("/api/crontab").expect(200))
             val crontab = crontabs.firstOrNull { it.path("id").asLong() == crontabId }
-            val history = crontab?.path("histories")?.firstOrNull()
-            if (history != null && history.path("endTime").asText().isNotBlank()) {
+            val history = crontab?.path("histories")?.firstOrNull {
+                (afterHistoryId == null || it.path("id").asLong() > afterHistoryId) &&
+                        it.path("endTime").asText().isNotBlank()
+            }
+            if (history != null) {
                 return history.path("id").asLong()
             }
             Thread.sleep(100)

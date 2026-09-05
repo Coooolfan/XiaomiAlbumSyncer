@@ -5212,7 +5212,20 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.XiaomiAccountPropsKt"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput"
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "boolean",
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabConfig",
+            "long",
+            "java.util.List"
+          ]
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput$Builder",
@@ -5348,7 +5361,15 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigFtqqKeyUpdateKt"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit"
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInit$Builder",
@@ -5380,7 +5401,15 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigInitKt"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigNotifyConfigUpdate"
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigNotifyConfigUpdate",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.NotifyConfig"
+          ]
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigNotifyConfigUpdate$Builder",
@@ -5449,7 +5478,16 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPassTokenUpdateKt"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate"
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdate$Builder",
@@ -5487,7 +5525,15 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigPasswordUpdateKt"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate"
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdate$Builder",
@@ -5519,7 +5565,17 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdateKt"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountCreate"
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountCreate",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountCreate$Builder",
@@ -5562,7 +5618,17 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountCreateKt"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountUpdate"
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountUpdate",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountUpdate$Builder",
@@ -9853,17 +9919,32 @@
       "type": "com.zaxxer.hikari.util.ConcurrentBag$IConcurrentBagEntry[]"
     },
     {
+      "type": "io.github.smartboot.socket.timer.HashedWheelTimer$HashedWheelTimerTask"
+    },
+    {
       "type": "java.beans.Introspector"
+    },
+    {
+      "type": "java.io.Closeable"
     },
     {
       "type": "java.io.FilePermission"
     },
     {
+      "type": "java.io.Flushable"
+    },
+    {
       "type": "java.io.ObjectInputStream"
+    },
+    {
+      "type": "java.io.OutputStream"
     },
     {
       "type": "java.io.Serializable",
       "allDeclaredFields": true
+    },
+    {
+      "type": "java.lang.AutoCloseable"
     },
     {
       "type": "java.lang.Boolean",
@@ -10082,6 +10163,10 @@
         }
       ],
       "methods": [
+        {
+          "name": "isVirtual",
+          "parameterTypes": []
+        },
         {
           "name": "ofVirtual",
           "parameterTypes": []
@@ -11478,6 +11563,9 @@
       ]
     },
     {
+      "type": "okhttp3.internal.connection.RealCall"
+    },
+    {
       "type": "okhttp3.internal.connection.RealConnectionPool",
       "fields": [
         {
@@ -11549,6 +11637,15 @@
       ]
     },
     {
+      "type": "org.babyfish.jimmer.client.meta.Doc$DeserializerV3",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.babyfish.jimmer.client.meta.TypeName$Deserializer",
       "methods": [
         {
@@ -11559,6 +11656,15 @@
     },
     {
       "type": "org.babyfish.jimmer.client.meta.TypeName$DeserializerV2",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.client.meta.TypeName$DeserializerV3",
       "methods": [
         {
           "name": "<init>",
@@ -11585,6 +11691,15 @@
       ]
     },
     {
+      "type": "org.babyfish.jimmer.client.meta.impl.ApiOperationImpl$DeserializerV3",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.babyfish.jimmer.client.meta.impl.ApiParameterImpl$Deserializer",
       "methods": [
         {
@@ -11595,6 +11710,15 @@
     },
     {
       "type": "org.babyfish.jimmer.client.meta.impl.ApiParameterImpl$DeserializerV2",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.client.meta.impl.ApiParameterImpl$DeserializerV3",
       "methods": [
         {
           "name": "<init>",
@@ -11621,6 +11745,15 @@
       ]
     },
     {
+      "type": "org.babyfish.jimmer.client.meta.impl.ApiServiceImpl$DeserializerV3",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.babyfish.jimmer.client.meta.impl.EnumConstantImpl$Deserializer",
       "methods": [
         {
@@ -11631,6 +11764,15 @@
     },
     {
       "type": "org.babyfish.jimmer.client.meta.impl.EnumConstantImpl$DeserializerV2",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.client.meta.impl.EnumConstantImpl$DeserializerV3",
       "methods": [
         {
           "name": "<init>",
@@ -11657,6 +11799,15 @@
       ]
     },
     {
+      "type": "org.babyfish.jimmer.client.meta.impl.PropImpl$DeserializerV3",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.babyfish.jimmer.client.meta.impl.SchemaImpl$Deserializer",
       "methods": [
         {
@@ -11667,6 +11818,15 @@
     },
     {
       "type": "org.babyfish.jimmer.client.meta.impl.SchemaImpl$DeserializerV2",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.client.meta.impl.SchemaImpl$DeserializerV3",
       "methods": [
         {
           "name": "<init>",
@@ -11693,6 +11853,15 @@
       ]
     },
     {
+      "type": "org.babyfish.jimmer.client.meta.impl.TypeDefinitionImpl$DeserializerV3",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.babyfish.jimmer.client.meta.impl.TypeRefImpl$Deserializer",
       "methods": [
         {
@@ -11703,6 +11872,15 @@
     },
     {
       "type": "org.babyfish.jimmer.client.meta.impl.TypeRefImpl$DeserializerV2",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.client.meta.impl.TypeRefImpl$DeserializerV3",
       "methods": [
         {
           "name": "<init>",
@@ -12901,7 +13079,22 @@
       "type": "org.flywaydb.core.internal.proprietaryStubs.AuthCommandExtensionStub"
     },
     {
+      "type": "org.flywaydb.core.internal.proprietaryStubs.AwsSecretsManagerSupportStub"
+    },
+    {
       "type": "org.flywaydb.core.internal.proprietaryStubs.CheckCommandExtensionStub"
+    },
+    {
+      "type": "org.flywaydb.core.internal.proprietaryStubs.CherryPickConfigurationExtensionStub",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.flywaydb.core.internal.proprietaryStubs.CherryPickSupportStub"
     },
     {
       "type": "org.flywaydb.core.internal.proprietaryStubs.DeployCommandExtensionStub"
@@ -12913,7 +13106,28 @@
       "type": "org.flywaydb.core.internal.proprietaryStubs.DiffTextCommandExtensionStub"
     },
     {
+      "type": "org.flywaydb.core.internal.proprietaryStubs.DryRunConfigurationExtensionStub",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.flywaydb.core.internal.proprietaryStubs.DryRunSupportStub"
+    },
+    {
+      "type": "org.flywaydb.core.internal.proprietaryStubs.ErrorOverrideInitializerStub"
+    },
+    {
+      "type": "org.flywaydb.core.internal.proprietaryStubs.ErrorOverridesSupportStub"
+    },
+    {
       "type": "org.flywaydb.core.internal.proprietaryStubs.GenerateCommandExtensionStub"
+    },
+    {
+      "type": "org.flywaydb.core.internal.proprietaryStubs.LicenseSupportStub"
     },
     {
       "type": "org.flywaydb.core.internal.proprietaryStubs.LicensingConfigurationExtensionStub",
@@ -12931,6 +13145,9 @@
     },
     {
       "type": "org.flywaydb.core.internal.proprietaryStubs.PrepareCommandExtensionStub"
+    },
+    {
+      "type": "org.flywaydb.core.internal.proprietaryStubs.ShouldExecuteEvaluatorStub"
     },
     {
       "type": "org.flywaydb.core.internal.proprietaryStubs.UndoCommandExtensionStub"
@@ -13335,6 +13552,9 @@
       ]
     },
     {
+      "type": "org.noear.solon.core.serialize.Serializer"
+    },
+    {
       "type": "org.noear.solon.data.cache.CacheService",
       "methods": [
         {
@@ -13488,6 +13708,15 @@
     },
     {
       "type": "org.noear.solon.extend.impl.ScannerExt",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.noear.solon.extend.impl.ScopeLocalFactoryExt",
       "methods": [
         {
           "name": "<init>",
@@ -14123,6 +14352,18 @@
     },
     {
       "type": "org.noear.solon.serialization.jackson.integration.SerializationJacksonPlugin",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.noear.solon.serialization.javabin.JavabinSerializer"
+    },
+    {
+      "type": "org.noear.solon.serialization.javabin.integration.SerializationJavabinPlugin",
       "methods": [
         {
           "name": "<init>",
@@ -14827,6 +15068,24 @@
     },
     {
       "type": "tools.jackson.databind.ObjectMapper"
+    },
+    {
+      "type": "tools.jackson.databind.deser.Deserializers[]"
+    },
+    {
+      "type": "tools.jackson.databind.deser.KeyDeserializers[]"
+    },
+    {
+      "type": "tools.jackson.databind.deser.ValueInstantiators[]"
+    },
+    {
+      "type": "tools.jackson.databind.ser.Serializers[]"
+    },
+    {
+      "type": "tools.jackson.databind.ser.ValueSerializerModifier[]"
+    },
+    {
+      "type": "tools.jackson.module.kotlin.KotlinModule"
     },
     {
       "type": {

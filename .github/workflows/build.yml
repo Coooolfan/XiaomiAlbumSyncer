@@ -54,12 +54,12 @@ jobs:
       - name: 设置 node 环境
         uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: '24.20.0'
 
       - name: 启用 Corepack 并激活 Yarn 4
         run: |
           corepack enable
-          corepack prepare yarn@4.9.2 --activate
+          corepack prepare yarn@4.18.0 --activate
 
       - name: 缓存 Yarn 包缓存
         uses: actions/cache@v6

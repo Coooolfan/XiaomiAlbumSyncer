@@ -31,9 +31,9 @@ class OpenApiUiController(private val properties: JimmerProperties) {
         }
         return resource.replace("\r\n", "\n") // Normalize line endings to LF
             .replace(
-                $$"${openapi.css}", "https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css"
+                $$"${openapi.css}", "https://unpkg.com/swagger-ui-dist@5.32.15/swagger-ui.css"
             ).replace(
-                $$"${openapi.js}", "https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"
+                $$"${openapi.js}", "https://unpkg.com/swagger-ui-dist@5.32.15/swagger-ui-bundle.js"
             ).replace(
                 $$"${openapi.refPath}", refPath!!
             )
