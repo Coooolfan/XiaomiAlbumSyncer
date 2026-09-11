@@ -1,6 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.e2e
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -12,6 +13,8 @@ import java.time.Duration
 import java.util.Comparator
 
 class ApiE2eSuite {
+
+    private val mcpJson = ObjectMapper()
 
     @Test
     fun fullApiWorkflow() {
@@ -167,6 +170,8 @@ class ApiE2eSuite {
         assertTrue(mock.routeCount("/mock/oss/101") >= 1)
         assertTrue(mock.routeCount("/mock/download/101") >= 1)
 
+        executeMcpWorkflow(api, crontabId, historyId)
+
         api.delete("/api/crontab/$crontabId/histories").expect(200)
         val historiesAfterClear = api.json(api.get("/api/crontab").expect(200))
             .first { it.path("id").asLong() == crontabId }
@@ -214,6 +219,135 @@ class ApiE2eSuite {
         ).expect(200)
         api.delete("/api/token").expect(200)
         api.get("/api/account").expect(401)
+    }
+
+    /**
+     * 覆盖 /mcp 端点：Bearer 鉴权、initialize/tools/list/tools/call 全 domain 调用，
+     * 让 Native Image tracing agent 采集到 MCP 链路的反射与资源元数据。
+     */
+    private fun executeMcpWorkflow(api: ApiClient, crontabId: Long, historyId: Long) {
+        val mcpToken = "e2e-mcp-token"
+        api.post(
+            "/api/system-config/normal",
+            mapOf("exifToolPath" to "exiftool", "mcpToken" to mcpToken)
+        ).expect(200)
+
+        // 未携带或携带错误 token 的请求一律 401
+        mcpRequest(api, null, null, 0, "initialize").expect(401)
+        mcpRequest(api, "wrong-token", null, 0, "initialize").expect(401)
+
+        val init = mcpRequest(
+            api, mcpToken, null, 0, "initialize",
+            mapOf(
+                "protocolVersion" to "2025-06-18",
+                "capabilities" to emptyMap<String, Any>(),
+                "clientInfo" to mapOf("name" to "e2e", "version" to "0"),
+            )
+        ).expect(200)
+        val sessionId = init.headers.firstValue("mcp-session-id").orElse("").ifEmpty { null }
+
+        mcpRequest(api, mcpToken, sessionId, null, "notifications/initialized").let {
+            check(it.status == 200 || it.status == 202) { "notifications/initialized 返回 ${it.status}: ${it.body}" }
+        }
+
+        val tools = mcpResult(mcpRequest(api, mcpToken, sessionId, 1, "tools/list"))
+        assertTrue(
+            tools.path("result").path("tools").any { it.path("name").asText() == "xas_query" },
+            "tools/list 应包含 xas_query: $tools"
+        )
+
+        var callId = 10
+        fun callTool(arguments: Map<String, Any?>): JsonNode {
+            val response = mcpResult(
+                mcpRequest(
+                    api, mcpToken, sessionId, callId++, "tools/call",
+                    mapOf("name" to "xas_query", "arguments" to arguments)
+                )
+            )
+            assertFalse(
+                response.path("result").path("isError").asBoolean(),
+                "tools/call $arguments 返回错误: $response"
+            )
+            return response
+        }
+
+        callTool(mapOf("domain" to "help", "action" to "list"))
+        callTool(mapOf("domain" to "album", "action" to "list"))
+        callTool(mapOf("domain" to "crontab", "action" to "list"))
+        callTool(
+            mapOf(
+                "domain" to "crontab", "action" to "get",
+                "filter" to mapOf("id" to crontabId.toString())
+            )
+        )
+        callTool(mapOf("domain" to "crontab_history", "action" to "list"))
+        callTool(
+            mapOf(
+                "domain" to "crontab_history_detail", "action" to "list",
+                "filter" to mapOf("id" to historyId.toString())
+            )
+        )
+        callTool(mapOf("domain" to "system", "action" to "list"))
+
+        // 非法入参应返回 isError=true 的 CallToolResult，而非协议级错误
+        val badCall = mcpResult(
+            mcpRequest(
+                api, mcpToken, sessionId, callId++, "tools/call",
+                mapOf("name" to "xas_query", "arguments" to mapOf("domain" to "not_exist", "action" to "list"))
+            )
+        )
+        assertTrue(
+            badCall.path("result").path("isError").asBoolean(),
+            "非法 domain 应返回 isError=true: $badCall"
+        )
+
+        // trigger 放最后：异步执行一轮流水线，不阻塞后续清理
+        callTool(
+            mapOf(
+                "domain" to "crontab", "action" to "trigger",
+                "filter" to mapOf("id" to crontabId.toString())
+            )
+        )
+
+        api.delete(
+            "/mcp",
+            buildMap {
+                put("Authorization", "Bearer $mcpToken")
+                sessionId?.let { put("mcp-session-id", it) }
+            }
+        )
+    }
+
+    private fun mcpRequest(
+        api: ApiClient,
+        token: String?,
+        sessionId: String?,
+        id: Int?,
+        method: String,
+        params: Any? = null,
+    ): ApiClient.Response {
+        val body = linkedMapOf<String, Any?>("jsonrpc" to "2.0", "method" to method)
+        id?.let { body["id"] = it }
+        params?.let { body["params"] = it }
+        val headers = buildMap {
+            put("Accept", "application/json, text/event-stream")
+            token?.let { put("Authorization", "Bearer $it") }
+            sessionId?.let { put("mcp-session-id", it) }
+        }
+        return api.postOnNewConnection("/mcp", body, headers)
+    }
+
+    private fun mcpResult(response: ApiClient.Response): JsonNode {
+        val contentType = response.headers.firstValue("Content-Type").orElse("")
+        val payload = if (contentType.contains("text/event-stream")) {
+            response.body.lineSequence()
+                .filter { it.startsWith("data:") }
+                .map { it.removePrefix("data:").trim() }
+                .lastOrNull() ?: throw AssertionError("SSE 响应无 data 行: ${response.body}")
+        } else {
+            response.body
+        }
+        return mcpJson.readTree(payload)
     }
 
     private fun executeRecordingWorkflows(

@@ -54,6 +54,8 @@ class CrontabService(private val sql: KSqlClient) {
         }
     }
 
+    fun isCrontabRunning(crontabId: Long): Boolean = taskScheduler.checkIsRunning(crontabId)
+
     fun getCrontabCurrentStats(crontabId: Long): CrontabCurrentStats {
         if (!taskScheduler.checkIsRunning(crontabId))
             return CrontabCurrentStats() // 没有正在运行

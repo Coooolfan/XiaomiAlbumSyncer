@@ -36,19 +36,38 @@ class ApiClient(private val baseUrl: String) {
 
     fun get(path: String): Response = request("GET", path)
 
-    fun post(path: String, body: Any? = null): Response = request("POST", path, body)
+    fun post(path: String, body: Any? = null, headers: Map<String, String> = emptyMap()): Response =
+        request("POST", path, body, headers)
+
+    /**
+     * 使用一次性连接的 POST：/mcp 鉴权失败时服务端会直接关闭 keep-alive 连接，
+     * 复用连接池会让下一个请求读到 EOF。
+     */
+    fun postOnNewConnection(
+        path: String,
+        body: Any? = null,
+        headers: Map<String, String> = emptyMap(),
+    ): Response = request("POST", path, body, headers, HttpClient.newHttpClient())
 
     fun put(path: String, body: Any): Response = request("PUT", path, body)
 
-    fun delete(path: String): Response = request("DELETE", path)
+    fun delete(path: String, headers: Map<String, String> = emptyMap()): Response = request("DELETE", path, null, headers)
 
     fun json(response: Response): JsonNode = objectMapper.readTree(response.body)
 
     fun encode(value: String): String = URLEncoder.encode(value, StandardCharsets.UTF_8)
 
-    private fun request(method: String, path: String, body: Any? = null): Response {
+    private fun request(
+        method: String,
+        path: String,
+        body: Any? = null,
+        headers: Map<String, String> = emptyMap(),
+        client: HttpClient = httpClient,
+    ): Response {
         val builder = HttpRequest.newBuilder(URI.create(baseUrl + path))
             .timeout(Duration.ofSeconds(35))
+
+        headers.forEach { (name, value) -> builder.header(name, value) }
 
         if (body == null) {
             builder.method(method, HttpRequest.BodyPublishers.noBody())
@@ -57,7 +76,7 @@ class ApiClient(private val baseUrl: String) {
             builder.method(method, HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body)))
         }
 
-        val response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))
+        val response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))
         return Response(response.statusCode(), response.body(), response.headers())
     }
 }

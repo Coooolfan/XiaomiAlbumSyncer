@@ -6,6 +6,8 @@ input SystemConfigInit {
 
 input SystemConfigUpdate {
     exifToolPath
+
+    mcpToken
 }
 
 input SystemConfigPasswordUpdate {

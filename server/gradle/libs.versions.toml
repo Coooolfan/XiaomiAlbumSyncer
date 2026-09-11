@@ -23,6 +23,7 @@ solon-aot = { module = "org.noear:solon-aot" }
 solon-logging-logback = { module = "org.noear:solon-logging-logback" }
 solon-serialization-jackson = { module = "org.noear:solon-serialization-jackson" }
 solon-scheduling-simple = { module = "org.noear:solon-scheduling-simple" }
+solon-ai-mcp = { module = "org.noear:solon-ai-mcp" }
 solon-test = { module = "org.noear:solon-test" }
 
 sa-token-solon = { module = "cn.dev33:sa-token-solon-plugin", version.ref = "saToken" }
