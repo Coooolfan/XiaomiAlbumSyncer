@@ -52,6 +52,7 @@ dependencies {
     implementation(platform(libs.jackson.bom))
     implementation(libs.jackson.kotlin)
     implementation(libs.solon.scheduling.simple)
+    implementation(libs.solon.ai.mcp)
 
     implementation(libs.flyway.core)
 

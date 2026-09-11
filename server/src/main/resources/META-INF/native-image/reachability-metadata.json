@@ -2260,6 +2260,558 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.AlbumItem",
+      "methods": [
+        {
+          "name": "getAccountNickname",
+          "parameterTypes": []
+        },
+        {
+          "name": "getAssetCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getLastUpdateTime",
+          "parameterTypes": []
+        },
+        {
+          "name": "getName",
+          "parameterTypes": []
+        },
+        {
+          "name": "getRemoteId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getShadow",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.AlbumListOutput",
+      "methods": [
+        {
+          "name": "getAlbums",
+          "parameterTypes": []
+        },
+        {
+          "name": "getHint",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.CrontabCurrentStatsOutput",
+      "methods": [
+        {
+          "name": "getAssetCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDownloadCompletedCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getExifFilledCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getFsTimeUpdatedCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSha1VerifiedCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTs",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.CrontabGetOutput",
+      "methods": [
+        {
+          "name": "getCrontab",
+          "parameterTypes": []
+        },
+        {
+          "name": "getCurrentStats",
+          "parameterTypes": []
+        },
+        {
+          "name": "getHint",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.CrontabHistoryDetailListOutput",
+      "methods": [
+        {
+          "name": "getHint",
+          "parameterTypes": []
+        },
+        {
+          "name": "getHistory",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPageIndex",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPageSize",
+          "parameterTypes": []
+        },
+        {
+          "name": "getRows",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTotalCount",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.CrontabHistoryItem",
+      "methods": [
+        {
+          "name": "getCrontabId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getCrontabName",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDetailsCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getEndTime",
+          "parameterTypes": []
+        },
+        {
+          "name": "getId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getStartTime",
+          "parameterTypes": []
+        },
+        {
+          "name": "isCompleted",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.CrontabHistoryListOutput",
+      "methods": [
+        {
+          "name": "getHint",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPageIndex",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPageSize",
+          "parameterTypes": []
+        },
+        {
+          "name": "getRows",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTotalCount",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.CrontabHistoryOverview",
+      "methods": [
+        {
+          "name": "getEndTime",
+          "parameterTypes": []
+        },
+        {
+          "name": "getId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getStartTime",
+          "parameterTypes": []
+        },
+        {
+          "name": "isCompleted",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.CrontabListOutput",
+      "methods": [
+        {
+          "name": "getCrontabs",
+          "parameterTypes": []
+        },
+        {
+          "name": "getHint",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.CrontabOverview",
+      "methods": [
+        {
+          "name": "getAlbumIds",
+          "parameterTypes": []
+        },
+        {
+          "name": "getConfig",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDescription",
+          "parameterTypes": []
+        },
+        {
+          "name": "getEnabled",
+          "parameterTypes": []
+        },
+        {
+          "name": "getId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getLastRunTime",
+          "parameterTypes": []
+        },
+        {
+          "name": "getName",
+          "parameterTypes": []
+        },
+        {
+          "name": "getRunning",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.CrontabSummaryItem",
+      "methods": [
+        {
+          "name": "getEnabled",
+          "parameterTypes": []
+        },
+        {
+          "name": "getId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getLastRunTime",
+          "parameterTypes": []
+        },
+        {
+          "name": "getName",
+          "parameterTypes": []
+        },
+        {
+          "name": "getRunning",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.CrontabTriggerOutput",
+      "methods": [
+        {
+          "name": "getCrontab",
+          "parameterTypes": []
+        },
+        {
+          "name": "getHint",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTriggered",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.DomainDoc",
+      "methods": [
+        {
+          "name": "getActions",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDesc",
+          "parameterTypes": []
+        },
+        {
+          "name": "getExample",
+          "parameterTypes": []
+        },
+        {
+          "name": "getFilter",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.HelpOutput",
+      "methods": [
+        {
+          "name": "getHint",
+          "parameterTypes": []
+        },
+        {
+          "name": "getUsage",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.HistoryDetailAsset",
+      "methods": [
+        {
+          "name": "getAlbumName",
+          "parameterTypes": []
+        },
+        {
+          "name": "getFileName",
+          "parameterTypes": []
+        },
+        {
+          "name": "getType",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.HistoryDetailItem",
+      "methods": [
+        {
+          "name": "getAsset",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDownloadCompleted",
+          "parameterTypes": []
+        },
+        {
+          "name": "getExifFilled",
+          "parameterTypes": []
+        },
+        {
+          "name": "getFilePath",
+          "parameterTypes": []
+        },
+        {
+          "name": "getFsTimeUpdated",
+          "parameterTypes": []
+        },
+        {
+          "name": "getMessage",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSha1Verified",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.InputDoc",
+      "methods": [
+        {
+          "name": "getAction",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDomain",
+          "parameterTypes": []
+        },
+        {
+          "name": "getFilter",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPageIndex",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPageSize",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.McpAccountItem",
+      "methods": [
+        {
+          "name": "getNickname",
+          "parameterTypes": []
+        },
+        {
+          "name": "getUserId",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.McpSystemInfo",
+      "methods": [
+        {
+          "name": "getAppVersion",
+          "parameterTypes": []
+        },
+        {
+          "name": "getAssetsDateMapTimeZone",
+          "parameterTypes": []
+        },
+        {
+          "name": "getInitialized",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.PaginationDoc",
+      "methods": [
+        {
+          "name": "getPageIndex",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPageSize",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.SystemListOutput",
+      "methods": [
+        {
+          "name": "getAccounts",
+          "parameterTypes": []
+        },
+        {
+          "name": "getHint",
+          "parameterTypes": []
+        },
+        {
+          "name": "getInfo",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.TriggeredCrontab",
+      "methods": [
+        {
+          "name": "getId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getName",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.UsageDoc",
+      "methods": [
+        {
+          "name": "getDescription",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDomains",
+          "parameterTypes": []
+        },
+        {
+          "name": "getInput",
+          "parameterTypes": []
+        },
+        {
+          "name": "getNotes",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPagination",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.XasFilterInput",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.XasMcpServer",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.KSqlClient",
+            "com.coooolfan.xiaomialbumsyncer.mcp.XasQueryService",
+            "com.fasterxml.jackson.databind.ObjectMapper"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.XasQueryInput",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.Integer",
+            "java.lang.Integer",
+            "com.coooolfan.xiaomialbumsyncer.mcp.XasFilterInput",
+            "int",
+            "kotlin.jvm.internal.DefaultConstructorMarker"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.XasQueryService",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.KSqlClient",
+            "com.coooolfan.xiaomialbumsyncer.service.CrontabService"
+          ]
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.model.Album",
       "methods": [
         {
@@ -5532,6 +6084,22 @@
           "parameterTypes": [
             "java.lang.String"
           ]
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "int",
+            "kotlin.jvm.internal.DefaultConstructorMarker"
+          ]
         }
       ]
     },
@@ -7321,6 +7889,9 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiRecordingName"
+    },
+    {
+      "type": "com.ethlo.time.ITU"
     },
     {
       "type": "com.fasterxml.jackson.core.ObjectCodec",
@@ -9922,6 +10493,375 @@
       "type": "io.github.smartboot.socket.timer.HashedWheelTimer$HashedWheelTimerTask"
     },
     {
+      "type": "io.micrometer.context.ContextRegistry"
+    },
+    {
+      "type": "io.modelcontextprotocol.json.jackson2.JacksonMcpJsonMapperSupplier"
+    },
+    {
+      "type": "io.modelcontextprotocol.json.schema.jackson2.JacksonJsonSchemaValidatorSupplier"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$Annotated"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$Annotations"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$CallToolRequest",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.util.Map",
+            "java.util.Map"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$CallToolResult",
+      "fields": [
+        {
+          "name": "content"
+        },
+        {
+          "name": "meta"
+        },
+        {
+          "name": "structuredContent"
+        }
+      ],
+      "methods": [
+        {
+          "name": "isError",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ClientCapabilities",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.util.Map",
+            "io.modelcontextprotocol.spec.McpSchema$ClientCapabilities$RootCapabilities",
+            "io.modelcontextprotocol.spec.McpSchema$ClientCapabilities$Sampling",
+            "io.modelcontextprotocol.spec.McpSchema$ClientCapabilities$Elicitation"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ClientCapabilities$Elicitation"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ClientCapabilities$Elicitation$Form"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ClientCapabilities$Elicitation$Url"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ClientCapabilities$RootCapabilities"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ClientCapabilities$Sampling"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$Content"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$Identifier"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$Implementation",
+      "fields": [
+        {
+          "name": "name"
+        },
+        {
+          "name": "title"
+        },
+        {
+          "name": "version"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$InitializeRequest",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "io.modelcontextprotocol.spec.McpSchema$ClientCapabilities",
+            "io.modelcontextprotocol.spec.McpSchema$Implementation",
+            "java.util.Map"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$InitializeResult",
+      "fields": [
+        {
+          "name": "capabilities"
+        },
+        {
+          "name": "instructions"
+        },
+        {
+          "name": "meta"
+        },
+        {
+          "name": "protocolVersion"
+        },
+        {
+          "name": "serverInfo"
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$JSONRPCMessage"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$JSONRPCNotification",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.Object"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$JSONRPCRequest",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.Object",
+            "java.lang.Object"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$JSONRPCResponse",
+      "fields": [
+        {
+          "name": "error"
+        },
+        {
+          "name": "id"
+        },
+        {
+          "name": "jsonrpc"
+        },
+        {
+          "name": "result"
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$JSONRPCResponse$JSONRPCError"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$JsonSchema",
+      "fields": [
+        {
+          "name": "additionalProperties"
+        },
+        {
+          "name": "definitions"
+        },
+        {
+          "name": "defs"
+        },
+        {
+          "name": "properties"
+        },
+        {
+          "name": "required"
+        },
+        {
+          "name": "type"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.util.Map",
+            "java.util.List",
+            "java.lang.Boolean",
+            "java.util.Map",
+            "java.util.Map"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ListToolsResult",
+      "fields": [
+        {
+          "name": "meta"
+        },
+        {
+          "name": "nextCursor"
+        },
+        {
+          "name": "tools"
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$Meta"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$Request"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$Result"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ServerCapabilities",
+      "fields": [
+        {
+          "name": "completions"
+        },
+        {
+          "name": "experimental"
+        },
+        {
+          "name": "logging"
+        },
+        {
+          "name": "prompts"
+        },
+        {
+          "name": "resources"
+        },
+        {
+          "name": "tools"
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ServerCapabilities$CompletionCapabilities"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ServerCapabilities$LoggingCapabilities"
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ServerCapabilities$PromptCapabilities",
+      "fields": [
+        {
+          "name": "listChanged"
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ServerCapabilities$ResourceCapabilities",
+      "fields": [
+        {
+          "name": "listChanged"
+        },
+        {
+          "name": "subscribe"
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ServerCapabilities$ToolCapabilities",
+      "fields": [
+        {
+          "name": "listChanged"
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$TextContent",
+      "fields": [
+        {
+          "name": "annotations"
+        },
+        {
+          "name": "meta"
+        },
+        {
+          "name": "text"
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$Tool",
+      "fields": [
+        {
+          "name": "annotations"
+        },
+        {
+          "name": "description"
+        },
+        {
+          "name": "inputSchema"
+        },
+        {
+          "name": "meta"
+        },
+        {
+          "name": "name"
+        },
+        {
+          "name": "outputSchema"
+        },
+        {
+          "name": "title"
+        }
+      ]
+    },
+    {
+      "type": "io.modelcontextprotocol.spec.McpSchema$ToolAnnotations",
+      "fields": [
+        {
+          "name": "destructiveHint"
+        },
+        {
+          "name": "idempotentHint"
+        },
+        {
+          "name": "openWorldHint"
+        },
+        {
+          "name": "readOnlyHint"
+        },
+        {
+          "name": "returnDirect"
+        },
+        {
+          "name": "title"
+        }
+      ]
+    },
+    {
       "type": "java.beans.Introspector"
     },
     {
@@ -10015,6 +10955,9 @@
       ]
     },
     {
+      "type": "java.lang.Double"
+    },
+    {
       "type": "java.lang.Enum",
       "allDeclaredFields": true
     },
@@ -10041,6 +10984,9 @@
           "parameterTypes": []
         }
       ]
+    },
+    {
+      "type": "java.lang.Number"
     },
     {
       "type": "java.lang.Object",
@@ -10345,6 +11291,9 @@
           ]
         }
       ]
+    },
+    {
+      "type": "java.util.Arrays$ArrayList"
     },
     {
       "type": "java.util.Collection"
@@ -13195,6 +14144,27 @@
       "type": "org.flywaydb.core.internal.schemahistory.BaseAppliedMigration"
     },
     {
+      "type": "org.noear.solon.ai.integration.AiPlugin",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.noear.solon.ai.mcp.integration.McpPlugin",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.noear.solon.ai.mcp.server.McpServerEndpointProvider"
+    },
+    {
       "type": "org.noear.solon.annotation.Note"
     },
     {
@@ -13462,6 +14432,9 @@
           ]
         }
       ]
+    },
+    {
+      "type": "org.noear.solon.core.bean.LifecycleBean"
     },
     {
       "type": "org.noear.solon.core.handle.AbstractEntityConverter",
@@ -13734,6 +14707,15 @@
       ]
     },
     {
+      "type": "org.noear.solon.net.http.integration.NetHttpPlugin",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.noear.solon.net.integration.NetPlugin",
       "methods": [
         {
@@ -13828,6 +14810,9 @@
           ]
         }
       ]
+    },
+    {
+      "type": "org.noear.solon.rx.handle.RxChainManager"
     },
     {
       "type": "org.noear.solon.scheduling.command.CommandManager",
@@ -14434,6 +15419,24 @@
       ]
     },
     {
+      "type": "org.noear.solon.web.rx.integration.WebRxPlugin",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.noear.solon.web.sse.integration.WebSsePlugin",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.noear.solon.web.staticfiles.integration.WebStaticfilesPlugin",
       "methods": [
         {
@@ -14642,6 +15645,81 @@
           ]
         }
       ]
+    },
+    {
+      "type": "reactor.core.publisher.FlatMapTracker"
+    },
+    {
+      "type": "reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber"
+    },
+    {
+      "type": "reactor.core.publisher.FluxCreate$BaseSink"
+    },
+    {
+      "type": "reactor.core.publisher.FluxCreate$BufferAsyncSink"
+    },
+    {
+      "type": "reactor.core.publisher.FluxCreate$SerializedFluxSink"
+    },
+    {
+      "type": "reactor.core.publisher.FluxFlatMap$FlatMapInner"
+    },
+    {
+      "type": "reactor.core.publisher.FluxFlatMap$FlatMapMain"
+    },
+    {
+      "type": "reactor.core.publisher.FluxInterval$IntervalRunnable"
+    },
+    {
+      "type": "reactor.core.publisher.FluxIterable$IterableSubscription"
+    },
+    {
+      "type": "reactor.core.publisher.FluxOnErrorReturn$ReturnSubscriber"
+    },
+    {
+      "type": "reactor.core.publisher.LambdaMonoSubscriber"
+    },
+    {
+      "type": "reactor.core.publisher.LambdaSubscriber"
+    },
+    {
+      "type": "reactor.core.publisher.MonoCreate$DefaultMonoSink"
+    },
+    {
+      "type": "reactor.core.publisher.MonoFlatMap$FlatMapMain"
+    },
+    {
+      "type": "reactor.core.publisher.MonoIgnoreThen$ThenIgnoreMain"
+    },
+    {
+      "type": "reactor.core.publisher.MonoSupplier$MonoSupplierSubscription"
+    },
+    {
+      "type": "reactor.core.publisher.Operators$MultiSubscriptionSubscriber"
+    },
+    {
+      "type": "reactor.core.publisher.Operators$ScalarSubscription"
+    },
+    {
+      "type": "reactor.core.scheduler.BoundedElasticScheduler"
+    },
+    {
+      "type": "reactor.core.scheduler.BoundedElasticScheduler$BoundedServices"
+    },
+    {
+      "type": "reactor.core.scheduler.BoundedElasticScheduler$BoundedState"
+    },
+    {
+      "type": "reactor.core.scheduler.PeriodicWorkerTask"
+    },
+    {
+      "type": "reactor.util.concurrent.MpscLinkedQueue"
+    },
+    {
+      "type": "reactor.util.concurrent.MpscLinkedQueue$LinkedQueueNode"
+    },
+    {
+      "type": "reactor.util.concurrent.SpscLinkedArrayQueue"
     },
     {
       "type": "sun.management.VMManagementImpl",
