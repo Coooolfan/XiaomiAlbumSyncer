@@ -54,6 +54,8 @@ class CrontabService(private val sql: KSqlClient) {
         }
     }
 
+    fun isCrontabRunning(crontabId: Long): Boolean = taskScheduler.checkIsRunning(crontabId)
+
     fun getCrontabCurrentStats(crontabId: Long): CrontabCurrentStats {
         if (!taskScheduler.checkIsRunning(crontabId))
             return CrontabCurrentStats() // 没有正在运行
@@ -121,14 +123,14 @@ class CrontabService(private val sql: KSqlClient) {
         return execute.modifiedEntity
     }
 
-    fun executeCrontab(crontabId: Long): Boolean {
+    fun executeCrontab(crontabId: Long) {
         val crontab =
             sql.findById(
                 CRONTAB_WITH_ALBUMS_FETCHER,
                 crontabId
             ) ?: throw IllegalArgumentException("定时任务不存在: $crontabId")
 
-        return taskScheduler.executeCrontab(crontab, true)
+        taskScheduler.executeCrontab(crontab, true)
     }
 
     fun createCrontabHistory(crontab: Crontab): CrontabHistory {
