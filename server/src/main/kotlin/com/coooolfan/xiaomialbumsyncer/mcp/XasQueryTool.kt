@@ -1,18 +1,25 @@
 package com.coooolfan.xiaomialbumsyncer.mcp
 
 import com.coooolfan.xiaomialbumsyncer.exception.BadRequestException
+import com.coooolfan.xiaomialbumsyncer.model.McpTokenPermission
+import com.coooolfan.xiaomialbumsyncer.service.McpTokenService
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.noear.solon.ai.chat.tool.FunctionTool
+import org.noear.solon.core.handle.Context
 import java.lang.reflect.Type
 
 /**
- * XAS 唯一对外暴露的 MCP 只读查询工具。
+ * XAS 唯一对外暴露的 MCP 查询工具。
  *
  * inputSchema 为手写 JSON（统一信封：domain + action + 分页 + filter），
  * 入参在本类用 Jackson 解析，不走 solon-ai 的注解参数绑定。
  */
-class XasQueryTool(private val service: XasQueryService, objectMapper: ObjectMapper) : FunctionTool {
+class XasQueryTool(
+    private val service: XasQueryService,
+    private val tokenService: McpTokenService,
+    objectMapper: ObjectMapper,
+) : FunctionTool {
 
     // LLM 可能臆造 schema 外的字段，宽松忽略而非解析失败
     private val mapper = objectMapper.copy()
@@ -49,7 +56,10 @@ class XasQueryTool(private val service: XasQueryService, objectMapper: ObjectMap
         val filterId = input.filter?.id?.trim()?.takeIf { it.isNotEmpty() }
 
         return when (domain) {
-            DOMAIN_HELP -> help(action, filterId)
+            DOMAIN_HELP -> {
+                requireAction(domain, action, ACTION_LIST, ACTION_GET)
+                help(filterId)
+            }
 
             DOMAIN_ALBUM -> {
                 requireOnlyList(domain, action)
@@ -64,7 +74,10 @@ class XasQueryTool(private val service: XasQueryService, objectMapper: ObjectMap
                 }
 
                 ACTION_GET -> toJson(service.getCrontab(requireNumericId(domain, filterId, "任务")))
-                ACTION_TRIGGER -> toJson(service.triggerCrontab(requireNumericId(domain, filterId, "任务")))
+                ACTION_TRIGGER -> {
+                    requireTriggerPermission()
+                    toJson(service.triggerCrontab(requireNumericId(domain, filterId, "任务")))
+                }
                 else -> unsupportedAction(domain, action)
             }
 
@@ -93,7 +106,7 @@ class XasQueryTool(private val service: XasQueryService, objectMapper: ObjectMap
     /**
      * help 的 list 与 get 走同一实现；filter.id 为 domain 枚举项时只返回对应 domain 的文档。
      */
-    private fun help(action: String, filterId: String?): String {
+    private fun help(filterId: String?): String {
         val domains = if (filterId != null) {
             if (filterId !in DOMAIN_METAS) {
                 throw BadRequestException(
@@ -137,8 +150,12 @@ class XasQueryTool(private val service: XasQueryService, objectMapper: ObjectMap
     }
 
     private fun requireOnlyList(domain: String, action: String) {
-        if (action != ACTION_LIST) {
-            throw BadRequestException("domain=$domain 仅支持 action=$ACTION_LIST")
+        requireAction(domain, action, ACTION_LIST)
+    }
+
+    private fun requireAction(domain: String, action: String, vararg allowed: String) {
+        if (action !in allowed) {
+            throw BadRequestException("domain=$domain 仅支持 action=${allowed.joinToString("/")}")
         }
     }
 
@@ -160,6 +177,13 @@ class XasQueryTool(private val service: XasQueryService, objectMapper: ObjectMap
 
     private fun unsupportedAction(domain: String, action: String): String {
         throw BadRequestException("domain=$domain 不支持 action=$action")
+    }
+
+    private fun requireTriggerPermission() {
+        val authorization = Context.current()?.header(XasMcpServer.AUTH_HEADER)
+        if (tokenService.resolvePermission(authorization) != McpTokenPermission.ALLOW_TRIGGER) {
+            throw BadRequestException("当前 MCP Token 为只读权限，不允许触发定时任务")
+        }
     }
 
     private fun pageIndex(input: XasQueryInput): Int = (input.pageIndex ?: DEFAULT_PAGE_INDEX).coerceAtLeast(0)
@@ -195,7 +219,8 @@ class XasQueryTool(private val service: XasQueryService, objectMapper: ObjectMap
                 "+ filter.id（语义随 domain：crontab 的 get/trigger 传任务 id；crontab_history 传任务 id 可选；" +
                 "crontab_history_detail 传历史 id 必填；help 时为 domain 枚举项，可缩小文档范围）。" +
                 "所有响应顶层带 hint 提示下一步操作。不确定用法时先调用 {\"domain\":\"help\",\"action\":\"list\"}。" +
-                "除 crontab 的 trigger 为写操作外均为只读，不含密码/passToken/通知配置等敏感信息。"
+                "除 crontab 的 trigger 为写操作外均为只读；trigger 仅允许使用 ALLOW_TRIGGER 权限的 Token。" +
+                "不含密码/passToken/通知配置等敏感信息。"
 
         private val INPUT_SCHEMA = """
             {
@@ -240,7 +265,7 @@ class XasQueryTool(private val service: XasQueryService, objectMapper: ObjectMap
         """.trimIndent()
 
         private val NOTES = listOf(
-            "除 domain=crontab&action=trigger（触发任务执行）外均为只读",
+            "除 domain=crontab&action=trigger（仅 ALLOW_TRIGGER 权限 Token 可用）外均为只读",
             "时间戳为 ISO-8601 字符串（currentStats.ts 为毫秒时间戳）",
             "不暴露密码/passToken/通知配置等敏感信息",
         )

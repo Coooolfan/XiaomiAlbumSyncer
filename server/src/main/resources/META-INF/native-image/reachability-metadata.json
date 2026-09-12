@@ -1892,6 +1892,33 @@
       "type": "com.coooolfan.xiaomialbumsyncer.controller.LoginRequest"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.McpTokenController",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.McpTokenService"
+          ]
+        },
+        {
+          "name": "create",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.McpTokenCreateRequest"
+          ]
+        },
+        {
+          "name": "list",
+          "parameterTypes": []
+        },
+        {
+          "name": "revoke",
+          "parameterTypes": [
+            "long"
+          ]
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.MountPathCheckRequest",
       "methods": [
         {
@@ -2775,12 +2802,23 @@
         {
           "name": "<init>",
           "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.mcp.XasQueryService",
+            "com.coooolfan.xiaomialbumsyncer.service.McpTokenService",
+            "com.fasterxml.jackson.databind.ObjectMapper"
+          ]
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
             "org.babyfish.jimmer.sql.kt.KSqlClient",
             "com.coooolfan.xiaomialbumsyncer.mcp.XasQueryService",
             "com.fasterxml.jackson.databind.ObjectMapper"
           ]
         }
       ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.XasMcpServer$Companion"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.mcp.XasQueryInput",
@@ -2800,6 +2838,9 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.XasQueryOutputKt"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.mcp.XasQueryService",
       "methods": [
         {
@@ -2810,6 +2851,15 @@
           ]
         }
       ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.XasQueryService$Companion"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.XasQueryTool"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.mcp.XasQueryTool$Companion"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.Album",
@@ -5129,6 +5179,77 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabPropsKt"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpToken"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpToken$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenDraft"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenDraft$$",
+      "fields": [
+        {
+          "name": "INSTANCE"
+        }
+      ],
+      "methods": [
+        {
+          "name": "getType",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenDraft$$$DraftImpl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenDraft$$$Impl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenDraft$$$Implementor"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenDraft$$$Implementor$DefaultImpls"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenDraft$Builder"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenDraftKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenFetcherDsl"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenFetcherKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenPermission"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenProps"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenProps$CREATED_AT$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenProps$ID$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenProps$NAME$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenProps$PERMISSION$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenProps$TOKEN_HASH$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.McpTokenPropsKt"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.model.NotifyConfig",
       "methods": [
         {
@@ -7076,6 +7197,78 @@
           "parameterTypes": []
         }
       ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.McpTokenCreateRequest",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "com.coooolfan.xiaomialbumsyncer.model.McpTokenPermission"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.McpTokenCreatedResponse",
+      "methods": [
+        {
+          "name": "getCreatedAt",
+          "parameterTypes": []
+        },
+        {
+          "name": "getId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getName",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPermission",
+          "parameterTypes": []
+        },
+        {
+          "name": "getToken",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.McpTokenInfo",
+      "methods": [
+        {
+          "name": "getCreatedAt",
+          "parameterTypes": []
+        },
+        {
+          "name": "getId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getName",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPermission",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.McpTokenService",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.KSqlClient"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.McpTokenService$Companion"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.service.MountPathService",
@@ -12905,6 +13098,15 @@
       "methods": [
         {
           "name": "value",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.babyfish.jimmer.sql.Key",
+      "methods": [
+        {
+          "name": "group",
           "parameterTypes": []
         }
       ]

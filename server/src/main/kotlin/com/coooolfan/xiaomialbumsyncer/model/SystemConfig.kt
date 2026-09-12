@@ -18,7 +18,4 @@ interface SystemConfig {
     val assetsDateMapTimeZone: String
 
     val notifyConfig: NotifyConfig
-
-    // MCP 只读端点的独立访问令牌；为空表示 MCP 端点拒绝所有请求
-    val mcpToken: String?
 }
