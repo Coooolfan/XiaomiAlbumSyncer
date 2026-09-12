@@ -12,7 +12,7 @@ import java.lang.reflect.Type
 /**
  * XAS 唯一对外暴露的 MCP 查询工具。
  *
- * inputSchema 为手写 JSON（统一信封：domain + action + 分页 + filter），
+ * inputSchema 为手写 JSON（统一信封：domain + action + 分页 + id），
  * 入参在本类用 Jackson 解析，不走 solon-ai 的注解参数绑定。
  */
 class XasQueryTool(
@@ -51,94 +51,51 @@ class XasQueryTool(
     }
 
     private fun dispatch(input: XasQueryInput): String {
-        val domain = requireEnum(input.domain, "domain", DOMAIN_METAS.keys)
+        val domain = requireEnum(input.domain, "domain", DOMAINS)
         val action = requireEnum(input.action, "action", listOf(ACTION_LIST, ACTION_GET, ACTION_TRIGGER))
-        val filterId = input.filter?.id?.trim()?.takeIf { it.isNotEmpty() }
+        val id = input.id?.trim()?.takeIf { it.isNotEmpty() }
 
         return when (domain) {
-            DOMAIN_HELP -> {
-                requireAction(domain, action, ACTION_LIST, ACTION_GET)
-                help(filterId)
-            }
-
             DOMAIN_ALBUM -> {
                 requireOnlyList(domain, action)
-                requireNoFilterId(domain, filterId)
+                requireNoId(domain, id)
                 toJson(service.listAlbums())
             }
 
             DOMAIN_CRONTAB -> when (action) {
                 ACTION_LIST -> {
-                    requireNoFilterId(domain, filterId)
+                    requireNoId(domain, id)
                     toJson(service.listCrontabs())
                 }
 
-                ACTION_GET -> toJson(service.getCrontab(requireNumericId(domain, filterId, "任务")))
+                ACTION_GET -> toJson(service.getCrontab(requireNumericId(domain, id, "任务")))
                 ACTION_TRIGGER -> {
                     requireTriggerPermission()
-                    toJson(service.triggerCrontab(requireNumericId(domain, filterId, "任务")))
+                    toJson(service.triggerCrontab(requireNumericId(domain, id, "任务")))
                 }
                 else -> unsupportedAction(domain, action)
             }
 
             DOMAIN_CRONTAB_HISTORY -> {
                 requireOnlyList(domain, action)
-                val crontabId = filterId?.let { parseNumericId(it, "任务") }
+                val crontabId = id?.let { parseNumericId(it, "任务") }
                 toJson(service.listCrontabHistories(crontabId, pageIndex(input), pageSize(input)))
             }
 
             DOMAIN_CRONTAB_HISTORY_DETAIL -> {
                 requireOnlyList(domain, action)
-                val historyId = requireNumericId(domain, filterId, "历史")
+                val historyId = requireNumericId(domain, id, "历史")
                 toJson(service.listCrontabHistoryDetails(historyId, pageIndex(input), pageSize(input)))
             }
 
             DOMAIN_SYSTEM -> {
                 requireOnlyList(domain, action)
-                requireNoFilterId(domain, filterId)
+                requireNoId(domain, id)
                 toJson(service.listSystem())
             }
 
             else -> throw BadRequestException("不支持的 domain: $domain")
         }
-    }
-
-    /**
-     * help 的 list 与 get 走同一实现；filter.id 为 domain 枚举项时只返回对应 domain 的文档。
-     */
-    private fun help(filterId: String?): String {
-        val domains = if (filterId != null) {
-            if (filterId !in DOMAIN_METAS) {
-                throw BadRequestException(
-                    "domain=help 时 filter.id 必须是 domain 枚举项之一: ${DOMAIN_METAS.keys.joinToString()}"
-                )
-            }
-            mapOf(filterId to DOMAIN_METAS.getValue(filterId))
-        } else {
-            DOMAIN_METAS
-        }
-
-        return toJson(
-            HelpOutput(
-                hint = HINT_HELP,
-                usage = UsageDoc(
-                    description = TOOL_DESCRIPTION,
-                    input = InputDoc(
-                        domain = "必填，枚举: ${DOMAIN_METAS.keys.joinToString()}",
-                        action = "必填，枚举: $ACTION_LIST（集合视图）/ $ACTION_GET（单资源详情）/ $ACTION_TRIGGER（触发任务执行，仅 crontab）",
-                        pageIndex = "可选，从 0 开始，默认 0；仅分页查询生效",
-                        pageSize = "可选，默认 50，上限 $MAX_PAGE_SIZE；仅分页查询生效",
-                        filter = "可选对象，字段 id 的语义随 domain 变化，见各 domain 的 filter 说明",
-                    ),
-                    domains = domains,
-                    pagination = PaginationDoc(
-                        pageIndex = "从 0 开始，默认 0",
-                        pageSize = "默认 50，上限 $MAX_PAGE_SIZE",
-                    ),
-                    notes = NOTES,
-                ),
-            )
-        )
     }
 
     private fun requireEnum(value: String?, name: String, allowed: Collection<String>): String {
@@ -159,20 +116,20 @@ class XasQueryTool(
         }
     }
 
-    private fun requireNoFilterId(domain: String, filterId: String?) {
-        if (filterId != null) {
-            throw BadRequestException("domain=$domain 不支持 filter.id")
+    private fun requireNoId(domain: String, id: String?) {
+        if (id != null) {
+            throw BadRequestException("domain=$domain 不支持 id")
         }
     }
 
-    private fun requireNumericId(domain: String, filterId: String?, idName: String): Long {
-        return filterId?.let { parseNumericId(it, idName) }
-            ?: throw BadRequestException("domain=$domain 时 filter.id=$idName id 为必填")
+    private fun requireNumericId(domain: String, id: String?, idName: String): Long {
+        return id?.let { parseNumericId(it, idName) }
+            ?: throw BadRequestException("domain=$domain 时 id=$idName id 为必填")
     }
 
     private fun parseNumericId(value: String, idName: String): Long {
         return value.toLongOrNull()
-            ?: throw BadRequestException("filter.id 必须是数字 $idName id，收到: $value")
+            ?: throw BadRequestException("id 必须是数字 $idName id，收到: $value")
     }
 
     private fun unsupportedAction(domain: String, action: String): String {
@@ -200,7 +157,6 @@ class XasQueryTool(
         const val DEFAULT_PAGE_SIZE = 50
         const val MAX_PAGE_SIZE = 200
 
-        const val DOMAIN_HELP = "help"
         const val DOMAIN_ALBUM = "album"
         const val DOMAIN_CRONTAB = "crontab"
         const val DOMAIN_CRONTAB_HISTORY = "crontab_history"
@@ -212,13 +168,12 @@ class XasQueryTool(
         const val ACTION_TRIGGER = "trigger"
 
         const val TOOL_DESCRIPTION =
-            "Xiaomi Album Syncer（XAS）查询工具。统一信封入参：domain（help=使用说明 / album=相册 / " +
+            "Xiaomi Album Syncer（XAS）查询工具。统一信封入参：domain（album=相册 / " +
                 "crontab=定时任务 / crontab_history=运行历史 / crontab_history_detail=运行明细 / system=账号与系统信息）" +
                 "+ action（list=集合视图 / get=单资源详情 / trigger=触发任务立即执行，仅 crontab 支持）" +
                 "+ 分页 pageIndex（从 0 开始）/ pageSize（默认 50，上限 200）" +
-                "+ filter.id（语义随 domain：crontab 的 get/trigger 传任务 id；crontab_history 传任务 id 可选；" +
-                "crontab_history_detail 传历史 id 必填；help 时为 domain 枚举项，可缩小文档范围）。" +
-                "所有响应顶层带 hint 提示下一步操作。不确定用法时先调用 {\"domain\":\"help\",\"action\":\"list\"}。" +
+                "+ id（语义随 domain：crontab 的 get/trigger 传任务 id；crontab_history 传任务 id 可选；" +
+                "crontab_history_detail 传历史 id 必填）。所有响应顶层带 hint 提示下一步操作。" +
                 "除 crontab 的 trigger 为写操作外均为只读；trigger 仅允许使用 ALLOW_TRIGGER 权限的 Token。" +
                 "不含密码/passToken/通知配置等敏感信息。"
 
@@ -228,13 +183,13 @@ class XasQueryTool(
               "properties": {
                 "domain": {
                   "type": "string",
-                  "enum": ["help", "album", "crontab", "crontab_history", "crontab_history_detail", "system"],
-                  "description": "查询域：help=使用说明，album=相册，crontab=定时任务，crontab_history=运行历史，crontab_history_detail=运行明细，system=账号与系统信息"
+                  "enum": ["album", "crontab", "crontab_history", "crontab_history_detail", "system"],
+                  "description": "查询域：album=相册，crontab=定时任务，crontab_history=运行历史，crontab_history_detail=运行明细，system=账号与系统信息"
                 },
                 "action": {
                   "type": "string",
                   "enum": ["list", "get", "trigger"],
-                  "description": "list=集合视图；get=单资源详情（仅 crontab 支持 get）；trigger=触发任务立即执行（仅 crontab 支持，写操作）；help 下 list 与 get 等价"
+                  "description": "list=集合视图；get=单资源详情（仅 crontab 支持 get）；trigger=触发任务立即执行（仅 crontab 支持，写操作）"
                 },
                 "pageIndex": {
                   "type": "integer",
@@ -249,80 +204,21 @@ class XasQueryTool(
                   "default": 50,
                   "description": "每页条数，默认 50，上限 200；仅分页查询生效"
                 },
-                "filter": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "description": "语义随 domain 变化：crontab 的 get/trigger 传任务 id（必填）；crontab_history 传任务 id（可选）；crontab_history_detail 传历史 id（必填）；help 时为 domain 枚举项（可选）；album/system 不支持"
-                    }
-                  },
-                  "description": "通用过滤对象"
+                "id": {
+                  "type": "string",
+                  "description": "语义随 domain 变化：crontab 的 get/trigger 传任务 id（必填）；crontab_history 传任务 id（可选）；crontab_history_detail 传历史 id（必填）；album/system 不支持"
                 }
               },
               "required": ["domain", "action"]
             }
         """.trimIndent()
 
-        private val NOTES = listOf(
-            "除 domain=crontab&action=trigger（仅 ALLOW_TRIGGER 权限 Token 可用）外均为只读",
-            "时间戳为 ISO-8601 字符串（currentStats.ts 为毫秒时间戳）",
-            "不暴露密码/passToken/通知配置等敏感信息",
-        )
-
-        /**
-         * help 文档与入参校验共用的 domain 元数据
-         */
-        private val DOMAIN_METAS: Map<String, DomainDoc> = linkedMapOf(
-            DOMAIN_HELP to DomainDoc(
-                actions = listOf(ACTION_LIST, ACTION_GET),
-                desc = "本工具的使用说明；list 与 get 返回相同内容",
-                filter = "filter.id 可选，取值为 domain 枚举项，仅返回对应 domain 的说明",
-                example = mapOf("domain" to DOMAIN_HELP, "action" to ACTION_LIST),
-            ),
-            DOMAIN_ALBUM to DomainDoc(
-                actions = listOf(ACTION_LIST),
-                desc = "全部相册（永远包含影子相册，shadow=true 表示远程已不存在的本地相册）",
-                filter = null,
-                example = mapOf("domain" to DOMAIN_ALBUM, "action" to ACTION_LIST),
-            ),
-            DOMAIN_CRONTAB to DomainDoc(
-                actions = listOf(ACTION_LIST, ACTION_GET, ACTION_TRIGGER),
-                desc = "list 返回定时任务极简摘要；get 返回任务概况（含 cron 表达式等 config）与当前执行统计；" +
-                    "trigger 触发任务立即执行（异步，运行中的任务会跳过本次触发）",
-                filter = "action=get/trigger 时 filter.id=任务id（必填，数字）",
-                example = mapOf(
-                    "domain" to DOMAIN_CRONTAB,
-                    "action" to ACTION_TRIGGER,
-                    "filter" to mapOf("id" to "1"),
-                ),
-            ),
-            DOMAIN_CRONTAB_HISTORY to DomainDoc(
-                actions = listOf(ACTION_LIST),
-                desc = "定时任务运行历史（分页，按开始时间倒序；行内含 crontabId/crontabName 归属信息）",
-                filter = "filter.id=任务id（可选，不传返回全部任务的历史）",
-                example = mapOf(
-                    "domain" to DOMAIN_CRONTAB_HISTORY,
-                    "action" to ACTION_LIST,
-                    "filter" to mapOf("id" to "1"),
-                ),
-            ),
-            DOMAIN_CRONTAB_HISTORY_DETAIL to DomainDoc(
-                actions = listOf(ACTION_LIST),
-                desc = "某次运行历史的下载明细（分页）",
-                filter = "filter.id=历史id（必填，数字）",
-                example = mapOf(
-                    "domain" to DOMAIN_CRONTAB_HISTORY_DETAIL,
-                    "action" to ACTION_LIST,
-                    "filter" to mapOf("id" to "7"),
-                ),
-            ),
-            DOMAIN_SYSTEM to DomainDoc(
-                actions = listOf(ACTION_LIST),
-                desc = "绑定的小米账号（脱敏）与系统信息",
-                filter = null,
-                example = mapOf("domain" to DOMAIN_SYSTEM, "action" to ACTION_LIST),
-            ),
+        private val DOMAINS = listOf(
+            DOMAIN_ALBUM,
+            DOMAIN_CRONTAB,
+            DOMAIN_CRONTAB_HISTORY,
+            DOMAIN_CRONTAB_HISTORY_DETAIL,
+            DOMAIN_SYSTEM,
         )
     }
 }

@@ -300,15 +300,13 @@ class ApiE2eSuite {
             return protocolResponse
         }
 
-        callTool(readOnlyToken, readOnlySessionId, mapOf("domain" to "help", "action" to "list"))
         callTool(readOnlyToken, readOnlySessionId, mapOf("domain" to "album", "action" to "list"))
         callTool(readOnlyToken, readOnlySessionId, mapOf("domain" to "crontab", "action" to "list"))
         callTool(
             readOnlyToken,
             readOnlySessionId,
             mapOf(
-                "domain" to "crontab", "action" to "get",
-                "filter" to mapOf("id" to crontabId.toString())
+                "domain" to "crontab", "action" to "get", "id" to crontabId.toString()
             )
         )
         callTool(
@@ -320,8 +318,7 @@ class ApiE2eSuite {
             readOnlyToken,
             readOnlySessionId,
             mapOf(
-                "domain" to "crontab_history_detail", "action" to "list",
-                "filter" to mapOf("id" to historyId.toString())
+                "domain" to "crontab_history_detail", "action" to "list", "id" to historyId.toString()
             )
         )
         callTool(readOnlyToken, readOnlySessionId, mapOf("domain" to "system", "action" to "list"))
@@ -335,15 +332,14 @@ class ApiE2eSuite {
         callTool(
             readOnlyToken,
             readOnlySessionId,
-            mapOf("domain" to "help", "action" to "trigger"),
+            mapOf("domain" to "album", "action" to "trigger"),
             expectError = true,
         )
         callTool(
             readOnlyToken,
             readOnlySessionId,
             mapOf(
-                "domain" to "crontab", "action" to "trigger",
-                "filter" to mapOf("id" to crontabId.toString())
+                "domain" to "crontab", "action" to "trigger", "id" to crontabId.toString()
             ),
             expectError = true,
         )
@@ -356,8 +352,7 @@ class ApiE2eSuite {
             triggerToken,
             triggerSessionId,
             mapOf(
-                "domain" to "crontab", "action" to "trigger",
-                "filter" to mapOf("id" to crontabId.toString())
+                "domain" to "crontab", "action" to "trigger", "id" to crontabId.toString()
             ),
         )
         awaitCompletedHistory(api, crontabId, afterHistoryId = historyId)

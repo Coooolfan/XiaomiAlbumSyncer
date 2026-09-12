@@ -10,6 +10,7 @@ import org.noear.solon.annotation.Managed
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Base64
+import java.util.HexFormat
 
 @Managed
 class McpTokenService(private val sql: KSqlClient) {
@@ -91,7 +92,7 @@ class McpTokenService(private val sql: KSqlClient) {
 
     private fun hashToken(token: String): String = MessageDigest.getInstance("SHA-256")
         .digest(token.toByteArray(Charsets.UTF_8))
-        .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+        .let(HexFormat.of()::formatHex)
 
     private companion object {
         const val BEARER_PREFIX = "Bearer "

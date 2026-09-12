@@ -2579,40 +2579,6 @@
       ]
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.mcp.DomainDoc",
-      "methods": [
-        {
-          "name": "getActions",
-          "parameterTypes": []
-        },
-        {
-          "name": "getDesc",
-          "parameterTypes": []
-        },
-        {
-          "name": "getExample",
-          "parameterTypes": []
-        },
-        {
-          "name": "getFilter",
-          "parameterTypes": []
-        }
-      ]
-    },
-    {
-      "type": "com.coooolfan.xiaomialbumsyncer.mcp.HelpOutput",
-      "methods": [
-        {
-          "name": "getHint",
-          "parameterTypes": []
-        },
-        {
-          "name": "getUsage",
-          "parameterTypes": []
-        }
-      ]
-    },
-    {
       "type": "com.coooolfan.xiaomialbumsyncer.mcp.HistoryDetailAsset",
       "methods": [
         {
@@ -2663,31 +2629,6 @@
       ]
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.mcp.InputDoc",
-      "methods": [
-        {
-          "name": "getAction",
-          "parameterTypes": []
-        },
-        {
-          "name": "getDomain",
-          "parameterTypes": []
-        },
-        {
-          "name": "getFilter",
-          "parameterTypes": []
-        },
-        {
-          "name": "getPageIndex",
-          "parameterTypes": []
-        },
-        {
-          "name": "getPageSize",
-          "parameterTypes": []
-        }
-      ]
-    },
-    {
       "type": "com.coooolfan.xiaomialbumsyncer.mcp.McpAccountItem",
       "methods": [
         {
@@ -2713,19 +2654,6 @@
         },
         {
           "name": "getInitialized",
-          "parameterTypes": []
-        }
-      ]
-    },
-    {
-      "type": "com.coooolfan.xiaomialbumsyncer.mcp.PaginationDoc",
-      "methods": [
-        {
-          "name": "getPageIndex",
-          "parameterTypes": []
-        },
-        {
-          "name": "getPageSize",
           "parameterTypes": []
         }
       ]
@@ -2757,42 +2685,6 @@
         {
           "name": "getName",
           "parameterTypes": []
-        }
-      ]
-    },
-    {
-      "type": "com.coooolfan.xiaomialbumsyncer.mcp.UsageDoc",
-      "methods": [
-        {
-          "name": "getDescription",
-          "parameterTypes": []
-        },
-        {
-          "name": "getDomains",
-          "parameterTypes": []
-        },
-        {
-          "name": "getInput",
-          "parameterTypes": []
-        },
-        {
-          "name": "getNotes",
-          "parameterTypes": []
-        },
-        {
-          "name": "getPagination",
-          "parameterTypes": []
-        }
-      ]
-    },
-    {
-      "type": "com.coooolfan.xiaomialbumsyncer.mcp.XasFilterInput",
-      "methods": [
-        {
-          "name": "<init>",
-          "parameterTypes": [
-            "java.lang.String"
-          ]
         }
       ]
     },
@@ -2830,7 +2722,7 @@
             "java.lang.String",
             "java.lang.Integer",
             "java.lang.Integer",
-            "com.coooolfan.xiaomialbumsyncer.mcp.XasFilterInput",
+            "java.lang.String",
             "int",
             "kotlin.jvm.internal.DefaultConstructorMarker"
           ]
