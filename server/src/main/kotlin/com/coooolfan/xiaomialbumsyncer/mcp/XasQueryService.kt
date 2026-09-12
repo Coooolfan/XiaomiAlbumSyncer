@@ -10,8 +10,6 @@ import org.babyfish.jimmer.sql.kt.ast.expression.desc
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.noear.solon.annotation.Managed
-import java.time.Instant
-import java.time.format.DateTimeFormatter
 
 /**
  * 为 MCP xas_query 工具提供查询和受权限控制的任务触发服务。
@@ -34,7 +32,7 @@ class XasQueryService(
                 remoteId = album.remoteId.toString(),
                 name = album.name,
                 assetCount = album.assetCount,
-                lastUpdateTime = formatInstant(album.lastUpdateTime),
+                lastUpdateTime = album.lastUpdateTime.toString(),
                 shadow = album.shadow,
                 accountNickname = album.account.nickname,
             )
@@ -51,7 +49,7 @@ class XasQueryService(
                 name = crontab.name,
                 enabled = crontab.enabled,
                 running = crontab.running,
-                lastRunTime = crontab.histories.firstOrNull()?.startTime?.let(::formatInstant),
+                lastRunTime = crontab.histories.firstOrNull()?.startTime?.toString(),
             )
         }
         return CrontabListOutput(HINT_CRONTAB_LIST, crontabs)
@@ -71,7 +69,7 @@ class XasQueryService(
                 enabled = crontab.enabled,
                 running = crontab.running,
                 albumIds = crontab.albumIds.map(Long::toString),
-                lastRunTime = crontab.histories.firstOrNull()?.startTime?.let(::formatInstant),
+                lastRunTime = crontab.histories.firstOrNull()?.startTime?.toString(),
                 config = crontab.config,
             ),
             currentStats = CrontabCurrentStatsOutput(
@@ -118,8 +116,8 @@ class XasQueryService(
                     id = history.id.toString(),
                     crontabId = history.crontab.id.toString(),
                     crontabName = history.crontab.name,
-                    startTime = formatInstant(history.startTime),
-                    endTime = history.endTime?.let(::formatInstant),
+                    startTime = history.startTime.toString(),
+                    endTime = history.endTime?.toString(),
                     isCompleted = history.isCompleted,
                     detailsCount = history.detailsCount,
                 )
@@ -141,8 +139,8 @@ class XasQueryService(
             hint = HINT_CRONTAB_HISTORY_DETAIL,
             history = CrontabHistoryOverview(
                 id = history.id.toString(),
-                startTime = formatInstant(history.startTime),
-                endTime = history.endTime?.let(::formatInstant),
+                startTime = history.startTime.toString(),
+                endTime = history.endTime?.toString(),
                 isCompleted = history.isCompleted,
             ),
             totalCount = page.totalRowCount,
@@ -167,18 +165,10 @@ class XasQueryService(
     }
 
     fun listSystem(): SystemListOutput {
-        val initialized = sql.executeQuery(SystemConfig::class) {
-            selectCount()
-        }[0] > 0
-
-        val timeZone = if (initialized) {
-            sql.executeQuery(SystemConfig::class) {
-                where(table.id eq SystemConfigService.CONFIG_ID)
-                select(table.assetsDateMapTimeZone)
-            }.firstOrNull()
-        } else {
-            null
-        }
+        val timeZone = sql.executeQuery(SystemConfig::class) {
+            where(table.id eq SystemConfigService.CONFIG_ID)
+            select(table.assetsDateMapTimeZone)
+        }.firstOrNull()
 
         val accounts = sql.executeQuery(XiaomiAccount::class) {
             select(table.fetchBy {
@@ -193,14 +183,12 @@ class XasQueryService(
             hint = HINT_SYSTEM,
             accounts = accounts,
             info = McpSystemInfo(
-                initialized = initialized,
+                initialized = timeZone != null,
                 assetsDateMapTimeZone = timeZone,
                 appVersion = loadAppVersion(),
             ),
         )
     }
-
-    private fun formatInstant(instant: Instant): String = DateTimeFormatter.ISO_INSTANT.format(instant)
 
     private fun loadAppVersion(): String {
         return try {

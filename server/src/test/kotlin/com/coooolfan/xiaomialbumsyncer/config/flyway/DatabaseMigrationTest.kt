@@ -139,25 +139,6 @@ class DatabaseMigrationTest {
         }
     }
 
-    @Test
-    fun migratesLegacyMcpTokenColumnToCredentialTable(@TempDir tempDir: Path) {
-        val databaseUrl = "jdbc:sqlite:${tempDir.resolve("legacy-mcp-token.db").toAbsolutePath()}"
-
-        flyway(databaseUrl, target = "0.18.0").migrate()
-        DriverManager.getConnection(databaseUrl).use { connection ->
-            assertTrue("mcp_token" in connection.columnNames("system_config"))
-        }
-
-        assertEquals(1, flyway(databaseUrl).migrate().migrationsExecuted)
-        DriverManager.getConnection(databaseUrl).use { connection ->
-            assertFalse("mcp_token" in connection.columnNames("system_config"))
-            assertEquals(
-                setOf("id", "name", "token_hash", "permission", "created_at"),
-                connection.columnNames("mcp_token"),
-            )
-        }
-    }
-
     private fun flyway(databaseUrl: String, target: String? = null): Flyway {
         val configuration = Flyway.configure()
             .dataSource(databaseUrl, null, null)

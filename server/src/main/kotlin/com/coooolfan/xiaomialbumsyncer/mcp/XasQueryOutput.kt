@@ -11,68 +11,29 @@ import com.coooolfan.xiaomialbumsyncer.model.CrontabConfig
 
 // ---------- 各 domain 的 hint（下一步操作提示） ----------
 
-internal const val HINT_HELP =
-    "除 domain=crontab&action=trigger 外均为只读；trigger 需要 ALLOW_TRIGGER 权限的 Token；" +
-        "随时可调用 domain=help 查看完整用法"
-
 internal const val HINT_ALBUM =
     "相册列表为只读快照，shadow=true 表示远程已不存在的本地相册；定时任务运行情况可查询 domain=crontab"
 
 internal const val HINT_CRONTAB_LIST =
-    "使用 domain=crontab&action=get 配合 filter.id=<任务id> 查看任务概况与实时统计；domain=crontab_history 查看运行历史"
+    "使用 domain=crontab&action=get 配合 id=<任务id> 查看任务概况与实时统计；domain=crontab_history 查看运行历史"
 
 internal const val HINT_CRONTAB_TRIGGER =
-    "任务已异步触发；可用 domain=crontab&action=get 配合 filter.id=<任务id> 查看实时统计，" +
+    "任务已异步触发；可用 domain=crontab&action=get 配合 id=<任务id> 查看实时统计，" +
         "或 domain=crontab_history 查看运行历史"
 
 internal const val HINT_CRONTAB_TRIGGER_SKIPPED =
-    "任务正在运行中，本次触发被跳过；可用 domain=crontab&action=get 配合 filter.id=<任务id> 查看实时统计"
+    "任务正在运行中，本次触发被跳过；可用 domain=crontab&action=get 配合 id=<任务id> 查看实时统计"
 
 internal const val HINT_CRONTAB_GET =
-    "使用 domain=crontab_history 配合 filter.id=<任务id> 查看该任务的运行历史，" +
-        "再以 domain=crontab_history_detail&filter.id=<历史id> 查看某次运行的下载明细"
+    "使用 domain=crontab_history 配合 id=<任务id> 查看该任务的运行历史，" +
+        "再以 domain=crontab_history_detail&id=<历史id> 查看某次运行的下载明细"
 
 internal const val HINT_CRONTAB_HISTORY =
-    "使用 domain=crontab_history_detail 配合 filter.id=<历史id> 查看该次运行的下载明细"
+    "使用 domain=crontab_history_detail 配合 id=<历史id> 查看该次运行的下载明细"
 
 internal const val HINT_CRONTAB_HISTORY_DETAIL = "通过 pageIndex/pageSize 翻页查看更多明细"
 
 internal const val HINT_SYSTEM = "仅展示脱敏信息；密码/passToken/通知配置不通过 MCP 暴露"
-
-// ---------- help ----------
-
-data class HelpOutput(
-    val hint: String,
-    val usage: UsageDoc,
-)
-
-data class UsageDoc(
-    val description: String,
-    val input: InputDoc,
-    val domains: Map<String, DomainDoc>,
-    val pagination: PaginationDoc,
-    val notes: List<String>,
-)
-
-data class InputDoc(
-    val domain: String,
-    val action: String,
-    val pageIndex: String,
-    val pageSize: String,
-    val filter: String,
-)
-
-data class DomainDoc(
-    val actions: List<String>,
-    val desc: String,
-    val filter: String?,
-    val example: Map<String, Any?>,
-)
-
-data class PaginationDoc(
-    val pageIndex: String,
-    val pageSize: String,
-)
 
 // ---------- album ----------
 
