@@ -87,7 +87,12 @@ class XasQueryService(
         val crontab = sql.findById(CRONTAB_TRIGGER_FETCHER, crontabId)
             ?: throw BadRequestException("定时任务不存在: $crontabId")
 
-        val triggered = crontabService.executeCrontab(crontabId)
+        val triggered = if (crontabService.isCrontabRunning(crontabId)) {
+            false
+        } else {
+            crontabService.executeCrontab(crontabId)
+            true
+        }
 
         return CrontabTriggerOutput(
             hint = if (triggered) HINT_CRONTAB_TRIGGER else HINT_CRONTAB_TRIGGER_SKIPPED,
