@@ -11,7 +11,9 @@ import com.coooolfan.xiaomialbumsyncer.model.CrontabConfig
 
 // ---------- 各 domain 的 hint（下一步操作提示） ----------
 
-internal const val HINT_HELP = "除 domain=crontab&action=trigger 外均为只读；随时可调用 domain=help 查看完整用法"
+internal const val HINT_HELP =
+    "除 domain=crontab&action=trigger 外均为只读；trigger 需要 ALLOW_TRIGGER 权限的 Token；" +
+        "随时可调用 domain=help 查看完整用法"
 
 internal const val HINT_ALBUM =
     "相册列表为只读快照，shadow=true 表示远程已不存在的本地相册；定时任务运行情况可查询 domain=crontab"

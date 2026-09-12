@@ -3,6 +3,7 @@ import {
     AlbumsController, 
     AssetController, 
     CrontabController, 
+    McpTokenController,
     PasskeyController, 
     SystemConfigController, 
     TokenController, 
@@ -17,6 +18,8 @@ export class Api {
     
     readonly crontabController: CrontabController
     
+    readonly mcpTokenController: McpTokenController
+
     readonly passkeyController: PasskeyController
     
     readonly systemConfigController: SystemConfigController
@@ -29,6 +32,7 @@ export class Api {
         this.albumsController = new AlbumsController(executor);
         this.assetController = new AssetController(executor);
         this.crontabController = new CrontabController(executor);
+        this.mcpTokenController = new McpTokenController(executor);
         this.passkeyController = new PasskeyController(executor);
         this.systemConfigController = new SystemConfigController(executor);
         this.tokenController = new TokenController(executor);

@@ -5,6 +5,7 @@ import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.service.CrontabService
 import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
 import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.babyfish.jimmer.sql.kt.ast.expression.asc
 import org.babyfish.jimmer.sql.kt.ast.expression.desc
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
@@ -13,7 +14,7 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 
 /**
- * 为 MCP xas_query 工具提供的只读查询服务。
+ * 为 MCP xas_query 工具提供查询和受权限控制的任务触发服务。
  *
  * 除复用 CrontabService 的实时统计外，其余查询均在本层用 Jimmer DSL 实现，
  * 不改动现有 HTTP API。
@@ -91,12 +92,7 @@ class XasQueryService(
         val crontab = sql.findById(CRONTAB_TRIGGER_FETCHER, crontabId)
             ?: throw BadRequestException("定时任务不存在: $crontabId")
 
-        val triggered = if (crontabService.isCrontabRunning(crontabId)) {
-            false
-        } else {
-            crontabService.executeCrontab(crontabId)
-            true
-        }
+        val triggered = crontabService.executeCrontab(crontabId)
 
         return CrontabTriggerOutput(
             hint = if (triggered) HINT_CRONTAB_TRIGGER else HINT_CRONTAB_TRIGGER_SKIPPED,
@@ -108,7 +104,7 @@ class XasQueryService(
     fun listCrontabHistories(crontabId: Long?, pageIndex: Int, pageSize: Int): CrontabHistoryListOutput {
         val page = sql.createQuery(CrontabHistory::class) {
             crontabId?.let { where(table.crontabId eq it) }
-            orderBy(table.startTime.desc())
+            orderBy(table.startTime.desc(), table.id.desc())
             select(table.fetch(CRONTAB_HISTORY_LIST_FETCHER))
         }.fetchPage(pageIndex, pageSize)
 
@@ -137,6 +133,7 @@ class XasQueryService(
 
         val page = sql.createQuery(CrontabHistoryDetail::class) {
             where(table.crontabHistoryId eq historyId)
+            orderBy(table.id.asc())
             select(table.fetch(CRONTAB_HISTORY_DETAIL_LIST_FETCHER))
         }.fetchPage(pageIndex, pageSize)
 

@@ -51,7 +51,7 @@ class DatabaseMigrationTest {
             }
         }
 
-        assertEquals(1, flyway(databaseUrl).migrate().migrationsExecuted)
+        assertEquals(1, flyway(databaseUrl, target = "0.16.3").migrate().migrationsExecuted)
 
         DriverManager.getConnection(databaseUrl).use { connection ->
             val indexNames = connection.indexNames()
@@ -95,7 +95,7 @@ class DatabaseMigrationTest {
             }
         }
 
-        assertEquals(1, flyway(databaseUrl).migrate().migrationsExecuted)
+        assertEquals(1, flyway(databaseUrl, target = "0.16.3").migrate().migrationsExecuted)
 
         DriverManager.getConnection(databaseUrl).use { connection ->
             val indexNames = connection.indexNames()
@@ -114,6 +114,50 @@ class DatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun createsMcpTokenTable(@TempDir tempDir: Path) {
+        val databaseUrl = "jdbc:sqlite:${tempDir.resolve("mcp-token.db").toAbsolutePath()}"
+
+        flyway(databaseUrl).migrate()
+
+        DriverManager.getConnection(databaseUrl).use { connection ->
+            assertEquals(
+                setOf("id", "name", "token_hash", "permission", "created_at"),
+                connection.columnNames("mcp_token"),
+            )
+            assertFalse("mcp_token" in connection.columnNames("system_config"))
+
+            connection.createStatement().use { statement ->
+                statement.executeUpdate(
+                    """
+                    INSERT INTO mcp_token (name, token_hash, permission, created_at)
+                    VALUES ('readonly', 'hash-1', 'READ_ONLY', 1),
+                           ('trigger', 'hash-2', 'ALLOW_TRIGGER', 2)
+                    """.trimIndent()
+                )
+            }
+        }
+    }
+
+    @Test
+    fun migratesLegacyMcpTokenColumnToCredentialTable(@TempDir tempDir: Path) {
+        val databaseUrl = "jdbc:sqlite:${tempDir.resolve("legacy-mcp-token.db").toAbsolutePath()}"
+
+        flyway(databaseUrl, target = "0.18.0").migrate()
+        DriverManager.getConnection(databaseUrl).use { connection ->
+            assertTrue("mcp_token" in connection.columnNames("system_config"))
+        }
+
+        assertEquals(1, flyway(databaseUrl).migrate().migrationsExecuted)
+        DriverManager.getConnection(databaseUrl).use { connection ->
+            assertFalse("mcp_token" in connection.columnNames("system_config"))
+            assertEquals(
+                setOf("id", "name", "token_hash", "permission", "created_at"),
+                connection.columnNames("mcp_token"),
+            )
+        }
+    }
+
     private fun flyway(databaseUrl: String, target: String? = null): Flyway {
         val configuration = Flyway.configure()
             .dataSource(databaseUrl, null, null)
@@ -127,6 +171,17 @@ class DatabaseMigrationTest {
     private fun Connection.indexNames(): Set<String> =
         createStatement().use { statement ->
             statement.executeQuery("SELECT name FROM sqlite_master WHERE type = 'index'").use { result ->
+                buildSet {
+                    while (result.next()) {
+                        add(result.getString("name"))
+                    }
+                }
+            }
+        }
+
+    private fun Connection.columnNames(tableName: String): Set<String> =
+        createStatement().use { statement ->
+            statement.executeQuery("PRAGMA table_info($tableName)").use { result ->
                 buildSet {
                     while (result.next()) {
                         add(result.getString("name"))

@@ -226,96 +226,154 @@ class ApiE2eSuite {
      * 让 Native Image tracing agent 采集到 MCP 链路的反射与资源元数据。
      */
     private fun executeMcpWorkflow(api: ApiClient, crontabId: Long, historyId: Long) {
-        val mcpToken = "e2e-mcp-token"
-        api.post(
-            "/api/system-config/normal",
-            mapOf("exifToolPath" to "exiftool", "mcpToken" to mcpToken)
-        ).expect(200)
+        val readOnlyCredential = api.json(
+            api.post(
+                "/api/mcp-token",
+                mapOf("name" to "E2E 只读", "permission" to "READ_ONLY"),
+            ).expect(200)
+        )
+        val triggerCredential = api.json(
+            api.post(
+                "/api/mcp-token",
+                mapOf("name" to "E2E 允许触发", "permission" to "ALLOW_TRIGGER"),
+            ).expect(200)
+        )
+        val readOnlyToken = readOnlyCredential.path("token").asText()
+        val triggerToken = triggerCredential.path("token").asText()
+        assertTrue(readOnlyToken.startsWith("xas_mcp_"))
+        assertTrue(triggerToken.startsWith("xas_mcp_"))
+
+        val credentials = api.json(api.get("/api/mcp-token").expect(200))
+        assertEquals(2, credentials.size())
+        assertTrue(credentials.all { !it.has("token") }, "Token 列表不应返回原始 Token: $credentials")
+        assertEquals(
+            setOf("READ_ONLY", "ALLOW_TRIGGER"),
+            credentials.map { it.path("permission").asText() }.toSet(),
+        )
 
         // 未携带或携带错误 token 的请求一律 401
         mcpRequest(api, null, null, 0, "initialize").expect(401)
         mcpRequest(api, "wrong-token", null, 0, "initialize").expect(401)
 
-        val init = mcpRequest(
-            api, mcpToken, null, 0, "initialize",
-            mapOf(
-                "protocolVersion" to "2025-06-18",
-                "capabilities" to emptyMap<String, Any>(),
-                "clientInfo" to mapOf("name" to "e2e", "version" to "0"),
-            )
-        ).expect(200)
-        val sessionId = init.headers.firstValue("mcp-session-id").orElse("").ifEmpty { null }
+        fun initialize(token: String, id: Int): String? {
+            val init = mcpRequest(
+                api, token, null, id, "initialize",
+                mapOf(
+                    "protocolVersion" to "2025-06-18",
+                    "capabilities" to emptyMap<String, Any>(),
+                    "clientInfo" to mapOf("name" to "e2e", "version" to "0"),
+                )
+            ).expect(200)
+            return init.headers.firstValue("mcp-session-id").orElse("").ifEmpty { null }
+        }
 
-        mcpRequest(api, mcpToken, sessionId, null, "notifications/initialized").let {
+        val readOnlySessionId = initialize(readOnlyToken, 0)
+
+        mcpRequest(api, readOnlyToken, readOnlySessionId, null, "notifications/initialized").let {
             check(it.status == 200 || it.status == 202) { "notifications/initialized 返回 ${it.status}: ${it.body}" }
         }
 
-        val tools = mcpResult(mcpRequest(api, mcpToken, sessionId, 1, "tools/list"))
+        val tools = mcpResult(mcpRequest(api, readOnlyToken, readOnlySessionId, 1, "tools/list"))
         assertTrue(
             tools.path("result").path("tools").any { it.path("name").asText() == "xas_query" },
             "tools/list 应包含 xas_query: $tools"
         )
 
         var callId = 10
-        fun callTool(arguments: Map<String, Any?>): JsonNode {
-            val response = mcpResult(
+        fun callTool(
+            token: String,
+            sessionId: String?,
+            arguments: Map<String, Any?>,
+            expectError: Boolean = false,
+        ): JsonNode {
+            val protocolResponse = mcpResult(
                 mcpRequest(
-                    api, mcpToken, sessionId, callId++, "tools/call",
+                    api, token, sessionId, callId++, "tools/call",
                     mapOf("name" to "xas_query", "arguments" to arguments)
                 )
             )
-            assertFalse(
-                response.path("result").path("isError").asBoolean(),
-                "tools/call $arguments 返回错误: $response"
+            assertEquals(
+                expectError,
+                protocolResponse.path("result").path("isError").asBoolean(),
+                "tools/call $arguments 错误状态不符合预期: $protocolResponse",
             )
-            return response
+            return protocolResponse
         }
 
-        callTool(mapOf("domain" to "help", "action" to "list"))
-        callTool(mapOf("domain" to "album", "action" to "list"))
-        callTool(mapOf("domain" to "crontab", "action" to "list"))
+        callTool(readOnlyToken, readOnlySessionId, mapOf("domain" to "help", "action" to "list"))
+        callTool(readOnlyToken, readOnlySessionId, mapOf("domain" to "album", "action" to "list"))
+        callTool(readOnlyToken, readOnlySessionId, mapOf("domain" to "crontab", "action" to "list"))
         callTool(
+            readOnlyToken,
+            readOnlySessionId,
             mapOf(
                 "domain" to "crontab", "action" to "get",
                 "filter" to mapOf("id" to crontabId.toString())
             )
         )
-        callTool(mapOf("domain" to "crontab_history", "action" to "list"))
         callTool(
+            readOnlyToken,
+            readOnlySessionId,
+            mapOf("domain" to "crontab_history", "action" to "list"),
+        )
+        callTool(
+            readOnlyToken,
+            readOnlySessionId,
             mapOf(
                 "domain" to "crontab_history_detail", "action" to "list",
                 "filter" to mapOf("id" to historyId.toString())
             )
         )
-        callTool(mapOf("domain" to "system", "action" to "list"))
+        callTool(readOnlyToken, readOnlySessionId, mapOf("domain" to "system", "action" to "list"))
 
-        // 非法入参应返回 isError=true 的 CallToolResult，而非协议级错误
-        val badCall = mcpResult(
-            mcpRequest(
-                api, mcpToken, sessionId, callId++, "tools/call",
-                mapOf("name" to "xas_query", "arguments" to mapOf("domain" to "not_exist", "action" to "list"))
-            )
-        )
-        assertTrue(
-            badCall.path("result").path("isError").asBoolean(),
-            "非法 domain 应返回 isError=true: $badCall"
-        )
-
-        // trigger 放最后：异步执行一轮流水线，不阻塞后续清理
         callTool(
+            readOnlyToken,
+            readOnlySessionId,
+            mapOf("domain" to "not_exist", "action" to "list"),
+            expectError = true,
+        )
+        callTool(
+            readOnlyToken,
+            readOnlySessionId,
+            mapOf("domain" to "help", "action" to "trigger"),
+            expectError = true,
+        )
+        callTool(
+            readOnlyToken,
+            readOnlySessionId,
             mapOf(
                 "domain" to "crontab", "action" to "trigger",
                 "filter" to mapOf("id" to crontabId.toString())
-            )
+            ),
+            expectError = true,
         )
 
-        api.delete(
-            "/mcp",
-            buildMap {
-                put("Authorization", "Bearer $mcpToken")
-                sessionId?.let { put("mcp-session-id", it) }
-            }
+        val triggerSessionId = initialize(triggerToken, 2)
+        mcpRequest(api, triggerToken, triggerSessionId, null, "notifications/initialized").let {
+            check(it.status == 200 || it.status == 202) { "notifications/initialized 返回 ${it.status}: ${it.body}" }
+        }
+        callTool(
+            triggerToken,
+            triggerSessionId,
+            mapOf(
+                "domain" to "crontab", "action" to "trigger",
+                "filter" to mapOf("id" to crontabId.toString())
+            ),
         )
+        awaitCompletedHistory(api, crontabId, afterHistoryId = historyId)
+
+        closeMcpSession(api, readOnlyToken, readOnlySessionId)
+        closeMcpSession(api, triggerToken, triggerSessionId)
+        api.delete("/api/mcp-token/${readOnlyCredential.path("id").asLong()}").expect(200)
+        api.delete("/api/mcp-token/${triggerCredential.path("id").asLong()}").expect(200)
+        assertEquals(0, api.json(api.get("/api/mcp-token").expect(200)).size())
+    }
+
+    private fun closeMcpSession(api: ApiClient, token: String, sessionId: String?) {
+        api.delete("/mcp", buildMap {
+            put("Authorization", "Bearer $token")
+            sessionId?.let { put("mcp-session-id", it) }
+        })
     }
 
     private fun mcpRequest(

@@ -107,20 +107,29 @@ class TaskScheduler(
     /** 立即执行某个定时任务
      * @param crontab 要执行的定时任务实体
      * @param async 是否异步执行，默认 true。若为 false，则在当前线程中执行该任务，阻塞，直到任务完成才返回
+     * @return 是否成功占用该任务并接受本次执行
      */
-    fun executeCrontab(crontab: Crontab, async: Boolean = true) {
+    fun executeCrontab(crontab: Crontab, async: Boolean = true): Boolean {
+        if (!runningCrontabs.add(crontab.id)) {
+            log.warn("定时任务[${crontab.id}:${crontab.name}]正在运行中，跳过本次执行")
+            return false
+        }
+
         if (async) {
-            thread.execute { executeWithGuard(crontab) }
+            try {
+                thread.execute { executeWithGuard(crontab) }
+            } catch (e: RuntimeException) {
+                runningCrontabs.remove(crontab.id)
+                throw e
+            }
         } else {
             executeWithGuard(crontab)
         }
+
+        return true
     }
 
     private fun executeWithGuard(crontab: Crontab) {
-        if (!runningCrontabs.add(crontab.id)) {
-            log.warn("定时任务[${crontab.id}:${crontab.name}]正在运行中，跳过本次执行")
-            return
-        }
         try {
             runBlocking(Dispatchers.IO) {
                 pipeline.execute(crontab)
