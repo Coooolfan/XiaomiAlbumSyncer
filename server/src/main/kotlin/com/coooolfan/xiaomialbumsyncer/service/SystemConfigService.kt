@@ -40,7 +40,14 @@ class SystemConfigService(
             password = hashPwd(create.password)
             exifToolPath = "exiftool"
             assetsDateMapTimeZone = "Asia/Shanghai"
-            notifyConfig = NotifyConfig(url = "", headers = emptyMap(), body = "", dailySummaryBody = null, dailySummaryCron = null, dailySummaryTimeZone = null)
+            notifyConfig = NotifyConfig(
+                url = "",
+                headers = emptyMap(),
+                body = "",
+                dailySummaryBody = null,
+                dailySummaryCron = null,
+                dailySummaryTimeZone = null
+            )
         }, SaveMode.INSERT_ONLY).execute()
     }
 

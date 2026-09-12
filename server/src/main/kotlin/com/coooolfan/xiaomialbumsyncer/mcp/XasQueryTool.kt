@@ -103,7 +103,7 @@ class XasQueryTool(
 
     companion object {
         const val TOOL_NAME = "xas_query"
-        const val TOOL_TITLE = "Xiaomi Album Syncer 查询与任务触发"
+        const val TOOL_TITLE = "Xiaomi Album Syncer 状态查询与任务触发"
         const val DEFAULT_PAGE_INDEX = 0
         const val DEFAULT_PAGE_SIZE = 50
         const val MAX_PAGE_SIZE = 200
@@ -188,10 +188,10 @@ class XasQueryTool(
         }
 
         val TOOL_DESCRIPTION = """
-            查询 Xiaomi Album Syncer（XAS）的相册、定时同步任务、运行历史、运行明细和系统信息。
-            用户要求“触发同步任务”“立即同步”或“执行定时任务”时，调用 domain=crontab、action=trigger、id=<任务id>；这是写操作，仅 ALLOW_TRIGGER Token 可用。
-            只读操作：album/system 用 list；crontab 用 list/get；crontab_history 用 list（任务id可选）；crontab_history_detail 用 list（历史id必填）。
-            分页使用 pageIndex（从 0 开始）和 pageSize（默认 50，上限 200）。响应包含 hint，且不暴露密码、passToken 或通知配置。
+            操作 Xiaomi Album Syncer（XAS），包含相册（album）、同步任务（crontab）、运行历史（crontab_history）、运行明细（crontab_history_detail）和系统信息（system）。
+            album/system 可用 list；crontab 可用 list/get；crontab_history 可用 list（同步任务id可选）；crontab_history_detail 可用 list（运行历史id必填）。
+            分页使用 pageIndex（从 0 开始）和 pageSize（默认 50，上限 200）。
+            用户要求“触发同步任务”“立即同步”或“执行定时任务”时，调用 domain=crontab、action=trigger、id=<同步任务id>；同步任务id从crontab的list动作中获取，仅在用户明确指定任务或者系统中只有一个任务的情况下触发任务。
         """.trimIndent()
 
         private val INPUT_SCHEMA = """
@@ -201,7 +201,7 @@ class XasQueryTool(
                 "domain": {
                   "type": "string",
                   "enum": ["album", "crontab", "crontab_history", "crontab_history_detail", "system"],
-                  "description": "查询域：album=相册，crontab=定时任务，crontab_history=运行历史，crontab_history_detail=运行明细，system=账号与系统信息"
+                  "description": "查询域：album=相册，crontab=同步任务，crontab_history=运行历史，crontab_history_detail=运行明细，system=账号与系统信息"
                 },
                 "action": {
                   "type": "string",
@@ -223,7 +223,7 @@ class XasQueryTool(
                 },
                 "id": {
                   "type": "string",
-                  "description": "语义随 domain 变化：crontab 的 get/trigger 传任务 id（必填）；crontab_history 传任务 id（可选）；crontab_history_detail 传历史 id（必填）；album/system 不支持"
+                  "description": "语义随 domain 变化：crontab 的 get/trigger 传同步任务 id（必填）；crontab_history 传同步任务 id（可选）；crontab_history_detail 传运行历史 id（必填）；album/system 不支持"
                 }
               },
               "required": ["domain", "action"]

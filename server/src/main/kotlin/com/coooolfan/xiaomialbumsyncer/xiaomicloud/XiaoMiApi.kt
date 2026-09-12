@@ -1,11 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 
 import com.coooolfan.xiaomialbumsyncer.config.XiaomiApiProperties
-import com.coooolfan.xiaomialbumsyncer.model.Album
-import com.coooolfan.xiaomialbumsyncer.model.AlbumTimeline
-import com.coooolfan.xiaomialbumsyncer.model.Asset
-import com.coooolfan.xiaomialbumsyncer.model.AssetType
-import com.coooolfan.xiaomialbumsyncer.model.RecordingType
+import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.utils.*
 import com.fasterxml.jackson.databind.JsonNode
 import okhttp3.FormBody
@@ -209,7 +205,13 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             }
             // 文件已被删除或不可下载（如相册 code=50050、录音 code=50202，retriable=false），
             // 跳过并标记为完成，避免后续周期反复请求
-            log.warn("文件: {} id: {} 不可下载: code={} retriable=false ({}), 跳过下载", asset.fileName, asset.id, code, reason)
+            log.warn(
+                "文件: {} id: {} 不可下载: code={} retriable=false ({}), 跳过下载",
+                asset.fileName,
+                asset.id,
+                code,
+                reason
+            )
             return false
         }
 

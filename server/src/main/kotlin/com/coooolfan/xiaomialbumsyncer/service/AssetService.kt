@@ -12,12 +12,7 @@ import kotlinx.coroutines.sync.withPermit
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
-import org.babyfish.jimmer.sql.kt.ast.expression.asc
-import org.babyfish.jimmer.sql.kt.ast.expression.eq
-import org.babyfish.jimmer.sql.kt.ast.expression.gt
-import org.babyfish.jimmer.sql.kt.ast.expression.ne
-import org.babyfish.jimmer.sql.kt.ast.expression.notExists
-import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
+import org.babyfish.jimmer.sql.kt.ast.expression.*
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.time.Instant

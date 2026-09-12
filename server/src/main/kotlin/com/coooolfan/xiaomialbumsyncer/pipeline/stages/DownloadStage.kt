@@ -1,12 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.pipeline.stages
 
-import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
-import com.coooolfan.xiaomialbumsyncer.model.downloadCompleted
-import com.coooolfan.xiaomialbumsyncer.model.exifFilled
-import com.coooolfan.xiaomialbumsyncer.model.filePath
-import com.coooolfan.xiaomialbumsyncer.model.fsTimeUpdated
-import com.coooolfan.xiaomialbumsyncer.model.id
-import com.coooolfan.xiaomialbumsyncer.model.sha1Verified
+import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq

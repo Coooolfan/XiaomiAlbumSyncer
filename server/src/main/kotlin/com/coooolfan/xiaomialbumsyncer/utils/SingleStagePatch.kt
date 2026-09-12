@@ -1,6 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.utils
 
-import com.coooolfan.xiaomialbumsyncer.model.*
+import com.coooolfan.xiaomialbumsyncer.model.Asset
+import com.coooolfan.xiaomialbumsyncer.model.SystemConfig
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
