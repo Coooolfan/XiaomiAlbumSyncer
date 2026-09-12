@@ -12,10 +12,7 @@ import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.noear.solon.annotation.Managed
 
 /**
- * 为 MCP xas_query 工具提供查询和受权限控制的任务触发服务。
- *
- * 除复用 CrontabService 的实时统计外，其余查询均在本层用 Jimmer DSL 实现，
- * 不改动现有 HTTP API。
+ * 为 MCP xas_query 工具提供数据查询和受权限控制的任务触发。
  */
 @Managed
 class XasQueryService(

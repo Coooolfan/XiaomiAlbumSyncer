@@ -10,10 +10,7 @@ import org.noear.solon.core.handle.Context
 import java.lang.reflect.Type
 
 /**
- * XAS 唯一对外暴露的 MCP 查询工具。
- *
- * inputSchema 为手写 JSON（统一信封：domain + action + 分页 + id），
- * 入参在本类用 Jackson 解析，不走 solon-ai 的注解参数绑定。
+ * XAS 的 MCP 查询工具，输入契约为 domain + action + 分页 + id。
  */
 class XasQueryTool(
     private val service: XasQueryService,
@@ -21,7 +18,7 @@ class XasQueryTool(
     objectMapper: ObjectMapper,
 ) : FunctionTool {
 
-    // LLM 可能臆造 schema 外的字段，宽松忽略而非解析失败
+    // 忽略 inputSchema 之外的字段
     private val mapper = objectMapper.copy()
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
@@ -38,7 +35,7 @@ class XasQueryTool(
     override fun returnType(): Type = String::class.java
 
     /**
-     * 业务校验错误直接抛出，由 solon-ai 框架转为 isError=true 的 CallToolResult（MCP 规范推荐）。
+     * 业务校验错误由 solon-ai 转换为 isError=true 的 CallToolResult。
      */
     override fun handle(args: Map<String, Any>): String {
         val input = try {

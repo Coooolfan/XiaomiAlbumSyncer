@@ -12,8 +12,7 @@ import org.noear.solon.ai.mcp.server.annotation.McpServerEndpoint
 /**
  * XAS 的 MCP 服务端点（streamable HTTP）。
  *
- * 未实现 @ToolMapping 注解方法，工具通过 ToolProvider 手工注册，
- * 以便完全掌控 inputSchema 与入参解析。
+ * 通过 ToolProvider 注册 xas_query，并由工具声明 inputSchema 与入参解析规则。
  *
  * 鉴权：请求需携带通过管理页创建的 `Authorization: Bearer <token>`。
  * Token 权限决定它是否可以触发定时任务。
