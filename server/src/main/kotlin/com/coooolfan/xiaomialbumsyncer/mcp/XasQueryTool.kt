@@ -187,15 +187,12 @@ class XasQueryTool(
             userId()
         }
 
-        const val TOOL_DESCRIPTION =
-            "Xiaomi Album Syncer（XAS）查询工具。统一信封入参：domain（album=相册 / " +
-                "crontab=定时任务 / crontab_history=运行历史 / crontab_history_detail=运行明细 / system=账号与系统信息）" +
-                "+ action（list=集合视图 / get=单资源详情 / trigger=触发任务立即执行，仅 crontab 支持）" +
-                "+ 分页 pageIndex（从 0 开始）/ pageSize（默认 50，上限 200）" +
-                "+ id（语义随 domain：crontab 的 get/trigger 传任务 id；crontab_history 传任务 id 可选；" +
-                "crontab_history_detail 传历史 id 必填）。所有响应顶层带 hint 提示下一步操作。" +
-                "除 crontab 的 trigger 为写操作外均为只读；trigger 仅允许使用 ALLOW_TRIGGER 权限的 Token。" +
-                "不含密码/passToken/通知配置等敏感信息。"
+        val TOOL_DESCRIPTION = """
+            查询 Xiaomi Album Syncer（XAS）的相册、定时同步任务、运行历史、运行明细和系统信息。
+            用户要求“触发同步任务”“立即同步”或“执行定时任务”时，调用 domain=crontab、action=trigger、id=<任务id>；这是写操作，仅 ALLOW_TRIGGER Token 可用。
+            只读操作：album/system 用 list；crontab 用 list/get；crontab_history 用 list（任务id可选）；crontab_history_detail 用 list（历史id必填）。
+            分页使用 pageIndex（从 0 开始）和 pageSize（默认 50，上限 200）。响应包含 hint，且不暴露密码、passToken 或通知配置。
+        """.trimIndent()
 
         private val INPUT_SCHEMA = """
             {
