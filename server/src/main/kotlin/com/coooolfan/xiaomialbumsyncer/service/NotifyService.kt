@@ -33,12 +33,14 @@ class NotifyService(private val sql: KSqlClient) {
             return
         }
 
-        val renderedBody = renderTemplate(notifyConfig.body, mapOf(
-            "crontab.name" to crontab.name,
-            "crontab.id" to crontab.id.toString(),
-            "success" to success.toString(),
-            "total" to total.toString()
-        ))
+        val renderedBody = renderTemplate(
+            notifyConfig.body, mapOf(
+                "crontab.name" to crontab.name,
+                "crontab.id" to crontab.id.toString(),
+                "success" to success.toString(),
+                "total" to total.toString()
+            )
+        )
 
         sendRequest(url, renderedBody, notifyConfig.headers, "crontabId=${crontab.id}, success=$success/$total")
     }

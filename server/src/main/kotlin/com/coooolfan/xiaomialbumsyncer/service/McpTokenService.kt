@@ -9,8 +9,7 @@ import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
 import java.security.MessageDigest
 import java.security.SecureRandom
-import java.util.Base64
-import java.util.HexFormat
+import java.util.*
 
 @Managed
 class McpTokenService(private val sql: KSqlClient) {

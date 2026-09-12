@@ -4,11 +4,11 @@ import com.coooolfan.xiaomialbumsyncer.exception.BadRequestException
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.service.CrontabService
 import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
+import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.asc
 import org.babyfish.jimmer.sql.kt.ast.expression.desc
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
-import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.noear.solon.annotation.Managed
 
 /**
@@ -220,15 +220,13 @@ class XasQueryService(
             "使用 domain=crontab&action=get 配合 id=<任务id> 查看任务概况与实时统计；domain=crontab_history 查看运行历史"
 
         private const val HINT_CRONTAB_TRIGGER =
-            "任务已异步触发；可用 domain=crontab&action=get 配合 id=<任务id> 查看实时统计，" +
-                "或 domain=crontab_history 查看运行历史"
+            "任务已异步触发；可用 domain=crontab&action=get 配合 id=<任务id> 查看实时统计，或 domain=crontab_history 查看运行历史"
 
         private const val HINT_CRONTAB_TRIGGER_SKIPPED =
             "任务正在运行中，本次触发被跳过；可用 domain=crontab&action=get 配合 id=<任务id> 查看实时统计"
 
         private const val HINT_CRONTAB_GET =
-            "使用 domain=crontab_history 配合 id=<任务id> 查看该任务的运行历史，" +
-                "再以 domain=crontab_history_detail&id=<历史id> 查看某次运行的下载明细"
+            "使用 domain=crontab_history 配合 id=<任务id> 查看该任务的运行历史，再以 domain=crontab_history_detail&id=<历史id> 查看某次运行的下载明细"
 
         private const val HINT_CRONTAB_HISTORY =
             "使用 domain=crontab_history_detail 配合 id=<历史id> 查看该次运行的下载明细"

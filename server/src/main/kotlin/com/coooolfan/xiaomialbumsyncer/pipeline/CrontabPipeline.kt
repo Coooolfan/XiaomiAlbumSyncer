@@ -12,13 +12,8 @@ import com.coooolfan.xiaomialbumsyncer.service.AssetService
 import com.coooolfan.xiaomialbumsyncer.service.CrontabService
 import com.coooolfan.xiaomialbumsyncer.service.NotifyService
 import com.coooolfan.xiaomialbumsyncer.service.SystemConfigService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 
