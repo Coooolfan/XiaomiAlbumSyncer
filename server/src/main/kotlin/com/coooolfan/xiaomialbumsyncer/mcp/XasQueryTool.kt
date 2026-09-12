@@ -1,10 +1,12 @@
 package com.coooolfan.xiaomialbumsyncer.mcp
 
 import com.coooolfan.xiaomialbumsyncer.exception.BadRequestException
-import com.coooolfan.xiaomialbumsyncer.model.McpTokenPermission
+import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.service.McpTokenService
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.babyfish.jimmer.sql.kt.ast.expression.desc
+import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.noear.solon.ai.chat.tool.FunctionTool
 import org.noear.solon.core.handle.Context
 import java.lang.reflect.Type
@@ -44,108 +46,60 @@ class XasQueryTool(
             throw BadRequestException("入参解析失败: ${e.message}")
         }
 
-        return dispatch(input)
-    }
-
-    private fun dispatch(input: XasQueryInput): String {
-        val domain = requireEnum(input.domain, "domain", DOMAINS)
-        val action = requireEnum(input.action, "action", listOf(ACTION_LIST, ACTION_GET, ACTION_TRIGGER))
+        val domain = input.domain?.trim()?.lowercase()
+        val action = input.action?.trim()?.lowercase()
         val id = input.id?.trim()?.takeIf { it.isNotEmpty() }
+        val pageIndex = (input.pageIndex ?: DEFAULT_PAGE_INDEX).coerceAtLeast(0)
+        val pageSize = (input.pageSize ?: DEFAULT_PAGE_SIZE).coerceIn(1, MAX_PAGE_SIZE)
 
-        return when (domain) {
-            DOMAIN_ALBUM -> {
-                requireOnlyList(domain, action)
-                requireNoId(domain, id)
-                toJson(service.listAlbums())
+        val output: Any = when (domain to action) {
+            DOMAIN_ALBUM to ACTION_LIST -> service.listAlbums(ALBUM_FETCHER)
+
+            DOMAIN_CRONTAB to ACTION_LIST -> service.listCrontabs(CRONTAB_SUMMARY_FETCHER)
+
+            DOMAIN_CRONTAB to ACTION_GET -> {
+                val crontabId = id?.toLongOrNull()
+                    ?: throw BadRequestException("domain=$domain 时 id=任务 id 为必填且必须是数字，收到: $id")
+                service.getCrontab(crontabId, CRONTAB_OVERVIEW_FETCHER)
             }
 
-            DOMAIN_CRONTAB -> when (action) {
-                ACTION_LIST -> {
-                    requireNoId(domain, id)
-                    toJson(service.listCrontabs())
+            DOMAIN_CRONTAB to ACTION_TRIGGER -> {
+                if (tokenService.resolvePermission(Context.current()?.header(XasMcpServer.AUTH_HEADER)) !=
+                    McpTokenPermission.ALLOW_TRIGGER
+                ) {
+                    throw BadRequestException("当前 MCP Token 为只读权限，不允许触发定时任务")
                 }
+                val crontabId = id?.toLongOrNull()
+                    ?: throw BadRequestException("domain=$domain 时 id=任务 id 为必填且必须是数字，收到: $id")
+                service.triggerCrontab(crontabId, CRONTAB_TRIGGER_FETCHER)
+            }
 
-                ACTION_GET -> toJson(service.getCrontab(requireNumericId(domain, id, "任务")))
-                ACTION_TRIGGER -> {
-                    requireTriggerPermission()
-                    toJson(service.triggerCrontab(requireNumericId(domain, id, "任务")))
+            DOMAIN_CRONTAB_HISTORY to ACTION_LIST -> {
+                val crontabId = id?.toLongOrNull()
+                if (id != null && crontabId == null) {
+                    throw BadRequestException("id 必须是数字任务 id，收到: $id")
                 }
-                else -> unsupportedAction(domain, action)
+                service.listCrontabHistories(crontabId, pageIndex, pageSize, CRONTAB_HISTORY_LIST_FETCHER)
             }
 
-            DOMAIN_CRONTAB_HISTORY -> {
-                requireOnlyList(domain, action)
-                val crontabId = id?.let { parseNumericId(it, "任务") }
-                toJson(service.listCrontabHistories(crontabId, pageIndex(input), pageSize(input)))
+            DOMAIN_CRONTAB_HISTORY_DETAIL to ACTION_LIST -> {
+                val historyId = id?.toLongOrNull()
+                    ?: throw BadRequestException("domain=$domain 时 id=历史 id 为必填且必须是数字，收到: $id")
+                service.listCrontabHistoryDetails(
+                    historyId,
+                    pageIndex,
+                    pageSize,
+                    CRONTAB_HISTORY_OVERVIEW_FETCHER,
+                    CRONTAB_HISTORY_DETAIL_LIST_FETCHER,
+                )
             }
 
-            DOMAIN_CRONTAB_HISTORY_DETAIL -> {
-                requireOnlyList(domain, action)
-                val historyId = requireNumericId(domain, id, "历史")
-                toJson(service.listCrontabHistoryDetails(historyId, pageIndex(input), pageSize(input)))
-            }
+            DOMAIN_SYSTEM to ACTION_LIST -> service.listSystem(XIAOMI_ACCOUNT_FETCHER)
 
-            DOMAIN_SYSTEM -> {
-                requireOnlyList(domain, action)
-                requireNoId(domain, id)
-                toJson(service.listSystem())
-            }
-
-            else -> throw BadRequestException("不支持的 domain: $domain")
+            else -> throw BadRequestException("domain=$domain 不支持 action=$action")
         }
+        return mapper.writeValueAsString(output)
     }
-
-    private fun requireEnum(value: String?, name: String, allowed: Collection<String>): String {
-        val trimmed = value?.trim()?.lowercase()
-        if (trimmed.isNullOrEmpty() || trimmed !in allowed) {
-            throw BadRequestException("参数 $name 必须是 ${allowed.joinToString()} 之一，收到: $value")
-        }
-        return trimmed
-    }
-
-    private fun requireOnlyList(domain: String, action: String) {
-        requireAction(domain, action, ACTION_LIST)
-    }
-
-    private fun requireAction(domain: String, action: String, vararg allowed: String) {
-        if (action !in allowed) {
-            throw BadRequestException("domain=$domain 仅支持 action=${allowed.joinToString("/")}")
-        }
-    }
-
-    private fun requireNoId(domain: String, id: String?) {
-        if (id != null) {
-            throw BadRequestException("domain=$domain 不支持 id")
-        }
-    }
-
-    private fun requireNumericId(domain: String, id: String?, idName: String): Long {
-        return id?.let { parseNumericId(it, idName) }
-            ?: throw BadRequestException("domain=$domain 时 id=$idName id 为必填")
-    }
-
-    private fun parseNumericId(value: String, idName: String): Long {
-        return value.toLongOrNull()
-            ?: throw BadRequestException("id 必须是数字 $idName id，收到: $value")
-    }
-
-    private fun unsupportedAction(domain: String, action: String): String {
-        throw BadRequestException("domain=$domain 不支持 action=$action")
-    }
-
-    private fun requireTriggerPermission() {
-        val authorization = Context.current()?.header(XasMcpServer.AUTH_HEADER)
-        if (tokenService.resolvePermission(authorization) != McpTokenPermission.ALLOW_TRIGGER) {
-            throw BadRequestException("当前 MCP Token 为只读权限，不允许触发定时任务")
-        }
-    }
-
-    private fun pageIndex(input: XasQueryInput): Int = (input.pageIndex ?: DEFAULT_PAGE_INDEX).coerceAtLeast(0)
-
-    private fun pageSize(input: XasQueryInput): Int =
-        (input.pageSize ?: DEFAULT_PAGE_SIZE).coerceIn(1, MAX_PAGE_SIZE)
-
-    private fun toJson(value: Any): String = mapper.writeValueAsString(value)
 
     companion object {
         const val TOOL_NAME = "xas_query"
@@ -163,6 +117,75 @@ class XasQueryTool(
         const val ACTION_LIST = "list"
         const val ACTION_GET = "get"
         const val ACTION_TRIGGER = "trigger"
+
+        private val ALBUM_FETCHER = newFetcher(Album::class).by {
+            allScalarFields()
+            account { nickname() }
+        }
+
+        private val CRONTAB_SUMMARY_FETCHER = newFetcher(Crontab::class).by {
+            name()
+            enabled()
+            running()
+            histories({
+                filter { orderBy(table.startTime.desc()) }
+                batch(1)
+                limit(1)
+            }) {
+                startTime()
+            }
+        }
+
+        private val CRONTAB_OVERVIEW_FETCHER = newFetcher(Crontab::class).by {
+            name()
+            description()
+            enabled()
+            running()
+            albumIds()
+            config()
+            histories({
+                filter { orderBy(table.startTime.desc()) }
+                batch(1)
+                limit(1)
+            }) {
+                startTime()
+            }
+        }
+
+        private val CRONTAB_TRIGGER_FETCHER = newFetcher(Crontab::class).by { name() }
+
+        private val CRONTAB_HISTORY_LIST_FETCHER = newFetcher(CrontabHistory::class).by {
+            startTime()
+            endTime()
+            isCompleted()
+            detailsCount()
+            crontab { name() }
+        }
+
+        private val CRONTAB_HISTORY_OVERVIEW_FETCHER = newFetcher(CrontabHistory::class).by {
+            startTime()
+            endTime()
+            isCompleted()
+        }
+
+        private val CRONTAB_HISTORY_DETAIL_LIST_FETCHER = newFetcher(CrontabHistoryDetail::class).by {
+            filePath()
+            downloadCompleted()
+            sha1Verified()
+            exifFilled()
+            fsTimeUpdated()
+            message()
+            asset {
+                fileName()
+                type()
+                album { name() }
+            }
+        }
+
+        private val XIAOMI_ACCOUNT_FETCHER = newFetcher(XiaomiAccount::class).by {
+            nickname()
+            userId()
+        }
 
         const val TOOL_DESCRIPTION =
             "Xiaomi Album Syncer（XAS）查询工具。统一信封入参：domain（album=相册 / " +
@@ -210,12 +233,16 @@ class XasQueryTool(
             }
         """.trimIndent()
 
-        private val DOMAINS = listOf(
-            DOMAIN_ALBUM,
-            DOMAIN_CRONTAB,
-            DOMAIN_CRONTAB_HISTORY,
-            DOMAIN_CRONTAB_HISTORY_DETAIL,
-            DOMAIN_SYSTEM,
-        )
     }
 }
+
+/**
+ * xas_query 的请求参数；domain 与 action 选择操作，id 和分页参数由对应操作解释。
+ */
+data class XasQueryInput(
+    val domain: String? = null,
+    val action: String? = null,
+    val pageIndex: Int? = null,
+    val pageSize: Int? = null,
+    val id: String? = null,
+)

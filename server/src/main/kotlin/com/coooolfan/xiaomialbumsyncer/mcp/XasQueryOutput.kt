@@ -9,32 +9,6 @@ import com.coooolfan.xiaomialbumsyncer.model.CrontabConfig
  * 出参不含密码/passToken/通知配置等敏感信息。
  */
 
-// ---------- 各 domain 的 hint（下一步操作提示） ----------
-
-internal const val HINT_ALBUM =
-    "相册列表为只读快照，shadow=true 表示远程已不存在的本地相册；定时任务运行情况可查询 domain=crontab"
-
-internal const val HINT_CRONTAB_LIST =
-    "使用 domain=crontab&action=get 配合 id=<任务id> 查看任务概况与实时统计；domain=crontab_history 查看运行历史"
-
-internal const val HINT_CRONTAB_TRIGGER =
-    "任务已异步触发；可用 domain=crontab&action=get 配合 id=<任务id> 查看实时统计，" +
-        "或 domain=crontab_history 查看运行历史"
-
-internal const val HINT_CRONTAB_TRIGGER_SKIPPED =
-    "任务正在运行中，本次触发被跳过；可用 domain=crontab&action=get 配合 id=<任务id> 查看实时统计"
-
-internal const val HINT_CRONTAB_GET =
-    "使用 domain=crontab_history 配合 id=<任务id> 查看该任务的运行历史，" +
-        "再以 domain=crontab_history_detail&id=<历史id> 查看某次运行的下载明细"
-
-internal const val HINT_CRONTAB_HISTORY =
-    "使用 domain=crontab_history_detail 配合 id=<历史id> 查看该次运行的下载明细"
-
-internal const val HINT_CRONTAB_HISTORY_DETAIL = "通过 pageIndex/pageSize 翻页查看更多明细"
-
-internal const val HINT_SYSTEM = "仅展示脱敏信息；密码/passToken/通知配置不通过 MCP 暴露"
-
 // ---------- album ----------
 
 data class AlbumListOutput(
