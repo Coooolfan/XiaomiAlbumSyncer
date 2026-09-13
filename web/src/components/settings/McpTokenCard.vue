@@ -187,7 +187,9 @@ function errorMessage(error: unknown): string {
     </template>
 
     <template #footer>
-      <Button label="创建 MCP Token" icon="pi pi-plus" @click="openCreateDialog" />
+      <div class="flex items-center justify-end">
+        <Button label="创建 MCP Token" icon="pi pi-plus" @click="openCreateDialog" />
+      </div>
     </template>
   </Card>
 
@@ -235,24 +237,24 @@ function errorMessage(error: unknown): string {
   <Dialog
     v-model:visible="showTokenDialog"
     modal
-    header="请立即保存 MCP Token"
+    header="创建成功"
     class="w-full sm:w-150"
     @hide="clearCreatedToken"
   >
-    <div class="space-y-4">
+    <div class="space-y-4 pt-1">
       <div
         class="rounded-md bg-amber-50 dark:bg-amber-950/35 text-amber-800 dark:text-amber-200 text-sm px-3 py-2 ring-1 ring-amber-200 dark:ring-amber-900/60"
       >
         该 Token 只会显示这一次。关闭后无法再次查看，丢失时需撤销并重新创建。
       </div>
       <div class="flex gap-2">
-        <InputText :model-value="createdToken" readonly class="w-full font-mono text-sm" />
-        <Button label="复制" icon="pi pi-copy" @click="copyCreatedToken" />
+        <InputText :model-value="createdToken" readonly class="w-full min-w-0 font-mono text-sm" />
+        <Button label="复制" icon="pi pi-copy" class="shrink-0" @click="copyCreatedToken" />
       </div>
     </div>
 
     <template #footer>
-      <Button label="我已保存" @click="showTokenDialog = false" />
+      <Button label="关闭" @click="showTokenDialog = false" />
     </template>
   </Dialog>
 </template>
