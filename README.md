@@ -24,6 +24,7 @@
 - [x] 📃 表达式插值文件下载路径 **>>> [点此查看详情](./README/expression-target-path.md) <<<**
 - [x] 🔒 SSL 支持 **>>> [点此查看详情](./README/ssl-suppot.md) <<<**
 - [x] 🛡️ Passkey 支持 **>>> [点此查看详情](./README/passkey-login.md) <<<**
+- [x] 🤖 MCP 服务（供 AI 助手查询与触发任务）**>>> [点此查看详情](./README/mcp-server.md) <<<**
 
 > [!CAUTION] 
 > 此项目已于 `0.3.0` 完成重构。新版目前仅提供 Web UI，部署方式提供 Docker、JVM、原生二进制版本。旧版 CLI 工具仍然可用，可前往 [0.2.1 releases](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases/tag/0.2.1) 下载。
