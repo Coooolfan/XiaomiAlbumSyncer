@@ -69,22 +69,34 @@ const channelOptions = computed<Array<{ label: string; value: NotifyPresetMode }
   { label: t('notify.channel.custom'), value: 'custom' },
 ])
 
-const interpolationItems = computed(() => [
-  { token: '${crontab.name}', description: t('notify.interpolation.crontabName') },
-  { token: '${crontab.id}', description: t('notify.interpolation.crontabId') },
-  { token: '${success}', description: t('notify.interpolation.success') },
-  { token: '${total}', description: t('notify.interpolation.total') },
-])
-
-const dailySummaryInterpolationItems = computed(() => [
-  { token: '${summary}', description: t('notify.interpolation.summary') },
-  { token: '${date}', description: t('notify.interpolation.date') },
-])
-
-const passTokenExpiredInterpolationItems = computed(() => [
-  { token: '${account.nickname}', description: t('notify.interpolation.accountNickname') },
-  { token: '${account.userId}', description: t('notify.interpolation.accountUserId') },
-  { token: '${account.id}', description: t('notify.interpolation.accountId') },
+const interpolationGroups = computed(() => [
+  {
+    key: 'task',
+    title: t('notify.interpolation.taskTitle'),
+    items: [
+      { token: '${crontab.name}', description: t('notify.interpolation.crontabName') },
+      { token: '${crontab.id}', description: t('notify.interpolation.crontabId') },
+      { token: '${success}', description: t('notify.interpolation.success') },
+      { token: '${total}', description: t('notify.interpolation.total') },
+    ],
+  },
+  {
+    key: 'daily',
+    title: t('notify.interpolation.dailyTitle'),
+    items: [
+      { token: '${summary}', description: t('notify.interpolation.summary') },
+      { token: '${date}', description: t('notify.interpolation.date') },
+    ],
+  },
+  {
+    key: 'passToken',
+    title: t('notify.interpolation.passTokenTitle'),
+    items: [
+      { token: '${account.nickname}', description: t('notify.interpolation.accountNickname') },
+      { token: '${account.userId}', description: t('notify.interpolation.accountUserId') },
+      { token: '${account.id}', description: t('notify.interpolation.accountId') },
+    ],
+  },
 ])
 
 const configured = computed(() => (config.value.url ?? '').trim() !== '')
@@ -117,41 +129,54 @@ const sampleDate = computed(() => {
     return new Date().toISOString().slice(0, 10)
   }
 })
-const taskPreviewValues = computed<Record<string, string>>(() => ({
-  'crontab.name': t('notify.preview.sample.crontabName'),
-  'crontab.id': '1',
-  success: '128',
-  total: '130',
-}))
-const dailySummaryPreviewValues = computed<Record<string, string>>(() => ({
-  summary: t('notify.preview.sample.summary'),
-  date: sampleDate.value,
-}))
-const passTokenPreviewValues = computed<Record<string, string>>(() => ({
-  'account.nickname': t('notify.preview.sample.accountNickname'),
-  'account.userId': '2266113523',
-  'account.id': '1',
-}))
-
 function renderPreview(template: string, values: Record<string, string>) {
   if (template.trim() === '') return t('common.status.empty')
   const rendered = renderNotifyTemplate(template, values)
   return tryFormatJson(rendered) ?? rendered
 }
 
-const previewBody = computed(() => renderPreview(bodyTemplate.value, taskPreviewValues.value))
-const previewDailySummaryBody = computed(() =>
-  renderPreview(dailySummaryBody.value, dailySummaryPreviewValues.value),
-)
-const previewPassTokenExpiredBody = computed(() =>
-  renderPreview(passTokenExpiredBody.value, passTokenPreviewValues.value),
-)
 const dailySummaryComplete = computed(
   () =>
     dailySummaryBody.value.trim() !== '' &&
     dailySummaryCron.value.trim() !== '' &&
     dailySummaryTimeZone.value.trim() !== '',
 )
+
+const previewGroups = computed(() => [
+  {
+    key: 'task',
+    title: t('notify.preview.taskTitle'),
+    enabled: true,
+    hint: '',
+    body: renderPreview(bodyTemplate.value, {
+      'crontab.name': t('notify.preview.sample.crontabName'),
+      'crontab.id': '1',
+      success: '128',
+      total: '130',
+    }),
+  },
+  {
+    key: 'daily',
+    title: t('notify.preview.dailyTitle'),
+    enabled: dailySummaryComplete.value,
+    hint: t('notify.preview.dailyIncomplete'),
+    body: renderPreview(dailySummaryBody.value, {
+      summary: t('notify.preview.sample.summary'),
+      date: sampleDate.value,
+    }),
+  },
+  {
+    key: 'passToken',
+    title: t('notify.preview.passTokenTitle'),
+    enabled: passTokenExpiredBody.value.trim() !== '',
+    hint: t('notify.preview.passTokenEmpty'),
+    body: renderPreview(passTokenExpiredBody.value, {
+      'account.nickname': t('notify.preview.sample.accountNickname'),
+      'account.userId': '2266113523',
+      'account.id': '1',
+    }),
+  },
+])
 
 watch(selectedChannel, (mode) => {
   if (mode !== 'custom' && bodyTemplate.value.trim() === '') {
@@ -756,113 +781,36 @@ onMounted(() => {
         class="w-full min-w-0 flex-1 self-stretch border-t border-slate-100 pt-6 dark:border-slate-800 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0"
       >
         <div class="space-y-5">
-          <div class="space-y-2">
+          <div v-for="group in interpolationGroups" :key="group.key" class="space-y-2">
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              {{ t('notify.interpolation.taskTitle') }}
+              {{ group.title }}
             </h3>
             <div
               class="space-y-1 rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70"
             >
               <div
-                v-for="item in interpolationItems"
+                v-for="item in group.items"
                 :key="item.token"
                 class="flex items-start justify-between gap-3"
               >
                 <span class="font-mono text-slate-700 dark:text-slate-200">{{ item.token }}</span>
                 <span class="text-slate-500 dark:text-slate-400">{{ item.description }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              {{ t('notify.interpolation.dailyTitle') }}
-            </h3>
-            <div
-              class="space-y-1 rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70"
-            >
-              <div
-                v-for="item in dailySummaryInterpolationItems"
-                :key="item.token"
-                class="flex items-start justify-between gap-3"
-              >
-                <span class="font-mono text-slate-700 dark:text-slate-200">{{ item.token }}</span>
-                <span class="text-slate-500 dark:text-slate-400">{{ item.description }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              {{ t('notify.interpolation.passTokenTitle') }}
-            </h3>
-            <div
-              class="space-y-1 rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70"
-            >
-              <div
-                v-for="item in passTokenExpiredInterpolationItems"
-                :key="item.token"
-                class="flex items-start justify-between gap-3"
-              >
-                <span class="font-mono text-slate-700 dark:text-slate-200">{{ item.token }}</span>
-                <span class="text-slate-500 dark:text-slate-400">{{ item.description }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              {{ t('notify.preview.taskTitle') }}
-            </h3>
-            <div class="rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70">
-              <div class="space-y-1">
-                <div class="text-slate-400 dark:text-slate-500">Method</div>
-                <div class="font-mono text-slate-700 dark:text-slate-200">POST</div>
-              </div>
-
-              <div class="mt-3 space-y-1">
-                <div class="text-slate-400 dark:text-slate-500">URL</div>
-                <div class="break-all font-mono text-slate-700 dark:text-slate-200">
-                  {{ previewUrl || t('notify.preview.emptyUrl') }}
-                </div>
-              </div>
-
-              <div class="mt-3 space-y-1">
-                <div class="text-slate-400 dark:text-slate-500">Headers</div>
-                <div
-                  v-if="previewHeaders.length === 0"
-                  class="font-mono text-slate-400 dark:text-slate-500"
-                >
-                  {{ t('notify.preview.none') }}
-                </div>
-                <div v-for="[key, value] in previewHeaders" :key="key" class="font-mono">
-                  <span class="text-slate-500 dark:text-slate-400">{{ key }}</span
-                  >:
-                  <span class="text-slate-700 dark:text-slate-200">{{
-                    value || t('common.status.empty')
-                  }}</span>
-                </div>
-              </div>
-
-              <div class="mt-3 space-y-1">
-                <div class="text-slate-400 dark:text-slate-500">Body</div>
-                <pre
-                  class="max-h-56 overflow-auto whitespace-pre-wrap rounded bg-slate-50 p-2 font-mono text-[11px] text-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
-                ><code>{{ previewBody }}</code></pre>
               </div>
             </div>
           </div>
 
           <div
+            v-for="preview in previewGroups"
+            :key="preview.key"
             class="space-y-2 transition-opacity duration-200"
-            :class="dailySummaryComplete ? '' : 'opacity-40 pointer-events-none select-none'"
+            :class="preview.enabled ? '' : 'pointer-events-none select-none opacity-40'"
           >
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              {{ t('notify.preview.dailyTitle') }}
+              {{ preview.title }}
               <span
-                v-if="!dailySummaryComplete"
+                v-if="!preview.enabled"
                 class="ml-1 text-xs font-normal text-slate-400 dark:text-slate-500"
-                >{{ t('notify.preview.dailyIncomplete') }}</span
+                >{{ preview.hint }}</span
               >
             </h3>
             <div class="rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70">
@@ -899,60 +847,7 @@ onMounted(() => {
                 <div class="text-slate-400 dark:text-slate-500">Body</div>
                 <pre
                   class="max-h-56 overflow-auto whitespace-pre-wrap rounded bg-slate-50 p-2 font-mono text-[11px] text-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
-                ><code>{{ previewDailySummaryBody }}</code></pre>
-              </div>
-            </div>
-          </div>
-
-          <div
-            class="space-y-2 transition-opacity duration-200"
-            :class="
-              passTokenExpiredBody.trim() !== '' ? '' : 'opacity-40 pointer-events-none select-none'
-            "
-          >
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              {{ t('notify.preview.passTokenTitle') }}
-              <span
-                v-if="passTokenExpiredBody.trim() === ''"
-                class="ml-1 text-xs font-normal text-slate-400 dark:text-slate-500"
-                >{{ t('notify.preview.passTokenEmpty') }}</span
-              >
-            </h3>
-            <div class="rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70">
-              <div class="space-y-1">
-                <div class="text-slate-400 dark:text-slate-500">Method</div>
-                <div class="font-mono text-slate-700 dark:text-slate-200">POST</div>
-              </div>
-
-              <div class="mt-3 space-y-1">
-                <div class="text-slate-400 dark:text-slate-500">URL</div>
-                <div class="break-all font-mono text-slate-700 dark:text-slate-200">
-                  {{ previewUrl || t('notify.preview.emptyUrl') }}
-                </div>
-              </div>
-
-              <div class="mt-3 space-y-1">
-                <div class="text-slate-400 dark:text-slate-500">Headers</div>
-                <div
-                  v-if="previewHeaders.length === 0"
-                  class="font-mono text-slate-400 dark:text-slate-500"
-                >
-                  {{ t('notify.preview.none') }}
-                </div>
-                <div v-for="[key, value] in previewHeaders" :key="key" class="font-mono">
-                  <span class="text-slate-500 dark:text-slate-400">{{ key }}</span
-                  >:
-                  <span class="text-slate-700 dark:text-slate-200">{{
-                    value || t('common.status.empty')
-                  }}</span>
-                </div>
-              </div>
-
-              <div class="mt-3 space-y-1">
-                <div class="text-slate-400 dark:text-slate-500">Body</div>
-                <pre
-                  class="max-h-56 overflow-auto whitespace-pre-wrap rounded bg-slate-50 p-2 font-mono text-[11px] text-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
-                ><code>{{ previewPassTokenExpiredBody }}</code></pre>
+                ><code>{{ preview.body }}</code></pre>
               </div>
             </div>
           </div>
