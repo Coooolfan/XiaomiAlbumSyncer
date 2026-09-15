@@ -276,6 +276,8 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.docker-tags-jvm.outputs.tags }}
+          cache-from: type=gha,scope=xas-jvm
+          cache-to: type=gha,mode=max,scope=xas-jvm,ignore-error=true
           build-args: |
             JAR_FILE=dist/xiaomi-album-syncer-v${{ inputs.version }}.jar
 
@@ -342,3 +344,5 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.docker-tags-native.outputs.tags }}
+          cache-from: type=gha,scope=xas-native
+          cache-to: type=gha,mode=max,scope=xas-native,ignore-error=true
