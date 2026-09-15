@@ -7907,6 +7907,9 @@
       "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager$CachedToken"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager$onPassTokenInvalid$1"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi",
       "allDeclaredFields": true,
       "methods": [
