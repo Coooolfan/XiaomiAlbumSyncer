@@ -6,6 +6,12 @@
 
 | 依赖库 | 版本 | 开源协议 | 描述 |
 |---|---|---|---|
+| @codemirror/commands | 6.11.0 | MIT | CodeMirror 编辑命令与快捷键 |
+| @codemirror/lang-json | 6.0.2 | MIT | CodeMirror JSON 语言支持 |
+| @codemirror/language | 6.12.4 | MIT | CodeMirror 语言与高亮基础设施 |
+| @codemirror/state | 6.7.4 | MIT | CodeMirror 编辑器状态管理 |
+| @codemirror/theme-one-dark | 6.1.3 | MIT | CodeMirror One Dark 主题 |
+| @codemirror/view | 6.43.11 | MIT | CodeMirror 编辑器视图 |
 | @primeuix/themes | 2.0.3 | MIT | PrimeUI 主题包（3.x 已改用 PrimeUI 许可证） |
 | @simplewebauthn/browser | 14.0.0 | MIT | WebAuthn 浏览器端支持 |
 | @tailwindcss/vite | 4.3.3 | MIT | Tailwind CSS 的 Vite 插件 |
@@ -16,6 +22,7 @@
 | primevue | 4.5.5 | MIT | PrimeVue UI 组件库（5.x 已改用 PrimeUI 许可证） |
 | tailwindcss | 4.3.3 | MIT | 工具类 CSS 框架 |
 | vue | 3.5.42 | MIT | Vue 3 前端框架 |
+| vue-i18n | 11.4.10 | MIT | Vue 国际化（中/英文） |
 | vue-router | 5.3.1 | MIT | Vue 路由管理 |
 
 ## 构建工具与插件

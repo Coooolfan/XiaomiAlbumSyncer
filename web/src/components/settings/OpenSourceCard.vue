@@ -30,6 +30,7 @@ const frontendCore = computed(() => [
   { name: 'Vue 3', desc: t('settings.openSource.desc.frontendFramework'), license: 'MIT' },
   { name: 'Vue Router', desc: t('settings.openSource.desc.routing'), license: 'MIT' },
   { name: 'Pinia', desc: t('settings.openSource.desc.stateManagement'), license: 'MIT' },
+  { name: 'vue-i18n', desc: t('settings.openSource.desc.i18n'), license: 'MIT' },
 ])
 
 const uiStack = computed(() => [
@@ -48,6 +49,7 @@ const tooling = computed(() => [
 
 const features = computed(() => [
   { name: 'SimpleWebAuthn', desc: t('settings.openSource.desc.passkeys'), license: 'MIT' },
+  { name: 'CodeMirror', desc: t('settings.openSource.desc.codeEditor'), license: 'MIT' },
   { name: 'OGL', desc: t('settings.openSource.desc.webgl'), license: 'Unlicense' },
 ])
 
