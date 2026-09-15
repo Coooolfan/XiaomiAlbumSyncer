@@ -5,4 +5,5 @@ export interface NotifyConfig {
     readonly dailySummaryBody?: string | undefined;
     readonly dailySummaryCron?: string | undefined;
     readonly dailySummaryTimeZone?: string | undefined;
+    readonly passTokenExpiredBody?: string | undefined;
 }

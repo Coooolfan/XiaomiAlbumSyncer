@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import Card from 'primevue/card'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
@@ -9,6 +10,7 @@ import { api } from '../ApiInstance'
 import { isWebAuthnSupported, hasAvailablePasskeys, authenticateWithPasskey } from '@/utils/passkey'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const checkingInit = ref(true)
 const isInit = ref(true) // 服务端是否已初始化
@@ -22,10 +24,10 @@ const webAuthnSupported = ref(false)
 const passkeyAvailable = ref(false)
 const passkeyLoading = ref(false)
 
-const modeTitle = computed(() => (isInit.value ? '登录' : '初始化 / 注册'))
+const modeTitle = computed(() => (isInit.value ? t('auth.login') : t('auth.initTitle')))
 const submitLabel = computed(() => {
-  if (!isInit.value) return '设置密码并进入'
-  return passkeyAvailable.value ? '使用密码登录' : '登录'
+  if (!isInit.value) return t('auth.password.setAndEnter')
+  return passkeyAvailable.value ? t('auth.password.signIn') : t('auth.login')
 })
 
 // 是否处于安全上下文
@@ -58,11 +60,11 @@ async function handlePasswordSubmit() {
   errorMsg.value = null
 
   if (!password.value || (!isInit.value && !confirmPassword.value)) {
-    errorMsg.value = '请完整填写密码'
+    errorMsg.value = t('auth.error.incompletePassword')
     return
   }
   if (!isInit.value && password.value !== confirmPassword.value) {
-    errorMsg.value = '两次密码输入不一致'
+    errorMsg.value = t('auth.error.passwordMismatch')
     return
   }
 
@@ -85,7 +87,7 @@ async function handlePasswordSubmit() {
     console.error('Auth error:', e)
     const msg = e instanceof Error ? e.message : String(e)
     if (msg.includes('Auth failed')) {
-      errorMsg.value = '密码错误'
+      errorMsg.value = t('auth.error.wrongPassword')
     } else {
       errorMsg.value = msg
     }
@@ -105,9 +107,9 @@ async function handlePasskeyLogin() {
     console.error('Passkey auth error:', e)
     const msg = e instanceof Error ? e.message : String(e)
     if (msg.includes('The operation either timed out or was not allowed')) {
-      errorMsg.value = 'Passkey 验证被取消或超时'
+      errorMsg.value = t('auth.error.passkeyCancelled')
     } else if (msg.includes('No Passkey registered')) {
-      errorMsg.value = '尚未注册任何 Passkey'
+      errorMsg.value = t('auth.error.noPasskey')
     } else {
       errorMsg.value = msg
     }
@@ -143,7 +145,7 @@ onMounted(() => {
             <!-- Passkey 登录按钮（仅在已初始化且支持时显示） -->
             <div v-if="isInit && webAuthnSupported && passkeyAvailable">
               <Button
-                label="使用 Passkey 登录"
+                :label="t('auth.passkey.signIn')"
                 icon="pi pi-shield"
                 class="w-full !py-3 !text-base !font-semibold"
                 :loading="passkeyLoading"
@@ -151,36 +153,42 @@ onMounted(() => {
               />
 
               <Divider>
-                <span class="text-xs text-slate-400 dark:text-slate-500">或使用密码</span>
+                <span class="text-xs text-slate-400 dark:text-slate-500">{{
+                  t('auth.passkey.orPassword')
+                }}</span>
               </Divider>
             </div>
 
             <div v-if="!isInit" class="text-sm text-slate-500 dark:text-slate-400">
-              首次使用，请设置登录密码。该密码仅保存在后端。
+              {{ t('auth.firstUseHint') }}
             </div>
 
             <div class="space-y-2">
-              <label class="text-sm font-medium text-slate-700 dark:text-slate-200">密码</label>
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-200">{{
+                t('auth.password.label')
+              }}</label>
               <Password
                 v-model="password"
                 :feedback="false"
                 toggleMask
                 :input-class="'w-full p-inputtext p-component'"
                 class="w-full"
-                placeholder="请输入密码"
+                :placeholder="t('auth.password.placeholder')"
                 @keyup.enter="handlePasswordSubmit"
               />
             </div>
 
             <div v-if="!isInit" class="space-y-2">
-              <label class="text-sm font-medium text-slate-700 dark:text-slate-200">确认密码</label>
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-200">{{
+                t('auth.password.confirmLabel')
+              }}</label>
               <Password
                 v-model="confirmPassword"
                 :feedback="false"
                 toggleMask
                 :input-class="'w-full p-inputtext p-component'"
                 class="w-full"
-                placeholder="请再次输入密码"
+                :placeholder="t('auth.password.confirmPlaceholder')"
                 @keyup.enter="handlePasswordSubmit"
               />
             </div>
@@ -214,19 +222,19 @@ onMounted(() => {
               v-if="isInit && !webAuthnSupported"
               class="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/35 border border-amber-200 dark:border-amber-900/60 rounded-md p-2"
             >
-              当前浏览器不支持 Passkey（WebAuthn）登录
+              {{ t('auth.passkey.unsupported') }}
             </div>
 
             <div
               v-if="!isSecureCtx"
               class="text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/70 rounded-md p-2"
             >
-              注意：当前页面不处于安全上下文（非 HTTPS 或来源不安全），请求将以明文传输。
+              {{ t('auth.insecureContextWarning') }}
             </div>
 
             <div class="text-center text-sm text-slate-500 dark:text-slate-400">
-              <template v-if="isInit"> 如需重置密码，请清空数据库的 system_config 表 </template>
-              <template v-else> 已初始化？请直接使用上方密码登录 </template>
+              <template v-if="isInit">{{ t('auth.resetPasswordHint') }}</template>
+              <template v-else>{{ t('auth.alreadyInitializedHint') }}</template>
             </div>
           </div>
         </template>
@@ -248,7 +256,7 @@ onMounted(() => {
         <span
           class="inline-block h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-600 animate-pulse [animation-delay:240ms]"
         ></span>
-        <span class="text-sm">正在加载...</span>
+        <span class="text-sm">{{ t('common.status.loading') }}</span>
       </div>
     </transition>
   </div>

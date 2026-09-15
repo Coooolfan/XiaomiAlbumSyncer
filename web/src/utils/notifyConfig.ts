@@ -92,6 +92,20 @@ export function buildPresetDailySummaryBodyTemplate(): string {
   return '{"text":"Xiaomi Album Syncer 日报 ${date}","desp":"同步日报\\n${summary}"}'
 }
 
+export function buildPresetPassTokenExpiredBodyTemplate(): string {
+  return '{"text":"Xiaomi Album Syncer 告警","desp":"账号 ${account.nickname}(${account.userId}) 的 PassToken 已失效，请在设置中更新"}'
+}
+
+export function renderNotifyTemplate(template: string, values: Record<string, string>): string {
+  const trimmed = template.trimStart()
+  const isJson = trimmed.startsWith('{') || trimmed.startsWith('[')
+  return template.replace(/\$\{([^}]+)\}/g, (match, key: string) => {
+    const raw = values[key]
+    if (raw === undefined) return match
+    return isJson ? JSON.stringify(raw).slice(1, -1) : raw
+  })
+}
+
 export function createHeaderRow(seed = Date.now(), key = '', value = ''): HeaderRow {
   return {
     id: `header-${seed}-${Math.random().toString(36).slice(2, 8)}`,

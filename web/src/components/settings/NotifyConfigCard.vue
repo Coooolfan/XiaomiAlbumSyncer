@@ -1,32 +1,36 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import Button from 'primevue/button'
-import Card from 'primevue/card'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
 import Tag from 'primevue/tag'
-import Textarea from 'primevue/textarea'
 import type { NotifyConfig } from '@/__generated/model/static'
 import { api } from '@/ApiInstance'
 import {
   buildPresetBodyTemplate,
   buildPresetDailySummaryBodyTemplate,
+  buildPresetPassTokenExpiredBodyTemplate,
   buildServerChan3Url,
   buildServerChanTurboUrl,
   createHeaderRow,
   detectPresetFromUrl,
   headerMapToRows,
+  renderNotifyTemplate,
   rowsToHeaderMap,
   toNotifyDraft,
   type HeaderRow,
   type NotifyPresetMode,
 } from '@/utils/notifyConfig'
+import SettingSection from '@/components/settings/SettingSection.vue'
+import CodeEditor from '@/components/CodeEditor.vue'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 
 const toast = useToast()
+const { t } = useI18n()
 
 const loading = ref(false)
 const saving = ref(false)
@@ -39,6 +43,7 @@ const config = ref<NotifyConfig>({
   dailySummaryBody: '',
   dailySummaryCron: '',
   dailySummaryTimeZone: '',
+  passTokenExpiredBody: '',
 })
 
 const selectedChannel = ref<NotifyPresetMode>('serverchanTurbo')
@@ -49,6 +54,7 @@ const bodyTemplate = ref('')
 const dailySummaryBody = ref('')
 const dailySummaryCron = ref('')
 const dailySummaryTimeZone = ref('')
+const passTokenExpiredBody = ref('')
 const headerRows = ref<HeaderRow[]>([createHeaderRow()])
 const timeZones = ref<string[]>([])
 const presetHeaderKey = 'Content-Type'
@@ -57,31 +63,37 @@ const presetHeaders: Readonly<Record<string, string>> = {
   [presetHeaderKey]: presetHeaderValue,
 }
 
-const channelOptions: Array<{ label: string; value: NotifyPresetMode }> = [
-  { label: 'Server酱 Turbo', value: 'serverchanTurbo' },
-  { label: 'Server酱 ³', value: 'serverchan3' },
-  { label: '自定义 WebHook', value: 'custom' },
-]
+const channelOptions = computed<Array<{ label: string; value: NotifyPresetMode }>>(() => [
+  { label: t('notify.channel.serverchanTurbo'), value: 'serverchanTurbo' },
+  { label: t('notify.channel.serverchan3'), value: 'serverchan3' },
+  { label: t('notify.channel.custom'), value: 'custom' },
+])
 
-const interpolationItems = [
-  { token: '${crontab.name}', description: '计划任务名称' },
-  { token: '${crontab.id}', description: '计划任务 ID' },
-  { token: '${success}', description: '本次同步成功数量' },
-  { token: '${total}', description: '本次同步总数量' },
-]
+const interpolationItems = computed(() => [
+  { token: '${crontab.name}', description: t('notify.interpolation.crontabName') },
+  { token: '${crontab.id}', description: t('notify.interpolation.crontabId') },
+  { token: '${success}', description: t('notify.interpolation.success') },
+  { token: '${total}', description: t('notify.interpolation.total') },
+])
 
-const dailySummaryInterpolationItems = [
-  { token: '${summary}', description: '过去 24h 所有任务的汇总文本' },
-  { token: '${date}', description: '报告日期（yyyy-MM-dd）' },
-]
+const dailySummaryInterpolationItems = computed(() => [
+  { token: '${summary}', description: t('notify.interpolation.summary') },
+  { token: '${date}', description: t('notify.interpolation.date') },
+])
+
+const passTokenExpiredInterpolationItems = computed(() => [
+  { token: '${account.nickname}', description: t('notify.interpolation.accountNickname') },
+  { token: '${account.userId}', description: t('notify.interpolation.accountUserId') },
+  { token: '${account.id}', description: t('notify.interpolation.accountId') },
+])
 
 const configured = computed(() => (config.value.url ?? '').trim() !== '')
 const currentPreset = computed(() => detectPresetFromUrl(config.value.url ?? ''))
 const currentChannel = computed(() => {
-  if (!configured.value) return '未配置'
-  if (currentPreset.value.mode === 'serverchanTurbo') return 'Server酱 Turbo'
-  if (currentPreset.value.mode === 'serverchan3') return 'Server酱 ³'
-  return '自定义 WebHook'
+  if (!configured.value) return t('common.status.notConfigured')
+  if (currentPreset.value.mode === 'serverchanTurbo') return t('notify.channel.serverchanTurbo')
+  if (currentPreset.value.mode === 'serverchan3') return t('notify.channel.serverchan3')
+  return t('notify.channel.custom')
 })
 const currentHeaderCount = computed(() => Object.keys(config.value.headers ?? {}).length)
 
@@ -96,16 +108,44 @@ const isPresetChannel = computed(() => selectedChannel.value !== 'custom')
 const previewHeaders = computed(() =>
   Object.entries(isPresetChannel.value ? presetHeaders : rowsToHeaderMap(headerRows.value)),
 )
-const previewBody = computed(() => {
-  if (bodyTemplate.value.trim() === '') return '(空)'
-  const formatted = tryFormatJson(bodyTemplate.value)
-  return formatted ?? bodyTemplate.value
+const sampleDate = computed(() => {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: dailySummaryTimeZone.value || 'UTC',
+    }).format(new Date())
+  } catch {
+    return new Date().toISOString().slice(0, 10)
+  }
 })
-const previewDailySummaryBody = computed(() => {
-  if (dailySummaryBody.value.trim() === '') return '(空)'
-  const formatted = tryFormatJson(dailySummaryBody.value)
-  return formatted ?? dailySummaryBody.value
-})
+const taskPreviewValues = computed<Record<string, string>>(() => ({
+  'crontab.name': t('notify.preview.sample.crontabName'),
+  'crontab.id': '1',
+  success: '128',
+  total: '130',
+}))
+const dailySummaryPreviewValues = computed<Record<string, string>>(() => ({
+  summary: t('notify.preview.sample.summary'),
+  date: sampleDate.value,
+}))
+const passTokenPreviewValues = computed<Record<string, string>>(() => ({
+  'account.nickname': t('notify.preview.sample.accountNickname'),
+  'account.userId': '2266113523',
+  'account.id': '1',
+}))
+
+function renderPreview(template: string, values: Record<string, string>) {
+  if (template.trim() === '') return t('common.status.empty')
+  const rendered = renderNotifyTemplate(template, values)
+  return tryFormatJson(rendered) ?? rendered
+}
+
+const previewBody = computed(() => renderPreview(bodyTemplate.value, taskPreviewValues.value))
+const previewDailySummaryBody = computed(() =>
+  renderPreview(dailySummaryBody.value, dailySummaryPreviewValues.value),
+)
+const previewPassTokenExpiredBody = computed(() =>
+  renderPreview(passTokenExpiredBody.value, passTokenPreviewValues.value),
+)
 const dailySummaryComplete = computed(
   () =>
     dailySummaryBody.value.trim() !== '' &&
@@ -144,6 +184,7 @@ function setEditorFromConfig(target?: NotifyConfig) {
   }
   bodyTemplate.value = draft.body
   dailySummaryBody.value = target?.dailySummaryBody ?? ''
+  passTokenExpiredBody.value = target?.passTokenExpiredBody ?? ''
   dailySummaryCron.value = target?.dailySummaryCron || '0 0 23 * * ?'
   dailySummaryTimeZone.value = target?.dailySummaryTimeZone || 'Asia/Shanghai'
   headerRows.value = headerMapToRows(draft.headers)
@@ -175,8 +216,8 @@ function formatDailySummaryBodyAsJson() {
   if (formatted === null) {
     toast.add({
       severity: 'warn',
-      summary: '提示',
-      detail: '当前日报请求体不是有效 JSON，无法格式化',
+      summary: t('common.toast.warn'),
+      detail: t('notify.toast.invalidDailyJson'),
       life: 2600,
     })
     return
@@ -186,6 +227,24 @@ function formatDailySummaryBodyAsJson() {
 
 function applyDefaultDailySummaryBodyTemplate() {
   dailySummaryBody.value = buildPresetDailySummaryBodyTemplate()
+}
+
+function formatPassTokenExpiredBodyAsJson() {
+  const formatted = tryFormatJson(passTokenExpiredBody.value)
+  if (formatted === null) {
+    toast.add({
+      severity: 'warn',
+      summary: t('common.toast.warn'),
+      detail: t('notify.toast.invalidPassTokenJson'),
+      life: 2600,
+    })
+    return
+  }
+  passTokenExpiredBody.value = formatted
+}
+
+function applyDefaultPassTokenExpiredBodyTemplate() {
+  passTokenExpiredBody.value = buildPresetPassTokenExpiredBodyTemplate()
 }
 
 function tryFormatJson(input: string): string | null {
@@ -204,8 +263,8 @@ function formatBodyAsJson() {
   if (formatted === null) {
     toast.add({
       severity: 'warn',
-      summary: '提示',
-      detail: '当前请求体不是有效 JSON，无法格式化',
+      summary: t('common.toast.warn'),
+      detail: t('notify.toast.invalidJson'),
       life: 2600,
     })
     return
@@ -230,10 +289,10 @@ function validateHeaders(): string | null {
     const hasValue = row.value.trim() !== ''
     if (key === '' && !hasValue) continue
     if (key === '' && hasValue) {
-      return '存在请求头 value 已填写但 key 为空的行，请修正后保存'
+      return t('notify.errors.headerValueWithoutKey')
     }
     if (keys.has(key)) {
-      return `请求头 key "${key}" 重复，请合并后再保存`
+      return t('notify.errors.duplicateHeaderKey', { key })
     }
     keys.add(key)
   }
@@ -251,13 +310,14 @@ async function fetchNotifyConfig() {
       dailySummaryBody: result?.dailySummaryBody ?? '',
       dailySummaryCron: result?.dailySummaryCron ?? '',
       dailySummaryTimeZone: result?.dailySummaryTimeZone ?? '',
+      passTokenExpiredBody: result?.passTokenExpiredBody ?? '',
     }
   } catch (error) {
     console.error('获取通知配置失败', error)
     toast.add({
       severity: 'error',
-      summary: '获取失败',
-      detail: '无法获取通知配置',
+      summary: t('common.toast.fetchFailed'),
+      detail: t('notify.toast.fetchFailedDetail'),
       life: 2600,
     })
   } finally {
@@ -272,8 +332,8 @@ async function saveNotifyConfig() {
   if (selectedChannel.value === 'serverchanTurbo' && turboSendKey.value.trim() === '') {
     toast.add({
       severity: 'warn',
-      summary: '提示',
-      detail: '请填写 Server酱 Turbo SendKey',
+      summary: t('common.toast.warn'),
+      detail: t('notify.toast.turboSendKeyRequired'),
       life: 2600,
     })
     return
@@ -282,8 +342,8 @@ async function saveNotifyConfig() {
   if (selectedChannel.value === 'serverchan3' && server3SendKey.value.trim() === '') {
     toast.add({
       severity: 'warn',
-      summary: '提示',
-      detail: '请填写 Server酱 ³ SendKey',
+      summary: t('common.toast.warn'),
+      detail: t('notify.toast.server3SendKeyRequired'),
       life: 2600,
     })
     return
@@ -292,8 +352,8 @@ async function saveNotifyConfig() {
   if (!isValidHttpUrl(url)) {
     toast.add({
       severity: 'warn',
-      summary: '提示',
-      detail: '通知 URL 格式无效，请输入 http(s) 地址',
+      summary: t('common.toast.warn'),
+      detail: t('notify.toast.invalidUrl'),
       life: 2600,
     })
     return
@@ -301,7 +361,12 @@ async function saveNotifyConfig() {
 
   const headerError = isPresetChannel.value ? null : validateHeaders()
   if (headerError) {
-    toast.add({ severity: 'warn', summary: '提示', detail: headerError, life: 2800 })
+    toast.add({
+      severity: 'warn',
+      summary: t('common.toast.warn'),
+      detail: headerError,
+      life: 2800,
+    })
     return
   }
 
@@ -316,15 +381,22 @@ async function saveNotifyConfig() {
           dailySummaryBody: dailySummaryBody.value,
           dailySummaryCron: dailySummaryCron.value,
           dailySummaryTimeZone: dailySummaryTimeZone.value,
+          passTokenExpiredBody: passTokenExpiredBody.value,
         },
       },
     })
-    toast.add({ severity: 'success', summary: '成功', detail: '通知配置已保存', life: 2000 })
+    toast.add({
+      severity: 'success',
+      summary: t('common.toast.success'),
+      detail: t('notify.toast.saved'),
+      life: 2000,
+    })
     editing.value = false
     await fetchNotifyConfig()
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error) || '保存失败'
-    toast.add({ severity: 'error', summary: '错误', detail, life: 3200 })
+    const detail =
+      error instanceof Error ? error.message : String(error) || t('common.toast.saveFailed')
+    toast.add({ severity: 'error', summary: t('common.toast.error'), detail, life: 3200 })
   } finally {
     saving.value = false
   }
@@ -365,76 +437,84 @@ onMounted(() => {
 </script>
 
 <template>
-  <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mb-6">
-    <template #title>
-      <div class="flex items-center justify-between gap-2">
-        <span>通知配置</span>
-        <div class="flex items-center gap-1">
-          <Button icon="pi pi-pencil" severity="secondary" text rounded @click="openEditor" />
-          <Button
-            icon="pi pi-refresh"
-            severity="secondary"
-            text
-            rounded
-            :loading="loading"
-            @click="fetchNotifyConfig"
-          />
-        </div>
-      </div>
+  <SettingSection :title="t('notify.section.title')" :description="t('notify.section.description')">
+    <template #actions>
+      <Button
+        icon="pi pi-pencil"
+        severity="secondary"
+        text
+        rounded
+        size="small"
+        v-tooltip.bottom="t('common.action.edit')"
+        @click="openEditor"
+      />
+      <Button
+        icon="pi pi-refresh"
+        severity="secondary"
+        text
+        rounded
+        size="small"
+        :loading="loading"
+        @click="fetchNotifyConfig"
+      />
     </template>
 
-    <template #content>
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <div class="text-sm text-slate-600 dark:text-slate-300">状态</div>
-          <Tag
-            :severity="configured ? 'success' : 'secondary'"
-            :value="configured ? '已配置' : '未配置'"
-          />
-        </div>
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="text-sm text-slate-600 dark:text-slate-300">{{ t('common.field.status') }}</div>
+        <Tag
+          :severity="configured ? 'success' : 'secondary'"
+          :value="configured ? t('common.status.configured') : t('common.status.notConfigured')"
+        />
+      </div>
 
-        <div class="grid gap-3 text-sm sm:grid-cols-2">
-          <div class="space-y-1">
-            <div class="text-xs text-slate-400 dark:text-slate-500">通知渠道</div>
-            <div class="font-medium text-slate-700 dark:text-slate-200">{{ currentChannel }}</div>
-          </div>
-          <div class="space-y-1">
-            <div class="text-xs text-slate-400 dark:text-slate-500">请求头数量</div>
-            <div class="font-medium text-slate-700 dark:text-slate-200">
-              {{ currentHeaderCount }}
-            </div>
-          </div>
-        </div>
-
+      <div class="grid gap-3 text-sm sm:grid-cols-2">
         <div class="space-y-1">
-          <div class="text-xs text-slate-400 dark:text-slate-500">请求 URL</div>
-          <div
-            class="truncate rounded border border-slate-200/70 px-2 py-1 font-mono text-xs dark:border-slate-700/70"
-          >
-            {{ configured ? config.url : '未配置（URL 为空）' }}
+          <div class="text-xs text-slate-400 dark:text-slate-500">
+            {{ t('notify.field.channel') }}
+          </div>
+          <div class="font-medium text-slate-700 dark:text-slate-200">{{ currentChannel }}</div>
+        </div>
+        <div class="space-y-1">
+          <div class="text-xs text-slate-400 dark:text-slate-500">
+            {{ t('notify.field.headerCount') }}
+          </div>
+          <div class="font-medium text-slate-700 dark:text-slate-200">
+            {{ currentHeaderCount }}
           </div>
         </div>
-
-        <p class="text-xs text-slate-400 dark:text-slate-500">
-          URL 留空表示关闭通知发送；支持 Server酱 Turbo、Server酱 ³ 和自定义 WebHook。
-        </p>
       </div>
-    </template>
-  </Card>
+
+      <div class="space-y-1">
+        <div class="text-xs text-slate-400 dark:text-slate-500">
+          {{ t('notify.field.requestUrl') }}
+        </div>
+        <div
+          class="truncate rounded border border-slate-200/70 px-2 py-1 font-mono text-xs dark:border-slate-700/70"
+        >
+          {{ configured ? config.url : t('notify.field.urlEmpty') }}
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-400 dark:text-slate-500">
+        {{ t('notify.section.hint') }}
+      </p>
+    </div>
+  </SettingSection>
 
   <Dialog
     v-model:visible="editing"
     modal
-    header="编辑通知配置"
+    :header="t('notify.dialog.title')"
     class="w-full sm:w-[1160px]"
     :dismissableMask="true"
   >
     <div class="flex flex-col items-start gap-8 lg:flex-row">
       <div class="w-full min-w-0 flex-1 space-y-4">
         <div class="space-y-2">
-          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-            >通知渠道</label
-          >
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+            t('notify.field.channel')
+          }}</label>
           <SelectButton
             v-model="selectedChannel"
             :options="channelOptions"
@@ -449,34 +529,34 @@ onMounted(() => {
             <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">
               {{
                 selectedChannel === 'serverchanTurbo'
-                  ? 'Server酱 Turbo SendKey'
-                  : 'Server酱 ³ SendKey'
+                  ? t('notify.sendKey.turboLabel')
+                  : t('notify.sendKey.server3Label')
               }}
             </label>
             <InputText
               v-if="selectedChannel === 'serverchanTurbo'"
               v-model="turboSendKey"
-              placeholder="输入 Turbo SendKey（通常以 sctp 开头）"
+              :placeholder="t('notify.sendKey.turboPlaceholder')"
               class="w-full"
             />
             <InputText
               v-else
               v-model="server3SendKey"
-              placeholder="输入 Server酱 ³ SendKey"
+              :placeholder="t('notify.sendKey.server3Placeholder')"
               class="w-full"
             />
           </div>
 
           <div class="space-y-2">
-            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-              >自动生成 URL</label
-            >
+            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+              t('notify.dialog.autoGeneratedUrl')
+            }}</label>
             <InputText
               :modelValue="previewUrl"
               readonly
               disabled
               class="w-full font-mono text-xs"
-              placeholder="根据 SendKey 自动生成"
+              :placeholder="t('notify.dialog.autoGeneratedUrlPlaceholder')"
             />
           </div>
         </div>
@@ -488,12 +568,19 @@ onMounted(() => {
           <InputText v-model="customUrl" placeholder="https://example.com/notify" class="w-full" />
         </div>
 
-        <Message severity="info" icon="pi pi-info-circle" variant="simple">
-          URL 为空则关闭通知，填写时请使用 http(s)。
+        <Message
+          v-if="selectedChannel === 'custom'"
+          severity="info"
+          icon="pi pi-info-circle"
+          variant="simple"
+        >
+          {{ t('notify.dialog.urlHint') }}
         </Message>
 
         <div class="space-y-2">
-          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">请求头</label>
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+            t('notify.dialog.headers')
+          }}</label>
 
           <div v-if="selectedChannel !== 'custom'" class="space-y-2">
             <div class="grid grid-cols-1 gap-2 p-2 sm:grid-cols-2">
@@ -501,7 +588,7 @@ onMounted(() => {
               <InputText :modelValue="presetHeaderValue" readonly disabled class="text-xs" />
             </div>
             <div class="text-[11px] text-slate-400 dark:text-slate-500">
-              Server酱预设固定使用 Content-Type: application/json，且不可修改。
+              {{ t('notify.dialog.presetHeadersHint') }}
             </div>
           </div>
 
@@ -527,7 +614,7 @@ onMounted(() => {
             <div class="flex justify-end pt-1">
               <Button
                 icon="pi pi-plus"
-                label="添加请求头"
+                :label="t('notify.dialog.addHeader')"
                 size="small"
                 severity="secondary"
                 text
@@ -535,19 +622,19 @@ onMounted(() => {
               />
             </div>
             <div class="text-[11px] text-slate-400 dark:text-slate-500">
-              支持多个请求头；`value` 非空时 `key` 必填，且 key 不能重复。
+              {{ t('notify.dialog.headersHint') }}
             </div>
           </template>
         </div>
 
         <div class="space-y-2">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-              >请求体模板</label
-            >
+            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+              t('notify.dialog.bodyTemplate')
+            }}</label>
             <div class="flex flex-wrap items-center gap-1">
               <Button
-                label="格式化 JSON"
+                :label="t('notify.dialog.formatJson')"
                 severity="secondary"
                 text
                 size="small"
@@ -555,7 +642,7 @@ onMounted(() => {
               />
               <Button
                 v-if="selectedChannel !== 'custom'"
-                label="恢复默认模板"
+                :label="t('notify.dialog.restoreDefault')"
                 severity="secondary"
                 text
                 size="small"
@@ -563,23 +650,21 @@ onMounted(() => {
               />
             </div>
           </div>
-          <Textarea
+          <CodeEditor
             v-model="bodyTemplate"
-            rows="8"
-            autoResize
-            class="w-full text-xs body-default-mono"
-            placeholder="通知请求体模板"
+            min-height="11rem"
+            :placeholder="t('notify.dialog.bodyTemplatePlaceholder')"
           />
         </div>
 
         <div class="space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-              >每日汇总通知模板
-            </label>
+            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+              t('notify.dialog.dailySummaryTemplate')
+            }}</label>
             <div class="flex flex-wrap items-center gap-1">
               <Button
-                label="格式化 JSON"
+                :label="t('notify.dialog.formatJson')"
                 severity="secondary"
                 text
                 size="small"
@@ -587,7 +672,7 @@ onMounted(() => {
               />
               <Button
                 v-if="selectedChannel !== 'custom'"
-                label="恢复默认模板"
+                :label="t('notify.dialog.restoreDefault')"
                 severity="secondary"
                 text
                 size="small"
@@ -595,28 +680,26 @@ onMounted(() => {
               />
             </div>
           </div>
-          <Textarea
+          <CodeEditor
             v-model="dailySummaryBody"
-            rows="4"
-            autoResize
-            class="w-full text-xs body-default-mono"
-            placeholder="日报请求体模板，支持 ${summary} 和 ${date} 插值，留空表示不发送日报"
+            min-height="6rem"
+            :placeholder="t('notify.dialog.dailySummaryPlaceholder')"
           />
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div class="space-y-1">
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-                >Cron 表达式</label
-              >
+              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+                t('notify.dialog.cronExpression')
+              }}</label>
               <InputText
                 v-model="dailySummaryCron"
                 class="w-full font-mono text-xs"
-                placeholder="如 0 0 23 * * ?（必填）"
+                :placeholder="t('notify.dialog.cronPlaceholder')"
               />
             </div>
             <div class="space-y-1">
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-                >时区</label
-              >
+              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+                t('notify.dialog.timeZone')
+              }}</label>
               <Select
                 v-model="dailySummaryTimeZone"
                 :options="timeZones"
@@ -628,9 +711,44 @@ onMounted(() => {
           </div>
         </div>
 
+        <div class="space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+              t('notify.dialog.passTokenExpiredTemplate')
+            }}</label>
+            <div class="flex flex-wrap items-center gap-1">
+              <Button
+                :label="t('notify.dialog.formatJson')"
+                severity="secondary"
+                text
+                size="small"
+                @click="formatPassTokenExpiredBodyAsJson"
+              />
+              <Button
+                v-if="selectedChannel !== 'custom'"
+                :label="t('notify.dialog.restoreDefault')"
+                severity="secondary"
+                text
+                size="small"
+                @click="applyDefaultPassTokenExpiredBodyTemplate"
+              />
+            </div>
+          </div>
+          <CodeEditor
+            v-model="passTokenExpiredBody"
+            min-height="6rem"
+            :placeholder="t('notify.dialog.passTokenExpiredPlaceholder')"
+          />
+        </div>
+
         <div class="flex items-center justify-end gap-2 pt-2">
-          <Button label="取消" severity="secondary" text @click="editing = false" />
-          <Button label="保存" :loading="saving" @click="saveNotifyConfig" />
+          <Button
+            :label="t('common.action.cancel')"
+            severity="secondary"
+            text
+            @click="editing = false"
+          />
+          <Button :label="t('common.action.save')" :loading="saving" @click="saveNotifyConfig" />
         </div>
       </div>
 
@@ -640,7 +758,7 @@ onMounted(() => {
         <div class="space-y-5">
           <div class="space-y-2">
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              单任务通知插值项
+              {{ t('notify.interpolation.taskTitle') }}
             </h3>
             <div
               class="space-y-1 rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70"
@@ -657,7 +775,9 @@ onMounted(() => {
           </div>
 
           <div class="space-y-2">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">日报通知插值项</h3>
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              {{ t('notify.interpolation.dailyTitle') }}
+            </h3>
             <div
               class="space-y-1 rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70"
             >
@@ -674,7 +794,25 @@ onMounted(() => {
 
           <div class="space-y-2">
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              定时任务通知预览
+              {{ t('notify.interpolation.passTokenTitle') }}
+            </h3>
+            <div
+              class="space-y-1 rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70"
+            >
+              <div
+                v-for="item in passTokenExpiredInterpolationItems"
+                :key="item.token"
+                class="flex items-start justify-between gap-3"
+              >
+                <span class="font-mono text-slate-700 dark:text-slate-200">{{ item.token }}</span>
+                <span class="text-slate-500 dark:text-slate-400">{{ item.description }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              {{ t('notify.preview.taskTitle') }}
             </h3>
             <div class="rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70">
               <div class="space-y-1">
@@ -685,7 +823,7 @@ onMounted(() => {
               <div class="mt-3 space-y-1">
                 <div class="text-slate-400 dark:text-slate-500">URL</div>
                 <div class="break-all font-mono text-slate-700 dark:text-slate-200">
-                  {{ previewUrl || '(空 URL，表示关闭通知)' }}
+                  {{ previewUrl || t('notify.preview.emptyUrl') }}
                 </div>
               </div>
 
@@ -695,12 +833,14 @@ onMounted(() => {
                   v-if="previewHeaders.length === 0"
                   class="font-mono text-slate-400 dark:text-slate-500"
                 >
-                  (无)
+                  {{ t('notify.preview.none') }}
                 </div>
                 <div v-for="[key, value] in previewHeaders" :key="key" class="font-mono">
                   <span class="text-slate-500 dark:text-slate-400">{{ key }}</span
                   >:
-                  <span class="text-slate-700 dark:text-slate-200">{{ value || '(空)' }}</span>
+                  <span class="text-slate-700 dark:text-slate-200">{{
+                    value || t('common.status.empty')
+                  }}</span>
                 </div>
               </div>
 
@@ -718,11 +858,11 @@ onMounted(() => {
             :class="dailySummaryComplete ? '' : 'opacity-40 pointer-events-none select-none'"
           >
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              每日汇总通知预览
+              {{ t('notify.preview.dailyTitle') }}
               <span
                 v-if="!dailySummaryComplete"
                 class="ml-1 text-xs font-normal text-slate-400 dark:text-slate-500"
-                >（请填写完整日报配置后预览）</span
+                >{{ t('notify.preview.dailyIncomplete') }}</span
               >
             </h3>
             <div class="rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70">
@@ -734,7 +874,7 @@ onMounted(() => {
               <div class="mt-3 space-y-1">
                 <div class="text-slate-400 dark:text-slate-500">URL</div>
                 <div class="break-all font-mono text-slate-700 dark:text-slate-200">
-                  {{ previewUrl || '(空 URL，表示关闭通知)' }}
+                  {{ previewUrl || t('notify.preview.emptyUrl') }}
                 </div>
               </div>
 
@@ -744,12 +884,14 @@ onMounted(() => {
                   v-if="previewHeaders.length === 0"
                   class="font-mono text-slate-400 dark:text-slate-500"
                 >
-                  (无)
+                  {{ t('notify.preview.none') }}
                 </div>
                 <div v-for="[key, value] in previewHeaders" :key="key" class="font-mono">
                   <span class="text-slate-500 dark:text-slate-400">{{ key }}</span
                   >:
-                  <span class="text-slate-700 dark:text-slate-200">{{ value || '(空)' }}</span>
+                  <span class="text-slate-700 dark:text-slate-200">{{
+                    value || t('common.status.empty')
+                  }}</span>
                 </div>
               </div>
 
@@ -761,24 +903,61 @@ onMounted(() => {
               </div>
             </div>
           </div>
+
+          <div
+            class="space-y-2 transition-opacity duration-200"
+            :class="
+              passTokenExpiredBody.trim() !== '' ? '' : 'opacity-40 pointer-events-none select-none'
+            "
+          >
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              {{ t('notify.preview.passTokenTitle') }}
+              <span
+                v-if="passTokenExpiredBody.trim() === ''"
+                class="ml-1 text-xs font-normal text-slate-400 dark:text-slate-500"
+                >{{ t('notify.preview.passTokenEmpty') }}</span
+              >
+            </h3>
+            <div class="rounded border border-slate-200/70 p-3 text-xs dark:border-slate-700/70">
+              <div class="space-y-1">
+                <div class="text-slate-400 dark:text-slate-500">Method</div>
+                <div class="font-mono text-slate-700 dark:text-slate-200">POST</div>
+              </div>
+
+              <div class="mt-3 space-y-1">
+                <div class="text-slate-400 dark:text-slate-500">URL</div>
+                <div class="break-all font-mono text-slate-700 dark:text-slate-200">
+                  {{ previewUrl || t('notify.preview.emptyUrl') }}
+                </div>
+              </div>
+
+              <div class="mt-3 space-y-1">
+                <div class="text-slate-400 dark:text-slate-500">Headers</div>
+                <div
+                  v-if="previewHeaders.length === 0"
+                  class="font-mono text-slate-400 dark:text-slate-500"
+                >
+                  {{ t('notify.preview.none') }}
+                </div>
+                <div v-for="[key, value] in previewHeaders" :key="key" class="font-mono">
+                  <span class="text-slate-500 dark:text-slate-400">{{ key }}</span
+                  >:
+                  <span class="text-slate-700 dark:text-slate-200">{{
+                    value || t('common.status.empty')
+                  }}</span>
+                </div>
+              </div>
+
+              <div class="mt-3 space-y-1">
+                <div class="text-slate-400 dark:text-slate-500">Body</div>
+                <pre
+                  class="max-h-56 overflow-auto whitespace-pre-wrap rounded bg-slate-50 p-2 font-mono text-[11px] text-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
+                ><code>{{ previewPassTokenExpiredBody }}</code></pre>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </Dialog>
 </template>
-
-<style scoped>
-.body-default-mono {
-  font-family: monospace;
-}
-
-:deep(.p-card) {
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
-}
-:deep(.p-card:hover) {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 30px -12px rgba(2, 6, 23, 0.2);
-}
-</style>

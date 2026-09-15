@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
-import Card from 'primevue/card'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
+import SettingSection from '@/components/settings/SettingSection.vue'
 import { useToast } from 'primevue/usetoast'
 import { api } from '@/ApiInstance'
 
@@ -14,6 +15,7 @@ const updatingPassword = ref(false)
 const showPasswordConfirmVisible = ref(false)
 const isInsecureContext = ref(false)
 const toast = useToast()
+const { t } = useI18n()
 
 onMounted(() => {
   try {
@@ -25,11 +27,21 @@ onMounted(() => {
 
 async function onUpdatePassword() {
   if (!oldPassword.value || !newPassword.value || !confirmPassword.value) {
-    toast.add({ severity: 'warn', summary: '提示', detail: '请完整填写所有密码字段', life: 2500 })
+    toast.add({
+      severity: 'warn',
+      summary: t('common.toast.warn'),
+      detail: t('settings.password.fieldsRequired'),
+      life: 2500,
+    })
     return
   }
   if (newPassword.value !== confirmPassword.value) {
-    toast.add({ severity: 'warn', summary: '提示', detail: '两次输入的新密码不一致', life: 2500 })
+    toast.add({
+      severity: 'warn',
+      summary: t('common.toast.warn'),
+      detail: t('settings.password.mismatch'),
+      life: 2500,
+    })
     return
   }
   try {
@@ -37,13 +49,18 @@ async function onUpdatePassword() {
     await api.systemConfigController.updatePassword({
       body: { oldPassword: oldPassword.value, password: newPassword.value },
     })
-    toast.add({ severity: 'success', summary: '成功', detail: '密码已更新', life: 2000 })
+    toast.add({
+      severity: 'success',
+      summary: t('common.toast.success'),
+      detail: t('settings.password.updated'),
+      life: 2000,
+    })
     oldPassword.value = ''
     newPassword.value = ''
     confirmPassword.value = ''
   } catch (e) {
-    const detail = e instanceof Error ? e.message : String(e) || '更新失败'
-    toast.add({ severity: 'error', summary: '错误', detail, life: 3000 })
+    const detail = e instanceof Error ? e.message : String(e) || t('settings.password.updateFailed')
+    toast.add({ severity: 'error', summary: t('common.toast.error'), detail, life: 3000 })
   } finally {
     updatingPassword.value = false
   }
@@ -60,60 +77,62 @@ async function confirmUpdatePassword() {
 </script>
 
 <template>
-  <Card
-    class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mt-6"
-    pt:footer:class="text-right"
+  <SettingSection
+    :title="t('nav.sections.password')"
+    :description="t('settings.password.description')"
   >
-    <template #title>修改密码</template>
-    <template #content>
-      <InputText
-        v-model="oldPassword"
-        :type="'password'"
-        placeholder="输入当前密码"
-        class="w-full"
-      />
-      <InputText
-        v-model="newPassword"
-        :type="'password'"
-        placeholder="输入新密码"
-        class="w-full mt-2"
-      />
-      <InputText
-        v-model="confirmPassword"
-        :type="'password'"
-        placeholder="再次输入新密码"
-        class="w-full mt-2"
-      />
-      <div
-        v-if="isInsecureContext"
-        class="mt-3 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
-      >
-        警告：当前处于不安全上下文，提交的密码将在网络上以明文传输到服务器，可能被窃取。
-        请仅在受信网络环境使用或通过 HTTPS 访问本页面。
-      </div>
-    </template>
+    <InputText
+      v-model="oldPassword"
+      :type="'password'"
+      :placeholder="t('settings.password.currentPlaceholder')"
+      class="w-full"
+    />
+    <InputText
+      v-model="newPassword"
+      :type="'password'"
+      :placeholder="t('settings.password.newPlaceholder')"
+      class="w-full mt-2"
+    />
+    <InputText
+      v-model="confirmPassword"
+      :type="'password'"
+      :placeholder="t('settings.password.confirmPlaceholder')"
+      class="w-full mt-2"
+    />
+    <div
+      v-if="isInsecureContext"
+      class="mt-3 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
+    >
+      {{ t('settings.password.insecureWarning') }}
+    </div>
+
     <template #footer>
-      <Button label="更新密码" :loading="updatingPassword" @click="requestUpdatePassword" />
+      <Button
+        :label="t('settings.password.updateButton')"
+        size="small"
+        :loading="updatingPassword"
+        @click="requestUpdatePassword"
+      />
     </template>
-  </Card>
+  </SettingSection>
 
   <!-- 更新密码 确认 -->
   <Dialog
     v-model:visible="showPasswordConfirmVisible"
     modal
-    header="更新密码"
+    :header="t('settings.password.dialogHeader')"
     class="w-full sm:w-105"
   >
     <div class="text-sm text-slate-700 dark:text-slate-200">
-      确定要更新密码吗？
+      {{ t('settings.password.confirmMessage') }}
       <span v-if="isInsecureContext" class="text-red-600 dark:text-red-300 font-medium">
-        当前为不安全上下文，提交将以明文传输。
+        {{ t('settings.password.insecureConfirmNote') }}
       </span>
     </div>
     <template #footer>
       <div class="flex items-center justify-end gap-2 w-full">
         <Button
-          label="取消"
+          :label="t('common.action.cancel')"
           severity="secondary"
           text
           @click="
@@ -123,7 +142,7 @@ async function confirmUpdatePassword() {
           "
         />
         <Button
-          label="确定"
+          :label="t('common.action.confirm')"
           severity="warning"
           :loading="updatingPassword"
           @click="confirmUpdatePassword"
@@ -132,15 +151,3 @@ async function confirmUpdatePassword() {
     </template>
   </Dialog>
 </template>
-
-<style scoped>
-:deep(.p-card) {
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
-}
-:deep(.p-card:hover) {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 30px -12px rgba(2, 6, 23, 0.2);
-}
-</style>

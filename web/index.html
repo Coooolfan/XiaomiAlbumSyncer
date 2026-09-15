@@ -5,6 +5,21 @@
     <link rel="icon" href="/logo.avif">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xiaomi Album Syncer</title>
+    <script>
+      try {
+        var savedLocale = localStorage.getItem('app:locale')
+        document.documentElement.lang =
+          savedLocale ||
+          ((navigator.language || '').toLowerCase().indexOf('zh') === 0 ? 'zh-CN' : 'en-US')
+        var theme = localStorage.getItem('app:themeMode')
+        if (
+          theme === 'dark' ||
+          (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ) {
+          document.documentElement.classList.add('dark')
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="app"></div>

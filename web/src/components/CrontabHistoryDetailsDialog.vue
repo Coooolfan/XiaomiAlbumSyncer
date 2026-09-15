@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
@@ -63,12 +64,15 @@ const dialogPt = computed(() => ({
   },
 }))
 
+const { t, locale } = useI18n()
+
 const historyStatus = computed(() => {
   const history = props.history
-  if (!history) return { severity: 'secondary' as const, label: '未知' }
-  if (history.isCompleted) return { severity: 'success' as const, label: '完成' }
-  if (!history.endTime) return { severity: 'info' as const, label: '进行中' }
-  return { severity: 'warn' as const, label: '终止' }
+  if (!history) return { severity: 'secondary' as const, label: t('schedule.status.unknown') }
+  if (history.isCompleted)
+    return { severity: 'success' as const, label: t('schedule.status.completed') }
+  if (!history.endTime) return { severity: 'info' as const, label: t('schedule.status.running') }
+  return { severity: 'warn' as const, label: t('schedule.status.terminated') }
 })
 
 function formatTime(value?: string) {
@@ -76,7 +80,7 @@ function formatTime(value?: string) {
   try {
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return value
-    return date.toLocaleString()
+    return date.toLocaleString(locale.value)
   } catch {
     return value
   }
@@ -88,7 +92,7 @@ function formatRange(history: CrontabHistory | null) {
 }
 
 function resolveErrorMessage(error: string | null | undefined) {
-  return error?.trim() || '加载执行明细失败'
+  return error?.trim() || t('schedule.details.loadFailed')
 }
 
 function resolveAssetId(detail: CrontabHistoryDetail) {
@@ -109,8 +113,8 @@ function resolveMessage(detail: CrontabHistoryDetail) {
 
 function resolveStepStatus(value?: boolean) {
   return value
-    ? { severity: 'success' as const, label: '完成' }
-    : { severity: 'warn' as const, label: '未完成' }
+    ? { severity: 'success' as const, label: t('schedule.status.completed') }
+    : { severity: 'warn' as const, label: t('schedule.status.incomplete') }
 }
 
 function handlePage(event: { page?: number; rows?: number }) {
@@ -130,7 +134,7 @@ const stepTagClass = '!whitespace-nowrap !text-xs'
     maximizable
     :style="dialogStyle"
     :pt="dialogPt"
-    header="执行明细"
+    :header="t('schedule.details.title')"
     @maximize="maximized = true"
     @unmaximize="maximized = false"
   >
@@ -147,15 +151,15 @@ const stepTagClass = '!whitespace-nowrap !text-xs'
               <Tag :severity="historyStatus.severity" :value="historyStatus.label" />
             </div>
             <div class="text-xs text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-4 gap-y-1">
-              <span>历史 ID：{{ history?.id ?? '-' }}</span>
-              <span>总条数：{{ totalRowCount }}</span>
-              <span>每页：{{ pageSize }}</span>
+              <span>{{ t('schedule.details.historyId', { id: history?.id ?? '-' }) }}</span>
+              <span>{{ t('schedule.details.totalCount', { n: totalRowCount }) }}</span>
+              <span>{{ t('schedule.details.pageSize', { n: pageSize }) }}</span>
             </div>
           </div>
 
           <Button
-            v-if="historyStatus.label === '进行中'"
-            label="手动刷新"
+            v-if="historyStatus.severity === 'info'"
+            :label="t('schedule.details.manualRefresh')"
             icon="pi pi-refresh"
             size="small"
             severity="secondary"
@@ -190,11 +194,11 @@ const stepTagClass = '!whitespace-nowrap !text-xs'
         >
           <template #empty>
             <div class="text-center text-slate-500 dark:text-slate-400 py-6">
-              {{ error ? '明细加载失败，请稍后重试。' : '暂无执行明细。' }}
+              {{ error ? t('schedule.details.loadFailedRetry') : t('schedule.details.empty') }}
             </div>
           </template>
 
-          <Column header="资产" style="min-width: 12rem">
+          <Column :header="t('schedule.details.colAsset')" style="min-width: 12rem">
             <template #body="{ data }">
               <span class="font-mono text-sm text-slate-700 dark:text-slate-200">
                 {{ resolveAssetId(data) }}
@@ -202,7 +206,7 @@ const stepTagClass = '!whitespace-nowrap !text-xs'
             </template>
           </Column>
 
-          <Column header="相册" style="min-width: 10rem">
+          <Column :header="t('schedule.details.colAlbum')" style="min-width: 10rem">
             <template #body="{ data }">
               <div class="flex flex-col gap-1">
                 <span class="text-slate-700 dark:text-slate-200">
@@ -215,7 +219,7 @@ const stepTagClass = '!whitespace-nowrap !text-xs'
             </template>
           </Column>
 
-          <Column header="文件路径" style="min-width: 18rem">
+          <Column :header="t('schedule.details.colFilePath')" style="min-width: 18rem">
             <template #body="{ data }">
               <span class="font-mono text-xs text-slate-600 dark:text-slate-300 break-all">
                 {{ data.filePath || '-' }}
@@ -223,7 +227,7 @@ const stepTagClass = '!whitespace-nowrap !text-xs'
             </template>
           </Column>
 
-          <Column header="下载时间" style="min-width: 11rem">
+          <Column :header="t('schedule.details.colDownloadTime')" style="min-width: 11rem">
             <template #body="{ data }">
               <span class="text-slate-600 dark:text-slate-300">
                 {{ formatTime(data.downloadTime) }}
@@ -231,7 +235,7 @@ const stepTagClass = '!whitespace-nowrap !text-xs'
             </template>
           </Column>
 
-          <Column header="下载" style="width: 6rem">
+          <Column :header="t('schedule.details.colDownload')" style="width: 6rem">
             <template #body="{ data }">
               <Tag
                 :class="stepTagClass"
@@ -261,7 +265,7 @@ const stepTagClass = '!whitespace-nowrap !text-xs'
             </template>
           </Column>
 
-          <Column header="文件时间" style="width: 7rem">
+          <Column :header="t('schedule.details.colFsTime')" style="width: 7rem">
             <template #body="{ data }">
               <Tag
                 :class="stepTagClass"
@@ -271,7 +275,7 @@ const stepTagClass = '!whitespace-nowrap !text-xs'
             </template>
           </Column>
 
-          <Column header="消息" style="min-width: 16rem">
+          <Column :header="t('schedule.details.colMessage')" style="min-width: 16rem">
             <template #body="{ data }">
               <div class="text-sm text-slate-700 dark:text-slate-200 break-words">
                 {{ resolveMessage(data) }}

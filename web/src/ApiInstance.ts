@@ -1,4 +1,5 @@
 import { Api } from './__generated'
+import { i18n } from '@/i18n'
 
 const BASE_URL = ''
 
@@ -33,20 +34,28 @@ export const api = new Api(async ({ uri, method, headers, body }) => {
     if (!unauthorizedHandled) {
       unauthorizedHandled = true
       document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-      window.alert('登录已过期，请重新登录')
+      window.alert(i18n.global.t('misc.session.expiredRelogin'))
       window.location.replace('/')
     }
-    throw new Error('登录已过期')
+    throw new Error(i18n.global.t('misc.session.expired'))
   }
 
   if (Math.floor(response.status / 100) === 5) {
     const text = await response.text()
     console.error('服务器错误:', response.status, uri, text)
-    throw new Error('请求失败：' + text)
+    throw new Error(i18n.global.t('misc.request.failedWithDetail', { detail: text }))
   }
 
   if (Math.floor(response.status / 100) !== 2) {
-    throw response.json()
+    const errBody = (await response.json().catch(() => null)) as {
+      description?: string
+      message?: string
+    } | null
+    throw new Error(
+      errBody?.description ||
+        errBody?.message ||
+        i18n.global.t('misc.request.failedWithStatus', { status: response.status }),
+    )
   }
 
   const text = await response.text()

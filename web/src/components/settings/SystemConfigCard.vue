@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
-import Card from 'primevue/card'
 import InputText from 'primevue/inputtext'
+import Skeleton from 'primevue/skeleton'
+import SettingSection from '@/components/settings/SettingSection.vue'
 import { useToast } from 'primevue/usetoast'
 import { api } from '@/ApiInstance'
 
 const exifToolPath = ref('')
 const loadingConfig = ref(false)
 const savingConfig = ref(false)
+const initialized = ref(false)
 const toast = useToast()
+const { t } = useI18n()
 
 async function fetchSystemConfig() {
   loadingConfig.value = true
@@ -18,15 +22,26 @@ async function fetchSystemConfig() {
     exifToolPath.value = cfg?.exifToolPath ?? ''
   } catch (e) {
     console.error('获取系统配置失败', e)
-    toast.add({ severity: 'error', summary: '获取失败', detail: '无法获取系统配置', life: 2200 })
+    toast.add({
+      severity: 'error',
+      summary: t('common.toast.fetchFailed'),
+      detail: t('settings.system.fetchFailedDetail'),
+      life: 2200,
+    })
   } finally {
     loadingConfig.value = false
+    initialized.value = true
   }
 }
 
 async function onUpdateSystemConfig() {
   if (!exifToolPath.value || exifToolPath.value.trim() === '') {
-    toast.add({ severity: 'warn', summary: '提示', detail: '请输入 exiftool 路径', life: 2500 })
+    toast.add({
+      severity: 'warn',
+      summary: t('common.toast.warn'),
+      detail: t('settings.system.pathRequired'),
+      life: 2500,
+    })
     return
   }
   try {
@@ -35,10 +50,15 @@ async function onUpdateSystemConfig() {
       body: { exifToolPath: exifToolPath.value },
     })
 
-    toast.add({ severity: 'success', summary: '成功', detail: '系统配置已保存', life: 2000 })
+    toast.add({
+      severity: 'success',
+      summary: t('common.toast.success'),
+      detail: t('settings.system.saved'),
+      life: 2000,
+    })
   } catch (e) {
-    const detail = e instanceof Error ? e.message : String(e) || '保存失败'
-    toast.add({ severity: 'error', summary: '错误', detail, life: 3000 })
+    const detail = e instanceof Error ? e.message : String(e) || t('common.toast.saveFailed')
+    toast.add({ severity: 'error', summary: t('common.toast.error'), detail, life: 3000 })
   } finally {
     savingConfig.value = false
   }
@@ -50,47 +70,42 @@ onMounted(() => {
 </script>
 
 <template>
-  <Card
-    class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mb-6"
-    pt:footer:class="text-right"
-  >
-    <template #title>
-      <div class="flex items-center justify-between">
-        <span>系统配置</span>
-        <Button icon="pi pi-refresh" severity="secondary" rounded text @click="fetchSystemConfig" />
-      </div>
+  <SettingSection :title="t('nav.sections.system')" :description="t('settings.system.description')">
+    <template #actions>
+      <Button
+        icon="pi pi-refresh"
+        severity="secondary"
+        rounded
+        text
+        size="small"
+        @click="fetchSystemConfig"
+      />
     </template>
-    <template #content>
-      <div class="space-y-6">
-        <div class="space-y-2">
-          <span class="text-sm text-slate-600 dark:text-slate-300 font-medium">ExifTool 路径</span>
-          <InputText
-            v-model="exifToolPath"
-            :disabled="loadingConfig"
-            placeholder="输入 exiftool 可执行文件路径"
-            class="w-full"
-          />
-          <p class="text-xs text-slate-400 dark:text-slate-500">
-            如果您使用 Docker 部署此项目，请不要改动此配置。如果您使用其他方式部署此项目，请输入
-            exiftool 可执行文件路径。
-          </p>
-        </div>
-      </div>
-    </template>
-    <template #footer>
-      <Button label="保存" :loading="savingConfig" @click="onUpdateSystemConfig" />
-    </template>
-  </Card>
-</template>
 
-<style scoped>
-:deep(.p-card) {
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
-}
-:deep(.p-card:hover) {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 30px -12px rgba(2, 6, 23, 0.2);
-}
-</style>
+    <div class="space-y-2">
+      <span class="text-sm text-slate-600 dark:text-slate-300 font-medium">{{
+        t('settings.system.exifToolPathLabel')
+      }}</span>
+      <Skeleton v-if="!initialized" height="2.75rem" class="w-full" />
+      <InputText
+        v-else
+        v-model="exifToolPath"
+        :disabled="loadingConfig"
+        :placeholder="t('settings.system.exifToolPathPlaceholder')"
+        class="w-full"
+      />
+      <p class="text-xs text-slate-400 dark:text-slate-500">
+        {{ t('settings.system.exifToolPathHint') }}
+      </p>
+    </div>
+
+    <template #footer>
+      <Button
+        :label="t('common.action.save')"
+        size="small"
+        :loading="savingConfig"
+        @click="onUpdateSystemConfig"
+      />
+    </template>
+  </SettingSection>
+</template>

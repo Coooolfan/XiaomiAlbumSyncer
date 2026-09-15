@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, toRefs, ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useTheme } from '@/composables/useTheme'
 
 type DataPoint = {
   timeStamp: number
@@ -42,6 +44,8 @@ const props = withDefaults(
     scheme: 'emerald',
   },
 )
+
+const { t, locale } = useI18n()
 
 const {
   data,
@@ -254,9 +258,8 @@ const weeks = computed(() => {
 const containerEl = ref<HTMLElement | null>(null)
 const measuredCell = ref(Math.max(8, cellSize.value))
 const measuredGap = ref(Math.max(1, gap.value))
-const prefersDark = ref(false)
+const { isDark: prefersDark } = useTheme()
 let ro: ResizeObserver | null = null
-let darkQuery: MediaQueryList | null = null
 
 const weeksCount = computed(() => weeks.value.length)
 
@@ -300,27 +303,6 @@ function recomputeLayout() {
 }
 
 onMounted(() => {
-  if (typeof window !== 'undefined') {
-    darkQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    prefersDark.value = darkQuery.matches
-    const onChange = (event: MediaQueryListEvent) => {
-      prefersDark.value = event.matches
-    }
-    if (typeof darkQuery.addEventListener === 'function') {
-      darkQuery.addEventListener('change', onChange)
-    } else {
-      darkQuery.addListener(onChange)
-    }
-    cleanupDarkListener = () => {
-      if (!darkQuery) return
-      if (typeof darkQuery.removeEventListener === 'function') {
-        darkQuery.removeEventListener('change', onChange)
-      } else {
-        darkQuery.removeListener(onChange)
-      }
-    }
-  }
-
   ro = new ResizeObserver(() => {
     recomputeLayout()
   })
@@ -331,9 +313,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   ro?.disconnect()
   ro = null
-  cleanupDarkListener?.()
-  cleanupDarkListener = null
-  darkQuery = null
 })
 
 watch(
@@ -345,14 +324,14 @@ watch(
 )
 
 function monthShort(d: Date): string {
-  return String(d.getMonth() + 1).padStart(2, '0')
+  return d.toLocaleDateString(locale.value, { month: 'short' })
 }
 
 const rangeText = computed(() => {
   const s = startDate.value
   const e = endDate.value
   const fmt = (d: Date) =>
-    d.toLocaleDateString(undefined, { year: '2-digit', month: '2-digit', day: '2-digit' })
+    d.toLocaleDateString(locale.value, { year: '2-digit', month: '2-digit', day: '2-digit' })
   return `${fmt(s)} - ${fmt(e)}`
 })
 
@@ -393,8 +372,6 @@ const colorPalette = computed(() => {
   }
 })
 
-let cleanupDarkListener: (() => void) | null = null
-
 function cellStyle(level: number) {
   const idx = Math.max(0, Math.min(4, Math.floor(level)))
   const bg = colorPalette.value[idx]
@@ -412,7 +389,7 @@ function onDayClick(day: { date: Date; dateStr: string; count: number; level: 0 
   emit('day-click', { date: day.date, dateStr: day.dateStr, count: day.count, level: day.level })
 }
 function tooltipText(day: { dateStr: string; count: number }) {
-  return `${day.count} on ${day.dateStr}`
+  return t('heatmap.dayTooltip', { count: day.count, dateStr: day.dateStr })
 }
 </script>
 
@@ -450,7 +427,7 @@ function tooltipText(day: { dateStr: string; count: number }) {
       class="flex"
       :style="{ columnGap: 'var(--gap)' }"
       role="grid"
-      aria-label="contribution heatmap"
+      :aria-label="t('heatmap.ariaLabel')"
     >
       <div
         v-for="(week, wi) in weeks"
@@ -464,7 +441,9 @@ function tooltipText(day: { dateStr: string; count: number }) {
           :key="`d-${wi}-${di}`"
           class="cell focus:outline-none focus:ring-2 focus:ring-emerald-500/60"
           role="gridcell"
-          :aria-label="`${day.dateStr}: ${day.count} count`"
+          :aria-label="
+            t('heatmap.dayAriaLabel', { dateStr: day.dateStr, count: day.count }, day.count)
+          "
           :title="tooltipText(day)"
           :style="cellStyle(day.level)"
           @click="onDayClick(day)"
@@ -476,7 +455,7 @@ function tooltipText(day: { dateStr: string; count: number }) {
     <div
       class="flex items-center gap-2 mt-3 text-[10px] text-slate-400 dark:text-slate-500 select-none"
     >
-      <span>Less</span>
+      <span>{{ t('heatmap.less') }}</span>
       <div class="flex items-center gap-1">
         <div
           v-for="l in [0, 1, 2, 3, 4]"
@@ -485,7 +464,7 @@ function tooltipText(day: { dateStr: string; count: number }) {
           :style="cellStyle(l)"
         ></div>
       </div>
-      <span>More</span>
+      <span>{{ t('heatmap.more') }}</span>
     </div>
   </div>
 </template>
@@ -494,21 +473,5 @@ function tooltipText(day: { dateStr: string; count: number }) {
 .cell:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 18px -10px rgba(2, 6, 23, 0.3);
-}
-
-/* Theming vars */
-:host,
-:root,
-.inline-block {
-  --heatmap-empty: rgba(15, 23, 42, 0.06);
-  --heatmap-cell-border: rgba(15, 23, 42, 0.08);
-}
-@media (prefers-color-scheme: dark) {
-  :host,
-  :root,
-  .inline-block {
-    --heatmap-empty: rgba(148, 163, 184, 0.12);
-    --heatmap-cell-border: rgba(148, 163, 184, 0.18);
-  }
 }
 </style>

@@ -221,6 +221,30 @@ class CrontabController(private val service: CrontabService) {
         return service.listCrontabHistoryDetails(id, pageIndex ?: 0, pageSize ?: 10, CRONTAB_HISTORY_DETAIL_FETCHER)
     }
 
+    /**
+     * 分页获取指定定时任务的执行历史（按连续 0 资产折叠）
+     *
+     * 连续的已完成且明细数为 0 的执行记录合并为一个分组返回，
+     * 其余记录各自单独成组。
+     *
+     * @param crontabId 定时任务ID
+     * @param pageIndex 页码，默认 0
+     * @param pageSize 分页大小，默认 10
+     * @return Page<CrontabHistoryGroup> 折叠后的历史分组分页数据
+     *
+     * @api GET /api/crontab/{crontabId}/histories
+     * @permission 需要登录认证
+     */
+    @Api
+    @Mapping("/{crontabId}/histories", method = [MethodType.GET])
+    fun listCrontabHistoryGroups(
+        @Path crontabId: Long,
+        @Param pageIndex: Int?,
+        @Param pageSize: Int?
+    ): Page<CrontabHistoryGroup> {
+        return service.listCrontabHistoryGroups(crontabId, pageIndex ?: 0, pageSize ?: 10)
+    }
+
     companion object {
         private val DEFAULT_CRONTAB = newFetcher(Crontab::class).by {
             allScalarFields()
@@ -268,6 +292,23 @@ class CrontabController(private val service: CrontabService) {
  * @property exifFilledCount EXIF填充完成数
  * @property fsTimeUpdatedCount 文件系统时间更新完成数
  */
+/**
+ * 折叠后的定时任务执行历史分组
+ *
+ * @property historyId 组内最新一次执行的历史 ID
+ * @property startTime 组内最早的开始时间
+ * @property endTime 组内最晚的结束时间（进行中为 null）
+ * @property runCount 折叠的执行次数，1 表示未折叠的单条记录
+ * @property detailsCount 组内资产明细总数
+ */
+data class CrontabHistoryGroup(
+    val historyId: Long,
+    val startTime: Instant,
+    val endTime: Instant?,
+    val runCount: Long,
+    val detailsCount: Long
+)
+
 data class CrontabCurrentStats(
     val ts: Instant? = null,
     val assetCount: Long? = null,

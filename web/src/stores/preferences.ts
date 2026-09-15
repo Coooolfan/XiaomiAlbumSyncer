@@ -1,18 +1,22 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
+import { detectLocale, type AppLocale } from '@/i18n'
 
-type BgMode = 'lightRays' | 'silk'
+export type ThemeMode = 'system' | 'light' | 'dark'
 
-const BG_KEY = 'app:bgMode'
+const THEME_KEY = 'app:themeMode'
+const LEGACY_BG_KEY = 'app:bgMode'
 const HEAT_KEY = 'app:optimizeHeatmap'
+const LOCALE_KEY = 'app:locale'
 
 function hasStorage(): boolean {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
 }
 
 export const usePreferencesStore = defineStore('preferences', () => {
-  const backgroundMode = ref<BgMode>('lightRays')
+  const themeMode = ref<ThemeMode>('system')
   const optimizeHeatmap = ref(true)
+  const locale = ref<AppLocale>(detectLocale())
   const loaded = ref(false)
 
   function loadFromStorage() {
@@ -21,9 +25,10 @@ export const usePreferencesStore = defineStore('preferences', () => {
       return
     }
     try {
-      const bgSaved = window.localStorage.getItem(BG_KEY) as BgMode | null
-      if (bgSaved === 'silk' || bgSaved === 'lightRays') {
-        backgroundMode.value = bgSaved
+      window.localStorage.removeItem(LEGACY_BG_KEY)
+      const themeSaved = window.localStorage.getItem(THEME_KEY) as ThemeMode | null
+      if (themeSaved === 'system' || themeSaved === 'light' || themeSaved === 'dark') {
+        themeMode.value = themeSaved
       }
     } catch {}
 
@@ -36,19 +41,26 @@ export const usePreferencesStore = defineStore('preferences', () => {
       }
     } catch {}
 
+    try {
+      const localeSaved = window.localStorage.getItem(LOCALE_KEY)
+      if (localeSaved === 'zh-CN' || localeSaved === 'en-US') {
+        locale.value = localeSaved
+      }
+    } catch {}
+
     loaded.value = true
   }
 
-  function setBackgroundMode(mode: BgMode) {
-    backgroundMode.value = mode
-  }
-
-  function toggleBackground() {
-    backgroundMode.value = backgroundMode.value === 'lightRays' ? 'silk' : 'lightRays'
+  function setThemeMode(mode: ThemeMode) {
+    themeMode.value = mode
   }
 
   function setOptimizeHeatmap(value: boolean) {
     optimizeHeatmap.value = value
+  }
+
+  function setLocale(value: AppLocale) {
+    locale.value = value
   }
 
   if (!loaded.value) {
@@ -56,11 +68,11 @@ export const usePreferencesStore = defineStore('preferences', () => {
   }
 
   watch(
-    backgroundMode,
+    themeMode,
     (val) => {
       if (!loaded.value || !hasStorage()) return
       try {
-        window.localStorage.setItem(BG_KEY, val)
+        window.localStorage.setItem(THEME_KEY, val)
       } catch {}
     },
     { immediate: false },
@@ -77,13 +89,25 @@ export const usePreferencesStore = defineStore('preferences', () => {
     { immediate: false },
   )
 
+  watch(
+    locale,
+    (val) => {
+      if (!loaded.value || !hasStorage()) return
+      try {
+        window.localStorage.setItem(LOCALE_KEY, val)
+      } catch {}
+    },
+    { immediate: false },
+  )
+
   return {
-    backgroundMode,
+    themeMode,
     optimizeHeatmap,
+    locale,
     loaded,
     loadFromStorage,
-    setBackgroundMode,
-    toggleBackground,
+    setThemeMode,
     setOptimizeHeatmap,
+    setLocale,
   }
 })

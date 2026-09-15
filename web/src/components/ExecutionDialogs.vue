@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   deleteVisible: boolean
@@ -87,15 +90,20 @@ function closeClearHistory() {
 
 <template>
   <!-- 删除确认 -->
-  <Dialog v-model:visible="deleteVisible" modal header="删除计划任务" class="w-full sm:w-105">
+  <Dialog
+    v-model:visible="deleteVisible"
+    modal
+    :header="t('schedule.dialog.delete.header')"
+    class="w-full sm:w-105"
+  >
     <div class="text-sm text-slate-700 dark:text-slate-200">
-      确定要删除该计划任务吗？该操作不可恢复。
+      {{ t('schedule.dialog.delete.message') }}
     </div>
     <template #footer>
       <div class="flex items-center justify-end gap-2 w-full">
-        <Button label="取消" severity="secondary" text @click="closeDelete" />
+        <Button :label="t('common.action.cancel')" severity="secondary" text @click="closeDelete" />
         <Button
-          label="删除"
+          :label="t('common.action.delete')"
           severity="danger"
           :loading="props.deleting"
           @click="emit('confirmDelete')"
@@ -105,15 +113,25 @@ function closeClearHistory() {
   </Dialog>
 
   <!-- 立即执行确认 -->
-  <Dialog v-model:visible="executeVisible" modal header="立即执行" class="w-full sm:w-105">
+  <Dialog
+    v-model:visible="executeVisible"
+    modal
+    :header="t('schedule.dialog.execute.header')"
+    class="w-full sm:w-105"
+  >
     <div class="text-sm text-slate-700 dark:text-slate-200">
-      确定要立即触发该计划任务的执行吗？该操作较为耗时，将在后台执行。
+      {{ t('schedule.dialog.execute.message') }}
     </div>
     <template #footer>
       <div class="flex items-center justify-end gap-2 w-full">
-        <Button label="取消" severity="secondary" text @click="closeExecute" />
         <Button
-          label="执行"
+          :label="t('common.action.cancel')"
+          severity="secondary"
+          text
+          @click="closeExecute"
+        />
+        <Button
+          :label="t('schedule.dialog.run')"
           severity="warning"
           :loading="props.executing"
           @click="emit('confirmExecute')"
@@ -126,18 +144,24 @@ function closeClearHistory() {
   <Dialog
     v-model:visible="executeExifVisible"
     modal
-    header="立即执行 EXIF 填充"
+    :header="t('schedule.dialog.executeExif.header')"
     class="w-full sm:w-105"
   >
     <div class="text-sm text-slate-700 dark:text-slate-200">
-      确定要手动触发该计划任务的 EXIF
-      填充操作吗？该操作较为耗时，将在后台执行。可观察程序日志查看进度。<br />会对此计划任务所有下载过的文件执行此操作。
+      {{ t('schedule.dialog.executeExif.message') }}<br />{{
+        t('schedule.dialog.appliesToAllFiles')
+      }}
     </div>
     <template #footer>
       <div class="flex items-center justify-end gap-2 w-full">
-        <Button label="取消" severity="secondary" text @click="closeExecuteExif" />
         <Button
-          label="执行"
+          :label="t('common.action.cancel')"
+          severity="secondary"
+          text
+          @click="closeExecuteExif"
+        />
+        <Button
+          :label="t('schedule.dialog.run')"
           severity="info"
           :loading="props.executingExif"
           @click="emit('confirmExecuteExif')"
@@ -150,17 +174,24 @@ function closeClearHistory() {
   <Dialog
     v-model:visible="executeRewriteFsVisible"
     modal
-    header="立即重写文件系统时间"
+    :header="t('schedule.dialog.executeRewriteFs.header')"
     class="w-full sm:w-105"
   >
     <div class="text-sm text-slate-700 dark:text-slate-200">
-      确定要对该计划任务已下载的文件执行文件系统时间重写吗？该操作较为耗时，将在后台执行。可观察程序日志查看进度。<br />会对此计划任务所有下载过的文件执行此操作。
+      {{ t('schedule.dialog.executeRewriteFs.message') }}<br />{{
+        t('schedule.dialog.appliesToAllFiles')
+      }}
     </div>
     <template #footer>
       <div class="flex items-center justify-end gap-2 w-full">
-        <Button label="取消" severity="secondary" text @click="closeExecuteRewriteFs" />
         <Button
-          label="执行"
+          :label="t('common.action.cancel')"
+          severity="secondary"
+          text
+          @click="closeExecuteRewriteFs"
+        />
+        <Button
+          :label="t('schedule.dialog.run')"
           severity="info"
           :loading="props.executingRewriteFs"
           @click="emit('confirmExecuteRewriteFs')"
@@ -170,22 +201,35 @@ function closeClearHistory() {
   </Dialog>
 
   <!-- 清理任务历史 -->
-  <Dialog v-model:visible="clearHistoryVisible" modal header="清理任务历史" class="w-full sm:w-105">
+  <Dialog
+    v-model:visible="clearHistoryVisible"
+    modal
+    :header="t('schedule.dialog.clearHistory.header')"
+    class="w-full sm:w-105"
+  >
     <div class="text-sm text-slate-700 dark:text-slate-200 space-y-2">
-      <div>确定要清空该任务的执行历史与下载记录吗？</div>
+      <div>{{ t('schedule.dialog.clearHistory.line1') }}</div>
       <div>
-        下次执行将把所有资源视为新增重新评估。时间线比对基线会丢失，下次执行回退为全量比对，耗时更长。
+        {{ t('schedule.dialog.clearHistory.line2') }}
       </div>
       <div>
-        仅删除数据库记录，
-        <bold class="text-amber-700 dark:text-amber-400">不会清理</bold> 文件系统/磁盘 上的文件
+        {{ t('schedule.dialog.clearHistory.line3a') }}
+        <bold class="text-amber-700 dark:text-amber-400">{{
+          t('schedule.dialog.clearHistory.line3b')
+        }}</bold>
+        {{ t('schedule.dialog.clearHistory.line3c') }}
       </div>
     </div>
     <template #footer>
       <div class="flex items-center justify-end gap-2 w-full">
-        <Button label="取消" severity="secondary" text @click="closeClearHistory" />
         <Button
-          label="清理"
+          :label="t('common.action.cancel')"
+          severity="secondary"
+          text
+          @click="closeClearHistory"
+        />
+        <Button
+          :label="t('schedule.dialog.clear')"
           severity="danger"
           :loading="props.clearingHistory"
           @click="emit('confirmClearHistory')"

@@ -5,6 +5,7 @@ export type {CredentialDescriptor} from './CredentialDescriptor';
 export type {CrontabConfig} from './CrontabConfig';
 export type {CrontabCreateInput} from './CrontabCreateInput';
 export type {CrontabCurrentStats} from './CrontabCurrentStats';
+export type {CrontabHistoryGroup} from './CrontabHistoryGroup';
 export type {CrontabUpdateInput} from './CrontabUpdateInput';
 export type {HasPasskeysResponse} from './HasPasskeysResponse';
 export type {IsInitResponse} from './IsInitResponse';

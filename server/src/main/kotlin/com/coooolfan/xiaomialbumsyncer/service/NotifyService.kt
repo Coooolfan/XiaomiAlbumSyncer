@@ -96,6 +96,32 @@ class NotifyService(private val sql: KSqlClient) {
         sendRequest(url, renderedBody, notifyConfig.headers, "daily-summary")
     }
 
+    fun sendPassTokenExpired(account: XiaomiAccount) {
+        val notifyConfig = sql.findOneById(SystemConfig::class, CONFIG_ID).notifyConfig
+        val url = notifyConfig.url.trim()
+        val template = notifyConfig.passTokenExpiredBody?.trim()
+
+        if (url.isEmpty()) {
+            log.warn("通知 URL 未配置, 将跳过通知发送")
+            return
+        }
+
+        if (template.isNullOrEmpty()) {
+            log.info("PassToken 失效通知未配置，跳过")
+            return
+        }
+
+        val renderedBody = renderTemplate(
+            template, mapOf(
+                "account.nickname" to account.nickname,
+                "account.userId" to account.userId,
+                "account.id" to account.id.toString()
+            )
+        )
+
+        sendRequest(url, renderedBody, notifyConfig.headers, "passToken-expired accountId=${account.id}")
+    }
+
     private fun buildSummaryText(
         histories: List<CrontabHistory>,
         totalCounts: Map<Long, Long>,

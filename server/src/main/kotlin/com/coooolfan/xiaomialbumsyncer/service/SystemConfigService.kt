@@ -46,7 +46,8 @@ class SystemConfigService(
                 body = "",
                 dailySummaryBody = null,
                 dailySummaryCron = null,
-                dailySummaryTimeZone = null
+                dailySummaryTimeZone = null,
+                passTokenExpiredBody = null
             )
         }, SaveMode.INSERT_ONLY).execute()
     }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, toRef, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
@@ -30,6 +31,8 @@ const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void
   (e: 'submit'): void
 }>()
+
+const { t } = useI18n()
 
 const visibleProxy = computed({
   get: () => props.visible,
@@ -92,7 +95,7 @@ onBeforeUnmount(() => {
   <Dialog
     v-model:visible="visibleProxy"
     modal
-    :header="props.isEditing ? '编辑计划任务' : '创建计划任务'"
+    :header="props.isEditing ? t('cronform.title.edit') : t('cronform.title.create')"
     :class="[
       'transition-all duration-300',
       showExpressionHelp || showCronHelp ? 'w-full sm:w-250' : 'w-full sm:w-130',
@@ -102,32 +105,40 @@ onBeforeUnmount(() => {
     <div class="flex gap-8 items-start">
       <div class="flex-1 space-y-4 min-w-0">
         <div class="space-y-2">
-          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">名称</label>
-          <InputText v-model="form.name" placeholder="例如：每日同步" class="w-full" />
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+            t('common.field.name')
+          }}</label>
+          <InputText
+            v-model="form.name"
+            :placeholder="t('cronform.field.namePlaceholder')"
+            class="w-full"
+          />
           <div v-if="formErrors.name" class="text-xs text-red-500">{{ formErrors.name }}</div>
         </div>
 
         <div class="space-y-2">
-          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">描述</label>
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+            t('common.field.description')
+          }}</label>
           <Textarea
             v-model="form.description"
             rows="2"
             autoResize
-            placeholder="可选"
+            :placeholder="t('common.field.optional')"
             class="w-full"
           />
         </div>
 
         <div class="space-y-2">
-          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-            >归属账号</label
-          >
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+            t('cronform.field.account')
+          }}</label>
           <Select
             v-model="form.accountId"
             :options="accountOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="选择小米账号"
+            :placeholder="t('cronform.field.accountPlaceholder')"
             class="w-full"
             :disabled="props.isEditing"
           />
@@ -135,16 +146,16 @@ onBeforeUnmount(() => {
             {{ formErrors.accountId }}
           </div>
           <div v-if="props.isEditing" class="text-[10px] text-slate-400 dark:text-slate-500">
-            计划任务创建后无法更改归属账号
+            {{ t('cronform.field.accountLockedHint') }}
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
           <div class="space-y-2">
             <div class="flex items-center justify-between">
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-                >Cron 表达式</label
-              >
+              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+                t('cronform.field.expression')
+              }}</label>
               <Button
                 icon="pi pi-question-circle"
                 variant="text"
@@ -165,13 +176,15 @@ onBeforeUnmount(() => {
               {{ formErrors.expression }}
             </div>
             <div class="text-[10px] text-slate-400 dark:text-slate-500">
-              支持标准 6/7 字段 Cron 表达式<br />例：0 0 23 * * ? 表示每天 23 点执行
+              {{ t('cronform.field.expressionHint') }}<br />{{
+                t('cronform.field.expressionExample')
+              }}
             </div>
           </div>
           <div class="space-y-2">
-            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-4"
-              >时区</label
-            >
+            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-4">{{
+              t('cronform.field.timeZone')
+            }}</label>
             <Select
               v-model="form.config.timeZone"
               :options="timeZones"
@@ -186,15 +199,15 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="space-y-2">
-          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-            >保存路径</label
-          >
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+            t('cronform.field.targetPath')
+          }}</label>
           <InputText v-model="form.config.targetPath" placeholder="/app/download" class="w-full" />
           <div v-if="formErrors.targetPath" class="text-xs text-red-500">
             {{ formErrors.targetPath }}
           </div>
           <div class="text-[10px] text-slate-400 dark:text-slate-500">
-            如在容器环境下运行，请确保已将此路径映射到宿主机。程序将在此路径下创建相册各自的文件夹。
+            {{ t('cronform.field.targetPathHint') }}
           </div>
           <Message
             v-if="props.targetPathMountWarning"
@@ -203,16 +216,16 @@ onBeforeUnmount(() => {
             icon="pi pi-exclamation-triangle"
           >
             <div class="text-[11px]">
-              警告：该路径可能仅存在于容器内，未挂载到宿主机，数据可能不会被持久化。
+              {{ t('cronform.field.targetPathMountWarning') }}
             </div>
           </Message>
         </div>
 
         <div class="space-y-2">
           <div class="flex items-center justify-between">
-            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-              >表达式路径 (高级)</label
-            >
+            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+              t('cronform.field.expressionTargetPath')
+            }}</label>
             <Button
               icon="pi pi-question-circle"
               variant="text"
@@ -230,112 +243,122 @@ onBeforeUnmount(() => {
             @focus="openExpressionHelp"
           />
           <div class="text-[10px] text-slate-400 dark:text-slate-500">
-            使用表达式自定义路径结构。此值有效将忽略上方的“保存路径”。
+            {{ t('cronform.field.expressionTargetPathHint') }}
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4 pt-1 pb-2">
           <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
             <ToggleSwitch v-model="form.config.downloadImages" />
-            <span>下载照片</span>
+            <span>{{ t('cronform.toggle.downloadImages') }}</span>
           </div>
           <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
             <ToggleSwitch v-model="form.config.downloadVideos" />
-            <span>下载视频</span>
+            <span>{{ t('cronform.toggle.downloadVideos') }}</span>
           </div>
           <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
             <ToggleSwitch v-model="form.config.downloadAudios" />
-            <span>下载录音</span>
+            <span>{{ t('cronform.toggle.downloadAudios') }}</span>
           </div>
           <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
             <ToggleSwitch v-model="form.config.notify" />
-            <span>发送通知</span>
+            <span>{{ t('cronform.toggle.notify') }}</span>
           </div>
         </div>
 
         <div class="space-y-2">
-          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-            >关联相册</label
-          >
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+            t('cronform.field.albums')
+          }}</label>
           <MultiSelect
             v-model="form.albumIds"
             :options="formAlbumOptions"
             display="chip"
             optionLabel="label"
             optionValue="value"
-            placeholder="选择相册"
+            :placeholder="t('cronform.field.albumsPlaceholder')"
             class="w-full"
             filter
           />
         </div>
 
         <Message severity="info" variant="simple" icon="pi pi-info-circle">
-          <div class="text-[12px]">
-            不同计划任务的<span class="font-semibold">下载记录</span
-            ><span class="font-semibold">相互独立</span>，<span class="font-semibold">互不影响</span
-            >。即使是<span class="font-semibold">同一相册中的同一资产</span
-            >，在不同计划任务中，其<span class="font-semibold">已下载状态</span>也会<span
-              class="font-semibold"
-              >分别判断</span
-            >。
-          </div>
+          <i18n-t keypath="cronform.notice.text" tag="div" class="text-[12px]">
+            <template #records>
+              <span class="font-semibold">{{ t('cronform.notice.records') }}</span>
+            </template>
+            <template #independent>
+              <span class="font-semibold">{{ t('cronform.notice.independent') }}</span>
+            </template>
+            <template #impact>
+              <span class="font-semibold">{{ t('cronform.notice.impact') }}</span>
+            </template>
+            <template #sameAsset>
+              <span class="font-semibold">{{ t('cronform.notice.sameAsset') }}</span>
+            </template>
+            <template #status>
+              <span class="font-semibold">{{ t('cronform.notice.status') }}</span>
+            </template>
+            <template #judged>
+              <span class="font-semibold">{{ t('cronform.notice.judged') }}</span>
+            </template>
+          </i18n-t>
         </Message>
 
-        <Panel header="高级配置" toggleable>
+        <Panel :header="t('cronform.advanced.title')" toggleable>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                 <ToggleSwitch v-model="form.config.diffByTimeline" />
-                <span>按时间线比对差异</span>
+                <span>{{ t('cronform.advanced.diffByTimeline') }}</span>
               </div>
               <div class="text-[10px] text-slate-400 dark:text-slate-500">
-                通过对比上一次同步的相册时间线，将相册资产的获取范围限定为存在变动的日期。
+                {{ t('cronform.advanced.diffByTimelineHint') }}
               </div>
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                 <ToggleSwitch v-model="form.config.rewriteExifTime" />
-                <span>填充 EXIF 时间</span>
+                <span>{{ t('cronform.advanced.rewriteExifTime') }}</span>
               </div>
               <div class="text-[10px] text-slate-400 dark:text-slate-500">
-                将资产在小米云服务的时间写入 EXIF 时间，仅在资产不存在 EXIF 时间时生效。
+                {{ t('cronform.advanced.rewriteExifTimeHint') }}
               </div>
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                 <ToggleSwitch v-model="form.config.skipExistingFile" />
-                <span>跳过已存在文件</span>
+                <span>{{ t('cronform.advanced.skipExistingFile') }}</span>
               </div>
               <div class="text-[10px] text-slate-400 dark:text-slate-500">
-                若资产的目标文件路径已存在，将跳过下载。仅适用于保存路径中已有存量数据。
+                {{ t('cronform.advanced.skipExistingFileHint') }}
               </div>
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                 <ToggleSwitch v-model="form.config.rewriteFileSystemTime" />
-                <span>重写文件时间</span>
+                <span>{{ t('cronform.advanced.rewriteFileSystemTime') }}</span>
               </div>
               <div class="text-[10px] text-slate-400 dark:text-slate-500">
-                同步完成后，将资产的文件系统时间修改为对应的小米云服务上的时间。
+                {{ t('cronform.advanced.rewriteFileSystemTimeHint') }}
               </div>
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                 <ToggleSwitch v-model="form.config.checkSha1" />
-                <span>校验 SHA1</span>
+                <span>{{ t('cronform.advanced.checkSha1') }}</span>
               </div>
               <div class="text-[10px] text-slate-400 dark:text-slate-500">
-                比对文件 SHA1，校验失败会终止对应资产后续处理。<span class="font-bold"
-                  >有BUG，别开。对已存在的文件无效。</span
-                >
+                {{ t('cronform.advanced.checkSha1Hint')
+                }}<span class="font-bold">{{ t('cronform.advanced.checkSha1Warning') }}</span>
               </div>
             </div>
           </div>
 
           <div v-if="form.config.rewriteExifTime" class="space-y-2 mt-3">
-            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-              >EXIF 时区</label
-            >
+            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+              t('cronform.advanced.exifTimeZone')
+            }}</label>
             <Select
               v-model="form.config.rewriteExifTimeZone"
               :options="timeZones"
@@ -344,20 +367,20 @@ onBeforeUnmount(() => {
               class="w-full"
             />
             <div class="text-[10px] text-slate-400 dark:text-slate-500">
-              用于写入 EXIF 的时区；仅在开启“填充 EXIF 时间”后生效。
+              {{ t('cronform.advanced.exifTimeZoneHint') }}
             </div>
           </div>
 
-          <Panel header="并发与性能" toggleable collapsed class="mt-4">
+          <Panel :header="t('cronform.concurrency.title')" toggleable collapsed class="mt-4">
             <div class="text-[10px] text-slate-400 dark:text-slate-500 mb-4">
-              除非你明确知道改动这些值的后果，否则不要改动
+              {{ t('cronform.concurrency.warning') }}
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-                  >数据库读批大小</label
-                >
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+                  t('cronform.concurrency.fetchFromDbSize')
+                }}</label>
                 <InputNumber
                   v-model="form.config.fetchFromDbSize"
                   :min="1"
@@ -375,7 +398,7 @@ onBeforeUnmount(() => {
                   </template>
                 </InputNumber>
                 <div class="text-[10px] text-slate-400 dark:text-slate-500">
-                  每次从数据库拉取的资产数量
+                  {{ t('cronform.concurrency.fetchFromDbSizeHint') }}
                 </div>
                 <div v-if="formErrors.concurrency" class="text-xs text-red-500">
                   {{ formErrors.concurrency }}
@@ -383,9 +406,9 @@ onBeforeUnmount(() => {
               </div>
 
               <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-                  >资产下载</label
-                >
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+                  t('cronform.concurrency.downloaders')
+                }}</label>
                 <InputNumber
                   v-model="form.config.downloaders"
                   :min="1"
@@ -402,13 +425,15 @@ onBeforeUnmount(() => {
                     <span class="pi pi-minus" />
                   </template>
                 </InputNumber>
-                <div class="text-[10px] text-slate-400 dark:text-slate-500">同时下载的资产数</div>
+                <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                  {{ t('cronform.concurrency.downloadersHint') }}
+                </div>
               </div>
 
               <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-                  >文件系统时间重写</label
-                >
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+                  t('cronform.concurrency.fileTimeWorkers')
+                }}</label>
                 <InputNumber
                   v-model="form.config.fileTimeWorkers"
                   :min="1"
@@ -426,14 +451,14 @@ onBeforeUnmount(() => {
                   </template>
                 </InputNumber>
                 <div class="text-[10px] text-slate-400 dark:text-slate-500">
-                  文件系统时间重写并发数
+                  {{ t('cronform.concurrency.fileTimeWorkersHint') }}
                 </div>
               </div>
 
               <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-                  >文件校验</label
-                >
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+                  t('cronform.concurrency.verifiers')
+                }}</label>
                 <InputNumber
                   v-model="form.config.verifiers"
                   :min="1"
@@ -451,14 +476,14 @@ onBeforeUnmount(() => {
                   </template>
                 </InputNumber>
                 <div class="text-[10px] text-slate-400 dark:text-slate-500">
-                  SHA1 校验检查并发数
+                  {{ t('cronform.concurrency.verifiersHint') }}
                 </div>
               </div>
 
               <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400"
-                  >EXIF 填充</label
-                >
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+                  t('cronform.concurrency.exifProcessors')
+                }}</label>
                 <InputNumber
                   v-model="form.config.exifProcessors"
                   :min="1"
@@ -476,7 +501,7 @@ onBeforeUnmount(() => {
                   </template>
                 </InputNumber>
                 <div class="text-[10px] text-slate-400 dark:text-slate-500">
-                  EXIF 信息填充并发数
+                  {{ t('cronform.concurrency.exifProcessorsHint') }}
                 </div>
               </div>
             </div>
@@ -486,12 +511,17 @@ onBeforeUnmount(() => {
         <div class="flex items-center justify-between pt-1">
           <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
             <ToggleSwitch v-model="form.enabled" />
-            <span>启用</span>
+            <span>{{ t('common.status.enabled') }}</span>
           </div>
           <div class="flex items-center gap-2">
-            <Button label="取消" severity="secondary" text @click="closeDialog" />
             <Button
-              :label="props.isEditing ? '保存' : '创建'"
+              :label="t('common.action.cancel')"
+              severity="secondary"
+              text
+              @click="closeDialog"
+            />
+            <Button
+              :label="props.isEditing ? t('common.action.save') : t('common.action.create')"
               :loading="props.saving"
               @click="emit('submit')"
             />

@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import Card from 'primevue/card'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import Button from 'primevue/button'
 import ContributionHeatmap from '@/components/ContributionHeatmap.vue'
 import AlbumPanel from '@/components/AlbumPanel.vue'
 import CrontabList from '@/components/CrontabList.vue'
-import CronFormDialog from '@/components/CronFormDialog.vue'
-import ExecutionDialogs from '@/components/ExecutionDialogs.vue'
-import CrontabHistoryDetailsDialog from '@/components/CrontabHistoryDetailsDialog.vue'
+
+const CronFormDialog = defineAsyncComponent(() => import('@/components/CronFormDialog.vue'))
+const ExecutionDialogs = defineAsyncComponent(() => import('@/components/ExecutionDialogs.vue'))
+const CrontabHistoryDetailsDialog = defineAsyncComponent(
+  () => import('@/components/CrontabHistoryDetailsDialog.vue'),
+)
 import { useToast } from 'primevue/usetoast'
 import { storeToRefs } from 'pinia'
 import { useAccountsStore } from '@/stores/accounts'
@@ -34,6 +38,7 @@ const { crontabs, loading: loadingCrons } = storeToRefs(crontabsStore)
 const { optimizeHeatmap } = storeToRefs(preferencesStore)
 
 const toast = useToast()
+const { t } = useI18n()
 
 const albumIds = computed(() => albums.value.map((a) => a.id))
 const {
@@ -106,8 +111,8 @@ async function fetchCrontabs() {
     console.error('获取计划任务失败', err)
     toast.add({
       severity: 'error',
-      summary: '获取失败',
-      detail: '无法获取计划任务列表',
+      summary: t('common.toast.fetchFailed'),
+      detail: t('schedule.fetchListFailed'),
       life: 2000,
     })
   }
@@ -151,6 +156,14 @@ const { visible: showExecuteRewriteFsVisible, loading: executingRewriteFs } = ex
 const { visible: showClearHistoryVisible, loading: clearingHistory } = clearHistoryDialog
 
 const showHistoryDetailsDialog = ref(false)
+const anyExecDialogVisible = computed(
+  () =>
+    showDeleteVisible.value ||
+    showExecuteVisible.value ||
+    showExecuteExifVisible.value ||
+    showExecuteRewriteFsVisible.value ||
+    showClearHistoryVisible.value,
+)
 const selectedHistory = ref<CrontabHistory | null>(null)
 const historyDetailRows = ref<ReadonlyArray<CrontabHistoryDetail>>([])
 const historyDetailsPageIndex = ref(0)
@@ -169,7 +182,7 @@ function getErrorMessage(error: unknown) {
   try {
     return JSON.stringify(error)
   } catch {
-    return '无法加载执行明细'
+    return t('schedule.details.loadError')
   }
 }
 
@@ -178,7 +191,7 @@ async function loadHistoryDetails() {
   if (historyId === null || historyId === undefined) {
     historyDetailRows.value = []
     historyDetailsTotalRowCount.value = 0
-    historyDetailsError.value = '历史记录不存在，无法加载执行明细'
+    historyDetailsError.value = t('schedule.details.historyMissing')
     return
   }
 
@@ -248,48 +261,107 @@ watch(showHistoryDetailsDialog, (visible) => {
 </script>
 
 <template>
-  <div class="max-w-5xl mx-auto px-4 py-8">
-    <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mb-6">
-      <template #content>
-        <div class="w-full overflow-x-hidden">
-          <ContributionHeatmap
-            :data="dataPoints"
-            :label="labelText"
-            :week-start="weekStartNum"
-            :range-days="rangeDaysNum"
-            :end="endDateStr"
-            @day-click="onDayClick"
-          />
-          <div
-            v-if="tip"
-            class="mt-3 inline-flex items-center rounded-md bg-slate-900/80 text-white text-xs px-2 py-1 shadow-md dark:bg-slate-100/10 dark:text-slate-100"
-          >
-            {{ tip }}
-          </div>
+  <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+    <!-- Page header -->
+    <div class="flex items-center justify-between">
+      <div class="min-w-0">
+        <h1
+          class="truncate text-lg font-semibold tracking-tight text-slate-800 dark:text-slate-100"
+        >
+          {{ t('schedule.title') }}
+        </h1>
+        <p class="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+          {{ t('schedule.subtitle') }}
+        </p>
+      </div>
+      <div class="flex shrink-0 items-center gap-1.5">
+        <Button
+          icon="pi pi-refresh"
+          severity="secondary"
+          text
+          rounded
+          :loading="loadingCrons"
+          v-tooltip.bottom="t('common.action.refresh')"
+          @click="fetchCrontabs"
+        />
+        <Button
+          :label="t('schedule.newTask')"
+          icon="pi pi-plus"
+          size="small"
+          @click="openCreateCron"
+        />
+      </div>
+    </div>
+
+    <!-- Heatmap strip -->
+    <div
+      class="mt-5 rounded-lg border border-slate-200/80 bg-white/70 p-4 backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/60"
+    >
+      <div class="w-full overflow-x-hidden">
+        <ContributionHeatmap
+          :data="dataPoints"
+          :label="labelText"
+          :week-start="weekStartNum"
+          :range-days="rangeDaysNum"
+          :end="endDateStr"
+          @day-click="onDayClick"
+        />
+        <div
+          v-if="tip"
+          class="mt-3 inline-flex items-center rounded-md bg-slate-900/80 px-2 py-1 text-xs text-white shadow-md dark:bg-slate-100/10 dark:text-slate-100"
+        >
+          {{ tip }}
         </div>
-      </template>
-    </Card>
+      </div>
+    </div>
 
-    <CrontabList
-      :crontabs="crontabs"
-      :loading="loadingCrons"
-      :album-options="allAlbumOptions"
-      :updating-row="updatingRow"
-      @refresh="fetchCrontabs"
-      @create="openCreateCron"
-      @edit="openEditCron"
-      @delete="requestDelete"
-      @toggle="toggleEnabled"
-      @execute="requestExecute"
-      @execute-exif="requestExecuteExif"
-      @execute-rewrite-fs-time="requestExecuteRewriteFs"
-      @clear-history="requestClearHistory"
-      @view-history-details="openHistoryDetails"
-    />
+    <!-- Task list -->
+    <div class="mt-6">
+      <div class="mb-2 flex items-center gap-2 px-1">
+        <h2
+          class="text-[11px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500"
+        >
+          {{ t('schedule.taskList') }}
+        </h2>
+        <span
+          v-if="crontabs?.length"
+          class="rounded-full bg-slate-200/70 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-700/70 dark:text-slate-400"
+        >
+          {{ crontabs.length }}
+        </span>
+      </div>
+      <CrontabList
+        :crontabs="crontabs"
+        :loading="loadingCrons"
+        :album-options="allAlbumOptions"
+        :updating-row="updatingRow"
+        @refresh="fetchCrontabs"
+        @create="openCreateCron"
+        @edit="openEditCron"
+        @delete="requestDelete"
+        @toggle="toggleEnabled"
+        @execute="requestExecute"
+        @execute-exif="requestExecuteExif"
+        @execute-rewrite-fs-time="requestExecuteRewriteFs"
+        @clear-history="requestClearHistory"
+        @view-history-details="openHistoryDetails"
+      />
+    </div>
 
-    <AlbumPanel />
+    <!-- Albums -->
+    <div class="mt-6">
+      <div class="mb-2 px-1">
+        <h2
+          class="text-[11px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500"
+        >
+          {{ t('schedule.albums') }}
+        </h2>
+      </div>
+      <AlbumPanel />
+    </div>
 
     <CronFormDialog
+      v-if="showCronDialog"
       v-model:visible="showCronDialog"
       :is-editing="isEditing"
       :saving="saving"
@@ -303,6 +375,7 @@ watch(showHistoryDetailsDialog, (visible) => {
     />
 
     <ExecutionDialogs
+      v-if="anyExecDialogVisible"
       v-model:delete-visible="showDeleteVisible"
       v-model:execute-visible="showExecuteVisible"
       v-model:execute-exif-visible="showExecuteExifVisible"
@@ -326,6 +399,7 @@ watch(showHistoryDetailsDialog, (visible) => {
     />
 
     <CrontabHistoryDetailsDialog
+      v-if="showHistoryDetailsDialog"
       v-model:visible="showHistoryDetailsDialog"
       :history="selectedHistory"
       :rows="historyDetailRows"
@@ -339,16 +413,3 @@ watch(showHistoryDetailsDialog, (visible) => {
     />
   </div>
 </template>
-
-<style scoped>
-:deep(.p-card) {
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
-}
-
-:deep(.p-card:hover) {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 30px -12px rgba(2, 6, 23, 0.2);
-}
-</style>

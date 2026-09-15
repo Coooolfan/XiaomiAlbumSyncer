@@ -3,6 +3,7 @@ package com.coooolfan.xiaomialbumsyncer.service
 import com.coooolfan.xiaomialbumsyncer.config.TaskScheduler
 import com.coooolfan.xiaomialbumsyncer.controller.CrontabController.Companion.CRONTAB_WITH_ALBUMS_FETCHER
 import com.coooolfan.xiaomialbumsyncer.controller.CrontabCurrentStats
+import com.coooolfan.xiaomialbumsyncer.controller.CrontabHistoryGroup
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.model.dto.CrontabCreateInput
 import org.babyfish.jimmer.Page
@@ -10,6 +11,7 @@ import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.*
+import org.babyfish.jimmer.sql.kt.ast.query.baseTableSymbol
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.noear.solon.annotation.Inject
 import org.noear.solon.annotation.Managed
@@ -264,6 +266,100 @@ class CrontabService(private val sql: KSqlClient) {
             where(table.crontabHistoryId eq historyId)
             select(table.fetch(fetcher))
         }.fetchPage(pageIndex, pageSize)
+    }
+
+    /**
+     * 分页获取定时任务的执行历史，按“连续 0 资产”折叠。
+     *
+     * 连续的已完成且资产明细数为 0 的执行记录会合并为一个分组，
+     * 其余记录（有资产/进行中）各自单独成组。
+     */
+    fun listCrontabHistoryGroups(
+        crontabId: Long,
+        pageIndex: Int,
+        pageSize: Int
+    ): Page<CrontabHistoryGroup> {
+        // L1: id, startTime, endTime, detailsCount（@Transient 不是列，用 count 子查询代替）
+        val src = baseTableSymbol {
+            sql.createBaseQuery(CrontabHistory::class) {
+                where(table.crontabId eq crontabId)
+                selections
+                    .add(table.id)
+                    .add(table.startTime)
+                    .add(table.endTime)
+                    .add(
+                        subQuery(CrontabHistoryDetail::class) {
+                            where(table.crontabHistoryId eq parentTable.id)
+                            select(count(table))
+                        }
+                    )
+            }
+        }
+        // L2: + foldable, prevFoldable（窗口函数不能嵌套，LAG 需要物化一层）
+        val marked = baseTableSymbol {
+            sql.createBaseQuery(src) {
+                selections
+                    .add(table._1)
+                    .add(table._2)
+                    .add(table._3)
+                    .add(table._4)
+                    .add(
+                        sql(
+                            Int::class,
+                            "case when %e is not null and %e = 0 then 1 else 0 end",
+                            table._3, table._4
+                        )
+                    )
+                    .add(
+                        sqlNullable(
+                            Int::class,
+                            "lag(case when %e is not null and %e = 0 then 1 else 0 end) over(order by %e desc)",
+                            table._3, table._4, table._2
+                        )
+                    )
+            }
+        }
+        // L3: + 组号（非折叠行或前一行非折叠时开启新组）
+        val grouped = baseTableSymbol {
+            sql.createBaseQuery(marked) {
+                selections
+                    .add(table._1)
+                    .add(table._2)
+                    .add(table._3)
+                    .add(table._4)
+                    .add(
+                        sql(
+                            Long::class,
+                            "sum(case when %e = 0 or %e is null or %e = 0 then 1 else 0 end) over(order by %e desc rows unbounded preceding)",
+                            table._5, table._6, table._6, table._2
+                        )
+                    )
+            }
+        }
+        val page = sql.createQuery(grouped) {
+            orderBy(table._5.asc())
+            groupBy(table._5)
+            select(
+                max(table._1),
+                min(table._2),
+                max(table._3),
+                count(table._1),
+                sum(table._4)
+            )
+        }.fetchPage(pageIndex, pageSize)
+        return Page(
+            page.rows.map {
+                CrontabHistoryGroup(
+                    historyId = it._1 ?: 0,
+                    startTime = it._2 ?: Instant.EPOCH,
+                    endTime = it._3,
+                    runCount = it._4,
+                    detailsCount = it._5 ?: 0
+                )
+            },
+            page.totalRowCount,
+            page.totalPageCount
+        )
     }
 
     fun updateDetailMessage(detailId: Long, message: String) {

@@ -1,12 +1,13 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { i18n } from '@/i18n'
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'auth',
     component: () => import('../pages/AuthPage.vue'),
-    meta: { guestOnly: true, title: '登录 / 注册' },
+    meta: { guestOnly: true, titleKey: 'meta.title.auth' },
   },
   {
     path: '/dashboard',
@@ -18,13 +19,13 @@ const routes: RouteRecordRaw[] = [
         path: 'setting',
         name: 'dashboard-setting',
         component: () => import('../pages/DashboardSettingPage.vue'),
-        meta: { requiresAuth: true, title: '设置' },
+        meta: { requiresAuth: true, titleKey: 'meta.title.settings' },
       },
       {
         path: 'schedule',
         name: 'dashboard-schedule',
         component: () => import('../pages/DashboardSchedulePage.vue'),
-        meta: { requiresAuth: true, title: '计划' },
+        meta: { requiresAuth: true, titleKey: 'meta.title.schedule' },
       },
     ],
   },
@@ -40,8 +41,8 @@ const router = createRouter({
 })
 
 router.afterEach((to) => {
-  const title = to.meta?.title
-  if (title) document.title = String(title)
+  const titleKey = to.meta?.titleKey
+  if (typeof titleKey === 'string') document.title = i18n.global.t(titleKey)
 })
 
 export default router

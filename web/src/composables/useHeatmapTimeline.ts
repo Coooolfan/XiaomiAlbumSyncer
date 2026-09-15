@@ -1,5 +1,6 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { api } from '@/ApiInstance'
+import { i18n } from '@/i18n'
 
 export type DataPoint = { timeStamp: number; count: number }
 
@@ -47,7 +48,7 @@ function quantile(values: number[], q: number): number {
 }
 
 export function useHeatmapTimeline({ albumIds, optimizeHeatmap }: UseHeatmapTimelineOptions) {
-  const labelText = ref('一年活跃度')
+  const labelText = computed(() => i18n.global.t('misc.heatmap.yearActivity'))
   const weekStartNum = ref(1)
   const rangeDaysNum = ref(365)
   const endDateStr = ref(formatDateInput(new Date()))

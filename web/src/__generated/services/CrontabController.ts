@@ -3,6 +3,7 @@ import type {CrontabDto, CrontabHistoryDetailDto} from '../model/dto/';
 import type {
     CrontabCreateInput, 
     CrontabCurrentStats, 
+    CrontabHistoryGroup, 
     CrontabUpdateInput, 
     Page
 } from '../model/static/';
@@ -183,6 +184,40 @@ export class CrontabController {
     }
     
     /**
+     * 分页获取指定定时任务的执行历史（按连续 0 资产折叠）
+     * 
+     * 连续的已完成且明细数为 0 的执行记录合并为一个分组返回，
+     * 其余记录各自单独成组。
+     * 
+     * @parameter {CrontabControllerOptions['listCrontabHistoryGroups']} options
+     * - crontabId 定时任务ID
+     * - pageIndex 页码，默认 0
+     * - pageSize 分页大小，默认 10
+     * @return Page<CrontabHistoryGroup> 折叠后的历史分组分页数据
+     * 
+     */
+    readonly listCrontabHistoryGroups: (options: CrontabControllerOptions['listCrontabHistoryGroups']) => Promise<
+        Page<CrontabHistoryGroup>
+    > = async(options) => {
+        let _uri = '/api/crontab/';
+        _uri += encodeURIComponent(options.crontabId);
+        _uri += '/histories';
+        let _separator = _uri.indexOf('?') === -1 ? '?' : '&';
+        let _value: any = undefined;
+        _value = options.pageIndex;
+        _uri += _separator
+        _uri += 'pageIndex='
+        _uri += encodeURIComponent(_value);
+        _separator = '&';
+        _value = options.pageSize;
+        _uri += _separator
+        _uri += 'pageSize='
+        _uri += encodeURIComponent(_value);
+        _separator = '&';
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<Page<CrontabHistoryGroup>>;
+    }
+    
+    /**
      * 获取所有定时任务列表
      * 
      * 此接口用于获取系统中配置的所有定时任务信息
@@ -285,6 +320,20 @@ export type CrontabControllerOptions = {
         readonly pageIndex: number, 
         /**
          * 分页大小参数，作为接口入参保留
+         */
+        readonly pageSize: number
+    }, 
+    'listCrontabHistoryGroups': {
+        /**
+         * 定时任务ID
+         */
+        readonly crontabId: number, 
+        /**
+         * 页码，默认 0
+         */
+        readonly pageIndex: number, 
+        /**
+         * 分页大小，默认 10
          */
         readonly pageSize: number
     }

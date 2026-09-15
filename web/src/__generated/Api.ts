@@ -3,7 +3,7 @@ import {
     AlbumsController, 
     AssetController, 
     CrontabController, 
-    McpTokenController,
+    McpTokenController, 
     PasskeyController, 
     SystemConfigController, 
     TokenController, 
@@ -19,7 +19,7 @@ export class Api {
     readonly crontabController: CrontabController
     
     readonly mcpTokenController: McpTokenController
-
+    
     readonly passkeyController: PasskeyController
     
     readonly systemConfigController: SystemConfigController

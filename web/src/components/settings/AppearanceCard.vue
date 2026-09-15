@@ -1,74 +1,95 @@
 <script setup lang="ts">
-import Card from 'primevue/card'
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SelectButton from 'primevue/selectbutton'
+import SettingSection from '@/components/settings/SettingSection.vue'
 import { storeToRefs } from 'pinia'
-import { usePreferencesStore } from '@/stores/preferences'
+import { usePreferencesStore, type ThemeMode } from '@/stores/preferences'
+import type { AppLocale } from '@/i18n'
 
-type BgMode = 'lightRays' | 'silk'
-
+const { t } = useI18n()
 const preferencesStore = usePreferencesStore()
-const { backgroundMode, optimizeHeatmap } = storeToRefs(preferencesStore)
+const { themeMode, optimizeHeatmap, locale } = storeToRefs(preferencesStore)
 
-const bgOptions: Array<{ label: string; value: BgMode }> = [
-  { label: '光束', value: 'lightRays' },
-  { label: '丝绸', value: 'silk' },
+const themeOptions = computed<Array<{ label: string; value: ThemeMode }>>(() => [
+  { label: t('appearance.themeSystem'), value: 'system' },
+  { label: t('appearance.themeLight'), value: 'light' },
+  { label: t('appearance.themeDark'), value: 'dark' },
+])
+
+const languageOptions: Array<{ label: string; value: AppLocale }> = [
+  { label: '中文', value: 'zh-CN' },
+  { label: 'English', value: 'en-US' },
 ]
 
-const heatOptions: Array<{ label: string; value: boolean }> = [
-  { label: '关闭', value: false },
-  { label: '开启', value: true },
-]
+const heatOptions = computed<Array<{ label: string; value: boolean }>>(() => [
+  { label: t('appearance.off'), value: false },
+  { label: t('appearance.on'), value: true },
+])
 </script>
 
 <template>
-  <Card class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mb-6">
-    <template #title>外观</template>
-    <template #content>
-      <div class="flex items-center justify-between">
-        <span class="text-sm text-slate-600 dark:text-slate-300">背景</span>
-        <div class="min-w-40">
+  <SettingSection :title="t('appearance.title')" :description="t('appearance.description')">
+    <div class="divide-y divide-slate-100 dark:divide-slate-800/70">
+      <div class="flex items-center justify-between gap-4 py-3 first:pt-0">
+        <div class="min-w-0">
+          <div class="text-sm text-slate-600 dark:text-slate-300">
+            {{ t('appearance.theme') }}
+          </div>
+          <p class="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+            {{ t('appearance.themeDesc') }}
+          </p>
+        </div>
+        <div class="flex shrink-0 justify-end">
           <SelectButton
-            v-model="backgroundMode"
-            :options="bgOptions"
+            v-model="themeMode"
+            :options="themeOptions"
             optionLabel="label"
             optionValue="value"
+            :allowEmpty="false"
           />
         </div>
       </div>
-      <p class="text-xs text-slate-400 dark:text-slate-500 mt-3">
-        选择背景效果（单选），偏好将被本地保存。
-      </p>
 
-      <div class="mt-4 pt-4 border-t border-slate-200/60 dark:border-slate-700/60">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="text-sm text-slate-600 dark:text-slate-300">热力图优化展示</span>
+      <div class="flex items-center justify-between gap-4 py-3">
+        <div class="min-w-0">
+          <div class="text-sm text-slate-600 dark:text-slate-300">
+            {{ t('appearance.language') }}
           </div>
-          <div class="min-w-40">
-            <SelectButton
-              v-model="optimizeHeatmap"
-              :options="heatOptions"
-              optionLabel="label"
-              optionValue="value"
-            />
-          </div>
+          <p class="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+            {{ t('appearance.languageDesc') }}
+          </p>
         </div>
-        <p class="text-xs text-slate-400 dark:text-slate-500 mt-3">
-          开启后，颜色深度将基于近似上界（95%分位）映射，弱化极端离群值影响；偏好将被本地保存。
-        </p>
+        <div class="flex shrink-0 justify-end">
+          <SelectButton
+            v-model="locale"
+            :options="languageOptions"
+            optionLabel="label"
+            optionValue="value"
+            :allowEmpty="false"
+          />
+        </div>
       </div>
-    </template>
-  </Card>
-</template>
 
-<style scoped>
-:deep(.p-card) {
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
-}
-:deep(.p-card:hover) {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 30px -12px rgba(2, 6, 23, 0.2);
-}
-</style>
+      <div class="flex items-center justify-between gap-4 py-3 last:pb-0">
+        <div class="min-w-0">
+          <div class="text-sm text-slate-600 dark:text-slate-300">
+            {{ t('appearance.heatmap') }}
+          </div>
+          <p class="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+            {{ t('appearance.heatmapDesc') }}
+          </p>
+        </div>
+        <div class="flex shrink-0 justify-end">
+          <SelectButton
+            v-model="optimizeHeatmap"
+            :options="heatOptions"
+            optionLabel="label"
+            optionValue="value"
+            :allowEmpty="false"
+          />
+        </div>
+      </div>
+    </div>
+  </SettingSection>
+</template>

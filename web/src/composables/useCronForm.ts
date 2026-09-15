@@ -1,4 +1,5 @@
 import { onBeforeUnmount, ref, watch } from 'vue'
+import { i18n } from '@/i18n'
 import { api } from '@/ApiInstance'
 import type { CrontabDto } from '@/__generated/model/dto'
 import { createEmptyCronForm, mapCrontabToForm, type LocalCronForm } from '@/utils/crontabForm'
@@ -107,26 +108,28 @@ export function useCronForm(getDefaultAccountId: () => number) {
 
   function validateCronForm(): boolean {
     const errors: Record<string, string> = {}
-    if (!cronForm.value.name || cronForm.value.name.trim() === '') errors.name = '必填'
+    if (!cronForm.value.name || cronForm.value.name.trim() === '')
+      errors.name = i18n.global.t('cronform.errors.required')
     if (!cronForm.value.config.expression || cronForm.value.config.expression.trim() === '') {
-      errors.expression = '必填'
+      errors.expression = i18n.global.t('cronform.errors.required')
     } else {
       const crontabExpression = cronForm.value.config.expression.split(' ')
       if (crontabExpression.length < 6) {
-        errors.expression = '看起来这不是一个有效的表达式'
+        errors.expression = i18n.global.t('cronform.errors.invalidExpression')
       } else {
         if (crontabExpression[0] === '*') {
-          errors.expression = '每秒运行一次似乎有点太高频了'
+          errors.expression = i18n.global.t('cronform.errors.tooFrequentPerSecond')
         } else if (crontabExpression[1] === '*') {
-          errors.expression = '每分钟运行一次似乎有点太高频了'
+          errors.expression = i18n.global.t('cronform.errors.tooFrequentPerMinute')
         }
       }
     }
     if (!cronForm.value.config.timeZone || cronForm.value.config.timeZone.trim() === '')
-      errors.timeZone = '必选'
+      errors.timeZone = i18n.global.t('cronform.errors.requiredSelect')
     if (!cronForm.value.config.targetPath || cronForm.value.config.targetPath.trim() === '')
-      errors.targetPath = '必填'
-    if (!cronForm.value.accountId) errors.accountId = '必选'
+      errors.targetPath = i18n.global.t('cronform.errors.required')
+    if (!cronForm.value.accountId)
+      errors.accountId = i18n.global.t('cronform.errors.requiredSelect')
 
     formErrors.value = errors
     return Object.keys(errors).length === 0

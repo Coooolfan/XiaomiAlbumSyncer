@@ -16,4 +16,6 @@ data class NotifyConfig(
     val dailySummaryCron: String?,
 
     val dailySummaryTimeZone: String?,
+
+    val passTokenExpiredBody: String?,
 )

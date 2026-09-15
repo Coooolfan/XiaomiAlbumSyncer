@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
-import Card from 'primevue/card'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import SettingSection from '@/components/settings/SettingSection.vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { api } from '@/ApiInstance'
 import { isWebAuthnSupported, registerPasskey } from '@/utils/passkey'
 import type { PasskeyCredentialInfo } from '@/utils/passkey'
 
+const { t, locale } = useI18n()
 const toast = useToast()
 const confirm = useConfirm()
 
@@ -46,7 +48,7 @@ async function loadCredentials() {
     credentials.value = (await api.passkeyController.listCredentials()) as PasskeyCredentialInfo[]
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e)
-    toast.add({ severity: 'error', summary: '加载失败', detail, life: 3000 })
+    toast.add({ severity: 'error', summary: t('common.toast.fetchFailed'), detail, life: 3000 })
   } finally {
     loading.value = false
   }
@@ -54,7 +56,7 @@ async function loadCredentials() {
 
 function formatDate(timestamp: number | null | undefined): string {
   if (!timestamp) return '-'
-  return new Date(timestamp).toLocaleString('zh-CN', {
+  return new Date(timestamp).toLocaleString(locale.value, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -71,34 +73,59 @@ function openRegisterDialog() {
 
 async function doRegister() {
   if (!registerPassword.value) {
-    toast.add({ severity: 'warn', summary: '提示', detail: '请输入当前密码', life: 2500 })
+    toast.add({
+      severity: 'warn',
+      summary: t('common.toast.warn'),
+      detail: t('tokens.passkey.enterPassword'),
+      life: 2500,
+    })
     return
   }
   if (!registerName.value.trim()) {
-    toast.add({ severity: 'warn', summary: '提示', detail: '请输入 Passkey 名称', life: 2500 })
+    toast.add({
+      severity: 'warn',
+      summary: t('common.toast.warn'),
+      detail: t('tokens.passkey.enterName'),
+      life: 2500,
+    })
     return
   }
 
   registering.value = true
   try {
     await registerPasskey(registerPassword.value, registerName.value.trim())
-    toast.add({ severity: 'success', summary: '成功', detail: 'Passkey 注册成功', life: 2000 })
+    toast.add({
+      severity: 'success',
+      summary: t('common.toast.success'),
+      detail: t('tokens.passkey.registerSuccess'),
+      life: 2000,
+    })
     showRegisterDialog.value = false
     await loadCredentials()
   } catch (e) {
     console.error('Register passkey error:', e)
     const msg = e instanceof Error ? e.message : String(e)
     if (msg.includes('Auth failed')) {
-      toast.add({ severity: 'error', summary: '错误', detail: '密码错误', life: 3000 })
+      toast.add({
+        severity: 'error',
+        summary: t('common.toast.error'),
+        detail: t('tokens.passkey.wrongPassword'),
+        life: 3000,
+      })
     } else if (msg.includes('The operation either timed out or was not allowed')) {
       toast.add({
         severity: 'warn',
-        summary: '已取消',
-        detail: 'Passkey 注册被取消或超时',
+        summary: t('tokens.passkey.cancelled'),
+        detail: t('tokens.passkey.registerCancelled'),
         life: 3000,
       })
     } else {
-      toast.add({ severity: 'error', summary: '注册失败', detail: msg, life: 3000 })
+      toast.add({
+        severity: 'error',
+        summary: t('tokens.passkey.registerFailed'),
+        detail: msg,
+        life: 3000,
+      })
     }
   } finally {
     registering.value = false
@@ -113,7 +140,12 @@ function openRenameDialog(cred: PasskeyCredentialInfo) {
 
 async function doRename() {
   if (!renameName.value.trim()) {
-    toast.add({ severity: 'warn', summary: '提示', detail: '名称不能为空', life: 2500 })
+    toast.add({
+      severity: 'warn',
+      summary: t('common.toast.warn'),
+      detail: t('tokens.passkey.nameRequired'),
+      life: 2500,
+    })
     return
   }
 
@@ -123,12 +155,22 @@ async function doRename() {
       credentialId: renameCredentialId.value,
       body: { name: renameName.value.trim() },
     })
-    toast.add({ severity: 'success', summary: '成功', detail: '名称已更新', life: 2000 })
+    toast.add({
+      severity: 'success',
+      summary: t('common.toast.success'),
+      detail: t('tokens.passkey.nameUpdated'),
+      life: 2000,
+    })
     showRenameDialog.value = false
     await loadCredentials()
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e)
-    toast.add({ severity: 'error', summary: '更新失败', detail, life: 3000 })
+    toast.add({
+      severity: 'error',
+      summary: t('tokens.passkey.updateFailed'),
+      detail,
+      life: 3000,
+    })
   } finally {
     renaming.value = false
   }
@@ -136,11 +178,11 @@ async function doRename() {
 
 function confirmDelete(cred: PasskeyCredentialInfo) {
   confirm.require({
-    message: `确定要删除 Passkey "${cred.name}" 吗？此操作不可撤销。`,
-    header: '确认删除',
+    message: t('tokens.passkey.confirmDelete', { name: cred.name }),
+    header: t('tokens.passkey.confirmDeleteTitle'),
     icon: 'pi pi-exclamation-triangle',
-    rejectLabel: '取消',
-    acceptLabel: '删除',
+    rejectLabel: t('common.action.cancel'),
+    acceptLabel: t('common.action.delete'),
     rejectProps: { severity: 'secondary', text: true },
     acceptProps: { severity: 'danger' },
     accept: () => doDelete(cred.id),
@@ -150,153 +192,147 @@ function confirmDelete(cred: PasskeyCredentialInfo) {
 async function doDelete(credentialId: string) {
   try {
     await api.passkeyController.deleteCredential({ credentialId })
-    toast.add({ severity: 'success', summary: '成功', detail: 'Passkey 已删除', life: 2000 })
+    toast.add({
+      severity: 'success',
+      summary: t('common.toast.success'),
+      detail: t('tokens.passkey.deleted'),
+      life: 2000,
+    })
     await loadCredentials()
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e)
-    toast.add({ severity: 'error', summary: '删除失败', detail, life: 3000 })
+    toast.add({
+      severity: 'error',
+      summary: t('tokens.passkey.deleteFailed'),
+      detail,
+      life: 3000,
+    })
   }
 }
 </script>
 
 <template>
-  <Card
-    class="overflow-hidden shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 mt-6"
-    pt:footer:class="text-right"
-  >
-    <template #title>
-      <div class="flex items-center gap-2">
-        <span>Passkey 管理</span>
-      </div>
-    </template>
-    <template #content>
-      <!-- WebAuthn 不支持警告 -->
-      <div
-        v-if="!webAuthnSupported"
-        class="mb-4 rounded-md bg-amber-50 dark:bg-amber-950/35 text-amber-700 dark:text-amber-300 text-sm px-3 py-2 ring-1 ring-amber-200 dark:ring-amber-900/60"
-      >
-        <i class="pi pi-exclamation-triangle mr-2"></i>
-        当前浏览器不支持
-        Passkey（WebAuthn）。请使用支持的现代浏览器（Chrome、Safari、Firefox、Edge）。
-      </div>
+  <SettingSection :title="t('tokens.passkey.title')" :description="t('tokens.passkey.description')">
+    <!-- WebAuthn 不支持警告 -->
+    <div
+      v-if="!webAuthnSupported"
+      class="mb-4 rounded-md bg-amber-50 dark:bg-amber-950/35 text-amber-700 dark:text-amber-300 text-sm px-3 py-2 ring-1 ring-amber-200 dark:ring-amber-900/60"
+    >
+      <i class="pi pi-exclamation-triangle mr-2"></i>
+      {{ t('tokens.passkey.unsupported') }}
+    </div>
 
-      <!-- 不安全上下文警告 -->
-      <div
-        v-if="isInsecureContext"
-        class="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
-      >
-        <i class="pi pi-shield mr-2"></i>
-        警告：当前处于不安全上下文（非 HTTPS），WebAuthn 功能可能受限。
-      </div>
+    <!-- 不安全上下文警告 -->
+    <div
+      v-if="isInsecureContext"
+      class="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
+    >
+      <i class="pi pi-shield mr-2"></i>
+      {{ t('tokens.passkey.insecureContext') }}
+    </div>
 
-      <!-- 说明文字 -->
-      <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">
-        Passkey 是一种无密码登录方式，使用设备的生物识别（指纹、面容）或 PIN 进行验证。
-        您可以在多个设备上注册 Passkey，实现便捷安全的登录。
-      </p>
+    <!-- Passkey 列表 -->
+    <DataTable
+      :value="credentials"
+      :loading="loading"
+      class="text-sm"
+      stripedRows
+      :pt="{
+        table: { class: 'min-w-full' },
+        column: { bodyCell: { class: 'py-2' } },
+      }"
+    >
+      <template #empty>
+        <div class="text-center text-slate-500 dark:text-slate-400 py-4">
+          {{ t('tokens.passkey.empty') }}
+        </div>
+      </template>
 
-      <!-- Passkey 列表 -->
-      <DataTable
-        :value="credentials"
-        :loading="loading"
-        class="text-sm"
-        stripedRows
-        :pt="{
-          table: { class: 'min-w-full' },
-          column: { bodyCell: { class: 'py-2' } },
-        }"
-      >
-        <template #empty>
-          <div class="text-center text-slate-500 dark:text-slate-400 py-4">
-            尚未注册任何 Passkey
+      <Column field="name" :header="t('common.field.name')" class="font-medium" />
+      <Column :header="t('tokens.table.createdAt')">
+        <template #body="{ data }">
+          {{ formatDate(data.createdAt) }}
+        </template>
+      </Column>
+      <Column :header="t('tokens.passkey.colLastUsed')">
+        <template #body="{ data }">
+          {{ formatDate(data.lastUsedAt) }}
+        </template>
+      </Column>
+      <Column :header="t('tokens.table.actions')" style="width: 120px">
+        <template #body="{ data }">
+          <div class="flex gap-1">
+            <Button
+              icon="pi pi-pencil"
+              severity="secondary"
+              text
+              rounded
+              size="small"
+              v-tooltip.top="t('tokens.passkey.rename')"
+              @click="openRenameDialog(data)"
+            />
+            <Button
+              icon="pi pi-trash"
+              severity="danger"
+              text
+              rounded
+              size="small"
+              v-tooltip.top="t('common.action.delete')"
+              @click="confirmDelete(data)"
+            />
           </div>
         </template>
-
-        <Column field="name" header="名称" class="font-medium" />
-        <Column header="创建时间">
-          <template #body="{ data }">
-            {{ formatDate(data.createdAt) }}
-          </template>
-        </Column>
-        <Column header="最后使用">
-          <template #body="{ data }">
-            {{ formatDate(data.lastUsedAt) }}
-          </template>
-        </Column>
-        <Column header="操作" style="width: 120px">
-          <template #body="{ data }">
-            <div class="flex gap-1">
-              <Button
-                icon="pi pi-pencil"
-                severity="secondary"
-                text
-                rounded
-                size="small"
-                v-tooltip.top="'重命名'"
-                @click="openRenameDialog(data)"
-              />
-              <Button
-                icon="pi pi-trash"
-                severity="danger"
-                text
-                rounded
-                size="small"
-                v-tooltip.top="'删除'"
-                @click="confirmDelete(data)"
-              />
-            </div>
-          </template>
-        </Column>
-      </DataTable>
-    </template>
+      </Column>
+    </DataTable>
 
     <template #footer>
       <Button
-        label="注册新 Passkey"
+        :label="t('tokens.passkey.registerTitle')"
         icon="pi pi-plus"
+        size="small"
         :disabled="!webAuthnSupported"
         @click="openRegisterDialog"
       />
     </template>
-  </Card>
+  </SettingSection>
 
   <!-- 注册对话框 -->
   <Dialog
     v-model:visible="showRegisterDialog"
     modal
-    header="注册新 Passkey"
+    :header="t('tokens.passkey.registerTitle')"
     class="w-full sm:w-105"
   >
     <div class="space-y-4">
       <p class="text-sm text-slate-600 dark:text-slate-300">
-        注册前需要验证您的密码。注册后，您可以使用此设备的 Passkey 登录。
+        {{ t('tokens.passkey.registerDesc') }}
       </p>
 
       <div>
-        <label class="text-sm font-medium text-slate-700 dark:text-slate-200 block mb-1"
-          >当前密码</label
-        >
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200 block mb-1">{{
+          t('tokens.passkey.currentPassword')
+        }}</label>
         <InputText
           v-model="registerPassword"
           type="password"
-          placeholder="输入当前密码"
+          :placeholder="t('tokens.passkey.passwordPlaceholder')"
           class="w-full"
           @keyup.enter="doRegister"
         />
       </div>
 
       <div>
-        <label class="text-sm font-medium text-slate-700 dark:text-slate-200 block mb-1"
-          >Passkey 名称</label
-        >
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200 block mb-1">{{
+          t('tokens.passkey.nameLabel')
+        }}</label>
         <InputText
           v-model="registerName"
-          placeholder="例如：MacBook Pro、iPhone 15"
+          :placeholder="t('tokens.passkey.namePlaceholder')"
           class="w-full"
           @keyup.enter="doRegister"
         />
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          为此 Passkey 取一个便于识别的名称
+          {{ t('tokens.passkey.nameHint') }}
         </p>
       </div>
 
@@ -304,27 +340,41 @@ async function doDelete(credentialId: string) {
         v-if="isInsecureContext"
         class="rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
       >
-        警告：当前处于不安全上下文，密码将以明文传输。
+        {{ t('tokens.passkey.insecurePassword') }}
       </div>
     </div>
 
     <template #footer>
       <div class="flex items-center justify-end gap-2 w-full">
-        <Button label="取消" severity="secondary" text @click="showRegisterDialog = false" />
-        <Button label="注册" :loading="registering" @click="doRegister" />
+        <Button
+          :label="t('common.action.cancel')"
+          severity="secondary"
+          text
+          @click="showRegisterDialog = false"
+        />
+        <Button
+          :label="t('tokens.passkey.registerAction')"
+          :loading="registering"
+          @click="doRegister"
+        />
       </div>
     </template>
   </Dialog>
 
   <!-- 重命名对话框 -->
-  <Dialog v-model:visible="showRenameDialog" modal header="重命名 Passkey" class="w-full sm:w-96">
+  <Dialog
+    v-model:visible="showRenameDialog"
+    modal
+    :header="t('tokens.passkey.renameTitle')"
+    class="w-full sm:w-96"
+  >
     <div>
-      <label class="text-sm font-medium text-slate-700 dark:text-slate-200 block mb-1"
-        >新名称</label
-      >
+      <label class="text-sm font-medium text-slate-700 dark:text-slate-200 block mb-1">{{
+        t('tokens.passkey.newName')
+      }}</label>
       <InputText
         v-model="renameName"
-        placeholder="输入新名称"
+        :placeholder="t('tokens.passkey.newNamePlaceholder')"
         class="w-full"
         @keyup.enter="doRename"
       />
@@ -332,21 +382,14 @@ async function doDelete(credentialId: string) {
 
     <template #footer>
       <div class="flex items-center justify-end gap-2 w-full">
-        <Button label="取消" severity="secondary" text @click="showRenameDialog = false" />
-        <Button label="保存" :loading="renaming" @click="doRename" />
+        <Button
+          :label="t('common.action.cancel')"
+          severity="secondary"
+          text
+          @click="showRenameDialog = false"
+        />
+        <Button :label="t('common.action.save')" :loading="renaming" @click="doRename" />
       </div>
     </template>
   </Dialog>
 </template>
-
-<style scoped>
-:deep(.p-card) {
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
-}
-:deep(.p-card:hover) {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 30px -12px rgba(2, 6, 23, 0.2);
-}
-</style>

@@ -1,8 +1,14 @@
 @import 'tailwindcss';
 @import 'primeicons/primeicons.css';
 
-:root {
-  color-scheme: light dark;
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 html,
@@ -20,9 +26,59 @@ body {
     color 220ms ease;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: rgb(2 6 23);
-    color: rgb(226 232 240);
-  }
+html.dark body {
+  background-color: rgb(2 6 23);
+  color: rgb(226 232 240);
+}
+
+/* 热力图配色变量 */
+:root {
+  --heatmap-empty: rgb(15 23 42 / 0.06);
+  --heatmap-cell-border: rgb(15 23 42 / 0.08);
+}
+
+html.dark {
+  --heatmap-empty: rgb(148 163 184 / 0.12);
+  --heatmap-cell-border: rgb(148 163 184 / 0.18);
+}
+
+/* DataTable 透明化：让表格融入半透明卡片背景，而不是呈现内嵌白色块 */
+.p-datatable {
+  --p-datatable-header-background: transparent;
+  --p-datatable-header-cell-background: transparent;
+  --p-datatable-row-background: transparent;
+  --p-datatable-footer-background: transparent;
+  --p-datatable-footer-cell-background: transparent;
+  --p-datatable-row-striped-background: light-dark(rgb(15 23 42 / 0.025), rgb(255 255 255 / 0.04));
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  white-space: nowrap;
+}
+
+/* 全局细滚动条：透明轨道 + 半透明圆角滑块，随明暗主题切换 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: light-dark(rgb(15 23 42 / 0.25), rgb(148 163 184 / 0.3)) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: light-dark(rgb(15 23 42 / 0.16), rgb(148 163 184 / 0.22));
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: light-dark(rgb(15 23 42 / 0.32), rgb(148 163 184 / 0.42));
 }

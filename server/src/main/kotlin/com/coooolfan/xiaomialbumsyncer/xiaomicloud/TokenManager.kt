@@ -3,7 +3,11 @@ package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 
 import com.coooolfan.xiaomialbumsyncer.config.XiaomiApiProperties
 import com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount
+import com.coooolfan.xiaomialbumsyncer.service.NotifyService
 import com.coooolfan.xiaomialbumsyncer.utils.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.Request
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.noear.solon.Solon
@@ -16,7 +20,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 @Managed
-class TokenManager(private val sql: KSqlClient) {
+class TokenManager(private val sql: KSqlClient, private val notifyService: NotifyService) {
 
     @Inject
     private lateinit var apiProperties: XiaomiApiProperties
@@ -24,6 +28,9 @@ class TokenManager(private val sql: KSqlClient) {
     private val log = org.slf4j.LoggerFactory.getLogger(TokenManager::class.java)
 
     private val tokenCache = ConcurrentHashMap<Long, CachedToken>()
+
+    // passToken 失效告警为一次性事件，避免每次定时任务失败都重复推送
+    private val passTokenAlerted = ConcurrentHashMap.newKeySet<Long>()
 
     data class CachedToken(
         val serviceToken: String,
@@ -49,7 +56,8 @@ class TokenManager(private val sql: KSqlClient) {
             val account = sql.findById(XiaomiAccount::class, accountId)
                 ?: throw IllegalStateException("Account not found: $accountId")
 
-            val serviceToken = genServiceToken(account.passToken, account.userId)
+            val serviceToken = genServiceToken(account)
+            passTokenAlerted.remove(accountId)
             tokenCache[accountId] = CachedToken(serviceToken, account.userId, Instant.now())
 
             return account.userId to serviceToken
@@ -58,6 +66,7 @@ class TokenManager(private val sql: KSqlClient) {
 
     fun invalidateToken(accountId: Long) {
         tokenCache.remove(accountId)
+        passTokenAlerted.remove(accountId)
         log.info("账号 {} 的 token 缓存已清除", accountId)
     }
 
@@ -66,8 +75,10 @@ class TokenManager(private val sql: KSqlClient) {
         return Instant.now().isAfter(lastFreshenTime.plusSeconds(60 * 10))
     }
 
-    private fun genServiceToken(passToken: String, userId: String): String {
+    private fun genServiceToken(account: XiaomiAccount): String {
 
+        val passToken = account.passToken
+        val userId = account.userId
         val deviceId = "wb_" + UUID.randomUUID().toString()
 
         // 步骤一 ：获取 loginUrl
@@ -113,12 +124,25 @@ class TokenManager(private val sql: KSqlClient) {
 
         val serviceToken = setCookies.firstOrNull { it.startsWith("serviceToken=") }?.substringAfter("serviceToken=")
             ?.substringBefore(";")
-            ?: error("no serviceToken from remote")
+
+        // passToken 失效的特征：响应的 Set-Cookie 不再下发 serviceToken
+        if (serviceToken == null) {
+            onPassTokenInvalid(account)
+            error("no serviceToken from remote")
+        }
 
         log.info("serviceToken 获取成功")
 
         return serviceToken
 
+    }
+
+    private fun onPassTokenInvalid(account: XiaomiAccount) {
+        if (!passTokenAlerted.add(account.id)) return
+        log.error("账号 {}({}) 的 passToken 已失效，请在设置中更新", account.id, account.userId)
+        CoroutineScope(Dispatchers.IO).launch {
+            notifyService.sendPassTokenExpired(account)
+        }
     }
 
 }
