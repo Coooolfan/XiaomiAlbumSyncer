@@ -1873,6 +1873,9 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.CrontabHistoryGroup"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.IsInitResponse",
       "allDeclaredFields": true,
       "methods": [
@@ -5164,6 +5167,18 @@
           ]
         },
         {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.util.Map",
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        },
+        {
           "name": "getBody",
           "parameterTypes": []
         },
@@ -5181,6 +5196,10 @@
         },
         {
           "name": "getHeaders",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPassTokenExpiredBody",
           "parameterTypes": []
         },
         {
@@ -7811,6 +7830,13 @@
           "name": "<init>",
           "parameterTypes": [
             "org.babyfish.jimmer.sql.kt.KSqlClient"
+          ]
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.KSqlClient",
+            "com.coooolfan.xiaomialbumsyncer.service.NotifyService"
           ]
         },
         {
