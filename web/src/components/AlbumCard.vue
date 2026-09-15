@@ -4,18 +4,22 @@ import { useI18n } from 'vue-i18n'
 
 type Props = {
   name?: string
+  remoteId?: string
   assetCount?: number
   lastUpdateTime?: string
   shadow?: boolean
 }
 
+const RECORDING_ALBUM_REMOTE_ID = '-1'
+
 const props = defineProps<Props>()
 
 const { t } = useI18n()
 
+const isRecording = computed(() => props.remoteId === RECORDING_ALBUM_REMOTE_ID)
 const displayName = computed(() => props.name ?? t('album.card.unnamed'))
 const displayCount = computed(() => {
-  if (props.assetCount === 0 && props.name === '录音') {
+  if (props.assetCount === 0 && isRecording.value) {
     return t('album.card.hiddenUntilDownload')
   }
   const n = props.assetCount ?? 0
@@ -50,10 +54,13 @@ const displayRelativeUpdate = computed(() => {
   >
     <div class="flex min-w-0 items-center gap-2">
       <i
-        class="pi pi-images shrink-0 text-[13px]"
-        :class="
-          props.shadow ? 'text-slate-300 dark:text-slate-600' : 'text-slate-400 dark:text-slate-500'
-        "
+        class="pi shrink-0 text-[13px]"
+        :class="[
+          isRecording ? 'pi-microphone' : 'pi-images',
+          props.shadow
+            ? 'text-slate-300 dark:text-slate-600'
+            : 'text-slate-400 dark:text-slate-500',
+        ]"
       />
       <span
         class="min-w-0 flex-1 truncate text-[13px]"

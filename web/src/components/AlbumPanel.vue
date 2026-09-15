@@ -197,6 +197,7 @@ onMounted(() => {
             v-for="a in group.albums"
             :key="a.id"
             :name="a.name"
+            :remote-id="a.remoteId"
             :asset-count="a.assetCount"
             :last-update-time="a.lastUpdateTime"
             :shadow="a.shadow"
