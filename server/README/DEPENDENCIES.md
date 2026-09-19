@@ -19,7 +19,7 @@
 | Kotlinx Coroutines Core | 1.11.0 | Apache-2.0 | Kotlin 协程支持 |
 | Jimmer Client | 0.12.0 | Apache-2.0 | Jimmer 客户端模型支持 |
 | Jimmer SQL Kotlin | 0.12.0 | Apache-2.0 | Jimmer ORM 框架（Kotlin） |
-| WebAuthn4J Core | 0.31.10.RELEASE | Apache-2.0 | WebAuthn 认证支持 |
+| WebAuthn4J Core | 0.30.3.RELEASE | Apache-2.0 | WebAuthn 认证支持（0.30.x 为 Jackson 2 兼容线） |
 | HikariCP | 7.1.0 | Apache-2.0 | JDBC 连接池 |
 | SQLite JDBC | 3.53.4.0 | Apache-2.0 | SQLite 数据库驱动 |
 

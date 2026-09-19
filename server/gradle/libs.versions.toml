@@ -12,7 +12,7 @@ hikari = "7.1.0"
 sqlite = "3.53.4.0"
 logback = "1.6.3"
 graalvmNativePlugin = "1.1.11"
-webauthn4j = "0.31.10.RELEASE"
+webauthn4j = "0.30.3.RELEASE"
 asm = "9.10.1"
 benManesVersions = "0.61.0"
 

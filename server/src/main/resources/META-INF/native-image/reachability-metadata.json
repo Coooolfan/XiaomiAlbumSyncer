@@ -14179,6 +14179,11 @@
     },
     {
       "type": "org.flywaydb.core.internal.proprietaryStubs.DryRunConfigurationExtensionStub",
+      "fields": [
+        {
+          "name": "cachedOutputStream"
+        }
+      ],
       "methods": [
         {
           "name": "<init>",
@@ -16269,24 +16274,6 @@
     },
     {
       "type": "tools.jackson.databind.ObjectMapper"
-    },
-    {
-      "type": "tools.jackson.databind.deser.Deserializers[]"
-    },
-    {
-      "type": "tools.jackson.databind.deser.KeyDeserializers[]"
-    },
-    {
-      "type": "tools.jackson.databind.deser.ValueInstantiators[]"
-    },
-    {
-      "type": "tools.jackson.databind.ser.Serializers[]"
-    },
-    {
-      "type": "tools.jackson.databind.ser.ValueSerializerModifier[]"
-    },
-    {
-      "type": "tools.jackson.module.kotlin.KotlinModule"
     },
     {
       "type": {
