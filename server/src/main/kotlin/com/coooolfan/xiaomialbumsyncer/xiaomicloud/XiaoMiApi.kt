@@ -189,7 +189,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             throwIfNotSuccess(res.code)
             Solon.context().objectMapper.readTree(res.body)
         }
-        throwIfBizError(responseTree)
+        responseTree.throwIfBizError()
 
         return responseTree.at("/data/albums").mapNotNull {
             val albumId = it.get("albumId")?.asLong() ?: return@mapNotNull null
@@ -222,7 +222,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             throwIfNotSuccess(res.code)
             Solon.context().objectMapper.readTree(res.body)
         }
-        throwIfBizError(responseTree)
+        responseTree.throwIfBizError()
 
         val data = responseTree.at("/data")
         val content = data.get("content") ?: throw IllegalStateException("allitems 响应缺少 data.content")
@@ -237,14 +237,6 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             lastPage = data.get("lastPage")?.asBoolean() ?: true,
             assets = assets,
         )
-    }
-
-    private fun throwIfBizError(responseTree: JsonNode) {
-        val code = responseTree.at("/code").asInt()
-        if (code == 0) return
-        val reason = responseTree.at("/description").asText()
-            .ifBlank { responseTree.at("/reason").asText() }
-        throw IllegalStateException("小米返回错误码 $code ($reason)")
     }
 
     fun downloadAsset(accountId: Long, asset: Asset, targetPath: Path): Boolean {

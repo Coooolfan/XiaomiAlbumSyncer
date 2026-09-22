@@ -3,6 +3,8 @@ package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 import com.coooolfan.xiaomialbumsyncer.service.XiaomiAccountService
 import com.coooolfan.xiaomialbumsyncer.utils.client
 import com.coooolfan.xiaomialbumsyncer.utils.objectMapper
+import com.coooolfan.xiaomialbumsyncer.utils.requiredText
+import com.coooolfan.xiaomialbumsyncer.utils.textOrNull
 import com.coooolfan.xiaomialbumsyncer.utils.ua
 import com.coooolfan.xiaomialbumsyncer.utils.withCookie
 import com.fasterxml.jackson.databind.JsonNode
@@ -80,7 +82,7 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
      * 创建扫码登录会话，返回二维码地址
      */
     fun createSession(): QrLoginSessionView {
-        sweepSessions()
+        sessions.values.removeIf { Instant.now().isAfter(it.expiresAt) }
         val deviceId = "wb_" + UUID.randomUUID().toString()
         val session = Session(
             id = UUID.randomUUID().toString(),
@@ -180,7 +182,7 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
      */
     private fun handleLpResult(session: Session, res: Response): Boolean {
         val body = res.body.string()
-        val json = runCatching { mapper.readTree(stripJsonPrefix(body)) }.getOrNull()
+        val json = runCatching { mapper.readTree(body.removePrefix(JSON_PREFIX)) }.getOrNull()
             ?: run {
                 log.warn("会话 {} 长轮询响应非 JSON: {}", session.id, body.take(200))
                 fail(session, "扫码响应解析失败")
@@ -225,7 +227,7 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
             if (res.code / 100 !in 2..3) {
                 error("小米登录接口请求失败: GET $url -> HTTP ${res.code}")
             }
-            mapper.readTree(stripJsonPrefix(res.body.string()))
+            mapper.readTree(res.body.string().removePrefix(JSON_PREFIX))
         }
     }
 
@@ -236,20 +238,6 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
             if (idx > 0) session.cookies[first.substring(0, idx).trim()] = first.substring(idx + 1).trim()
         }
     }
-
-    private fun sweepSessions() {
-        val now = Instant.now()
-        sessions.values.removeIf { now.isAfter(it.expiresAt) }
-    }
-
-    private fun stripJsonPrefix(body: String): String =
-        if (body.startsWith(JSON_PREFIX)) body.substring(JSON_PREFIX.length) else body
-
-    private fun JsonNode.requiredText(field: String): String =
-        at("/$field").asText("").ifBlank { error("小米登录响应缺少字段 $field") }
-
-    private fun JsonNode.textOrNull(field: String): String? =
-        at("/$field").asText(null)?.takeIf { it.isNotBlank() }
 
     companion object {
         private const val ACCOUNT_BASE = "https://account.xiaomi.com"
