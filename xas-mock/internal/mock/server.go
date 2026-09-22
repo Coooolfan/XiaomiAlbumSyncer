@@ -37,6 +37,8 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /gallery/user/album/list", s.albumList)
 	s.mux.HandleFunc("GET /gallery/user/galleries", s.galleryList)
 	s.mux.HandleFunc("GET /gallery/user/timeline", s.timeline)
+	s.mux.HandleFunc("GET /gallery/album/full", s.albumFull)
+	s.mux.HandleFunc("GET /gallery/allitems", s.allItems)
 	s.mux.HandleFunc("GET /sfs/ns/recorder/dir/0/list", s.recordingList)
 	s.mux.HandleFunc("GET /gallery/storage", s.galleryStorage)
 	s.mux.HandleFunc("GET /sfs/ns/recorder/file/", s.recordingStorage)
@@ -187,6 +189,99 @@ func (s *Server) timeline(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(hash, "%d:%d:%d:%s;", asset.ID, asset.DateTaken, asset.Size, asset.SHA1)
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": map[string]any{"indexHash": hex.EncodeToString(hash.Sum(nil)), "dayCount": counts}})
+}
+
+// albumFull 返回全量相册快照及每相册水位头（incrementalTag=最新变更序号），供位点同步预检。
+func (s *Server) albumFull(w http.ResponseWriter, r *http.Request) {
+	account, ok := s.cloudAccount(w, r)
+	if !ok {
+		return
+	}
+	ids := make([]int64, 0, len(account.GalleryAlbums))
+	for id := range account.GalleryAlbums {
+		ids = append(ids, id)
+	}
+	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	albums := make([]map[string]any, 0, len(ids))
+	for _, id := range ids {
+		album := account.GalleryAlbums[id]
+		albums = append(albums, map[string]any{
+			"albumId":         album.AlbumID,
+			"name":            album.Name,
+			"incrementalTag":  strconv.FormatInt(album.NextSeq-1, 10),
+			"totalImageCount": len(album.Assets),
+			"lastUpdateTime":  album.LastUpdateTime,
+		})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"code": 0, "result": "ok", "data": map[string]any{"albums": albums}})
+}
+
+// allitems 按位点返回相册变更记录页：tag 为上次返回的 syncTag（"0" 从头回放）。
+// tag 超过最新序号视为位点失效，返回错误触发调用方回退全量重放。
+func (s *Server) allItems(w http.ResponseWriter, r *http.Request) {
+	account, ok := s.cloudAccount(w, r)
+	if !ok {
+		return
+	}
+	groupID, err := requiredInt64(r, "groupId")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, 40021, "invalid groupId")
+		return
+	}
+	album := account.GalleryAlbums[groupID]
+	if album == nil {
+		writeError(w, http.StatusNotFound, 40404, "album not found")
+		return
+	}
+	tagText := r.URL.Query().Get("tag")
+	if tagText == "" {
+		tagText = "0"
+	}
+	s.state.stats.RecordAllItems(strconv.FormatInt(groupID, 10), tagText)
+	tagSeq, err := strconv.ParseInt(tagText, 10, 64)
+	if err != nil || tagSeq < 0 {
+		writeError(w, http.StatusBadRequest, 40022, "invalid tag")
+		return
+	}
+	if tagSeq > album.NextSeq-1 {
+		writeError(w, http.StatusBadRequest, 40023, "stale tag")
+		return
+	}
+	limit, err := optionalNonNegativeInt(r, "limit", 200)
+	if err != nil || limit <= 0 {
+		writeError(w, http.StatusBadRequest, 40003, "invalid limit")
+		return
+	}
+	pageSize := limit
+	if configured := s.state.allItemsPageSize(); configured > 0 && configured < pageSize {
+		pageSize = configured
+	}
+	entries := make([]*AlbumChange, 0, len(album.Changes))
+	for _, change := range album.Changes {
+		if change.Seq > tagSeq {
+			entries = append(entries, change)
+		}
+	}
+	page := entries[:min(pageSize, len(entries))]
+	content := make([]map[string]any, 0, len(page))
+	for _, change := range page {
+		row := galleryAssetJSON(change.Asset)
+		row["status"] = change.Status
+		content = append(content, row)
+	}
+	syncSeq := tagSeq
+	if len(page) > 0 {
+		syncSeq = page[len(page)-1].Seq
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"code":   0,
+		"result": "ok",
+		"data": map[string]any{
+			"content":  content,
+			"syncTag":  strconv.FormatInt(syncSeq, 10),
+			"lastPage": len(page) >= len(entries),
+		},
+	})
 }
 
 func (s *Server) recordingList(w http.ResponseWriter, r *http.Request) {

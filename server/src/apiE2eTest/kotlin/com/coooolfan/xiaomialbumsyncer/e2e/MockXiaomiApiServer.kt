@@ -46,6 +46,10 @@ class MockXiaomiApiServer private constructor(
 
     fun timelineCount(albumId: Long): Long = stats().path("timelineAlbumIds").path(albumId.toString()).asLong()
 
+    /** 指定相册的 /gallery/allitems 请求 tag 序列，用于断言位点推进与跳过行为 */
+    fun allItemsTags(albumId: Long): List<String> =
+        stats().path("allItemsTags").path(albumId.toString()).map { it.asText() }
+
     fun awaitRequest(path: String, timeout: Duration = Duration.ofSeconds(5)) {
         val deadline = System.nanoTime() + timeout.toNanos()
         while (System.nanoTime() < deadline) {

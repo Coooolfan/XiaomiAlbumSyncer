@@ -69,10 +69,11 @@ func buildRuntime(s Scenario) (*runtimeData, error) {
 		return nil, errors.New("scenario must contain at least one account")
 	}
 	data := &runtimeData{
-		Accounts:      map[string]*Account{},
-		Deleted:       map[int64]deletedMedia{},
-		StorageErrors: map[int64]storageError{},
-		Clock:         s.LogicalClock,
+		Accounts:         map[string]*Account{},
+		Deleted:          map[int64]deletedMedia{},
+		StorageErrors:    map[int64]storageError{},
+		Clock:            s.LogicalClock,
+		AllItemsPageSize: s.AllItemsPageSize,
 	}
 	if data.Clock == 0 {
 		data.Clock = 1714564800000
@@ -99,7 +100,7 @@ func buildRuntime(s Scenario) (*runtimeData, error) {
 			if _, exists := account.GalleryAlbums[albumSpec.AlbumID]; exists {
 				return nil, fmt.Errorf("duplicate albumId %d for %s", albumSpec.AlbumID, account.UserID)
 			}
-			album := &GalleryAlbum{AlbumID: albumSpec.AlbumID, Name: albumSpec.Name, LastUpdateTime: albumSpec.LastUpdateTime, Assets: map[int64]*GalleryAsset{}}
+			album := &GalleryAlbum{AlbumID: albumSpec.AlbumID, Name: albumSpec.Name, LastUpdateTime: albumSpec.LastUpdateTime, Assets: map[int64]*GalleryAsset{}, NextSeq: 1}
 			if album.Name == "" {
 				album.Name = fmt.Sprintf("Album %d", album.AlbumID)
 			}
@@ -124,6 +125,10 @@ func buildRuntime(s Scenario) (*runtimeData, error) {
 				if asset.DateTaken > data.Clock {
 					data.Clock = asset.DateTaken
 				}
+			}
+			// 初始资产按 dateTaken 倒序铺入变更日志，作为位点流的存量基线
+			for _, asset := range sortedGalleryAssets(album.Assets) {
+				appendAlbumChange(album, asset, "custom")
 			}
 		}
 		for _, spec := range accountSpec.Recordings {

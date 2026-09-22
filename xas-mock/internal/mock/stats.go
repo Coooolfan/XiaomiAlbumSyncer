@@ -4,17 +4,18 @@ import "sync"
 
 type Stats struct {
 	mu                      sync.Mutex
-	RouteCounts             map[string]int64 `json:"routeCounts"`
-	TimelineAlbumIDs        map[string]int64 `json:"timelineAlbumIds"`
-	BytesSent               int64            `json:"bytesSent"`
-	ActiveDownloads         int64            `json:"activeDownloads"`
-	PeakConcurrentDownloads int64            `json:"peakConcurrentDownloads"`
-	UnexpectedRequests      int64            `json:"unexpectedRequests"`
-	Notifications           int64            `json:"notifications"`
+	RouteCounts             map[string]int64   `json:"routeCounts"`
+	TimelineAlbumIDs        map[string]int64   `json:"timelineAlbumIds"`
+	AllItemsTags            map[string][]string `json:"allItemsTags"`
+	BytesSent               int64              `json:"bytesSent"`
+	ActiveDownloads         int64              `json:"activeDownloads"`
+	PeakConcurrentDownloads int64              `json:"peakConcurrentDownloads"`
+	UnexpectedRequests      int64              `json:"unexpectedRequests"`
+	Notifications           int64              `json:"notifications"`
 }
 
 func NewStats() *Stats {
-	return &Stats{RouteCounts: map[string]int64{}, TimelineAlbumIDs: map[string]int64{}}
+	return &Stats{RouteCounts: map[string]int64{}, TimelineAlbumIDs: map[string]int64{}, AllItemsTags: map[string][]string{}}
 }
 
 func (s *Stats) Reset() {
@@ -22,6 +23,7 @@ func (s *Stats) Reset() {
 	defer s.mu.Unlock()
 	s.RouteCounts = map[string]int64{}
 	s.TimelineAlbumIDs = map[string]int64{}
+	s.AllItemsTags = map[string][]string{}
 	s.BytesSent = 0
 	s.ActiveDownloads = 0
 	s.PeakConcurrentDownloads = 0
@@ -39,6 +41,13 @@ func (s *Stats) RecordTimeline(albumID string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.TimelineAlbumIDs[albumID]++
+}
+
+// RecordAllItems 记录一次 /gallery/allitems 请求的 groupId 与入参 tag，用于断言位点推进
+func (s *Stats) RecordAllItems(groupID, tag string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.AllItemsTags[groupID] = append(s.AllItemsTags[groupID], tag)
 }
 
 func (s *Stats) Unexpected() {
@@ -80,9 +89,14 @@ func (s *Stats) Snapshot() map[string]any {
 	for key, value := range s.TimelineAlbumIDs {
 		timelines[key] = value
 	}
+	allItemsTags := make(map[string][]string, len(s.AllItemsTags))
+	for key, value := range s.AllItemsTags {
+		allItemsTags[key] = append([]string(nil), value...)
+	}
 	return map[string]any{
 		"routeCounts":             routes,
 		"timelineAlbumIds":        timelines,
+		"allItemsTags":            allItemsTags,
 		"bytesSent":               s.BytesSent,
 		"activeDownloads":         s.ActiveDownloads,
 		"peakConcurrentDownloads": s.PeakConcurrentDownloads,

@@ -48,6 +48,12 @@ func (s *State) Reset(seed *int64) error {
 	return nil
 }
 
+func (s *State) allItemsPageSize() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.data.AllItemsPageSize
+}
+
 func (s *State) Health() (int64, int64) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -220,7 +226,7 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 		if _, exists := account.GalleryAlbums[op.Album.AlbumID]; exists {
 			return nil, fmt.Errorf("album %d already exists", op.Album.AlbumID)
 		}
-		account.GalleryAlbums[op.Album.AlbumID] = &GalleryAlbum{AlbumID: op.Album.AlbumID, Name: op.Album.Name, LastUpdateTime: data.Clock, Assets: map[int64]*GalleryAsset{}}
+		account.GalleryAlbums[op.Album.AlbumID] = &GalleryAlbum{AlbumID: op.Album.AlbumID, Name: op.Album.Name, LastUpdateTime: data.Clock, Assets: map[int64]*GalleryAsset{}, NextSeq: 1}
 		return []int64{op.Album.AlbumID}, nil
 	case "updateAlbum":
 		album := account.GalleryAlbums[op.AlbumID]
@@ -267,6 +273,7 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 				return nil, err
 			}
 			album.Assets[id] = asset
+			appendAlbumChange(album, asset, "custom")
 			album.LastUpdateTime = max(album.LastUpdateTime, data.Clock, asset.DateTaken)
 			delete(data.Deleted, id)
 			ids = append(ids, id)
@@ -289,6 +296,7 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 		updated.Version = current.Version + 1
 		updated.SHA1 = resolveSHA1(seed, updated.ID, updated.Version, updated.Size, updated.ContentPattern, updated.ContentMode, op.Asset.SHA1, op.Asset.SHA1Mode)
 		album.Assets[updated.ID] = updated
+		appendAlbumChange(album, updated, "custom")
 		album.LastUpdateTime = data.Clock
 		return []int64{updated.ID}, nil
 	case "deleteAssets":
@@ -301,8 +309,11 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 			return nil, err
 		}
 		for _, id := range ids {
+			asset := album.Assets[id]
+			snapshot := *asset
 			delete(album.Assets, id)
 			data.Deleted[id] = deletedMedia{UserID: account.UserID, Kind: "gallery"}
+			appendAlbumChange(album, &snapshot, "deleted")
 		}
 		album.LastUpdateTime = data.Clock
 		return ids, nil
@@ -407,6 +418,12 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 	default:
 		return nil, fmt.Errorf("unknown mutation op %q", op.Op)
 	}
+}
+
+// appendAlbumChange 向相册位点流追加一条变更记录，Seq 为相册内单调递增序号
+func appendAlbumChange(album *GalleryAlbum, asset *GalleryAsset, status string) {
+	album.Changes = append(album.Changes, &AlbumChange{Seq: album.NextSeq, Asset: asset, Status: status})
+	album.NextSeq++
 }
 
 func setOrClearStorageError(data *runtimeData, id int64, userID, kind string, op MutationOperation) {
@@ -625,11 +642,12 @@ func mergeRecordingSpec(current *Recording, update RecordingSpec) RecordingSpec 
 
 func cloneRuntime(data *runtimeData) *runtimeData {
 	copyData := &runtimeData{
-		Accounts:      map[string]*Account{},
-		Deleted:       map[int64]deletedMedia{},
-		StorageErrors: map[int64]storageError{},
-		NextMediaID:   data.NextMediaID,
-		Clock:         data.Clock,
+		Accounts:         map[string]*Account{},
+		Deleted:          map[int64]deletedMedia{},
+		StorageErrors:    map[int64]storageError{},
+		NextMediaID:      data.NextMediaID,
+		Clock:            data.Clock,
+		AllItemsPageSize: data.AllItemsPageSize,
 	}
 	for id, deleted := range data.Deleted {
 		copyData.Deleted[id] = deleted
@@ -646,10 +664,14 @@ func cloneRuntime(data *runtimeData) *runtimeData {
 func cloneAccount(account *Account) *Account {
 	copyAccount := &Account{UserID: account.UserID, PassToken: account.PassToken, ServiceToken: account.ServiceToken, GalleryAlbums: map[int64]*GalleryAlbum{}, Recordings: map[int64]*Recording{}}
 	for id, album := range account.GalleryAlbums {
-		copyAlbum := &GalleryAlbum{AlbumID: album.AlbumID, Name: album.Name, LastUpdateTime: album.LastUpdateTime, Assets: map[int64]*GalleryAsset{}}
+		copyAlbum := &GalleryAlbum{AlbumID: album.AlbumID, Name: album.Name, LastUpdateTime: album.LastUpdateTime, Assets: map[int64]*GalleryAsset{}, NextSeq: album.NextSeq}
 		for assetID, asset := range album.Assets {
 			value := *asset
 			copyAlbum.Assets[assetID] = &value
+		}
+		for _, change := range album.Changes {
+			assetCopy := *change.Asset
+			copyAlbum.Changes = append(copyAlbum.Changes, &AlbumChange{Seq: change.Seq, Asset: &assetCopy, Status: change.Status})
 		}
 		copyAccount.GalleryAlbums[id] = copyAlbum
 	}

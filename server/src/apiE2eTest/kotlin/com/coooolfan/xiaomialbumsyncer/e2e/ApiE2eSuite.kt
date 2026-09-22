@@ -99,6 +99,7 @@ class ApiE2eSuite {
         val albums = api.json(api.get("/api/album/latest/$accountId").expect(200))
         assertEquals(3, albums.size())
         val cameraAlbumId = findAlbumId(albums, "1")
+        val screenshotsAlbumId = findAlbumId(albums, "2")
         val audioAlbumId = findAlbumId(albums, "-1")
         api.get("/api/album").expect(200)
 
@@ -182,6 +183,15 @@ class ApiE2eSuite {
         )
 
         api.delete("/api/crontab/$crontabId").expect(200)
+
+        executeCursorSyncWorkflow(
+            api = api,
+            mock = mock,
+            workDir = workDir,
+            accountId = accountId,
+            screenshotsAlbumId = screenshotsAlbumId,
+            baseConfig = config,
+        )
 
         executeRecordingWorkflows(
             api = api,
@@ -401,6 +411,119 @@ class ApiE2eSuite {
             response.body
         }
         return mcpJson.readTree(payload)
+    }
+
+    /**
+     * 位点同步模式（CURSOR）：album/full 预检 + allitems 按 syncTag 翻页拉流。
+     * 覆盖：首轮 tag=0 回放、水位头未变跳过、增量翻页位点推进、清理历史后重置回放。
+     * 使用空相册 Screenshots(remoteId=2)，与相册 1 的既有断言完全隔离。
+     */
+    private fun executeCursorSyncWorkflow(
+        api: ApiClient,
+        mock: MockXiaomiApiServer,
+        workDir: Path,
+        accountId: Long,
+        screenshotsAlbumId: Long,
+        baseConfig: LinkedHashMap<String, Any?>,
+    ) {
+        val cursorConfig = LinkedHashMap(baseConfig).apply {
+            this["targetPath"] = workDir.resolve("cursor-downloads").toString()
+            this["downloadImages"] = true
+            this["downloadVideos"] = false
+            this["downloadAudios"] = false
+            this["notify"] = false
+            this["skipExistingFile"] = false
+        }
+        val cursorCrontab = api.json(
+            api.post(
+                "/api/crontab",
+                linkedMapOf<String, Any?>(
+                    "name" to "Cursor Sync E2E",
+                    "description" to "album/full precheck + allitems cursor stream",
+                    "enabled" to false,
+                    "syncMode" to "CURSOR",
+                    "config" to cursorConfig,
+                    "accountId" to accountId,
+                    "albumIds" to listOf(screenshotsAlbumId),
+                )
+            ).expect(200)
+        )
+        val cursorCrontabId = cursorCrontab.path("id").asLong()
+
+        // 第一轮：无位点基线 → tag=0 回放，空相册单页即追平
+        api.post("/api/crontab/$cursorCrontabId/executions").expect(200)
+        val firstHistoryId = awaitCompletedHistory(api, cursorCrontabId)
+        assertCompletedDetailCount(api, firstHistoryId, 0)
+        assertEquals(listOf("0"), mock.allItemsTags(2), "首轮应从 tag=0 回放")
+
+        // 第二轮：incrementalTag 未变 → 预检跳过，不再请求 allitems
+        api.post("/api/crontab/$cursorCrontabId/executions").expect(200)
+        val secondHistoryId = awaitCompletedHistory(api, cursorCrontabId, afterHistoryId = firstHistoryId)
+        assertEquals(listOf("0"), mock.allItemsTags(2), "水位头未变的相册应跳过拉流")
+
+        // 云端新增 3 个资产 → 按位点增量拉取；allItemsPageSize=2 → 两页 0→2→3
+        mock.mutate(
+            mapOf(
+                "operations" to listOf(
+                    mapOf(
+                        "op" to "addAssets",
+                        "userId" to "mock-user",
+                        "albumId" to 2,
+                        "assets" to listOf(
+                            mapOf(
+                                "id" to 105,
+                                "type" to "image",
+                                "fileName" to "cursor-1.jpg",
+                                "dateTaken" to 1714651200000L,
+                                "size" to 28,
+                                "sha1Mode" to "exact",
+                                "contentPattern" to "xiaomi-album-syncer-api-e2e\n",
+                            ),
+                            mapOf(
+                                "id" to 106,
+                                "type" to "image",
+                                "fileName" to "cursor-2.jpg",
+                                "dateTaken" to 1714651201000L,
+                                "size" to 28,
+                                "sha1Mode" to "exact",
+                                "contentPattern" to "xiaomi-album-syncer-api-e2e\n",
+                            ),
+                            mapOf(
+                                "id" to 107,
+                                "type" to "image",
+                                "fileName" to "cursor-3.jpg",
+                                "dateTaken" to 1714651202000L,
+                                "size" to 28,
+                                "sha1Mode" to "exact",
+                                "contentPattern" to "xiaomi-album-syncer-api-e2e\n",
+                            ),
+                        ),
+                    ),
+                )
+            )
+        )
+        api.post("/api/crontab/$cursorCrontabId/executions").expect(200)
+        val thirdHistoryId = awaitCompletedHistory(api, cursorCrontabId, afterHistoryId = secondHistoryId)
+        assertCompletedDetailCount(api, thirdHistoryId, 3)
+        assertEquals(
+            listOf("0", "0", "2"),
+            mock.allItemsTags(2),
+            "增量拉流应从上次位点翻页推进",
+        )
+
+        // 清理下载历史 → 位点随之清零 → 下一轮重新 tag=0 回放
+        api.delete("/api/crontab/$cursorCrontabId/histories").expect(200)
+        api.post("/api/crontab/$cursorCrontabId/executions").expect(200)
+        val fourthHistoryId = awaitCompletedHistory(api, cursorCrontabId, afterHistoryId = thirdHistoryId)
+        assertCompletedDetailCount(api, fourthHistoryId, 3)
+        assertEquals(
+            listOf("0", "0", "2", "0", "2"),
+            mock.allItemsTags(2),
+            "清理历史后应重新从 tag=0 回放",
+        )
+
+        assertEquals(0, mock.timelineCount(2), "位点模式不应请求相册 timeline")
+        api.delete("/api/crontab/$cursorCrontabId").expect(200)
     }
 
     private fun executeRecordingWorkflows(

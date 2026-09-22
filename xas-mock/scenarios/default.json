@@ -52,5 +52,6 @@
         }
       ]
     }
-  ]
+  ],
+  "allItemsPageSize": 2
 }
