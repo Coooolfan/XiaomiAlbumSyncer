@@ -18,7 +18,7 @@ import ExpressionPathHelp from '@/components/ExpressionPathHelp.vue'
 import CronHelp from '@/components/CronHelp.vue'
 import type { CrontabSyncMode } from '@/__generated/model/enums'
 import type { CrontabConfig } from '@/__generated/model/static'
-import type { LocalCronForm } from '@/utils/crontabForm'
+import type { LocalCronForm, Writable } from '@/utils/crontabForm'
 
 const props = defineProps<{
   visible: boolean
@@ -51,8 +51,6 @@ const accountOptions = computed(() => [...props.accountOptions])
 const formAlbumOptions = computed(() => [...props.formAlbumOptions])
 const timeZones = computed(() => [...props.timeZones])
 
-type Writable<T> = { -readonly [P in keyof T]: T[P] }
-
 const steps = ['basic', 'scope', 'mode', 'schedule'] as const
 type Step = (typeof steps)[number]
 const step = ref<Step>('basic')
@@ -67,21 +65,9 @@ const stepFields: Partial<Record<Step, readonly string[]>> = {
   schedule: ['expression', 'timeZone', 'targetPath', 'concurrency'],
 }
 
-const errorStep: Record<string, Step> = {
-  name: 'basic',
-  accountId: 'basic',
-  expression: 'schedule',
-  timeZone: 'schedule',
-  targetPath: 'schedule',
-  concurrency: 'schedule',
-}
-
-const hasRecordingAlbum = computed(() => {
-  const recordingIds = new Set(
-    formAlbumOptions.value.filter((o) => o.recording).map((o) => o.value),
-  )
-  return form.value.albumIds.some((id) => recordingIds.has(id))
-})
+const hasRecordingAlbum = computed(() =>
+  form.value.albumIds.some((id) => formAlbumOptions.value.find((o) => o.value === id)?.recording),
+)
 
 const recommendedMode = computed<CrontabSyncMode>(() =>
   hasRecordingAlbum.value ? 'FULL' : 'TIMELINE',
@@ -93,18 +79,21 @@ const syncModeCards = computed(() => [
     icon: 'pi-database',
     label: t('cronform.advanced.syncModeFull'),
     desc: t('cronform.advanced.syncModeFullHint'),
+    badge: recommendedMode.value === 'FULL' ? ('recommended' as const) : null,
   },
   {
     value: 'TIMELINE' as CrontabSyncMode,
     icon: 'pi-history',
     label: t('cronform.advanced.syncModeTimeline'),
     desc: t('cronform.advanced.syncModeTimelineHint'),
+    badge: recommendedMode.value === 'TIMELINE' ? ('recommended' as const) : null,
   },
   {
     value: 'CURSOR' as CrontabSyncMode,
     icon: 'pi-bolt',
     label: t('cronform.advanced.syncModeCursor'),
     desc: t('cronform.advanced.syncModeCursorHint'),
+    badge: 'beta' as const,
   },
 ])
 
@@ -131,7 +120,7 @@ function selectSyncMode(mode: CrontabSyncMode) {
 watch(formErrors, (errors) => {
   const keys = Object.keys(errors)
   if (!keys.length) return
-  const target = steps.find((s) => keys.some((key) => errorStep[key] === s))
+  const target = steps.find((s) => keys.some((key) => stepFields[s]?.includes(key)))
   if (target && target !== step.value) goToStep(target)
 })
 
@@ -360,15 +349,9 @@ onBeforeUnmount(() => {
                     card.label
                   }}</span>
                   <Tag
-                    v-if="card.value === recommendedMode"
-                    :value="t('cronform.badge.recommended')"
-                    severity="success"
-                    class="text-[10px]! px-1.5! py-0!"
-                  />
-                  <Tag
-                    v-if="card.value === 'CURSOR'"
-                    :value="t('cronform.badge.beta')"
-                    severity="warn"
+                    v-if="card.badge"
+                    :value="t(`cronform.badge.${card.badge}`)"
+                    :severity="card.badge === 'beta' ? 'warn' : 'success'"
                     class="text-[10px]! px-1.5! py-0!"
                   />
                 </span>

@@ -8,11 +8,10 @@ import {
   deriveTargetBase,
   mapCrontabToForm,
   type LocalCronForm,
+  type Writable,
 } from '@/utils/crontabForm'
 
 type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
-
-type Writable<T> = { -readonly [P in keyof T]: T[P] }
 
 function resolveDefaultTimeZone() {
   try {

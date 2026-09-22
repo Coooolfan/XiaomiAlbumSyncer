@@ -182,20 +182,16 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             }
 
             var syncTag = cursor?.syncTag ?: "0"
-            var firstPage = true
+            // 存量位点被服务端拒绝（失效/参数错误）：首页失败回退 tag=0 全量重放，不中断运行
+            var page = try {
+                api.fetchAllItemsPage(accountId, album, syncTag)
+            } catch (e: Exception) {
+                if (syncTag == "0") throw e
+                log.warn("相册 {} 位点 {} 拉取失败（{}），回退全量重放", album.name, syncTag, e.message)
+                syncTag = "0"
+                api.fetchAllItemsPage(accountId, album, syncTag)
+            }
             while (true) {
-                val page = try {
-                    api.fetchAllItemsPage(accountId, album, syncTag)
-                } catch (e: Exception) {
-                    // 存量位点被服务端拒绝（失效/参数错误）：回退 tag=0 全量重放，不中断运行
-                    if (firstPage && syncTag != "0") {
-                        log.warn("相册 {} 位点 {} 拉取失败（{}），回退全量重放", album.name, syncTag, e.message)
-                        syncTag = "0"
-                        api.fetchAllItemsPage(accountId, album, syncTag)
-                    } else throw e
-                }
-                firstPage = false
-
                 if (page.assets.isNotEmpty()) {
                     sql.saveEntitiesCommand(page.assets, SaveMode.UPSERT).execute()
                 }
@@ -216,6 +212,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
                     where(table.id eq crontabHistory.id)
                 }
                 if (page.lastPage || stalled) break
+                page = api.fetchAllItemsPage(accountId, album, syncTag)
             }
             log.info("相册 {} (remoteId={}) 位点同步完成，当前位点 {}", album.name, album.remoteId, syncTag)
         }

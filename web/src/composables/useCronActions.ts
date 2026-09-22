@@ -130,7 +130,6 @@ export function useCronActions(options: UseCronActionsOptions) {
         name: row.name,
         description: row.description,
         enabled: !row.enabled,
-        syncMode: row.syncMode,
         config: row.config,
         albumIds: row.albumIds,
       })

@@ -469,34 +469,14 @@ class ApiE2eSuite {
                         "op" to "addAssets",
                         "userId" to "mock-user",
                         "albumId" to 2,
-                        "assets" to listOf(
-                            mapOf(
-                                "id" to 105,
-                                "type" to "image",
-                                "fileName" to "cursor-1.jpg",
-                                "dateTaken" to 1714651200000L,
-                                "size" to 28,
-                                "sha1Mode" to "exact",
-                                "contentPattern" to "xiaomi-album-syncer-api-e2e\n",
-                            ),
-                            mapOf(
-                                "id" to 106,
-                                "type" to "image",
-                                "fileName" to "cursor-2.jpg",
-                                "dateTaken" to 1714651201000L,
-                                "size" to 28,
-                                "sha1Mode" to "exact",
-                                "contentPattern" to "xiaomi-album-syncer-api-e2e\n",
-                            ),
-                            mapOf(
-                                "id" to 107,
-                                "type" to "image",
-                                "fileName" to "cursor-3.jpg",
-                                "dateTaken" to 1714651202000L,
-                                "size" to 28,
-                                "sha1Mode" to "exact",
-                                "contentPattern" to "xiaomi-album-syncer-api-e2e\n",
-                            ),
+                        "count" to 3,
+                        "template" to mapOf(
+                            "type" to "image",
+                            "fileName" to "cursor.jpg",
+                            "dateTaken" to 1714651200000L,
+                            "size" to 28,
+                            "sha1Mode" to "exact",
+                            "contentPattern" to "xiaomi-album-syncer-api-e2e\n",
                         ),
                     ),
                 )
@@ -713,7 +693,7 @@ class ApiE2eSuite {
         api.post("/api/crontab/$recordingCrontabId/executions").expect(200)
         awaitCompletedHistory(api, recordingCrontabId)
 
-        // 云端新增录音 203 后被删除：列表可见，storage 返回 code=50202
+        // 云端新增录音 301 后被删除：列表可见，storage 返回 code=50202
         mock.mutate(
             mapOf(
                 "operations" to listOf(
@@ -722,7 +702,7 @@ class ApiE2eSuite {
                         "userId" to "mock-user",
                         "recordings" to listOf(
                             mapOf(
-                                "id" to 203,
+                                "id" to 301,
                                 "fileName" to "deleted-recording.m4a",
                                 "recordingType" to 0,
                                 "createTime" to 1714651200000L,
@@ -735,7 +715,7 @@ class ApiE2eSuite {
                     mapOf(
                         "op" to "markDeleted",
                         "userId" to "mock-user",
-                        "ids" to listOf(203),
+                        "ids" to listOf(301),
                     ),
                 )
             )
@@ -752,9 +732,9 @@ class ApiE2eSuite {
             assertTrue(detail.path("downloadCompleted").asBoolean(), "资产 ${detail.path("asset").path("id")} 应标记下载完成")
             assertTrue(detail.path("message").isMissingNode || detail.path("message").isNull, "跳过不应产生错误消息")
         }
-        val deletedRecording = recordingDetails.path("rows").first { it.path("asset").path("id").asText() == "203" }
+        val deletedRecording = recordingDetails.path("rows").first { it.path("asset").path("id").asText() == "301" }
         assertFalse(Files.exists(Path.of(deletedRecording.path("filePath").asText())), "已删除录音不应产出文件")
-        assertEquals(0, mock.routePrefixCount("/mock/oss/203"), "已删除录音不应请求 OSS 签名直链")
+        assertEquals(0, mock.routePrefixCount("/mock/oss/301"), "已删除录音不应请求 OSS 签名直链")
         api.delete("/api/crontab/$recordingCrontabId").expect(200)
     }
 

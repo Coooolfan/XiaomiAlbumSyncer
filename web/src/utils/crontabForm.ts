@@ -5,6 +5,9 @@ import type { CrontabSyncMode } from '@/__generated/model/enums'
 
 export type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
 
+// 生成的 DTO 字段均为 readonly，表单内赋值处用此类型解除
+export type Writable<T> = { -readonly [P in keyof T]: T[P] }
+
 export interface LocalCronForm extends Omit<CrontabCreateInput, 'albumIds'> {
   albumIds: number[]
   // UI 专用：开启后路径输入框编辑 expressionTargetPath（完整模板），关闭时提交为 '' 走默认目录结构
@@ -69,7 +72,7 @@ export function mapCrontabToForm(item: Crontab, fallbackTz: string): LocalCronFo
     name: item.name,
     description: item.description,
     enabled: item.enabled,
-    syncMode: item.syncMode ?? 'TIMELINE',
+    syncMode: item.syncMode,
     accountId: item.accountId,
     config: {
       expression: item.config.expression,
