@@ -14,12 +14,6 @@ export interface LocalCronForm extends Omit<CrontabCreateInput, 'albumIds'> {
   useExpressionPath: boolean
 }
 
-// 从模板中提取 $ 之前的字面量前缀作为 targetPath（后端兜底/挂载检查仍需要真实基础路径）
-export function deriveTargetBase(expression: string): string {
-  const literal = expression.split('$', 1)[0]?.replace(/\/+$/, '') ?? ''
-  return literal || '/'
-}
-
 export function buildSubmitConfig(form: LocalCronForm): CrontabConfig {
   return {
     ...form.config,

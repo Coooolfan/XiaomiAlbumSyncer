@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, toRef, watch } from 'vue'
+import { computed, ref, toRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
@@ -126,7 +126,6 @@ watch(formErrors, (errors) => {
 
 const showExpressionHelp = ref(false)
 const showCronHelp = ref(false)
-let hideHelpTimer: number | undefined
 
 function toggleCronHelp() {
   showCronHelp.value = !showCronHelp.value
@@ -173,17 +172,10 @@ watch(
       slideDir.value = 'slide-left'
       return
     }
-    if (hideHelpTimer) window.clearTimeout(hideHelpTimer)
-    hideHelpTimer = window.setTimeout(() => {
-      showExpressionHelp.value = false
-      showCronHelp.value = false
-    }, 300)
+    showExpressionHelp.value = false
+    showCronHelp.value = false
   },
 )
-
-onBeforeUnmount(() => {
-  if (hideHelpTimer) window.clearTimeout(hideHelpTimer)
-})
 </script>
 
 <template>

@@ -5,7 +5,6 @@ import type { CrontabDto } from '@/__generated/model/dto'
 import type { CrontabConfig } from '@/__generated/model/static'
 import {
   createEmptyCronForm,
-  deriveTargetBase,
   mapCrontabToForm,
   type LocalCronForm,
   type Writable,
@@ -191,7 +190,8 @@ export function useCronForm(getDefaultAccountId: () => number) {
     () => {
       if (!cronForm.value.useExpressionPath) return
       const expr = cronForm.value.config.expressionTargetPath
-      ;(cronForm.value.config as Writable<CrontabConfig>).targetPath = deriveTargetBase(expr ?? '')
+      const literal = expr?.split('$', 1)[0]?.replace(/\/+$/, '') ?? ''
+      ;(cronForm.value.config as Writable<CrontabConfig>).targetPath = literal || '/'
     },
   )
 

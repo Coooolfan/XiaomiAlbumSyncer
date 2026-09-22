@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import okhttp3.Cookie
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -55,7 +56,6 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
 
     class Session(
         val id: String,
-        val deviceId: String,
         val expiresAt: Instant,
     ) {
         @Volatile
@@ -63,9 +63,6 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
 
         @Volatile
         var error: String? = null
-
-        @Volatile
-        var accountId: Long? = null
 
         @Volatile
         var nickname: String? = null
@@ -86,7 +83,6 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
         val deviceId = "wb_" + UUID.randomUUID().toString()
         val session = Session(
             id = UUID.randomUUID().toString(),
-            deviceId = deviceId,
             expiresAt = Instant.now().plusSeconds(SESSION_TTL_SECONDS),
         )
         session.cookies["deviceId"] = deviceId
@@ -123,7 +119,7 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
         scope.launch { pollLp(session, lp, timeout) }
 
         log.info("扫码登录会话 {} 已创建，二维码有效期 {} 秒", session.id, timeout)
-        return QrLoginSessionView(session.id, qr, timeout)
+        return QrLoginSessionView(session.id, qr)
     }
 
     /**
@@ -139,7 +135,6 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
 
         return QrLoginStatusView(
             status = session.status,
-            accountId = session.accountId,
             nickname = session.nickname,
             userId = session.accountUserId,
             error = session.error,
@@ -201,7 +196,6 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
         return try {
             val account = accountService.upsertCredentials(userId, passToken)
             session.status = QrLoginStatus.SUCCESS
-            session.accountId = account.id
             session.nickname = account.nickname
             session.accountUserId = account.userId
             log.info("会话 {} 扫码成功，账号 {}({}) 凭证已写入", session.id, account.id, userId)
@@ -232,10 +226,8 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
     }
 
     private fun mergeCookies(session: Session, res: Response) {
-        res.headers("Set-Cookie").forEach { header ->
-            val first = header.substringBefore(';')
-            val idx = first.indexOf('=')
-            if (idx > 0) session.cookies[first.substring(0, idx).trim()] = first.substring(idx + 1).trim()
+        Cookie.parseAll(res.request.url, res.headers).forEach {
+            session.cookies[it.name] = it.value
         }
     }
 
@@ -257,12 +249,10 @@ enum class QrLoginStatus {
 data class QrLoginSessionView(
     val sessionId: String,
     val qrUrl: String,
-    val expiresIn: Long,
 )
 
 data class QrLoginStatusView(
     val status: QrLoginStatus,
-    val accountId: Long? = null,
     val nickname: String? = null,
     val userId: String? = null,
     val error: String? = null,

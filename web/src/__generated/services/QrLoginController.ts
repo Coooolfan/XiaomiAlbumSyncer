@@ -19,7 +19,7 @@ export class QrLoginController {
      * 向小米通行证发起扫码登录初始化，返回二维码图片地址供前端展示。
      * 会话创建后服务端在后台持有长轮询，直至用户扫码确认或二维码过期。
      * 
-     * @return QrLoginSessionView 会话 ID、二维码图片 URL 与有效期（秒）
+     * @return QrLoginSessionView 会话 ID 与二维码图片 URL
      * 
      */
     readonly create: () => Promise<
