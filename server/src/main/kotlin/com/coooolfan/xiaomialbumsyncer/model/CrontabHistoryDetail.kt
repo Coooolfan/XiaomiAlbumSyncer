@@ -62,17 +62,14 @@ interface CrontabHistoryDetail {
 
     /**
      * 生成下载目标路径。
-     * - 支持 expressionTargetPath 里的 ${} 插值（含时间格式化前缀）。
-     * - 相对路径模板会拼接到 targetPath 下；绝对路径模板按原样使用。
-     * - 若模板为空、无插值项或解析后为空，则回退到旧逻辑。
+     * targetPath 始终是完整路径表达式，支持 ${} 插值（含时间格式化前缀）。
+     * 为兼容直接调用 API 的旧客户端，不含插值的目录会自动补全默认相册/文件名模板。
      */
     fun genFilePath(history: CrontabHistory, asset: Asset): String {
         val config = history.crontab.config
-        val expression = config.expressionTargetPath.trim().takeIf { it.isNotEmpty() }
-
-        if (expression == null) {
-            return legacyFilePath(history, asset)
-        }
+        val configuredPath = config.targetPath.trim()
+        val expression = if (TOKEN_REGEX.containsMatchIn(configuredPath)) configuredPath
+        else Path(configuredPath, "\${album}", "\${downloadFileName}").toString()
 
         val zoneId = resolveZoneId(config.timeZone)
         val downloadTime = history.startTime
@@ -91,6 +88,10 @@ interface CrontabHistoryDetail {
             put("album", sanitizeSegment(asset.album.name))
             put("albumName", sanitizeSegment(asset.album.name))
             put("fileName", fileNameSafe)
+            put(
+                "downloadFileName",
+                if (asset.type == AssetType.AUDIO) "${asset.id}_$fileNameSafe" else fileNameSafe
+            )
             put("fileStem", fileStem)
             put("fileExt", fileExt)
             put("assetId", asset.id.toString())
@@ -106,32 +107,9 @@ interface CrontabHistoryDetail {
             put("takenEpochSeconds", takenTime.epochSecond.toString())
         }
 
-        if (!containsSupportedInterpolation(expression, replacements.keys)) {
-            return legacyFilePath(history, asset)
-        }
-
         val resolved = interpolateExpression(expression, replacements, downloadTime, takenTime, zoneId).trim()
-        if (resolved.isEmpty()) {
-            return legacyFilePath(history, asset)
-        }
-
-        // 相对路径模板拼接到 targetPath 下；绝对路径模板按原样使用
-        val resolvedPath = Path(resolved).normalize()
-        return if (resolvedPath.isAbsolute) resolvedPath.toString()
-        else Path(config.targetPath).resolve(resolvedPath).normalize().toString()
-    }
-
-    // 旧逻辑：按 targetPath/album/fileName 生成，录音自动加 id 前缀
-    private fun legacyFilePath(history: CrontabHistory, asset: Asset): String {
-        return if (asset.type != AssetType.AUDIO)
-            Path(crontabHistory.crontab.config.targetPath, asset.album.name, asset.fileName).toString()
-        else
-        // 录音文件会有普遍的文件名重复，需要在文件名前加上 id 以避免冲突
-            Path(
-                crontabHistory.crontab.config.targetPath,
-                asset.album.name,
-                "${asset.id}_${asset.fileName}"
-            ).toString()
+        require(resolved.isNotEmpty()) { "targetPath 解析结果不能为空" }
+        return Path(resolved).normalize().toString()
     }
 
     // 将模板中的 ${key} 替换为对应值，并解析 download_/taken_ 时间格式。
@@ -180,15 +158,6 @@ interface CrontabHistoryDetail {
     private fun sanitizeSegment(value: String): String {
         if (value.isEmpty()) return value
         return value.replace(Regex("""[\\/:*?"<>|\r\n\t]"""), "_")
-    }
-
-    private fun containsSupportedInterpolation(template: String, supportedKeys: Set<String>): Boolean {
-        return TOKEN_REGEX.findAll(template).any { match ->
-            val key = match.groupValues[1]
-            key in supportedKeys ||
-                    key.startsWith("download_") ||
-                    key.startsWith("taken_")
-        }
     }
 
 }

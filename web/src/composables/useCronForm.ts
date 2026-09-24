@@ -2,13 +2,7 @@ import { onBeforeUnmount, ref, watch } from 'vue'
 import { i18n } from '@/i18n'
 import { api } from '@/ApiInstance'
 import type { CrontabDto } from '@/__generated/model/dto'
-import type { CrontabConfig } from '@/__generated/model/static'
-import {
-  createEmptyCronForm,
-  mapCrontabToForm,
-  type LocalCronForm,
-  type Writable,
-} from '@/utils/crontabForm'
+import { createEmptyCronForm, mapCrontabToForm, type LocalCronForm } from '@/utils/crontabForm'
 
 type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
 
@@ -32,6 +26,13 @@ export function useCronForm(getDefaultAccountId: () => number) {
   let mountCheckTimer: number | undefined
   let mountCheckSeq = 0
 
+  function targetBasePath(): string {
+    const targetPath = cronForm.value.config.targetPath.trim()
+    if (!targetPath) return ''
+    const literal = targetPath.split('$', 1)[0]?.replace(/\/+$/, '') ?? ''
+    return literal || '/'
+  }
+
   function clearMountCheckTimer() {
     if (mountCheckTimer) {
       window.clearTimeout(mountCheckTimer)
@@ -48,7 +49,7 @@ export function useCronForm(getDefaultAccountId: () => number) {
   function shouldSkipMountCheck(): boolean {
     if (!showCronDialog.value) return true
 
-    const targetPath = cronForm.value.config.targetPath?.trim() ?? ''
+    const targetPath = targetBasePath()
     return !targetPath
   }
 
@@ -76,7 +77,7 @@ export function useCronForm(getDefaultAccountId: () => number) {
       return
     }
 
-    const path = cronForm.value.config.targetPath.trim()
+    const path = targetBasePath()
 
     try {
       const response = await api.systemConfigController.checkMountPath({
@@ -131,9 +132,7 @@ export function useCronForm(getDefaultAccountId: () => number) {
       if (!cronForm.value.config.timeZone || cronForm.value.config.timeZone.trim() === '')
         errors.timeZone = i18n.global.t('cronform.errors.requiredSelect')
     }
-    const pathValue = cronForm.value.useExpressionPath
-      ? cronForm.value.config.expressionTargetPath
-      : cronForm.value.config.targetPath
+    const pathValue = cronForm.value.config.targetPath
     if (!pathValue || pathValue.trim() === '')
       errors.targetPath = i18n.global.t('cronform.errors.required')
     if (!cronForm.value.accountId)
@@ -181,17 +180,6 @@ export function useCronForm(getDefaultAccountId: () => number) {
       if (!isEditing.value) {
         cronForm.value.albumIds = []
       }
-    },
-  )
-
-  // 模板模式下，将 $ 之前的字面量前缀同步为 targetPath，供挂载检查与后端兜底使用
-  watch(
-    () => [cronForm.value.useExpressionPath, cronForm.value.config.expressionTargetPath],
-    () => {
-      if (!cronForm.value.useExpressionPath) return
-      const expr = cronForm.value.config.expressionTargetPath
-      const literal = expr?.split('$', 1)[0]?.replace(/\/+$/, '') ?? ''
-      ;(cronForm.value.config as Writable<CrontabConfig>).targetPath = literal || '/'
     },
   )
 

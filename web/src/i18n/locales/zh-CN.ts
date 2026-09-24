@@ -169,7 +169,6 @@ export default {
       account: '账号',
       schedule: '调度',
       targetPath: '保存路径',
-      expressionPath: '表达式路径',
       enabled: '已启用',
       disabled: '已禁用',
       shadowAlbumTip: '此相册在远程不存在，请核查并编辑本计划任务',
@@ -336,7 +335,7 @@ export default {
       targetPathMountWarning:
         '警告：该路径可能仅存在于容器内，未挂载到宿主机，数据可能不会被持久化。',
       useExpressionPath: '路径模板',
-      expressionTargetPathHint:
+      targetPathExpressionHint:
         '使用完整的保存路径模板，支持变量占位符。相对路径将从根目录开始解析，建议以 / 开头。',
       albums: '关联相册',
       albumsPlaceholder: '选择相册',

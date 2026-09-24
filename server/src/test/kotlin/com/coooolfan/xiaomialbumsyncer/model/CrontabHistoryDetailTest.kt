@@ -8,8 +8,8 @@ import kotlin.io.path.Path
 class CrontabHistoryDetailTest {
 
     @Test
-    fun legacyPathIsUsedWhenExpressionIsNull() {
-        val config = buildConfig(targetPath = "/data/downloads", expressionTargetPath = "")
+    fun plainTargetPathUsesDefaultExpression() {
+        val config = buildConfig(targetPath = "/data/downloads")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Trip")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -23,7 +23,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionPathInterpolatesVariablesAndResolvesRelativePath() {
         val template = "./\${album}/\${download_YYYYMM}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template, timeZone = "Asia/Shanghai")
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template), timeZone = "Asia/Shanghai")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Travel")
         val asset = buildAsset(AssetType.VIDEO, "clip.mp4", album)
@@ -37,7 +37,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun audioFileNameKeepsOriginalNameInExpressions() {
         val template = "\${album}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Recordings")
         val asset = buildAsset(AssetType.AUDIO, "rec.m4a", album, id = 9L)
@@ -48,11 +48,11 @@ class CrontabHistoryDetailTest {
         assertEquals(expected, detail.filePath)
     }
 
-    // ==================== Legacy 路径逻辑测试 ====================
+    // ==================== 普通路径兼容测试 ====================
 
     @Test
-    fun legacyPathHandlesEmptyExpression() {
-        val config = buildConfig(targetPath = "/data", expressionTargetPath = "")
+    fun plainTargetPathAppendsAlbumAndFileName() {
+        val config = buildConfig(targetPath = "/data")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("MyAlbum")
         val asset = buildAsset(AssetType.IMAGE, "test.jpg", album)
@@ -64,8 +64,8 @@ class CrontabHistoryDetailTest {
     }
 
     @Test
-    fun legacyPathHandlesBlankExpression() {
-        val config = buildConfig(targetPath = "/data", expressionTargetPath = "   ")
+    fun plainTargetPathHandlesVideo() {
+        val config = buildConfig(targetPath = "/data")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.VIDEO, "video.mp4", album)
@@ -77,21 +77,21 @@ class CrontabHistoryDetailTest {
     }
 
     @Test
-    fun legacyPathHandlesExpressionWithoutInterpolation() {
-        val config = buildConfig(targetPath = "/data", expressionTargetPath = "/app/download")
+    fun plainTargetPathUsesItsOwnDirectory() {
+        val config = buildConfig(targetPath = "/app/download")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
 
         val detail = CrontabHistoryDetail.init(history, asset)
 
-        val expected = Path("/data", "Photos", "photo.jpg").toString()
+        val expected = Path("/app/download", "Photos", "photo.jpg").toString()
         assertEquals(expected, detail.filePath)
     }
 
     @Test
-    fun legacyPathKeepsAudioFileName() {
-        val config = buildConfig(targetPath = "/storage", expressionTargetPath = "")
+    fun plainTargetPathKeepsAudioFileName() {
+        val config = buildConfig(targetPath = "/storage")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Voice")
         val asset = buildAsset(AssetType.AUDIO, "recording.m4a", album, id = 42L)
@@ -104,7 +104,7 @@ class CrontabHistoryDetailTest {
 
     @Test
     fun legacyPathDoesNotAddIdPrefixForImage() {
-        val config = buildConfig(targetPath = "/storage", expressionTargetPath = "")
+        val config = buildConfig(targetPath = "/storage")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Camera")
         val asset = buildAsset(AssetType.IMAGE, "IMG_001.jpg", album, id = 99L)
@@ -117,7 +117,7 @@ class CrontabHistoryDetailTest {
 
     @Test
     fun legacyPathDoesNotAddIdPrefixForVideo() {
-        val config = buildConfig(targetPath = "/storage", expressionTargetPath = "")
+        val config = buildConfig(targetPath = "/storage")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Movies")
         val asset = buildAsset(AssetType.VIDEO, "VID_001.mp4", album, id = 77L)
@@ -133,7 +133,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionInterpolatesCrontabIdAndName() {
         val template = "\${crontabId}_\${crontabName}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Album")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -147,7 +147,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionInterpolatesHistoryId() {
         val template = "history_\${historyId}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Album")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -161,7 +161,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionInterpolatesAlbumAndAlbumName() {
         val template = "\${album}/sub/\${albumName}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Vacation")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -175,7 +175,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionInterpolatesAlbum() {
         val template = "\${album}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("My:Album*With<Special>Chars")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -189,7 +189,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionInterpolatesFileStemAndExt() {
         val template = "\${album}/\${fileStem}_backup.\${fileExt}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "IMG_20240501.jpg", album)
@@ -203,7 +203,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionInterpolatesAssetId() {
         val template = "\${album}/\${assetId}_\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album, id = 12345L)
@@ -217,7 +217,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionInterpolatesAssetType() {
         val template = "\${assetType}/\${album}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Media")
         val asset = buildAsset(AssetType.VIDEO, "clip.mp4", album)
@@ -231,7 +231,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionInterpolatesRecordingType() {
         val template = "\${recordingTypeId}/\${recordingType}/\${assetId}_\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Recordings")
         val asset = buildAsset(
@@ -251,7 +251,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionInterpolatesBlankRecordingTypeForNonAudioAsset() {
         val template = "media/\${recordingType}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -265,7 +265,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionOnlyContainingRecordingTypeIsSupported() {
         val template = "\${recordingType}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Recordings")
         val asset = buildAsset(
@@ -283,7 +283,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionInterpolatesSha1() {
         val template = "\${album}/\${sha1}_\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -297,7 +297,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionInterpolatesTitle() {
         val template = "\${title}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -311,7 +311,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionInterpolatesSize() {
         val template = "\${album}/\${size}_\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -325,7 +325,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionInterpolatesEpochTimestamps() {
         val template = "\${downloadEpochSeconds}_\${takenEpochSeconds}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val downloadTime = Instant.parse("2024-05-06T12:00:00Z")
         val history = buildHistory(config, downloadTime)
         val album = buildAlbum("Photos")
@@ -342,7 +342,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionFormatsDownloadTimeWithPattern() {
         val template = "\${download_yyyy-MM-dd}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template, timeZone = "UTC")
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template), timeZone = "UTC")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -356,7 +356,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionFormatsTakenWithPattern() {
         val template = "\${taken_yyyy}/\${taken_MM}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template, timeZone = "UTC")
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template), timeZone = "UTC")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -370,7 +370,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionFormatsTakenWithAliasPrefix() {
         val template = "\${taken_yyyyMMdd}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template, timeZone = "UTC")
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template), timeZone = "UTC")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -384,7 +384,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionNormalizesYYYYToyyyy() {
         val template = "\${download_YYYY}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template, timeZone = "UTC")
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template), timeZone = "UTC")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -398,7 +398,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionFormatsTimeWithHourMinuteSecond() {
         val template = "\${download_HH-mm-ss}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template, timeZone = "UTC")
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template), timeZone = "UTC")
         val history = buildHistory(config, Instant.parse("2024-05-06T14:30:45Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -414,7 +414,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionRespectsTimeZone() {
         val template = "\${download_yyyy-MM-dd_HH}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template, timeZone = "Asia/Shanghai")
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template), timeZone = "Asia/Shanghai")
         // UTC 12:00 = Asia/Shanghai 20:00
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
@@ -429,7 +429,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionHandlesDateCrossoverWithTimeZone() {
         val template = "\${download_yyyy-MM-dd}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template, timeZone = "Asia/Shanghai")
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template), timeZone = "Asia/Shanghai")
         // UTC 2024-05-06 20:00 = Asia/Shanghai 2024-05-07 04:00
         val history = buildHistory(config, Instant.parse("2024-05-06T20:00:00Z"))
         val album = buildAlbum("Photos")
@@ -444,7 +444,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionHandlesNegativeOffsetTimeZone() {
         val template = "\${download_yyyy-MM-dd_HH}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template, timeZone = "America/New_York")
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template), timeZone = "America/New_York")
         // UTC 12:00 = America/New_York 08:00 (EDT, -4)
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
@@ -461,7 +461,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionWithAbsolutePathIsNotPrependedWithTargetPath() {
         val template = "/absolute/path/\${album}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -474,7 +474,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionWithRelativePathResolvesUnderTargetPath() {
         val template = "relative/\${album}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -488,7 +488,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionNormalizesParentDirectoryReferences() {
         val template = "./foo/../bar/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -502,7 +502,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionNormalizesMultipleSlashes() {
         val template = "foo//bar///\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -518,7 +518,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionSanitizesColonInAlbumName() {
         val template = "\${album}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("2024:05:06 Trip")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -532,7 +532,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionSanitizesQuestionMarkAndAsterisk() {
         val template = "\${album}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("What*Ever?")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -546,7 +546,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionSanitizesAngleBrackets() {
         val template = "\${album}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("<Album>")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -560,7 +560,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionSanitizesPipeAndQuotes() {
         val template = "\${album}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Test|\"Album\"")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -574,7 +574,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionSanitizesFileName() {
         val template = "\${album}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAssetWithFileName(AssetType.IMAGE, "photo:test?.jpg", album)
@@ -590,7 +590,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionHandlesFileWithoutExtension() {
         val template = "\${album}/\${fileStem}_copy.\${fileExt}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Files")
         val asset = buildAsset(AssetType.IMAGE, "README", album)
@@ -604,7 +604,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionHandlesFileWithMultipleDots() {
         val template = "\${album}/\${fileStem}.\${fileExt}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Files")
         val asset = buildAsset(AssetType.IMAGE, "file.name.with.dots.jpg", album)
@@ -618,7 +618,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionPreservesUnknownTokens() {
         val template = "\${album}/\${unknownToken}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -632,7 +632,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionHandlesInvalidTimePattern() {
         val template = "\${download_INVALID}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template, timeZone = "UTC")
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template), timeZone = "UTC")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -647,21 +647,21 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionHandlesEmptyAlbumName() {
         val template = "\${album}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
 
         val detail = CrontabHistoryDetail.init(history, asset)
 
-        val expected = Path("/photo.jpg").normalize().toString()
+        val expected = Path("/base/photo.jpg").normalize().toString()
         assertEquals(expected, detail.filePath)
     }
 
     @Test
     fun expressionHandlesChineseAlbumName() {
         val template = "\${album}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("我的相册")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -675,7 +675,7 @@ class CrontabHistoryDetailTest {
     @Test
     fun expressionHandlesChineseFileName() {
         val template = "\${album}/\${fileName}"
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = template)
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "照片.jpg", album)
@@ -690,7 +690,7 @@ class CrontabHistoryDetailTest {
 
     @Test
     fun initSetsDownloadCompletedToFalse() {
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = "")
+        val config = buildConfig(targetPath = "/base")
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -702,7 +702,7 @@ class CrontabHistoryDetailTest {
 
     @Test
     fun initSetsSha1VerifiedBasedOnConfig() {
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = "", checkSha1 = true)
+        val config = buildConfig(targetPath = "/base", checkSha1 = true)
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -714,7 +714,7 @@ class CrontabHistoryDetailTest {
 
     @Test
     fun initSetsSha1VerifiedToTrueWhenNotRequired() {
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = "", checkSha1 = false)
+        val config = buildConfig(targetPath = "/base", checkSha1 = false)
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -726,7 +726,7 @@ class CrontabHistoryDetailTest {
 
     @Test
     fun initSetsExifFilledBasedOnConfig() {
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = "", rewriteExifTime = true)
+        val config = buildConfig(targetPath = "/base", rewriteExifTime = true)
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -738,7 +738,7 @@ class CrontabHistoryDetailTest {
 
     @Test
     fun initSetsExifFilledToTrueWhenNotRequired() {
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = "", rewriteExifTime = false)
+        val config = buildConfig(targetPath = "/base", rewriteExifTime = false)
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -750,7 +750,7 @@ class CrontabHistoryDetailTest {
 
     @Test
     fun initSetsFsTimeUpdatedBasedOnConfig() {
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = "", rewriteFileSystemTime = true)
+        val config = buildConfig(targetPath = "/base", rewriteFileSystemTime = true)
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -762,7 +762,7 @@ class CrontabHistoryDetailTest {
 
     @Test
     fun initSetsFsTimeUpdatedToTrueWhenNotRequired() {
-        val config = buildConfig(targetPath = "/base", expressionTargetPath = "", rewriteFileSystemTime = false)
+        val config = buildConfig(targetPath = "/base", rewriteFileSystemTime = false)
         val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
         val album = buildAlbum("Photos")
         val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
@@ -774,7 +774,6 @@ class CrontabHistoryDetailTest {
 
     private fun buildConfig(
         targetPath: String,
-        expressionTargetPath: String,
         timeZone: String = "UTC",
         checkSha1: Boolean = false,
         rewriteExifTime: Boolean = false,
@@ -797,8 +796,13 @@ class CrontabHistoryDetailTest {
             exifProcessors = 1,
             fileTimeWorkers = 1,
             downloadAudios = true,
-            expressionTargetPath = expressionTargetPath,
         )
+    }
+
+    private fun resolveTargetPath(base: String, expression: String): String {
+        val path = Path(expression)
+        return if (path.isAbsolute) path.normalize().toString()
+        else Path(base).resolve(path).normalize().toString()
     }
 
     private fun buildHistory(config: CrontabConfig, startTime: Instant): CrontabHistory {

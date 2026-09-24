@@ -128,7 +128,6 @@ class ApiE2eSuite {
             "exifProcessors" to 1,
             "fileTimeWorkers" to 1,
             "downloadAudios" to false,
-            "expressionTargetPath" to "",
             "notify" to true,
         )
         val crontabBody = linkedMapOf<String, Any?>(

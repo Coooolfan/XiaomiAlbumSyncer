@@ -89,12 +89,11 @@ class DataImporter(
             config = CrontabConfig(
                 expression = "0 0 * * * ?",
                 timeZone = "Asia/Shanghai",
-                targetPath = "./download",
+                targetPath = "./download/\${album}/\${downloadFileName}",
                 downloadImages = true,
                 downloadVideos = true,
                 rewriteExifTime = true,
                 rewriteExifTimeZone = "Asia/Shanghai",
-                expressionTargetPath = ""
             )
             albumIds = selectedAlbums
         }

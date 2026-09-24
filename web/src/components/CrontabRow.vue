@@ -9,6 +9,7 @@ import type { CrontabCurrentStats, CrontabHistoryGroup } from '@/__generated/mod
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/ApiInstance'
+import { displayTargetPath } from '@/utils/crontabForm'
 
 const { t, locale } = useI18n()
 
@@ -446,16 +447,8 @@ onUnmounted(() => {
             </dd>
             <dt class="text-slate-400 dark:text-slate-500">{{ t('schedule.row.targetPath') }}</dt>
             <dd class="truncate font-mono text-xs text-slate-700 dark:text-slate-200">
-              {{ crontab.config?.targetPath || '-' }}
+              {{ crontab.config?.targetPath ? displayTargetPath(crontab.config.targetPath) : '-' }}
             </dd>
-            <template v-if="crontab.config?.expressionTargetPath">
-              <dt class="text-slate-400 dark:text-slate-500">
-                {{ t('schedule.row.expressionPath') }}
-              </dt>
-              <dd class="truncate font-mono text-xs text-slate-700 dark:text-slate-200">
-                {{ crontab.config.expressionTargetPath }}
-              </dd>
-            </template>
             <dt class="text-slate-400 dark:text-slate-500">{{ t('common.field.status') }}</dt>
             <dd class="flex items-center gap-2">
               <ToggleSwitch

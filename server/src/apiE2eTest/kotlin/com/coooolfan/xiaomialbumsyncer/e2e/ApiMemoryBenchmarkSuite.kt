@@ -202,7 +202,6 @@ class ApiMemoryBenchmarkSuite {
                 "verifiers" to verifiers,
                 "exifProcessors" to exifProcessors,
                 "fileTimeWorkers" to fileTimeWorkers,
-                "expressionTargetPath" to "",
                 "notify" to false,
             )
             val crontab = api.json(

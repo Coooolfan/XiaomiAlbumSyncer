@@ -10,8 +10,21 @@ export type Writable<T> = { -readonly [P in keyof T]: T[P] }
 
 export interface LocalCronForm extends Omit<CrontabCreateInput, 'albumIds'> {
   albumIds: number[]
-  // UI 专用：开启后路径输入框编辑 expressionTargetPath（完整模板），关闭时提交为 '' 走默认目录结构
+  // UI 专用：只切换路径输入的提示和帮助内容
   useExpressionPath: boolean
+}
+
+const DEFAULT_PATH_SUFFIX = '/${album}/${downloadFileName}'
+
+function normalizeTargetPath(path: string): string {
+  const trimmed = path.trim().replace(/\/+$/, '')
+  return trimmed.includes('${') ? trimmed : `${trimmed}${DEFAULT_PATH_SUFFIX}`
+}
+
+export function displayTargetPath(path: string): string {
+  return path.endsWith(DEFAULT_PATH_SUFFIX)
+    ? path.slice(0, -DEFAULT_PATH_SUFFIX.length) || '/'
+    : path
 }
 
 export function buildSubmitConfig(form: LocalCronForm): CrontabConfig {
@@ -19,9 +32,7 @@ export function buildSubmitConfig(form: LocalCronForm): CrontabConfig {
     ...form.config,
     // 禁用任务不校验表达式，提交时兜底默认值避免空串
     expression: form.config.expression.trim() || '0 0 23 * * ?',
-    expressionTargetPath: form.useExpressionPath
-      ? (form.config.expressionTargetPath ?? '').trim()
-      : '',
+    targetPath: normalizeTargetPath(form.config.targetPath),
   }
 }
 
@@ -33,7 +44,6 @@ export function createDefaultCronConfig(defaultTz: string): CrontabConfig {
     downloadImages: true,
     downloadVideos: true,
     downloadAudios: true,
-    expressionTargetPath: '',
     rewriteExifTime: false,
     rewriteExifTimeZone: defaultTz,
     skipExistingFile: true,
@@ -62,6 +72,8 @@ export function createEmptyCronForm(defaultTz: string, accountId: number): Local
 }
 
 export function mapCrontabToForm(item: Crontab, fallbackTz: string): LocalCronForm {
+  const targetPath = displayTargetPath(item.config.targetPath)
+  const usesDefaultPath = targetPath !== item.config.targetPath
   return {
     name: item.name,
     description: item.description,
@@ -71,11 +83,10 @@ export function mapCrontabToForm(item: Crontab, fallbackTz: string): LocalCronFo
     config: {
       expression: item.config.expression,
       timeZone: item.config.timeZone,
-      targetPath: item.config.targetPath,
+      targetPath,
       downloadImages: item.config.downloadImages,
       downloadVideos: item.config.downloadVideos,
       downloadAudios: item.config.downloadAudios,
-      expressionTargetPath: item.config.expressionTargetPath ?? '',
       rewriteExifTime: item.config.rewriteExifTime,
       rewriteExifTimeZone: item.config.rewriteExifTimeZone ?? item.config.timeZone ?? fallbackTz,
       skipExistingFile: item.config.skipExistingFile ?? true,
@@ -89,6 +100,6 @@ export function mapCrontabToForm(item: Crontab, fallbackTz: string): LocalCronFo
       notify: item.config.notify ?? true,
     },
     albumIds: [...item.albumIds],
-    useExpressionPath: !!item.config.expressionTargetPath?.trim(),
+    useExpressionPath: !usesDefaultPath,
   }
 }

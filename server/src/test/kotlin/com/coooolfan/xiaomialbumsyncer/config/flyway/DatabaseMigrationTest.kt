@@ -139,6 +139,67 @@ class DatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun unifiesTargetPathExpression(@TempDir tempDir: Path) {
+        val databaseUrl = "jdbc:sqlite:${tempDir.resolve("target-path.db").toAbsolutePath()}"
+
+        flyway(databaseUrl, target = "0.18.0").migrate()
+        DriverManager.getConnection(databaseUrl).use { connection ->
+            connection.createStatement().use { statement ->
+                statement.executeUpdate(
+                    """
+                    INSERT INTO crontab (name, config, description, enabled, account_id)
+                    VALUES
+                        ('plain', '{"targetPath":"/data","expressionTargetPath":""}', '', 0, 1),
+                        ('missing', '{"targetPath":"/legacy","notify":false}', '', 0, 1),
+                        ('null', '{"targetPath":"/nullable","expressionTargetPath":null}', '', 0, 1),
+                        ('blank', '{"targetPath":"/trailing/","expressionTargetPath":"   "}', '', 0, 1),
+                        ('relative', '{"targetPath":"/data/","expressionTargetPath":"${'$'}{album}/${'$'}{fileName}"}', '', 0, 1),
+                        ('dot-relative', '{"targetPath":"/","expressionTargetPath":"./${'$'}{album}/${'$'}{fileName}"}', '', 0, 1),
+                        ('absolute', '{"targetPath":"/data","expressionTargetPath":"  /archive/${'$'}{fileName}  "}', '', 0, 1)
+                    """.trimIndent()
+                )
+            }
+        }
+
+        assertEquals(1, flyway(databaseUrl, target = "0.19.0").migrate().migrationsExecuted)
+
+        DriverManager.getConnection(databaseUrl).use { connection ->
+            val paths = connection.createStatement().use { statement ->
+                statement.executeQuery(
+                    "SELECT name, json_extract(config, '$.targetPath'), json_type(config, '$.expressionTargetPath') FROM crontab ORDER BY id"
+                ).use { result ->
+                    buildMap {
+                        while (result.next()) {
+                            assertEquals(null, result.getString(3))
+                            put(result.getString(1), result.getString(2))
+                        }
+                    }
+                }
+            }
+            assertEquals("/data/${'$'}{album}/${'$'}{downloadFileName}", paths.getValue("plain"))
+            assertEquals("/legacy/${'$'}{album}/${'$'}{downloadFileName}", paths.getValue("missing"))
+            assertEquals("/nullable/${'$'}{album}/${'$'}{downloadFileName}", paths.getValue("null"))
+            assertEquals("/trailing/${'$'}{album}/${'$'}{downloadFileName}", paths.getValue("blank"))
+            assertEquals("/data/${'$'}{album}/${'$'}{fileName}", paths.getValue("relative"))
+            assertEquals("/${'$'}{album}/${'$'}{fileName}", paths.getValue("dot-relative"))
+            assertEquals("/archive/${'$'}{fileName}", paths.getValue("absolute"))
+
+            val missingConfig = connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT config FROM crontab WHERE name = 'missing'").use { result ->
+                    assertTrue(result.next())
+                    result.getString(1)
+                }
+            }
+            assertEquals(0, connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT json_extract('$missingConfig', '$.notify')").use { result ->
+                    assertTrue(result.next())
+                    result.getInt(1)
+                }
+            })
+        }
+    }
+
     private fun flyway(databaseUrl: String, target: String? = null): Flyway {
         val configuration = Flyway.configure()
             .dataSource(databaseUrl, null, null)

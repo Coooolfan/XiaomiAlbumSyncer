@@ -41,7 +41,5 @@ data class CrontabConfig(
 
     val downloadAudios: Boolean = true,
 
-    val expressionTargetPath: String = "",
-
     val notify: Boolean = true,
 )

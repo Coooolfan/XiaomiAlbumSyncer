@@ -17,7 +17,6 @@ import Tag from 'primevue/tag'
 import ExpressionPathHelp from '@/components/ExpressionPathHelp.vue'
 import CronHelp from '@/components/CronHelp.vue'
 import type { CrontabSyncMode } from '@/__generated/model/enums'
-import type { CrontabConfig } from '@/__generated/model/static'
 import type { LocalCronForm, Writable } from '@/utils/crontabForm'
 
 const props = defineProps<{
@@ -146,19 +145,6 @@ function openExpressionHelp() {
   showExpressionHelp.value = true
   showCronHelp.value = false
 }
-
-// 开启模板模式时，按当前保存路径预填默认目录结构模板
-watch(
-  () => props.form.useExpressionPath,
-  (on) => {
-    if (!on) return
-    if (!props.form.config.expressionTargetPath?.trim()) {
-      const base = props.form.config.targetPath.trim().replace(/\/+$/, '') || '/app/download'
-      ;(props.form.config as Writable<CrontabConfig>).expressionTargetPath =
-        base + '/${album}/${fileName}'
-    }
-  },
-)
 
 function closeDialog() {
   visibleProxy.value = false
@@ -436,17 +422,12 @@ watch(
                 </div>
               </div>
               <InputText
-                v-if="!form.useExpressionPath"
                 v-model="form.config.targetPath"
-                placeholder="/app/download"
+                :placeholder="
+                  form.useExpressionPath ? '/app/download/${album}/${fileName}' : '/app/download'
+                "
                 class="w-full"
-              />
-              <InputText
-                v-else
-                v-model="form.config.expressionTargetPath"
-                placeholder="/app/download/${album}/${fileName}"
-                class="w-full"
-                @focus="openExpressionHelp"
+                @focus="form.useExpressionPath && openExpressionHelp()"
               />
               <div v-if="formErrors.targetPath" class="text-xs text-red-500">
                 {{ formErrors.targetPath }}
@@ -454,7 +435,7 @@ watch(
               <div class="text-[10px] text-slate-400 dark:text-slate-500">
                 {{
                   form.useExpressionPath
-                    ? t('cronform.field.expressionTargetPathHint')
+                    ? t('cronform.field.targetPathExpressionHint')
                     : t('cronform.field.targetPathHint')
                 }}
               </div>

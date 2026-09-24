@@ -171,7 +171,6 @@ const messages: typeof zh = {
       account: 'Account',
       schedule: 'Schedule',
       targetPath: 'Target path',
-      expressionPath: 'Expression path',
       enabled: 'Enabled',
       disabled: 'Disabled',
       shadowAlbumTip: 'This album no longer exists remotely. Please check and edit this task.',
@@ -339,7 +338,7 @@ const messages: typeof zh = {
       targetPathMountWarning:
         'Warning: this path may only exist inside the container and is not mounted to the host, so data may not be persisted.',
       useExpressionPath: 'Path template',
-      expressionTargetPathHint:
+      targetPathExpressionHint:
         'Use a full save path template with variable placeholders. It is recommended to start with / for an absolute path.',
       albums: 'Linked albums',
       albumsPlaceholder: 'Select albums',
