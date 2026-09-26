@@ -226,7 +226,7 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 		if _, exists := account.GalleryAlbums[op.Album.AlbumID]; exists {
 			return nil, fmt.Errorf("album %d already exists", op.Album.AlbumID)
 		}
-		account.GalleryAlbums[op.Album.AlbumID] = &GalleryAlbum{AlbumID: op.Album.AlbumID, Name: op.Album.Name, LastUpdateTime: data.Clock, Assets: map[int64]*GalleryAsset{}, NextSeq: 1}
+		account.GalleryAlbums[op.Album.AlbumID] = &GalleryAlbum{AlbumID: op.Album.AlbumID, Name: op.Album.Name, LastUpdateTime: data.Clock, Assets: map[int64]*GalleryAsset{}}
 		return []int64{op.Album.AlbumID}, nil
 	case "updateAlbum":
 		album := account.GalleryAlbums[op.AlbumID]
@@ -420,10 +420,9 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 	}
 }
 
-// appendAlbumChange 向相册位点流追加一条变更记录，Seq 为相册内单调递增序号
+// appendAlbumChange 向相册位点流追加一条变更记录。
 func appendAlbumChange(album *GalleryAlbum, asset *GalleryAsset, status string) {
-	album.Changes = append(album.Changes, &AlbumChange{Seq: album.NextSeq, Asset: asset, Status: status})
-	album.NextSeq++
+	album.Changes = append(album.Changes, &AlbumChange{Asset: asset, Status: status})
 }
 
 func setOrClearStorageError(data *runtimeData, id int64, userID, kind string, op MutationOperation) {
@@ -664,14 +663,14 @@ func cloneRuntime(data *runtimeData) *runtimeData {
 func cloneAccount(account *Account) *Account {
 	copyAccount := &Account{UserID: account.UserID, PassToken: account.PassToken, ServiceToken: account.ServiceToken, GalleryAlbums: map[int64]*GalleryAlbum{}, Recordings: map[int64]*Recording{}}
 	for id, album := range account.GalleryAlbums {
-		copyAlbum := &GalleryAlbum{AlbumID: album.AlbumID, Name: album.Name, LastUpdateTime: album.LastUpdateTime, Assets: map[int64]*GalleryAsset{}, NextSeq: album.NextSeq}
+		copyAlbum := &GalleryAlbum{AlbumID: album.AlbumID, Name: album.Name, LastUpdateTime: album.LastUpdateTime, Assets: map[int64]*GalleryAsset{}}
 		for assetID, asset := range album.Assets {
 			value := *asset
 			copyAlbum.Assets[assetID] = &value
 		}
 		for _, change := range album.Changes {
 			assetCopy := *change.Asset
-			copyAlbum.Changes = append(copyAlbum.Changes, &AlbumChange{Seq: change.Seq, Asset: &assetCopy, Status: change.Status})
+			copyAlbum.Changes = append(copyAlbum.Changes, &AlbumChange{Asset: &assetCopy, Status: change.Status})
 		}
 		copyAccount.GalleryAlbums[id] = copyAlbum
 	}

@@ -208,7 +208,7 @@ func (s *Server) albumFull(w http.ResponseWriter, r *http.Request) {
 		albums = append(albums, map[string]any{
 			"albumId":         album.AlbumID,
 			"name":            album.Name,
-			"incrementalTag":  strconv.FormatInt(album.NextSeq-1, 10),
+			"incrementalTag":  strconv.Itoa(len(album.Changes)),
 			"totalImageCount": len(album.Assets),
 			"lastUpdateTime":  album.LastUpdateTime,
 		})
@@ -243,7 +243,7 @@ func (s *Server) allItems(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, 40022, "invalid tag")
 		return
 	}
-	if tagSeq > album.NextSeq-1 {
+	if tagSeq > int64(len(album.Changes)) {
 		writeError(w, http.StatusBadRequest, 40023, "stale tag")
 		return
 	}
@@ -256,12 +256,7 @@ func (s *Server) allItems(w http.ResponseWriter, r *http.Request) {
 	if configured := s.state.allItemsPageSize(); configured > 0 && configured < pageSize {
 		pageSize = configured
 	}
-	entries := make([]*AlbumChange, 0, len(album.Changes))
-	for _, change := range album.Changes {
-		if change.Seq > tagSeq {
-			entries = append(entries, change)
-		}
-	}
+	entries := album.Changes[tagSeq:]
 	page := entries[:min(pageSize, len(entries))]
 	content := make([]map[string]any, 0, len(page))
 	for _, change := range page {
@@ -269,10 +264,7 @@ func (s *Server) allItems(w http.ResponseWriter, r *http.Request) {
 		row["status"] = change.Status
 		content = append(content, row)
 	}
-	syncSeq := tagSeq
-	if len(page) > 0 {
-		syncSeq = page[len(page)-1].Seq
-	}
+	syncSeq := tagSeq + int64(len(page))
 	writeJSON(w, http.StatusOK, map[string]any{
 		"code":   0,
 		"result": "ok",

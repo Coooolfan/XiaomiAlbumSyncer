@@ -22,7 +22,6 @@ import org.noear.solon.Solon
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.io.InterruptedIOException
-import java.net.SocketTimeoutException
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -158,9 +157,8 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
                         log.debug("会话 {} 长轮询响应码 {}，继续等待", session.id, res.code)
                     }
                 }
-            } catch (_: SocketTimeoutException) {
-                // 长轮询读超时属正常，重试直至 deadline
             } catch (_: InterruptedIOException) {
+                // 长轮询超时属正常，重试直至 deadline
             } catch (e: Exception) {
                 log.warn("会话 {} 长轮询异常", session.id, e)
                 fail(session, e.message ?: "长轮询异常")

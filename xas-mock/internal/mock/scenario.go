@@ -100,7 +100,7 @@ func buildRuntime(s Scenario) (*runtimeData, error) {
 			if _, exists := account.GalleryAlbums[albumSpec.AlbumID]; exists {
 				return nil, fmt.Errorf("duplicate albumId %d for %s", albumSpec.AlbumID, account.UserID)
 			}
-			album := &GalleryAlbum{AlbumID: albumSpec.AlbumID, Name: albumSpec.Name, LastUpdateTime: albumSpec.LastUpdateTime, Assets: map[int64]*GalleryAsset{}, NextSeq: 1}
+			album := &GalleryAlbum{AlbumID: albumSpec.AlbumID, Name: albumSpec.Name, LastUpdateTime: albumSpec.LastUpdateTime, Assets: map[int64]*GalleryAsset{}}
 			if album.Name == "" {
 				album.Name = fmt.Sprintf("Album %d", album.AlbumID)
 			}

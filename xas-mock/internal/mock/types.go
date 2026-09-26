@@ -127,9 +127,8 @@ type Recording struct {
 }
 
 // AlbumChange 表示相册位点流（/gallery/allitems）中的一条变更记录。
-// Seq 为相册内单调递增序号，即 syncTag/incrementalTag 的来源。
+// 记录在 Changes 中的位置加一即 syncTag，日志长度即 incrementalTag。
 type AlbumChange struct {
-	Seq    int64
 	Asset  *GalleryAsset
 	Status string
 }
@@ -140,7 +139,6 @@ type GalleryAlbum struct {
 	LastUpdateTime int64
 	Assets         map[int64]*GalleryAsset
 	Changes        []*AlbumChange
-	NextSeq        int64
 }
 
 type Account struct {

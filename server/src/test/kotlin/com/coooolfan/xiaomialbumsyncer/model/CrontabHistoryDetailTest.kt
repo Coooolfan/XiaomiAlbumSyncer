@@ -799,11 +799,8 @@ class CrontabHistoryDetailTest {
         )
     }
 
-    private fun resolveTargetPath(base: String, expression: String): String {
-        val path = Path(expression)
-        return if (path.isAbsolute) path.normalize().toString()
-        else Path(base).resolve(path).normalize().toString()
-    }
+    private fun resolveTargetPath(base: String, expression: String): String =
+        Path(base).resolve(expression).normalize().toString()
 
     private fun buildHistory(config: CrontabConfig, startTime: Instant): CrontabHistory {
         val crontab = Crontab {
