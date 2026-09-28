@@ -6961,6 +6961,12 @@
       "type": "com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsByDiffTimeline$4$1$1$1"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsBySyncTag$3"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsBySyncTag$3$1$1"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsFull$1"
     },
     {
