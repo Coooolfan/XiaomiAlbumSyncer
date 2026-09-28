@@ -140,7 +140,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
     fun refreshAssetsBySyncTag(
         crontab: Crontab,
         crontabHistory: CrontabHistory,
-        cursorBaseline: Map<Long, AlbumSyncCursor>
+        cursorBaseline: Map<Long, String>
     ) {
         val accountId = crontab.accountId
         val albums = sql.executeQuery(Album::class) {
@@ -177,11 +177,11 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             }
 
             val cursor = cursors[album.remoteId]
-            if (cursor != null && cursor.incrementalTag == remote.incrementalTag) {
-                continue // 上次已追平到此水位头
+            if (cursor == remote.incrementalTag) {
+                continue // 续拉位点已到达当前相册水位
             }
 
-            var syncTag = cursor?.syncTag ?: "0"
+            var syncTag = cursor ?: "0"
             // 存量位点被服务端拒绝（失效/参数错误）：首页失败回退 tag=0 全量重放，不中断运行
             var page = try {
                 api.fetchAllItemsPage(accountId, album, syncTag)
@@ -202,11 +202,8 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
                 }
                 syncTag = page.syncTag
 
-                // 页级提交位点；incrementalTag 仅在追平后写入，中途为 null 表示未追平
-                cursors[album.remoteId] = AlbumSyncCursor(
-                    syncTag,
-                    if (page.lastPage) remote.incrementalTag else null
-                )
+                // 每页提交续拉位点，崩溃后从已处理的最后一页继续
+                cursors[album.remoteId] = syncTag
                 sql.executeUpdate(CrontabHistory::class) {
                     set(table.albumSyncCursors, cursors.toMap())
                     where(table.id eq crontabHistory.id)

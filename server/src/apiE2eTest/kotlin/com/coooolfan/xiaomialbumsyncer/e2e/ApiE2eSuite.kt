@@ -455,7 +455,7 @@ class ApiE2eSuite {
         assertCompletedDetailCount(api, firstHistoryId, 0)
         assertEquals(listOf("0"), mock.allItemsTags(2), "首轮应从 tag=0 回放")
 
-        // 第二轮：incrementalTag 未变 → 预检跳过，不再请求 allitems
+        // 第二轮：syncTag 已到达 album/full 的水位 → 跳过 allitems
         api.post("/api/crontab/$cursorCrontabId/executions").expect(200)
         val secondHistoryId = awaitCompletedHistory(api, cursorCrontabId, afterHistoryId = firstHistoryId)
         assertEquals(listOf("0"), mock.allItemsTags(2), "水位头未变的相册应跳过拉流")

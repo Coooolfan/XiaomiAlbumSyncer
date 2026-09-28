@@ -1,18 +1,9 @@
 package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 
 import com.coooolfan.xiaomialbumsyncer.service.XiaomiAccountService
-import com.coooolfan.xiaomialbumsyncer.utils.client
-import com.coooolfan.xiaomialbumsyncer.utils.objectMapper
-import com.coooolfan.xiaomialbumsyncer.utils.requiredText
-import com.coooolfan.xiaomialbumsyncer.utils.textOrNull
-import com.coooolfan.xiaomialbumsyncer.utils.ua
-import com.coooolfan.xiaomialbumsyncer.utils.withCookie
+import com.coooolfan.xiaomialbumsyncer.utils.*
 import com.fasterxml.jackson.databind.JsonNode
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import okhttp3.Cookie
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
@@ -23,9 +14,10 @@ import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.io.InterruptedIOException
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * 小米账号扫码登录管理器
@@ -164,7 +156,7 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
                 fail(session, e.message ?: "长轮询异常")
                 return
             }
-            delay(POLL_RETRY_DELAY_MS)
+            delay(POLL_RETRY_DELAY_MS.milliseconds)
         }
         session.status = QrLoginStatus.EXPIRED
         log.info("会话 {} 二维码已过期", session.id)

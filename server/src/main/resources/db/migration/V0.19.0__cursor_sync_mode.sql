@@ -7,7 +7,7 @@ UPDATE crontab
 SET sync_mode = 'TIMELINE'
 WHERE json_extract(config, '$.diffByTimeline') = 1;
 
--- CURSOR 模式：各相册的 allitems 拉取位点（albumId -> {syncTag, incrementalTag}）
+-- CURSOR 模式：各相册的 allitems 拉取位点（albumId -> syncTag 字符串）
 ALTER TABLE crontab_history
     ADD COLUMN album_sync_cursors TEXT DEFAULT NULL;
 
@@ -19,12 +19,7 @@ SET config = json_remove(
         '$.targetPath',
         CASE
             WHEN trim(coalesce(json_extract(config, '$.expressionTargetPath'), '')) <> '' THEN
-                CASE
-                    WHEN substr(trim(json_extract(config, '$.expressionTargetPath')), 1, 1) = '/'
-                        THEN trim(json_extract(config, '$.expressionTargetPath'))
-                    ELSE rtrim(json_extract(config, '$.targetPath'), '/') || '/' ||
-                         ltrim(trim(json_extract(config, '$.expressionTargetPath')), './')
-                END
+                trim(json_extract(config, '$.expressionTargetPath'))
             ELSE rtrim(json_extract(config, '$.targetPath'), '/') || '/' ||
                  '$' || '{album}/' || '$' || '{downloadFileName}'
         END

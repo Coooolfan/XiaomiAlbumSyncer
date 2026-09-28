@@ -167,7 +167,7 @@ class CrontabService(private val sql: KSqlClient) {
      * 位点同步模式的基线：取本任务最近一次含位点的历史。
      * 与时间线模式不同，此处不过滤 endTime——崩溃任务的位点即恢复点，实现断点续拉
      */
-    fun getAlbumSyncCursorsHistory(history: CrontabHistory): Map<Long, AlbumSyncCursor> {
+    fun getAlbumSyncCursorsHistory(history: CrontabHistory): Map<Long, String> {
         return sql.createQuery(CrontabHistory::class) {
             orderBy(table.startTime.desc())
             where(table.crontabId eq history.crontab.id)

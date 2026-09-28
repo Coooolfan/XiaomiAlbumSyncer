@@ -130,14 +130,11 @@
 
 ### 位点存储
 
-位点存于 `CrontabHistory` 的序列化字段 `albumSyncCursors`（`Map<albumId, AlbumSyncCursor>`），每条位点含：
-
-- `syncTag`：`allitems` 返回的续拉位点，原样持久化；
-- `incrementalTag`：追平后写入的本轮相册水位头，拉取中途为 null 表示未追平（用于预检比对与崩溃续拉区分）。
+位点存于 `CrontabHistory` 的序列化字段 `albumSyncCursors`（`Map<albumId, syncTag>`）。每个值都是 `allitems` 返回的续拉位点，用于预检和断点续拉。
 
 行为约定：
 
-- 运行在创建 `CrontabHistory` 后即开始页级提交，每页资产 UPSERT 与位点更新同事务；
+- 运行在创建 `CrontabHistory` 后即开始页级提交；每页先 UPSERT 资产，再更新位点，重试时重复资产按 ID 覆盖；
 - 基线查询取本任务最近一次含位点的历史（不限 `endTime`，过滤 `albumSyncCursors is not null`）——崩溃任务的位点即恢复点，实现断点续拉；
 - 时间线模式的基线查询维持 `endTime ne null` 过滤，按同步模式条件添加；
 - 「清理下载历史」连带清空位点，下次运行自然回退全量回放，与现有按钮语义一致；
@@ -145,8 +142,8 @@
 
 ### 每轮同步流程
 
-1. 请求 `album/full`，与本地位点表比对筛出 `incrementalTag` 变化的相册；消失的相册标记 `shadow`；
-2. 对每个变化相册，以本地 `syncTag` 为起点循环调用 `allitems`（`simpleResult=false`），对 `content` 中 `status` 为 `"custom"` 的记录按 `id` UPSERT（不记录 per-asset 位点），每页提交后更新 `albumSyncTags`，直至 `lastPage`；
+1. 请求 `album/full`，逐个比较相册的 `incrementalTag` 与本地 `syncTag`；相等时跳过该相册；
+2. 对每个需要更新的相册，以本地 `syncTag` 为起点循环调用 `allitems`（`simpleResult=false`），对 `content` 中 `status` 为 `"custom"` 的记录按 `id` UPSERT（不记录 per-asset 位点），每页提交后更新 `albumSyncCursors`，直至 `lastPage`；
    - 新相册 / 位点缺失：起点为 `0`，即全量回放；
    - 位点被服务端拒绝（失效/参数错误）：清空该相册位点，本轮内以 `tag=0` 自动重置重放，不中断运行；
 3. 各相册流顺序拉取，不并发；

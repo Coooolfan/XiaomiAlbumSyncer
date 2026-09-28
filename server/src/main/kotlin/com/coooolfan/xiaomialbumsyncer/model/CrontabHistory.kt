@@ -24,7 +24,7 @@ interface CrontabHistory {
 
     // 位点同步模式下各相册的拉取位点，页级提交；null 表示本次运行未使用位点模式
     @Serialized
-    val albumSyncCursors: Map<Long, AlbumSyncCursor>?
+    val albumSyncCursors: Map<Long, String>?
 
     val fetchedAllAssets: Boolean
 

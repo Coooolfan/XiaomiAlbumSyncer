@@ -1,5 +1,5 @@
 import type {CrontabSyncMode} from '../enums/';
-import type {AlbumSyncCursor, CrontabConfig} from '../static/';
+import type {CrontabConfig} from '../static/';
 
 export type CrontabDto = {
     'CrontabController/DEFAULT_CRONTAB': {
@@ -20,7 +20,7 @@ export type CrontabDto = {
             readonly id: number;
             readonly startTime: string;
             readonly endTime?: string | undefined;
-            readonly albumSyncCursors?: {readonly [key:string]: AlbumSyncCursor} | undefined;
+            readonly albumSyncCursors?: {readonly [key:string]: string} | undefined;
             readonly fetchedAllAssets: boolean;
             readonly isCompleted: boolean;
             readonly detailsCount: number;
