@@ -50,20 +50,19 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
         val expiresAt: Instant,
     ) {
         @Volatile
-        var status: QrLoginStatus = QrLoginStatus.WAITING
+        var view = QrLoginStatusView(QrLoginStatus.WAITING)
 
+        // 前端最近一次查询状态的时间，长时间无人查询视为会话已被放弃
         @Volatile
-        var error: String? = null
-
-        @Volatile
-        var nickname: String? = null
-
-        @Volatile
-        var accountUserId: String? = null
+        var lastPolledAt: Instant = Instant.now()
 
         val cookies = ConcurrentHashMap<String, String>()
 
-        fun cookieHeader(): String = withCookie(*cookies.entries.map { it.key to it.value }.toTypedArray())
+        fun cookieHeader(): String = withCookie(*cookies.toList().toTypedArray())
+
+        fun get(url: String): Request = Request.Builder().url(url).ua()
+            .header("Cookie", cookieHeader())
+            .get().build()
     }
 
     /**
@@ -120,27 +119,26 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
         val session = sessions[sessionId]
             ?: return QrLoginStatusView(status = QrLoginStatus.EXPIRED, error = "会话不存在或已过期")
 
-        if (session.status == QrLoginStatus.WAITING && Instant.now().isAfter(session.expiresAt)) {
-            session.status = QrLoginStatus.EXPIRED
+        session.lastPolledAt = Instant.now()
+        if (session.view.status == QrLoginStatus.WAITING && Instant.now().isAfter(session.expiresAt)) {
+            session.view = QrLoginStatusView(QrLoginStatus.EXPIRED)
         }
-
-        return QrLoginStatusView(
-            status = session.status,
-            nickname = session.nickname,
-            userId = session.accountUserId,
-            error = session.error,
-        )
+        // 终态只需交付一次，随即释放会话及其持有的凭证 cookie
+        if (session.view.status != QrLoginStatus.WAITING) sessions.remove(sessionId)
+        return session.view
     }
 
     private suspend fun pollLp(session: Session, lpUrl: String, timeoutSeconds: Long) {
         val deadline = Instant.now().plusSeconds(minOf(timeoutSeconds, QR_DEFAULT_TIMEOUT_SECONDS) + 15)
         while (Instant.now().isBefore(deadline)) {
-            if (session.status != QrLoginStatus.WAITING) return
+            if (session.view.status != QrLoginStatus.WAITING) return
+            if (Instant.now().isAfter(session.lastPolledAt.plusSeconds(ABANDON_SECONDS))) {
+                sessions.remove(session.id)
+                log.info("会话 {} 已无前端查询，停止长轮询", session.id)
+                return
+            }
             try {
-                val request = Request.Builder().url(lpUrl).ua()
-                    .header("Cookie", session.cookieHeader())
-                    .get().build()
-                longPollClient.newCall(request).execute().use { res ->
+                longPollClient.newCall(session.get(lpUrl)).execute().use { res ->
                     mergeCookies(session, res)
                     if (res.code == 200) {
                         if (handleLpResult(session, res)) return
@@ -158,7 +156,7 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
             }
             delay(POLL_RETRY_DELAY_MS.milliseconds)
         }
-        session.status = QrLoginStatus.EXPIRED
+        session.view = QrLoginStatusView(QrLoginStatus.EXPIRED)
         log.info("会话 {} 二维码已过期", session.id)
     }
 
@@ -185,9 +183,7 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
 
         return try {
             val account = accountService.upsertCredentials(userId, passToken)
-            session.status = QrLoginStatus.SUCCESS
-            session.nickname = account.nickname
-            session.accountUserId = account.userId
+            session.view = QrLoginStatusView(QrLoginStatus.SUCCESS, account.nickname, account.userId)
             log.info("会话 {} 扫码成功，账号 {}({}) 凭证已写入", session.id, account.id, userId)
             true
         } catch (e: Exception) {
@@ -198,19 +194,13 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
     }
 
     private fun fail(session: Session, message: String) {
-        session.status = QrLoginStatus.FAILED
-        session.error = message
+        session.view = QrLoginStatusView(QrLoginStatus.FAILED, error = message)
     }
 
     private fun getJson(url: String, session: Session): JsonNode {
-        val request = Request.Builder().url(url).ua()
-            .header("Cookie", session.cookieHeader())
-            .get().build()
-        return client().newCall(request).execute().use { res ->
+        return client().newCall(session.get(url)).execute().use { res ->
             mergeCookies(session, res)
-            if (res.code / 100 !in 2..3) {
-                error("小米登录接口请求失败: GET $url -> HTTP ${res.code}")
-            }
+            throwIfNotSuccess(res.code)
             mapper.readTree(res.body.string().removePrefix(JSON_PREFIX))
         }
     }
@@ -229,6 +219,7 @@ class QrLoginManager(private val accountService: XiaomiAccountService) {
         private const val QR_DEFAULT_TIMEOUT_SECONDS = 300L
         private const val SESSION_TTL_SECONDS = 330L
         private const val POLL_RETRY_DELAY_MS = 500L
+        private const val ABANDON_SECONDS = 30L
     }
 }
 

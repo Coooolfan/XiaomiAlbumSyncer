@@ -37,17 +37,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         var hasMorePages = true
 
         while (hasMorePages) {
-            val req = Request.Builder()
-                .url(apiProperties.url("gallery/user/album/list?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=10&isShared=false&numOfThumbnails=1"))
-                .ua()
-                .authHeader(tokenManager.getAuthPair(accountId))
-                .get()
-                .build()
-
-            val responseTree = client().executeWithRetry(req).use { res ->
-                throwIfNotSuccess(res.code)
-                Solon.context().objectMapper.readTree(res.body)
-            }
+            val responseTree = getJson(accountId, apiProperties.url("gallery/user/album/list?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=10&isShared=false&numOfThumbnails=1"))
             val albumArrayJson = responseTree.at("/data/albums")
 
             log.info("解析第 ${pageNum + 1} 页相册数据，此页共 ${albumArrayJson.size()} 个相册")
@@ -103,17 +93,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                     apiProperties.url("gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.remoteId}")
 
 
-            val req = Request.Builder()
-                .url(url + urlDayParams)
-                .ua()
-                .authHeader(tokenManager.getAuthPair(album.accountId))
-                .get()
-                .build()
-
-            val responseTree = client().executeWithRetry(req).use { res ->
-                throwIfNotSuccess(res.code)
-                Solon.context().objectMapper.readTree(res.body)
-            }
+            val responseTree = getJson(album.accountId, url + urlDayParams)
             val assetArrayJson =
                 if (album.isAudioAlbum())
                     responseTree.at("/data/list")
@@ -154,17 +134,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
     }
 
     fun fetchAlbumTimeline(accountId: Long, albumId: Long): AlbumTimeline {
-        val req = Request.Builder()
-            .url(apiProperties.url("gallery/user/timeline?ts=${System.currentTimeMillis()}&albumId=$albumId"))
-            .ua()
-            .authHeader(tokenManager.getAuthPair(accountId))
-            .get()
-            .build()
-
-        val responseTree = client().executeWithRetry(req).use { res ->
-            throwIfNotSuccess(res.code)
-            Solon.context().objectMapper.readTree(res.body)
-        }
+        val responseTree = getJson(accountId, apiProperties.url("gallery/user/timeline?ts=${System.currentTimeMillis()}&albumId=$albumId"))
         val indexHash = responseTree.at("/data/indexHash").asText()
         val dayCountMap = responseTree.at("/data/dayCount").properties().asSequence().map {
             LocalDate.parse(it.key, BASIC_ISO_DATE) to it.value.asLong()
@@ -178,25 +148,15 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
      * 每次返回全量相册快照，无分页。
      */
     fun fetchAlbumSyncSnapshot(accountId: Long): List<AlbumSyncInfo> {
-        val req = Request.Builder()
-            .url(apiProperties.url("gallery/album/full?ts=${System.currentTimeMillis()}"))
-            .ua()
-            .authHeader(tokenManager.getAuthPair(accountId))
-            .get()
-            .build()
-
-        val responseTree = client().executeWithRetry(req).use { res ->
-            throwIfNotSuccess(res.code)
-            Solon.context().objectMapper.readTree(res.body)
-        }
+        val responseTree = getJson(accountId, apiProperties.url("gallery/album/full?ts=${System.currentTimeMillis()}"))
         responseTree.throwIfBizError()
 
         return responseTree.at("/data/albums").mapNotNull {
             val albumId = it.get("albumId")?.asLong() ?: return@mapNotNull null
             AlbumSyncInfo(
                 albumId = albumId,
-                incrementalTag = it.get("incrementalTag")?.asText() ?: "",
-                totalImageCount = it.get("totalImageCount")?.asLong() ?: 0L,
+                incrementalTag = it.path("incrementalTag").asText(),
+                totalImageCount = it.path("totalImageCount").asLong(),
             )
         }
     }
@@ -206,22 +166,13 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
      * @param tag 续拉位点（服务端返回的 syncTag 原样回传），"0" 表示从相册头部全量回放
      */
     fun fetchAllItemsPage(accountId: Long, album: Album, tag: String): AllItemsPage {
-        val req = Request.Builder()
-            .url(
-                apiProperties.url(
-                    "gallery/allitems?ts=${System.currentTimeMillis()}" +
-                        "&groupId=${album.remoteId}&tag=$tag&limit=200&simpleResult=false"
-                )
+        val responseTree = getJson(
+            accountId,
+            apiProperties.url(
+                "gallery/allitems?ts=${System.currentTimeMillis()}" +
+                    "&groupId=${album.remoteId}&tag=$tag&limit=200&simpleResult=false"
             )
-            .ua()
-            .authHeader(tokenManager.getAuthPair(accountId))
-            .get()
-            .build()
-
-        val responseTree = client().executeWithRetry(req).use { res ->
-            throwIfNotSuccess(res.code)
-            Solon.context().objectMapper.readTree(res.body)
-        }
+        )
         responseTree.throwIfBizError()
 
         val data = responseTree.at("/data")
@@ -232,9 +183,8 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             .map { parseJsonNode(it, album) }
 
         return AllItemsPage(
-            syncTag = data.get("syncTag")?.asText()
-                ?: throw IllegalStateException("allitems 响应缺少 data.syncTag"),
-            lastPage = data.get("lastPage")?.asBoolean() ?: true,
+            syncTag = data.requiredText("syncTag"),
+            lastPage = data.path("lastPage").asBoolean(true),
             assets = assets,
         )
     }
@@ -246,18 +196,8 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             else
                 apiProperties.url("gallery/storage?ts=${System.currentTimeMillis()}&id=${asset.id}")
 
-        // 这里的 resp 还是需要 close 一下，因为后面的 saveToFile 可能会阻塞很久，okhttp3 会报 warning
         // 1. 获取 OSS URL
-        val fetchOssUrlReq = Request.Builder()
-            .url(url)
-            .ua()
-            .authHeader(tokenManager.getAuthPair(accountId))
-            .get()
-            .build()
-        val fetchOssUrlJson = client().executeWithRetry(fetchOssUrlReq).use { resp ->
-            throwIfNotSuccess(resp.code)
-            Solon.context().objectMapper.readTree(resp.body)
-        }
+        val fetchOssUrlJson = getJson(accountId, url)
 
         // 与官方前端约定一致：只有 code == 0 才是成功，其余一律视为失败
         val code = fetchOssUrlJson.at("/code").asInt()
@@ -309,6 +249,20 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         }
 
         return true
+    }
+
+    // 读完即关闭响应，避免后续 saveToFile 等长耗时操作期间占用连接（okhttp3 会报 warning）
+    private fun getJson(accountId: Long, url: String): JsonNode {
+        val req = Request.Builder()
+            .url(url)
+            .ua()
+            .authHeader(tokenManager.getAuthPair(accountId))
+            .get()
+            .build()
+        return client().executeWithRetry(req).use { res ->
+            throwIfNotSuccess(res.code)
+            Solon.context().objectMapper.readTree(res.body)
+        }
     }
 
     private fun parseJsonNode(jsonNode: JsonNode, album: Album): Asset {

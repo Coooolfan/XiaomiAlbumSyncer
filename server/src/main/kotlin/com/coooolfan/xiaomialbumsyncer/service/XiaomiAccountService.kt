@@ -1,9 +1,9 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
+import com.coooolfan.xiaomialbumsyncer.controller.XiaomiAccountController.Companion.DEFAULT_XIAOMI_ACCOUNT
 import com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount
 import com.coooolfan.xiaomialbumsyncer.model.userId
 import com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountCreate
-import com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountUpdate
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
@@ -52,12 +52,7 @@ class XiaomiAccountService(
         }.firstOrNull()
 
         if (existing != null) {
-            val updated = sql.saveCommand(
-                XiaomiAccountUpdate(existing.nickname, passToken, userId).toEntity { id = existing.id },
-                SaveMode.UPDATE_ONLY
-            ).execute().modifiedEntity
-            tokenManager.invalidateToken(existing.id)
-            return updated
+            return update(XiaomiAccount(existing) { this.passToken = passToken }, DEFAULT_XIAOMI_ACCOUNT)
         }
 
         return create(XiaomiAccountCreate(nickname = userId, passToken = passToken, userId = userId))

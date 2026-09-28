@@ -153,8 +153,6 @@ export default {
       audios: '录音',
       notify: '通知',
       exif: '填充 EXIF',
-      diffByTimeline: '时间线比对',
-      syncByCursor: '位点增量',
       skipExisting: '跳过已存在',
       rewriteFsTime: '重写文件时间',
       sha1: 'SHA1 校验',
@@ -358,7 +356,6 @@ export default {
     },
     advanced: {
       title: '高级配置',
-      syncMode: '同步模式',
       syncModeFull: '全量刷新',
       syncModeTimeline: '时间线比对',
       syncModeCursor: '位点增量',

@@ -4,14 +4,14 @@ import "sync"
 
 type Stats struct {
 	mu                      sync.Mutex
-	RouteCounts             map[string]int64   `json:"routeCounts"`
-	TimelineAlbumIDs        map[string]int64   `json:"timelineAlbumIds"`
+	RouteCounts             map[string]int64    `json:"routeCounts"`
+	TimelineAlbumIDs        map[string]int64    `json:"timelineAlbumIds"`
 	AllItemsTags            map[string][]string `json:"allItemsTags"`
-	BytesSent               int64              `json:"bytesSent"`
-	ActiveDownloads         int64              `json:"activeDownloads"`
-	PeakConcurrentDownloads int64              `json:"peakConcurrentDownloads"`
-	UnexpectedRequests      int64              `json:"unexpectedRequests"`
-	Notifications           int64              `json:"notifications"`
+	BytesSent               int64               `json:"bytesSent"`
+	ActiveDownloads         int64               `json:"activeDownloads"`
+	PeakConcurrentDownloads int64               `json:"peakConcurrentDownloads"`
+	UnexpectedRequests      int64               `json:"unexpectedRequests"`
+	Notifications           int64               `json:"notifications"`
 }
 
 func NewStats() *Stats {

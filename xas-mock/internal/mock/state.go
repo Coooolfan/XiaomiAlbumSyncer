@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -51,7 +52,7 @@ func (s *State) Reset(seed *int64) error {
 func (s *State) allItemsPageSize() int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return s.data.AllItemsPageSize
+	return s.scenario.AllItemsPageSize
 }
 
 func (s *State) Health() (int64, int64) {
@@ -309,11 +310,9 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 			return nil, err
 		}
 		for _, id := range ids {
-			asset := album.Assets[id]
-			snapshot := *asset
+			appendAlbumChange(album, album.Assets[id], "deleted")
 			delete(album.Assets, id)
 			data.Deleted[id] = deletedMedia{UserID: account.UserID, Kind: "gallery"}
-			appendAlbumChange(album, &snapshot, "deleted")
 		}
 		album.LastUpdateTime = data.Clock
 		return ids, nil
@@ -641,12 +640,11 @@ func mergeRecordingSpec(current *Recording, update RecordingSpec) RecordingSpec 
 
 func cloneRuntime(data *runtimeData) *runtimeData {
 	copyData := &runtimeData{
-		Accounts:         map[string]*Account{},
-		Deleted:          map[int64]deletedMedia{},
-		StorageErrors:    map[int64]storageError{},
-		NextMediaID:      data.NextMediaID,
-		Clock:            data.Clock,
-		AllItemsPageSize: data.AllItemsPageSize,
+		Accounts:      map[string]*Account{},
+		Deleted:       map[int64]deletedMedia{},
+		StorageErrors: map[int64]storageError{},
+		NextMediaID:   data.NextMediaID,
+		Clock:         data.Clock,
 	}
 	for id, deleted := range data.Deleted {
 		copyData.Deleted[id] = deleted
@@ -668,10 +666,8 @@ func cloneAccount(account *Account) *Account {
 			value := *asset
 			copyAlbum.Assets[assetID] = &value
 		}
-		for _, change := range album.Changes {
-			assetCopy := *change.Asset
-			copyAlbum.Changes = append(copyAlbum.Changes, &AlbumChange{Asset: &assetCopy, Status: change.Status})
-		}
+		// 变更记录只追加不修改，可在快照间共享
+		copyAlbum.Changes = slices.Clone(album.Changes)
 		copyAccount.GalleryAlbums[id] = copyAlbum
 	}
 	for id, recording := range account.Recordings {

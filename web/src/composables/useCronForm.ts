@@ -1,8 +1,13 @@
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { i18n } from '@/i18n'
 import { api } from '@/ApiInstance'
 import type { CrontabDto } from '@/__generated/model/dto'
-import { createEmptyCronForm, mapCrontabToForm, type LocalCronForm } from '@/utils/crontabForm'
+import {
+  createEmptyCronForm,
+  mapCrontabToForm,
+  targetBasePath,
+  type LocalCronForm,
+} from '@/utils/crontabForm'
 
 type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
 
@@ -26,12 +31,8 @@ export function useCronForm(getDefaultAccountId: () => number) {
   let mountCheckTimer: number | undefined
   let mountCheckSeq = 0
 
-  function targetBasePath(): string {
-    const targetPath = cronForm.value.config.targetPath.trim()
-    if (!targetPath) return ''
-    const literal = targetPath.split('$', 1)[0]?.replace(/\/+$/, '') ?? ''
-    return literal || '/'
-  }
+  // 仅字面目录变化时才需要重新检测，编辑表达式尾部不触发请求
+  const mountCheckPath = computed(() => targetBasePath(cronForm.value.config.targetPath))
 
   function clearMountCheckTimer() {
     if (mountCheckTimer) {
@@ -47,10 +48,7 @@ export function useCronForm(getDefaultAccountId: () => number) {
   }
 
   function shouldSkipMountCheck(): boolean {
-    if (!showCronDialog.value) return true
-
-    const targetPath = targetBasePath()
-    return !targetPath
+    return !showCronDialog.value || !mountCheckPath.value
   }
 
   function scheduleTargetPathMountCheck() {
@@ -77,7 +75,7 @@ export function useCronForm(getDefaultAccountId: () => number) {
       return
     }
 
-    const path = targetBasePath()
+    const path = mountCheckPath.value
 
     try {
       const response = await api.systemConfigController.checkMountPath({
@@ -183,12 +181,7 @@ export function useCronForm(getDefaultAccountId: () => number) {
     },
   )
 
-  watch(
-    () => cronForm.value.config.targetPath,
-    () => {
-      scheduleTargetPathMountCheck()
-    },
-  )
+  watch(mountCheckPath, scheduleTargetPathMountCheck)
 
   watch(showCronDialog, (visible) => {
     if (visible) {

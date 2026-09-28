@@ -11,7 +11,7 @@ WHERE json_extract(config, '$.diffByTimeline') = 1;
 ALTER TABLE crontab_history
     ADD COLUMN album_sync_cursors TEXT DEFAULT NULL;
 
--- targetPath 统一为完整下载路径表达式，不再单独保存 expressionTargetPath
+-- targetPath 统一为完整下载路径表达式，并移除不再使用的 expressionTargetPath、diffByTimeline
 UPDATE crontab
 SET config = json_remove(
     json_set(
@@ -24,5 +24,6 @@ SET config = json_remove(
                  '$' || '{album}/' || '$' || '{downloadFileName}'
         END
     ),
-    '$.expressionTargetPath'
+    '$.expressionTargetPath',
+    '$.diffByTimeline'
 );

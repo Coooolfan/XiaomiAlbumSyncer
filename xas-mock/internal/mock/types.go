@@ -165,10 +165,9 @@ type storageError struct {
 }
 
 type runtimeData struct {
-	Accounts         map[string]*Account
-	Deleted          map[int64]deletedMedia
-	StorageErrors    map[int64]storageError
-	NextMediaID      int64
-	Clock            int64
-	AllItemsPageSize int
+	Accounts      map[string]*Account
+	Deleted       map[int64]deletedMedia
+	StorageErrors map[int64]storageError
+	NextMediaID   int64
+	Clock         int64
 }

@@ -2,6 +2,7 @@ package com.coooolfan.xiaomialbumsyncer.service
 
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.utils.isAudioAlbum
+import com.coooolfan.xiaomialbumsyncer.xiaomicloud.AlbumSyncInfo
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -44,10 +45,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         val accountId = crontab.accountId
 
         // 获取相册列表（需要 remoteId）
-        val albums = sql.executeQuery(Album::class) {
-            where(table.id valueIn crontab.albumIds)
-            select(table)
-        }
+        val albums = crontabAlbums(crontab)
 
         // 1. 获取这些相册最新的 timeline
         val albumTimelinesLatest = fetchAlbumsTimelineSnapshot(accountId, albums)
@@ -104,27 +102,12 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
 
     fun refreshAssetsFull(crontab: Crontab, crontabHistory: CrontabHistory) {
         val accountId = crontab.accountId
-        val albums = sql.executeQuery(Album::class) {
-            where(table.id valueIn crontab.albumIds)
-            select(table)
-        }
+        val albums = crontabAlbums(crontab)
 
         runBlocking(Dispatchers.IO) {
             val semaphore = Semaphore(5)
             albums.map { album ->
-                async {
-                    semaphore.withPermit {
-                        log.info("开始刷新相册 {} 的 Asset", album.id)
-                        val assetCount = api.fetchAssetsByAlbumId(album) { assets ->
-                            sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
-                        }
-                        sql.executeUpdate(Album::class) {
-                            set(table.assetCount, assetCount)
-                            where(table.id eq album.id)
-                        }
-                    }
-
-                }
+                async { semaphore.withPermit { refreshAlbumFull(album) } }
             }.awaitAll()
         }
         sql.executeUpdate(CrontabHistory::class) {
@@ -143,76 +126,104 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         cursorBaseline: Map<Long, String>
     ) {
         val accountId = crontab.accountId
-        val albums = sql.executeQuery(Album::class) {
-            where(table.id valueIn crontab.albumIds)
-            select(table)
-        }
 
         // 录音不在相册位点体系内，维持全量路径
-        val (audioAlbums, galleryAlbums) = albums.partition { it.isAudioAlbum() }
-        for (album in audioAlbums) {
-            val assetCount = api.fetchAssetsByAlbumId(album) { assets ->
-                sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
-            }
-            sql.executeUpdate(Album::class) {
-                set(table.assetCount, assetCount)
-                where(table.id eq album.id)
-            }
-        }
+        val (audioAlbums, galleryAlbums) = crontabAlbums(crontab).partition { it.isAudioAlbum() }
+        audioAlbums.forEach(::refreshAlbumFull)
         if (galleryAlbums.isEmpty()) return
 
         // 预检：一次请求取全部相册水位头
         val remoteInfos = api.fetchAlbumSyncSnapshot(accountId).associateBy { it.albumId }
+        // 各相册并发拉取，位点写回经由该 Map 的锁串行化，保证落库的总是最新快照
         val cursors = cursorBaseline.toMutableMap()
 
-        for (album in galleryAlbums) {
-            val remote = remoteInfos[album.remoteId]
-            if (remote == null) {
-                log.warn("相册 {} (remoteId={}) 未出现在 album/full 快照中，本次跳过", album.name, album.remoteId)
-                continue
-            }
+        runBlocking(Dispatchers.IO) {
+            val semaphore = Semaphore(5)
+            galleryAlbums.map { album ->
+                async {
+                    semaphore.withPermit {
+                        val remote = remoteInfos[album.remoteId]
+                        if (remote == null) {
+                            log.warn("相册 {} (remoteId={}) 未出现在 album/full 快照中，本次跳过", album.name, album.remoteId)
+                        } else {
+                            refreshAlbumBySyncTag(album, remote, cursorBaseline[album.remoteId]) { syncTag ->
+                                synchronized(cursors) {
+                                    cursors[album.remoteId] = syncTag
+                                    sql.executeUpdate(CrontabHistory::class) {
+                                        set(table.albumSyncCursors, cursors.toMap())
+                                        where(table.id eq crontabHistory.id)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }.awaitAll()
+        }
+    }
+
+    private fun refreshAlbumFull(album: Album) {
+        log.info("开始刷新相册 {} 的 Asset", album.id)
+        val assetCount = api.fetchAssetsByAlbumId(album) { assets ->
+            sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+        }
+        sql.executeUpdate(Album::class) {
+            set(table.assetCount, assetCount)
+            where(table.id eq album.id)
+        }
+    }
+
+    /**
+     * 从 cursor 起按位点拉取单个相册，每页 UPSERT 后通过 commitCursor 提交续拉位点
+     */
+    private fun refreshAlbumBySyncTag(
+        album: Album,
+        remote: AlbumSyncInfo,
+        cursor: String?,
+        commitCursor: (String) -> Unit
+    ) {
+        if (album.assetCount != remote.totalImageCount) {
             sql.executeUpdate(Album::class) {
                 set(table.assetCount, remote.totalImageCount)
                 where(table.id eq album.id)
             }
-
-            val cursor = cursors[album.remoteId]
-            if (cursor == remote.incrementalTag) {
-                continue // 续拉位点已到达当前相册水位
-            }
-
-            var syncTag = cursor ?: "0"
-            // 存量位点被服务端拒绝（失效/参数错误）：首页失败回退 tag=0 全量重放，不中断运行
-            var page = try {
-                api.fetchAllItemsPage(accountId, album, syncTag)
-            } catch (e: Exception) {
-                if (syncTag == "0") throw e
-                log.warn("相册 {} 位点 {} 拉取失败（{}），回退全量重放", album.name, syncTag, e.message)
-                syncTag = "0"
-                api.fetchAllItemsPage(accountId, album, syncTag)
-            }
-            while (true) {
-                if (page.assets.isNotEmpty()) {
-                    sql.saveEntitiesCommand(page.assets, SaveMode.UPSERT).execute()
-                }
-                // 防御：syncTag 不推进时退出，避免服务端异常导致死循环
-                val stalled = page.syncTag == syncTag
-                if (stalled && !page.lastPage) {
-                    log.warn("相册 {} 的 syncTag 未推进（{}），终止本轮拉取", album.name, syncTag)
-                }
-                syncTag = page.syncTag
-
-                // 每页提交续拉位点，崩溃后从已处理的最后一页继续
-                cursors[album.remoteId] = syncTag
-                sql.executeUpdate(CrontabHistory::class) {
-                    set(table.albumSyncCursors, cursors.toMap())
-                    where(table.id eq crontabHistory.id)
-                }
-                if (page.lastPage || stalled) break
-                page = api.fetchAllItemsPage(accountId, album, syncTag)
-            }
-            log.info("相册 {} (remoteId={}) 位点同步完成，当前位点 {}", album.name, album.remoteId, syncTag)
         }
+        if (cursor == remote.incrementalTag) return // 续拉位点已到达当前相册水位
+
+        val accountId = album.accountId
+        var syncTag = cursor ?: "0"
+        // 存量位点被服务端拒绝（失效/参数错误）：首页失败回退 tag=0 全量重放，不中断运行
+        var page = try {
+            api.fetchAllItemsPage(accountId, album, syncTag)
+        } catch (e: Exception) {
+            if (syncTag == "0") throw e
+            log.warn("相册 {} 位点 {} 拉取失败（{}），回退全量重放", album.name, syncTag, e.message)
+            syncTag = "0"
+            api.fetchAllItemsPage(accountId, album, syncTag)
+        }
+        while (true) {
+            if (page.assets.isNotEmpty()) {
+                sql.saveEntitiesCommand(page.assets, SaveMode.UPSERT).execute()
+            }
+            val stalled = page.syncTag == syncTag
+            syncTag = page.syncTag
+            // 每页提交续拉位点，崩溃后从已处理的最后一页继续
+            commitCursor(syncTag)
+
+            if (page.lastPage) break
+            // 防御：syncTag 不推进时退出，避免服务端异常导致死循环
+            if (stalled) {
+                log.warn("相册 {} 的 syncTag 未推进（{}），终止本轮拉取", album.name, syncTag)
+                break
+            }
+            page = api.fetchAllItemsPage(accountId, album, syncTag)
+        }
+        log.info("相册 {} (remoteId={}) 位点同步完成，当前位点 {}", album.name, album.remoteId, syncTag)
+    }
+
+    private fun crontabAlbums(crontab: Crontab): List<Album> = sql.executeQuery(Album::class) {
+        where(table.id valueIn crontab.albumIds)
+        select(table)
     }
 
     fun getAssets(albumId: Long, fetcher: Fetcher<Asset>): List<Asset> {

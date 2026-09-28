@@ -9,6 +9,7 @@ import Dialog from 'primevue/dialog'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import SettingSection from '@/components/settings/SettingSection.vue'
+import OptionCard from '@/components/OptionCard.vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import type { XiaomiAccountDto } from '@/__generated/model/dto'
@@ -47,7 +48,9 @@ const form = ref({
 const qrSession = ref<QrLoginSessionView | null>(null)
 const qrStatus = ref<QrLoginStatus | 'CREATING'>('CREATING')
 const qrError = ref('')
-let qrTimer: ReturnType<typeof setInterval> | undefined
+let qrTimer: ReturnType<typeof setTimeout> | undefined
+// 每次开始/停止轮询自增，使过期的异步回调自行作废
+let qrSeq = 0
 
 const { t } = useI18n()
 
@@ -79,10 +82,9 @@ watch([showDialog, dialogStep], ([visible, step]) => {
 })
 
 function stopQrPolling() {
-  if (qrTimer !== undefined) {
-    clearInterval(qrTimer)
-    qrTimer = undefined
-  }
+  qrSeq++
+  clearTimeout(qrTimer)
+  qrTimer = undefined
 }
 
 function selectXiaomi() {
@@ -102,7 +104,6 @@ function selectManual() {
 }
 
 function goBack() {
-  stopQrPolling()
   slideDir.value = 'slide-right'
   dialogStep.value = dialogStep.value === 'method' ? 'provider' : 'method'
 }
@@ -112,24 +113,31 @@ async function refreshQrSession() {
   qrSession.value = null
   qrStatus.value = 'CREATING'
   qrError.value = ''
+  const seq = qrSeq
   try {
-    qrSession.value = await api.qrLoginController.create()
+    const session = await api.qrLoginController.create()
+    if (seq !== qrSeq) return
+    qrSession.value = session
     qrStatus.value = 'WAITING'
-    startQrPolling()
+    scheduleQrPoll(session.sessionId, seq)
   } catch (e) {
+    if (seq !== qrSeq) return
     qrStatus.value = 'FAILED'
     qrError.value = e instanceof Error ? e.message : String(e)
   }
 }
 
-function startQrPolling() {
-  qrTimer = setInterval(async () => {
-    const session = qrSession.value
-    if (!session) return
+// 上一次查询结束后再安排下一次，避免慢请求叠加
+function scheduleQrPoll(sessionId: string, seq: number) {
+  qrTimer = setTimeout(async () => {
     try {
-      const result = await api.qrLoginController.status({ sessionId: session.sessionId })
+      const result = await api.qrLoginController.status({ sessionId })
+      if (seq !== qrSeq) return
       qrStatus.value = result.status
-      if (result.status === 'WAITING') return
+      if (result.status === 'WAITING') {
+        scheduleQrPoll(sessionId, seq)
+        return
+      }
 
       stopQrPolling()
       if (result.status === 'SUCCESS') {
@@ -149,6 +157,7 @@ function startQrPolling() {
         qrError.value = result.error ?? ''
       }
     } catch (e) {
+      if (seq !== qrSeq) return
       stopQrPolling()
       qrStatus.value = 'FAILED'
       qrError.value = e instanceof Error ? e.message : String(e)
@@ -320,71 +329,38 @@ function confirmDelete(account: Account) {
       <Transition :name="slideDir" mode="out-in">
         <!-- 渠道选择 -->
         <div v-if="dialogStep === 'provider'" key="provider" class="flex flex-col gap-3 pt-2">
-          <button
-            type="button"
-            class="flex items-center gap-4 rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-4 cursor-pointer transition-colors hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+          <OptionCard
+            icon="pi-cloud"
+            :label="t('tokens.account.providerXiaomi')"
+            :desc="t('tokens.account.providerXiaomiDesc')"
             @click="selectXiaomi"
-          >
-            <i class="pi pi-cloud text-2xl text-slate-600 dark:text-slate-300"></i>
-            <span class="flex flex-col items-start text-left">
-              <span class="font-medium text-slate-800 dark:text-slate-100">{{
-                t('tokens.account.providerXiaomi')
-              }}</span>
-              <span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{
-                t('tokens.account.providerXiaomiDesc')
-              }}</span>
-            </span>
-          </button>
-          <button
-            type="button"
+          />
+          <OptionCard
+            icon="pi-apple"
+            :label="t('tokens.account.providerIcloud')"
+            :desc="t('tokens.account.providerIcloudDesc')"
             disabled
-            class="flex items-center gap-4 rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-4 opacity-50 cursor-not-allowed"
           >
-            <i class="pi pi-apple text-2xl text-slate-600 dark:text-slate-300"></i>
-            <span class="flex flex-col items-start text-left flex-1">
-              <span class="font-medium text-slate-800 dark:text-slate-100">{{
-                t('tokens.account.providerIcloud')
-              }}</span>
-              <span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{
-                t('tokens.account.providerIcloudDesc')
-              }}</span>
-            </span>
-            <Tag :value="t('common.status.comingSoon')" severity="secondary" />
-          </button>
+            <template #badge>
+              <Tag :value="t('common.status.comingSoon')" severity="secondary" />
+            </template>
+          </OptionCard>
         </div>
 
         <!-- 添加方式选择 -->
         <div v-else-if="dialogStep === 'method'" key="method" class="flex flex-col gap-3 pt-2">
-          <button
-            type="button"
-            class="flex items-center gap-4 rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-4 cursor-pointer transition-colors hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+          <OptionCard
+            icon="pi-qrcode"
+            :label="t('tokens.account.methodQrTitle')"
+            :desc="t('tokens.account.methodQrDesc')"
             @click="selectQr"
-          >
-            <i class="pi pi-qrcode text-2xl text-slate-600 dark:text-slate-300"></i>
-            <span class="flex flex-col items-start text-left flex-1">
-              <span class="font-medium text-slate-800 dark:text-slate-100">{{
-                t('tokens.account.methodQrTitle')
-              }}</span>
-              <span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{
-                t('tokens.account.methodQrDesc')
-              }}</span>
-            </span>
-          </button>
-          <button
-            type="button"
-            class="flex items-center gap-4 rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-4 cursor-pointer transition-colors hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+          />
+          <OptionCard
+            icon="pi-key"
+            :label="t('tokens.account.methodManualTitle')"
+            :desc="t('tokens.account.methodManualDesc')"
             @click="selectManual"
-          >
-            <i class="pi pi-key text-2xl text-slate-600 dark:text-slate-300"></i>
-            <span class="flex flex-col items-start text-left flex-1">
-              <span class="font-medium text-slate-800 dark:text-slate-100">{{
-                t('tokens.account.methodManualTitle')
-              }}</span>
-              <span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{
-                t('tokens.account.methodManualDesc')
-              }}</span>
-            </span>
-          </button>
+          />
           <div
             class="rounded-md bg-slate-50 dark:bg-slate-800 text-xs text-slate-500 dark:text-slate-400 px-3 py-2"
           >
@@ -518,34 +494,3 @@ function confirmDelete(account: Account) {
     </template>
   </Dialog>
 </template>
-
-<style scoped>
-.slide-left-enter-active,
-.slide-left-leave-active,
-.slide-right-enter-active,
-.slide-right-leave-active {
-  transition:
-    transform 0.15s ease,
-    opacity 0.15s ease;
-}
-
-.slide-left-enter-from {
-  opacity: 0;
-  transform: translateX(28px);
-}
-
-.slide-left-leave-to {
-  opacity: 0;
-  transform: translateX(-28px);
-}
-
-.slide-right-enter-from {
-  opacity: 0;
-  transform: translateX(-28px);
-}
-
-.slide-right-leave-to {
-  opacity: 0;
-  transform: translateX(28px);
-}
-</style>

@@ -5,20 +5,29 @@ import type { CrontabSyncMode } from '@/__generated/model/enums'
 
 export type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
 
-// 生成的 DTO 字段均为 readonly，表单内赋值处用此类型解除
-export type Writable<T> = { -readonly [P in keyof T]: T[P] }
+// 生成的 DTO 字段均为 readonly，表单需要可写
+type Writable<T> = { -readonly [P in keyof T]: T[P] }
 
-export interface LocalCronForm extends Omit<CrontabCreateInput, 'albumIds'> {
+export interface LocalCronForm extends Writable<Omit<CrontabCreateInput, 'albumIds'>> {
   albumIds: number[]
-  // UI 专用：只切换路径输入的提示和帮助内容
-  useExpressionPath: boolean
 }
 
 const DEFAULT_PATH_SUFFIX = '/${album}/${downloadFileName}'
 
+function trimTrailingSlash(path: string): string {
+  return path.replace(/\/+$/, '')
+}
+
 function normalizeTargetPath(path: string): string {
-  const trimmed = path.trim().replace(/\/+$/, '')
+  const trimmed = trimTrailingSlash(path.trim())
   return trimmed.includes('${') ? trimmed : `${trimmed}${DEFAULT_PATH_SUFFIX}`
+}
+
+// 路径表达式中首个插值前的字面目录，用于挂载检测
+export function targetBasePath(path: string): string {
+  const trimmed = path.trim()
+  if (!trimmed) return ''
+  return trimTrailingSlash(trimmed.split('$', 1)[0] ?? '') || '/'
 }
 
 export function displayTargetPath(path: string): string {
@@ -67,13 +76,10 @@ export function createEmptyCronForm(defaultTz: string, accountId: number): Local
     accountId,
     config: createDefaultCronConfig(defaultTz),
     albumIds: [],
-    useExpressionPath: false,
   }
 }
 
 export function mapCrontabToForm(item: Crontab, fallbackTz: string): LocalCronForm {
-  const targetPath = displayTargetPath(item.config.targetPath)
-  const usesDefaultPath = targetPath !== item.config.targetPath
   return {
     name: item.name,
     description: item.description,
@@ -83,7 +89,7 @@ export function mapCrontabToForm(item: Crontab, fallbackTz: string): LocalCronFo
     config: {
       expression: item.config.expression,
       timeZone: item.config.timeZone,
-      targetPath,
+      targetPath: displayTargetPath(item.config.targetPath),
       downloadImages: item.config.downloadImages,
       downloadVideos: item.config.downloadVideos,
       downloadAudios: item.config.downloadAudios,
@@ -100,6 +106,5 @@ export function mapCrontabToForm(item: Crontab, fallbackTz: string): LocalCronFo
       notify: item.config.notify ?? true,
     },
     albumIds: [...item.albumIds],
-    useExpressionPath: !usesDefaultPath,
   }
 }

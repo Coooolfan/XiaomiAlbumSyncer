@@ -248,6 +248,11 @@ class DatabaseMigrationTest {
             }
             assertEquals(mapOf("timeline" to "TIMELINE", "full" to "FULL", "default" to "FULL"), modes)
             connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT json_type(config, '$.diffByTimeline') FROM crontab").use { result ->
+                    while (result.next()) assertEquals(null, result.getString(1))
+                }
+            }
+            connection.createStatement().use { statement ->
                 statement.executeQuery("SELECT * FROM crontab_history WHERE id = 1").use { result ->
                     assertTrue(result.next())
                     assertEquals(null, result.getString("album_sync_cursors"))

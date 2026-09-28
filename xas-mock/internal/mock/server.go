@@ -7,9 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/url"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -101,11 +102,7 @@ func (s *Server) albumList(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	ids := make([]int64, 0, len(account.GalleryAlbums))
-	for id := range account.GalleryAlbums {
-		ids = append(ids, id)
-	}
-	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	ids := slices.Sorted(maps.Keys(account.GalleryAlbums))
 	start := page * size
 	end := min(start+size, len(ids))
 	albums := make([]map[string]any, 0)
@@ -197,11 +194,7 @@ func (s *Server) albumFull(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	ids := make([]int64, 0, len(account.GalleryAlbums))
-	for id := range account.GalleryAlbums {
-		ids = append(ids, id)
-	}
-	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	ids := slices.Sorted(maps.Keys(account.GalleryAlbums))
 	albums := make([]map[string]any, 0, len(ids))
 	for _, id := range ids {
 		album := account.GalleryAlbums[id]

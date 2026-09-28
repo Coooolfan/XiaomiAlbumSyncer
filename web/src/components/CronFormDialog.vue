@@ -15,9 +15,10 @@ import Button from 'primevue/button'
 import Message from 'primevue/message'
 import Tag from 'primevue/tag'
 import ExpressionPathHelp from '@/components/ExpressionPathHelp.vue'
+import OptionCard from '@/components/OptionCard.vue'
 import CronHelp from '@/components/CronHelp.vue'
 import type { CrontabSyncMode } from '@/__generated/model/enums'
-import type { LocalCronForm, Writable } from '@/utils/crontabForm'
+import type { LocalCronForm } from '@/utils/crontabForm'
 
 const props = defineProps<{
   visible: boolean
@@ -61,7 +62,7 @@ const stepTitle = computed(() => t(`cronform.step.${step.value}`))
 
 const stepFields: Partial<Record<Step, readonly string[]>> = {
   basic: ['name', 'accountId'],
-  schedule: ['expression', 'timeZone', 'targetPath', 'concurrency'],
+  schedule: ['expression', 'timeZone', 'targetPath'],
 }
 
 const hasRecordingAlbum = computed(() =>
@@ -72,29 +73,26 @@ const recommendedMode = computed<CrontabSyncMode>(() =>
   hasRecordingAlbum.value ? 'FULL' : 'TIMELINE',
 )
 
-const syncModeCards = computed(() => [
-  {
-    value: 'FULL' as CrontabSyncMode,
-    icon: 'pi-database',
-    label: t('cronform.advanced.syncModeFull'),
-    desc: t('cronform.advanced.syncModeFullHint'),
-    badge: recommendedMode.value === 'FULL' ? ('recommended' as const) : null,
-  },
-  {
-    value: 'TIMELINE' as CrontabSyncMode,
-    icon: 'pi-history',
-    label: t('cronform.advanced.syncModeTimeline'),
-    desc: t('cronform.advanced.syncModeTimelineHint'),
-    badge: recommendedMode.value === 'TIMELINE' ? ('recommended' as const) : null,
-  },
-  {
-    value: 'CURSOR' as CrontabSyncMode,
-    icon: 'pi-bolt',
-    label: t('cronform.advanced.syncModeCursor'),
-    desc: t('cronform.advanced.syncModeCursorHint'),
-    badge: 'beta' as const,
-  },
-])
+const syncModeCards = computed(() =>
+  (
+    [
+      ['FULL', 'Full', 'pi-database'],
+      ['TIMELINE', 'Timeline', 'pi-history'],
+      ['CURSOR', 'Cursor', 'pi-bolt'],
+    ] as const
+  ).map(([value, key, icon]) => ({
+    value,
+    icon,
+    label: t(`cronform.advanced.syncMode${key}`),
+    desc: t(`cronform.advanced.syncMode${key}Hint`),
+    badge:
+      value === 'CURSOR'
+        ? ('beta' as const)
+        : recommendedMode.value === value
+          ? ('recommended' as const)
+          : null,
+  })),
+)
 
 function goToStep(target: Step) {
   slideDir.value = steps.indexOf(target) > stepIndex.value ? 'slide-left' : 'slide-right'
@@ -112,7 +110,7 @@ function goBack() {
 }
 
 function selectSyncMode(mode: CrontabSyncMode) {
-  ;(form.value as Writable<LocalCronForm>).syncMode = mode
+  form.value.syncMode = mode
   nextStep()
 }
 
@@ -123,6 +121,8 @@ watch(formErrors, (errors) => {
   if (target && target !== step.value) goToStep(target)
 })
 
+// 仅切换路径输入的提示和帮助内容，提交时由 targetPath 本身是否含插值决定
+const useExpressionPath = ref(false)
 const showExpressionHelp = ref(false)
 const showCronHelp = ref(false)
 
@@ -156,6 +156,7 @@ watch(
     if (val) {
       step.value = 'basic'
       slideDir.value = 'slide-left'
+      useExpressionPath.value = form.value.config.targetPath.includes('${')
       return
     }
     showExpressionHelp.value = false
@@ -308,40 +309,23 @@ watch(
 
           <!-- 同步模式 -->
           <div v-else-if="step === 'mode'" key="mode" class="flex flex-col gap-3 pt-2">
-            <button
+            <OptionCard
               v-for="card in syncModeCards"
               :key="card.value"
-              type="button"
-              class="flex items-center gap-4 rounded-lg border px-4 py-4 cursor-pointer transition-colors text-left"
-              :class="
-                form.syncMode === card.value
-                  ? 'border-slate-400 dark:border-slate-500 bg-slate-50 dark:bg-slate-800'
-                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-              "
+              :icon="card.icon"
+              :label="card.label"
+              :desc="card.desc"
+              :selected="form.syncMode === card.value"
               @click="selectSyncMode(card.value)"
             >
-              <i class="pi text-2xl text-slate-600 dark:text-slate-300" :class="card.icon"></i>
-              <span class="flex flex-col items-start text-left flex-1">
-                <span class="flex items-center gap-2">
-                  <span class="font-medium text-slate-800 dark:text-slate-100">{{
-                    card.label
-                  }}</span>
-                  <Tag
-                    v-if="card.badge"
-                    :value="t(`cronform.badge.${card.badge}`)"
-                    :severity="card.badge === 'beta' ? 'warn' : 'success'"
-                    class="text-[10px]! px-1.5! py-0!"
-                  />
-                </span>
-                <span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{
-                  card.desc
-                }}</span>
-              </span>
-              <i
-                v-if="form.syncMode === card.value"
-                class="pi pi-check-circle text-lg text-slate-600 dark:text-slate-300"
-              ></i>
-            </button>
+              <template v-if="card.badge" #badge>
+                <Tag
+                  :value="t(`cronform.badge.${card.badge}`)"
+                  :severity="card.badge === 'beta' ? 'warn' : 'success'"
+                  class="text-[10px]! px-1.5! py-0!"
+                />
+              </template>
+            </OptionCard>
           </div>
 
           <!-- 调度与存储 -->
@@ -406,7 +390,7 @@ watch(
                 }}</label>
                 <div class="flex items-center gap-2">
                   <Button
-                    v-if="form.useExpressionPath"
+                    v-if="useExpressionPath"
                     icon="pi pi-question-circle"
                     variant="text"
                     severity="secondary"
@@ -418,23 +402,23 @@ watch(
                   <span class="text-xs text-slate-500 dark:text-slate-400">{{
                     t('cronform.field.useExpressionPath')
                   }}</span>
-                  <Checkbox v-model="form.useExpressionPath" binary />
+                  <Checkbox v-model="useExpressionPath" binary />
                 </div>
               </div>
               <InputText
                 v-model="form.config.targetPath"
                 :placeholder="
-                  form.useExpressionPath ? '/app/download/${album}/${fileName}' : '/app/download'
+                  useExpressionPath ? '/app/download/${album}/${fileName}' : '/app/download'
                 "
                 class="w-full"
-                @focus="form.useExpressionPath && openExpressionHelp()"
+                @focus="useExpressionPath && openExpressionHelp()"
               />
               <div v-if="formErrors.targetPath" class="text-xs text-red-500">
                 {{ formErrors.targetPath }}
               </div>
               <div class="text-[10px] text-slate-400 dark:text-slate-500">
                 {{
-                  form.useExpressionPath
+                  useExpressionPath
                     ? t('cronform.field.targetPathExpressionHint')
                     : t('cronform.field.targetPathHint')
                 }}
@@ -699,34 +683,3 @@ watch(
     </template>
   </Dialog>
 </template>
-
-<style scoped>
-.slide-left-enter-active,
-.slide-left-leave-active,
-.slide-right-enter-active,
-.slide-right-leave-active {
-  transition:
-    transform 0.15s ease,
-    opacity 0.15s ease;
-}
-
-.slide-left-enter-from {
-  opacity: 0;
-  transform: translateX(28px);
-}
-
-.slide-left-leave-to {
-  opacity: 0;
-  transform: translateX(-28px);
-}
-
-.slide-right-enter-from {
-  opacity: 0;
-  transform: translateX(-28px);
-}
-
-.slide-right-leave-to {
-  opacity: 0;
-  transform: translateX(28px);
-}
-</style>

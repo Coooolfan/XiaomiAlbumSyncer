@@ -43,6 +43,9 @@ interface CrontabHistoryDetail {
     companion object {
         private val TOKEN_REGEX = Regex("""\$\{([^}]+)}""")
 
+        // 目录未包含插值时补全的默认相册/文件名模板
+        const val DEFAULT_FILE_TEMPLATE = "\${album}/\${downloadFileName}"
+
         fun init(
             history: CrontabHistory,
             asset: Asset
@@ -69,7 +72,7 @@ interface CrontabHistoryDetail {
         val config = history.crontab.config
         val configuredPath = config.targetPath.trim()
         val expression = if (TOKEN_REGEX.containsMatchIn(configuredPath)) configuredPath
-        else Path(configuredPath, "\${album}", "\${downloadFileName}").toString()
+        else Path(configuredPath, DEFAULT_FILE_TEMPLATE).toString()
 
         val zoneId = resolveZoneId(config.timeZone)
         val downloadTime = history.startTime

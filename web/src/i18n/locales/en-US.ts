@@ -155,8 +155,6 @@ const messages: typeof zh = {
       audios: 'Audio',
       notify: 'Notifications',
       exif: 'Fill EXIF',
-      diffByTimeline: 'Timeline diff',
-      syncByCursor: 'Cursor sync',
       skipExisting: 'Skip existing',
       rewriteFsTime: 'Rewrite file time',
       sha1: 'SHA1 check',
@@ -361,7 +359,6 @@ const messages: typeof zh = {
     },
     advanced: {
       title: 'Advanced',
-      syncMode: 'Sync mode',
       syncModeFull: 'Full refresh',
       syncModeTimeline: 'Timeline diff',
       syncModeCursor: 'Cursor sync',
