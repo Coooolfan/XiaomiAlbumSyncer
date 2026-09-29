@@ -89,16 +89,55 @@ const historyGroupsTotal = ref(0)
 const historyPageIndex = ref(0)
 const historyLoading = ref(false)
 const historyLoaded = ref(false)
+let historyRequestSeq = 0
 const historyTotalPages = computed(() =>
   Math.max(1, Math.ceil(historyGroupsTotal.value / HISTORY_PAGE_SIZE)),
 )
 
-async function loadHistoryGroups() {
+// 任务结束后，后端的 history 记录与 running 状态之间没有事务屏障，
+// 此刻拉取可能读到尚未写入的收尾记录，因此按固定间隔补拉几次。
+const HISTORY_RETRY_DELAYS = [300, 1000, 2500, 5000]
+let historyRetryTimer: number | undefined
+let historyRetryStep = 0
+
+function cancelHistoryRetry() {
+  if (historyRetryTimer) {
+    clearTimeout(historyRetryTimer)
+    historyRetryTimer = undefined
+  }
+  historyRetryStep = 0
+}
+
+function scheduleHistoryRetry() {
+  if (historyRetryStep >= HISTORY_RETRY_DELAYS.length) return
+  if (historyRetryTimer) clearTimeout(historyRetryTimer)
+  const delay = HISTORY_RETRY_DELAYS[historyRetryStep++]
+  historyRetryTimer = window.setTimeout(() => {
+    historyRetryTimer = undefined
+    // 轮询计数已完成，本次补拉若仍为空会自行决定是否继续
+    if (props.expanded) loadHistoryGroups(true)
+  }, delay)
+}
+
+function reloadHistoryGroups() {
+  historyRequestSeq++
+  cancelHistoryRetry()
+  historyPageCache.clear()
+  historyLoaded.value = false
+  historyGroupsTotal.value = 0
+  if (!props.expanded) return
+  loadHistoryGroups(true)
+}
+
+async function loadHistoryGroups(allowRetry: boolean) {
   const cached = historyPageCache.get(historyPageIndex.value)
   if (cached) {
     historyGroups.value = cached
+    if (cached.length > 0) cancelHistoryRetry()
+    else if (allowRetry) scheduleHistoryRetry()
     return
   }
+  const seq = ++historyRequestSeq
   historyLoading.value = true
   try {
     const page = await api.crontabController.listCrontabHistoryGroups({
@@ -106,15 +145,20 @@ async function loadHistoryGroups() {
       pageIndex: historyPageIndex.value,
       pageSize: HISTORY_PAGE_SIZE,
     })
+    if (seq !== historyRequestSeq) return
     historyGroups.value = page.rows
     historyGroupsTotal.value = page.totalRowCount
     historyPageCache.set(historyPageIndex.value, page.rows)
     historyLoaded.value = true
+    if (page.rows.length > 0) cancelHistoryRetry()
+    else if (allowRetry) scheduleHistoryRetry()
   } catch {
+    if (seq !== historyRequestSeq) return
     historyGroups.value = []
     historyGroupsTotal.value = 0
+    if (allowRetry) scheduleHistoryRetry()
   } finally {
-    historyLoading.value = false
+    if (seq === historyRequestSeq) historyLoading.value = false
   }
 }
 
@@ -122,13 +166,33 @@ function gotoHistoryPage(delta: number) {
   const next = historyPageIndex.value + delta
   if (next < 0 || next >= historyTotalPages.value) return
   historyPageIndex.value = next
-  loadHistoryGroups()
+  loadHistoryGroups(false)
 }
 
 watch(
   () => props.expanded,
   (expanded) => {
-    if (expanded && !historyLoaded.value) loadHistoryGroups()
+    if (expanded && !historyLoaded.value) loadHistoryGroups(true)
+  },
+)
+
+// 执行历史由任务执行过程异步写入，任务结束后必须让上一次拉取的分页缓存失效
+watch(
+  () => props.crontab.histories,
+  (next, prev) => {
+    if (next === prev) return
+    reloadHistoryGroups()
+  },
+  { deep: true },
+)
+
+watch(
+  () => props.crontab.running,
+  (running, prevRunning) => {
+    if (prevRunning && !running) {
+      historyPageIndex.value = 0
+      reloadHistoryGroups()
+    }
   },
 )
 
@@ -271,12 +335,14 @@ watch(
     } else {
       stopPolling()
     }
+    if (props.expanded) loadHistoryGroups(true)
   },
   { immediate: true },
 )
 
 onUnmounted(() => {
   stopPolling()
+  cancelHistoryRetry()
 })
 </script>
 
