@@ -165,7 +165,7 @@ class ApiE2eSuite {
 
         assertEquals(1, mock.routeCount("/gallery/user/album/list"))
         assertTrue(mock.routeCount("/gallery/user/galleries") >= 2)
-        assertTrue(mock.routeCount("/gallery/user/timeline") >= 1)
+        assertEquals(0, mock.routeCount("/gallery/user/timeline"))
         assertTrue(mock.routeCount("/gallery/storage") >= 1)
         assertTrue(mock.routeCount("/mock/oss/101") >= 1)
         assertTrue(mock.routeCount("/mock/download/101") >= 1)
@@ -571,7 +571,7 @@ class ApiE2eSuite {
         assertTrue(mock.routeCount("/sfs/ns/recorder/dir/0/list") >= 3)
         assertTrue(mock.routePrefixCount("/sfs/ns/recorder/file/201/cb/") >= 2)
         assertEquals(0, mock.timelineCount(-1), "录音是独立远端资源，不应请求 gallery timeline 的 -1")
-        assertTrue(mock.timelineCount(1) >= 2, "混合任务应只为真实相册请求时间线")
+        assertTrue(mock.timelineCount(1) >= 1, "混合任务应只为真实相册请求时间线")
     }
 
     /**

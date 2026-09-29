@@ -100,7 +100,11 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }
     }
 
-    fun refreshAssetsFull(crontab: Crontab, crontabHistory: CrontabHistory) {
+    fun refreshAssetsFull(
+        crontab: Crontab,
+        crontabHistory: CrontabHistory,
+        captureTimelineSnapshot: Boolean = false,
+    ) {
         val albums = crontabAlbums(crontab)
 
         runBlocking(Dispatchers.IO) {
@@ -108,6 +112,12 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             albums.map { album ->
                 async { semaphore.withPermit { refreshAlbumFull(album) } }
             }.awaitAll()
+        }
+        if (captureTimelineSnapshot) {
+            sql.executeUpdate(CrontabHistory::class) {
+                set(table.timelineSnapshot, fetchAlbumsTimelineSnapshot(crontab.accountId, albums))
+                where(table.id eq crontabHistory.id)
+            }
         }
     }
 

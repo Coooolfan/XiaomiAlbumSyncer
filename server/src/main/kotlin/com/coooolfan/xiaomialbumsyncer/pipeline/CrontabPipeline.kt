@@ -59,7 +59,7 @@ class CrontabPipeline(
                 val timelineDiffUsable = checkTimelineDiffUsable(crontab, albumTimelinesHistory)
                 if (timelineDiffUsable != null) {
                     log.warn("时间线对比模式不可用，原因：$timelineDiffUsable，将使用完整刷新模式")
-                    assetService.refreshAssetsFull(crontab, crontabHistory)
+                    assetService.refreshAssetsFull(crontab, crontabHistory, captureTimelineSnapshot = true)
                 } else {
                     log.info("时间线对比模式可用，仅对有变更的日期进行刷新")
                     assetService.refreshAssetsByDiffTimeline(crontab, crontabHistory, albumTimelinesHistory)

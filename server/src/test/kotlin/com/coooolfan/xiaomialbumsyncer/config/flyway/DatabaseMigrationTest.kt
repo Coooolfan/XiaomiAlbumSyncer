@@ -264,6 +264,14 @@ class DatabaseMigrationTest {
                     assertTrue(result.next())
                     assertEquals("""{"10":"42"}""", result.getString(1))
                 }
+                statement.executeUpdate(
+                    """
+                    INSERT INTO crontab_history
+                        (crontab_id, start_time, timeline_snapshot, fetched_all_assets)
+                    VALUES
+                        (2, 200, NULL, 0)
+                    """.trimIndent()
+                )
             }
         }
     }
