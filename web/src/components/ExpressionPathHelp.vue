@@ -6,20 +6,22 @@
       </h3>
       <i18n-t keypath="help.expression.intro" tag="p">
         <template #token>
-          <code class="text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">${...}</code>
+          <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-xs font-mono"
+            >${...}</code
+          >
         </template>
       </i18n-t>
-      <ul class="list-disc list-inside space-y-1 pl-1 text-xs">
+      <ul class="list-disc list-inside space-y-1.5 pl-1 text-[13px]">
         <i18n-t keypath="help.expression.fallbackNote" tag="li">
           <template #field>
-            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">{{
+            <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-xs font-mono">{{
               t('cronform.field.targetPath')
             }}</code>
           </template>
         </i18n-t>
         <i18n-t keypath="help.expression.overrideNote" tag="li">
           <template #field>
-            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">{{
+            <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-xs font-mono">{{
               t('cronform.field.targetPath')
             }}</code>
           </template>
@@ -34,15 +36,15 @@
 
       <div class="space-y-3">
         <div>
-          <h4 class="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
+          <h4 class="text-[13px] font-semibold text-slate-700 dark:text-slate-200 mb-2">
             {{ t('help.expression.basicTitle') }}
           </h4>
-          <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="grid grid-cols-2 gap-2.5 text-[13px]">
             <div
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${album}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.album') }}
               </div>
             </div>
@@ -50,7 +52,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${fileName}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.fileName') }}
               </div>
             </div>
@@ -58,7 +60,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${fileStem}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.fileStem') }}
               </div>
             </div>
@@ -66,7 +68,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${fileExt}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.fileExt') }}
               </div>
             </div>
@@ -74,7 +76,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${assetType}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.assetType') }}
               </div>
             </div>
@@ -82,7 +84,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${recordingTypeId}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.recordingTypeId') }}
               </div>
             </div>
@@ -90,7 +92,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${recordingType}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.recordingType') }}
               </div>
             </div>
@@ -98,7 +100,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${title}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.title') }}
               </div>
             </div>
@@ -106,7 +108,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${assetId}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.assetId') }}
               </div>
             </div>
@@ -114,7 +116,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${size}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.size') }}
               </div>
             </div>
@@ -122,7 +124,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${sha1}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.sha1') }}
               </div>
             </div>
@@ -130,7 +132,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${crontabName}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.crontabName') }}
               </div>
             </div>
@@ -138,7 +140,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${crontabId}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.crontabId') }}
               </div>
             </div>
@@ -146,7 +148,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${historyId}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.historyId') }}
               </div>
             </div>
@@ -154,10 +156,10 @@
         </div>
 
         <div>
-          <h4 class="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
+          <h4 class="text-[13px] font-semibold text-slate-700 dark:text-slate-200 mb-2">
             {{ t('help.expression.timeTitle') }}
           </h4>
-          <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="grid grid-cols-2 gap-2.5 text-[13px]">
             <div
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800 col-span-2"
             >
@@ -165,7 +167,7 @@
               <i18n-t
                 keypath="help.expression.token.takenPattern"
                 tag="div"
-                class="text-slate-500 dark:text-slate-400 text-[10px]"
+                class="text-slate-500 dark:text-slate-400 text-[13px]"
               >
                 <template #example>${taken_yyyy-MM}</template>
               </i18n-t>
@@ -177,7 +179,7 @@
               <i18n-t
                 keypath="help.expression.token.downloadPattern"
                 tag="div"
-                class="text-slate-500 dark:text-slate-400 text-[10px]"
+                class="text-slate-500 dark:text-slate-400 text-[13px]"
               >
                 <template #example>${download_yyyyMMdd}</template>
               </i18n-t>
@@ -186,7 +188,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${takenEpochMillis}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.takenEpochMillis') }}
               </div>
             </div>
@@ -194,7 +196,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${downloadEpochMillis}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.downloadEpochMillis') }}
               </div>
             </div>
@@ -202,7 +204,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${takenEpochSeconds}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.takenEpochSeconds') }}
               </div>
             </div>
@@ -210,7 +212,7 @@
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
               <div class="font-mono text-blue-600 mb-0.5">${downloadEpochSeconds}</div>
-              <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+              <div class="text-slate-500 dark:text-slate-400 text-[13px]">
                 {{ t('help.expression.token.downloadEpochSeconds') }}
               </div>
             </div>
@@ -223,10 +225,10 @@
         {{ t('help.expression.tipsTitle') }}
       </h3>
       <p>{{ t('help.expression.tipsIntro') }}</p>
-      <ul class="list-disc list-inside space-y-1 pl-1 text-xs">
+      <ul class="list-disc list-inside space-y-1.5 pl-1 text-[13px]">
         <i18n-t keypath="help.expression.tipRecording" tag="li">
           <template #token>
-            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded"
+            <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-xs font-mono"
               >${assetId}</code
             >
           </template>
@@ -242,7 +244,7 @@
       <h3 class="font-medium text-slate-900 dark:text-slate-100">
         {{ t('help.expression.examplesTitle') }}
       </h3>
-      <div class="space-y-3 text-xs">
+      <div class="space-y-3 text-[13px]">
         <div>
           <div class="text-slate-500 dark:text-slate-400 mb-1">
             {{ t('help.expression.examples.albumMonth') }}

@@ -15,6 +15,8 @@ const messages: typeof zh = {
       add: 'Add',
       back: 'Back',
       next: 'Next',
+      prevPage: 'Previous page',
+      nextPage: 'Next page',
     },
     status: {
       loading: 'Loading…',

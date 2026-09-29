@@ -53,19 +53,19 @@ const displayRelativeUpdate = computed(() => {
   >
     <div class="flex min-w-0 items-center gap-2">
       <i
-        class="pi shrink-0 text-[13px]"
+        class="pi shrink-0 text-[14px]"
         :class="[
           isRecording ? 'pi-microphone' : 'pi-images',
           props.shadow
             ? 'text-slate-300 dark:text-slate-600'
-            : 'text-slate-400 dark:text-slate-500',
+            : 'text-slate-500 dark:text-slate-400',
         ]"
       />
       <span
-        class="min-w-0 flex-1 truncate text-[13px]"
+        class="min-w-0 flex-1 truncate text-[14px]"
         :class="
           props.shadow
-            ? 'text-slate-400 line-through dark:text-slate-500'
+            ? 'text-slate-500 line-through dark:text-slate-400'
             : 'text-slate-700 dark:text-slate-200'
         "
       >
@@ -73,7 +73,7 @@ const displayRelativeUpdate = computed(() => {
       </span>
     </div>
     <div
-      class="mt-1.5 flex items-center justify-between gap-2 text-[11px] text-slate-400 dark:text-slate-500"
+      class="mt-2 flex items-center justify-between gap-2 text-[13px] text-slate-500 dark:text-slate-400"
     >
       <span class="truncate">{{ displayCount }}</span>
       <span v-if="displayRelativeUpdate" class="shrink-0">{{ displayRelativeUpdate }}</span>

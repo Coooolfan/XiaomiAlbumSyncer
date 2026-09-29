@@ -79,7 +79,7 @@ async function confirmImportFromV2() {
   >
     <div class="text-sm text-slate-700 dark:text-slate-200">
       {{ t('settings.importV2.confirmMessage') }}
-      <div class="mt-2 text-xs text-red-600 dark:text-red-300">
+      <div class="mt-2 text-[13px] text-red-600 dark:text-red-300">
         {{ t('settings.importV2.confirmNote') }}
       </div>
     </div>

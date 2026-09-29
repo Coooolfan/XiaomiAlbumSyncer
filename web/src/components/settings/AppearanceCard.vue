@@ -36,7 +36,7 @@ const heatOptions = computed<Array<{ label: string; value: boolean }>>(() => [
           <div class="text-sm text-slate-600 dark:text-slate-300">
             {{ t('appearance.theme') }}
           </div>
-          <p class="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+          <p class="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
             {{ t('appearance.themeDesc') }}
           </p>
         </div>
@@ -56,7 +56,7 @@ const heatOptions = computed<Array<{ label: string; value: boolean }>>(() => [
           <div class="text-sm text-slate-600 dark:text-slate-300">
             {{ t('appearance.language') }}
           </div>
-          <p class="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+          <p class="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
             {{ t('appearance.languageDesc') }}
           </p>
         </div>
@@ -76,7 +76,7 @@ const heatOptions = computed<Array<{ label: string; value: boolean }>>(() => [
           <div class="text-sm text-slate-600 dark:text-slate-300">
             {{ t('appearance.heatmap') }}
           </div>
-          <p class="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+          <p class="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
             {{ t('appearance.heatmapDesc') }}
           </p>
         </div>

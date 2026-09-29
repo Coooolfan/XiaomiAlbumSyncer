@@ -118,7 +118,7 @@ onMounted(() => {
   >
     <div
       v-if="accounts.length === 0"
-      class="px-4 py-6 text-center text-xs text-slate-400 dark:text-slate-500"
+      class="px-4 py-6 text-center text-[13px] text-slate-500 dark:text-slate-400"
     >
       {{ t('album.panel.noAccounts') }}
     </div>
@@ -134,9 +134,9 @@ onMounted(() => {
           class="flex items-center justify-between bg-slate-50/60 px-4 py-2 dark:bg-slate-800/30"
         >
           <div
-            class="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400"
+            class="flex items-center gap-2 text-[13px] font-medium text-slate-600 dark:text-slate-300"
           >
-            <i class="pi pi-user text-[11px]" />
+            <i class="pi pi-user text-[13px]" />
             <span class="truncate">{{ group.account.nickname }}</span>
             <span class="text-slate-300 dark:text-slate-600">·</span>
             <span>{{
@@ -151,7 +151,7 @@ onMounted(() => {
                 severity="secondary"
                 text
                 size="small"
-                class="!px-2 !py-1 text-xs"
+                class="!px-2 !py-1 text-[13px]"
                 @click="fetchLatestAlbums(group.account.id)"
               />
             </template>
@@ -185,7 +185,7 @@ onMounted(() => {
 
         <div
           v-if="group.albums.length === 0"
-          class="px-4 py-4 text-xs text-slate-400 dark:text-slate-500"
+          class="px-4 py-4 text-[13px] text-slate-500 dark:text-slate-400"
         >
           {{ t('album.panel.noAlbums') }}
         </div>

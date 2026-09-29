@@ -27,7 +27,7 @@ defineProps<{
         <span class="font-medium text-slate-800 dark:text-slate-100">{{ label }}</span>
         <slot name="badge" />
       </span>
-      <span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ desc }}</span>
+      <span class="mt-1 text-[13px] text-slate-500 dark:text-slate-400">{{ desc }}</span>
     </span>
     <i v-if="selected" class="pi pi-check-circle text-lg text-slate-600 dark:text-slate-300"></i>
   </button>

@@ -225,7 +225,7 @@ async function doDelete(credentialId: string) {
     <!-- 不安全上下文警告 -->
     <div
       v-if="isInsecureContext"
-      class="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
+      class="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-[13px] px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
     >
       <i class="pi pi-shield mr-2"></i>
       {{ t('tokens.passkey.insecureContext') }}
@@ -331,14 +331,14 @@ async function doDelete(credentialId: string) {
           class="w-full"
           @keyup.enter="doRegister"
         />
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
           {{ t('tokens.passkey.nameHint') }}
         </p>
       </div>
 
       <div
         v-if="isInsecureContext"
-        class="rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
+        class="rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-[13px] px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
       >
         {{ t('tokens.passkey.insecurePassword') }}
       </div>

@@ -265,7 +265,7 @@ function errorMessage(error: unknown): string {
           :allow-empty="false"
           class="w-full"
         />
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
+        <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-2">
           {{ t('tokens.mcp.permissionHint') }}
         </p>
       </div>

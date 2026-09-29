@@ -13,6 +13,8 @@ export default {
       add: '添加',
       back: '返回',
       next: '下一步',
+      prevPage: '上一页',
+      nextPage: '下一页',
     },
     status: {
       loading: '加载中…',

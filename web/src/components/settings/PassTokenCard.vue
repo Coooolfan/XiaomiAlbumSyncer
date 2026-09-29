@@ -286,7 +286,7 @@ function confirmDelete(account: Account) {
 
     <div
       v-if="isInsecureContext"
-      class="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
+      class="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-[13px] px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
     >
       {{ t('tokens.account.insecureWarning') }}
     </div>
@@ -362,7 +362,7 @@ function confirmDelete(account: Account) {
             @click="selectManual"
           />
           <div
-            class="rounded-md bg-slate-50 dark:bg-slate-800 text-xs text-slate-500 dark:text-slate-400 px-3 py-2"
+            class="rounded-md bg-slate-50 dark:bg-slate-800 text-[13px] text-slate-500 dark:text-slate-400 px-3 py-2"
           >
             {{ t('tokens.account.adpHint') }}
           </div>
@@ -375,7 +375,7 @@ function confirmDelete(account: Account) {
           >
             <i
               v-if="qrStatus === 'CREATING'"
-              class="pi pi-spin pi-spinner text-3xl text-slate-400"
+              class="pi pi-spin pi-spinner text-3xl text-slate-500 dark:text-slate-400"
             ></i>
             <img
               v-else-if="qrSession"
@@ -395,7 +395,7 @@ function confirmDelete(account: Account) {
               <p class="font-medium text-slate-700 dark:text-slate-200">
                 {{ t('tokens.account.qrWaiting') }}
               </p>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
                 {{ t('tokens.account.qrTip') }}
               </p>
             </template>
@@ -447,12 +447,12 @@ function confirmDelete(account: Account) {
               "
               class="w-full"
             />
-            <p v-if="isEditMode" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p v-if="isEditMode" class="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
               {{ t('tokens.account.passTokenNote') }}
             </p>
           </div>
 
-          <div v-if="isInsecureContext" class="text-xs text-red-600 dark:text-red-300">
+          <div v-if="isInsecureContext" class="text-[13px] text-red-600 dark:text-red-300">
             {{ t('tokens.account.insecureShort') }}
           </div>
         </div>

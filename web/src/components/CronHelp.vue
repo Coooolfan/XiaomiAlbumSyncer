@@ -12,55 +12,55 @@
         {{ t('help.cron.fieldsTitle') }}
       </h3>
       <div class="overflow-x-auto">
-        <table class="w-full text-xs text-left">
+        <table class="w-full text-[13px] text-left">
           <thead
             class="text-slate-500 dark:text-slate-400 font-medium border-b border-slate-100 dark:border-slate-800"
           >
             <tr>
-              <th class="py-1">{{ t('help.cron.fieldTable.field') }}</th>
-              <th class="py-1">{{ t('help.cron.fieldTable.allowed') }}</th>
-              <th class="py-1">{{ t('help.cron.fieldTable.special') }}</th>
+              <th class="py-1.5">{{ t('help.cron.fieldTable.field') }}</th>
+              <th class="py-1.5">{{ t('help.cron.fieldTable.allowed') }}</th>
+              <th class="py-1.5">{{ t('help.cron.fieldTable.special') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-50 dark:divide-slate-800/60">
             <tr>
-              <td class="py-1">{{ t('help.cron.fieldTable.second') }}</td>
-              <td class="py-1">0-59</td>
-              <td class="py-1 font-mono">, - * /</td>
+              <td class="py-1.5">{{ t('help.cron.fieldTable.second') }}</td>
+              <td class="py-1.5">0-59</td>
+              <td class="py-1.5 font-mono">, - * /</td>
             </tr>
             <tr>
-              <td class="py-1">{{ t('help.cron.fieldTable.minute') }}</td>
-              <td class="py-1">0-59</td>
-              <td class="py-1 font-mono">, - * /</td>
+              <td class="py-1.5">{{ t('help.cron.fieldTable.minute') }}</td>
+              <td class="py-1.5">0-59</td>
+              <td class="py-1.5 font-mono">, - * /</td>
             </tr>
             <tr>
-              <td class="py-1">{{ t('help.cron.fieldTable.hour') }}</td>
-              <td class="py-1">0-23</td>
-              <td class="py-1 font-mono">, - * /</td>
+              <td class="py-1.5">{{ t('help.cron.fieldTable.hour') }}</td>
+              <td class="py-1.5">0-23</td>
+              <td class="py-1.5 font-mono">, - * /</td>
             </tr>
             <tr>
-              <td class="py-1">{{ t('help.cron.fieldTable.day') }}</td>
-              <td class="py-1">1-31</td>
-              <td class="py-1 font-mono">, - * ? / L W</td>
+              <td class="py-1.5">{{ t('help.cron.fieldTable.day') }}</td>
+              <td class="py-1.5">1-31</td>
+              <td class="py-1.5 font-mono">, - * ? / L W</td>
             </tr>
             <tr>
-              <td class="py-1">{{ t('help.cron.fieldTable.month') }}</td>
-              <td class="py-1">{{ t('help.cron.fieldTable.monthValue') }}</td>
-              <td class="py-1 font-mono">, - * /</td>
+              <td class="py-1.5">{{ t('help.cron.fieldTable.month') }}</td>
+              <td class="py-1.5">{{ t('help.cron.fieldTable.monthValue') }}</td>
+              <td class="py-1.5 font-mono">, - * /</td>
             </tr>
             <tr>
-              <td class="py-1">{{ t('help.cron.fieldTable.week') }}</td>
-              <td class="py-1">{{ t('help.cron.fieldTable.weekValue') }}</td>
-              <td class="py-1 font-mono">, - * ? / L #</td>
+              <td class="py-1.5">{{ t('help.cron.fieldTable.week') }}</td>
+              <td class="py-1.5">{{ t('help.cron.fieldTable.weekValue') }}</td>
+              <td class="py-1.5 font-mono">, - * ? / L #</td>
             </tr>
             <tr>
-              <td class="py-1 text-slate-400 dark:text-slate-500">
+              <td class="py-1 text-slate-500 dark:text-slate-400">
                 {{ t('help.cron.fieldTable.yearOptional') }}
               </td>
-              <td class="py-1 text-slate-400 dark:text-slate-500">
+              <td class="py-1 text-slate-500 dark:text-slate-400">
                 {{ t('help.cron.fieldTable.yearValue') }}
               </td>
-              <td class="py-1 font-mono text-slate-400 dark:text-slate-500">, - * /</td>
+              <td class="py-1 font-mono text-slate-500 dark:text-slate-400">, - * /</td>
             </tr>
           </tbody>
         </table>
@@ -71,12 +71,12 @@
       <h3 class="font-medium text-slate-900 dark:text-slate-100">
         {{ t('help.cron.specialTitle') }}
       </h3>
-      <div class="grid grid-cols-2 gap-2 text-xs">
+      <div class="grid grid-cols-2 gap-2.5 text-[13px]">
         <div
           class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
         >
           <div class="font-mono text-blue-600 mb-0.5">*</div>
-          <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+          <div class="text-slate-500 dark:text-slate-400 text-[13px]">
             {{ t('help.cron.special.asterisk') }}
           </div>
         </div>
@@ -84,7 +84,7 @@
           class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
         >
           <div class="font-mono text-blue-600 mb-0.5">?</div>
-          <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+          <div class="text-slate-500 dark:text-slate-400 text-[13px]">
             {{ t('help.cron.special.question') }}
           </div>
         </div>
@@ -92,7 +92,7 @@
           class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
         >
           <div class="font-mono text-blue-600 mb-0.5">-</div>
-          <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+          <div class="text-slate-500 dark:text-slate-400 text-[13px]">
             {{ t('help.cron.special.dash') }}
           </div>
         </div>
@@ -100,7 +100,7 @@
           class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
         >
           <div class="font-mono text-blue-600 mb-0.5">,</div>
-          <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+          <div class="text-slate-500 dark:text-slate-400 text-[13px]">
             {{ t('help.cron.special.comma') }}
           </div>
         </div>
@@ -108,7 +108,7 @@
           class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
         >
           <div class="font-mono text-blue-600 mb-0.5">/</div>
-          <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+          <div class="text-slate-500 dark:text-slate-400 text-[13px]">
             {{ t('help.cron.special.slash') }}
           </div>
         </div>
@@ -116,7 +116,7 @@
           class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
         >
           <div class="font-mono text-blue-600 mb-0.5">L</div>
-          <div class="text-slate-500 dark:text-slate-400 text-[10px]">
+          <div class="text-slate-500 dark:text-slate-400 text-[13px]">
             {{ t('help.cron.special.l') }}
           </div>
         </div>
@@ -127,7 +127,7 @@
       <h3 class="font-medium text-slate-900 dark:text-slate-100">
         {{ t('help.cron.examplesTitle') }}
       </h3>
-      <div class="space-y-3 text-xs">
+      <div class="space-y-3 text-[13px]">
         <div>
           <div class="text-slate-500 dark:text-slate-400 mb-1">
             {{ t('help.cron.examples.daily') }}

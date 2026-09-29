@@ -66,10 +66,10 @@ watch(
 <template>
   <div class="mx-auto max-w-4xl px-4 py-6 sm:px-6">
     <div class="min-w-0">
-      <h1 class="truncate text-lg font-semibold tracking-tight text-slate-800 dark:text-slate-100">
+      <h1 class="truncate text-xl font-semibold tracking-tight text-slate-800 dark:text-slate-100">
         {{ t(activeSection.item.labelKey) }}
       </h1>
-      <p class="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
         {{ t('nav.settings') }} · {{ t(activeSection.groupLabelKey) }}
       </p>
     </div>
@@ -81,7 +81,7 @@ watch(
           v-for="item in SETTING_SECTION_ITEMS"
           :key="item.key"
           type="button"
-          class="shrink-0 rounded-md px-2.5 py-1.5 text-[13px] transition-colors"
+          class="shrink-0 rounded-md px-2.5 py-1.5 text-[14px] transition-colors"
           :class="
             item.key === activeKey
               ? 'bg-slate-200/70 text-slate-900 dark:bg-slate-700/60 dark:text-slate-100 font-medium'

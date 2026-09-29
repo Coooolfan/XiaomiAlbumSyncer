@@ -70,7 +70,7 @@ const backendCore = computed(() => [
     <template #actions>
       <Tag value="GPL-3.0" severity="info" />
     </template>
-    <p class="text-xs text-slate-500 dark:text-slate-400">
+    <p class="text-[13px] text-slate-500 dark:text-slate-400">
       {{ t('settings.openSource.intro') }}
     </p>
 
@@ -79,11 +79,11 @@ const backendCore = computed(() => [
         <div class="text-sm font-medium text-slate-700 dark:text-slate-200">
           {{ t('settings.openSource.frontendCore') }}
         </div>
-        <ul class="text-xs text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1">
+        <ul class="text-[13px] text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1.5">
           <li v-for="item in frontendCore" :key="item.name">
             <span class="text-slate-700 dark:text-slate-200">{{ item.name }}</span> ·
             {{ item.desc }} ·
-            <span class="text-slate-400 dark:text-slate-500">{{ item.license }}</span>
+            <span class="text-slate-500 dark:text-slate-400">{{ item.license }}</span>
           </li>
         </ul>
       </div>
@@ -92,11 +92,11 @@ const backendCore = computed(() => [
         <div class="text-sm font-medium text-slate-700 dark:text-slate-200">
           {{ t('settings.openSource.uiStack') }}
         </div>
-        <ul class="text-xs text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1">
+        <ul class="text-[13px] text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1.5">
           <li v-for="item in uiStack" :key="item.name">
             <span class="text-slate-700 dark:text-slate-200">{{ item.name }}</span> ·
             {{ item.desc }} ·
-            <span class="text-slate-400 dark:text-slate-500">{{ item.license }}</span>
+            <span class="text-slate-500 dark:text-slate-400">{{ item.license }}</span>
           </li>
         </ul>
       </div>
@@ -105,11 +105,11 @@ const backendCore = computed(() => [
         <div class="text-sm font-medium text-slate-700 dark:text-slate-200">
           {{ t('settings.openSource.tooling') }}
         </div>
-        <ul class="text-xs text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1">
+        <ul class="text-[13px] text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1.5">
           <li v-for="item in tooling" :key="item.name">
             <span class="text-slate-700 dark:text-slate-200">{{ item.name }}</span> ·
             {{ item.desc }} ·
-            <span class="text-slate-400 dark:text-slate-500">{{ item.license }}</span>
+            <span class="text-slate-500 dark:text-slate-400">{{ item.license }}</span>
           </li>
         </ul>
       </div>
@@ -118,11 +118,11 @@ const backendCore = computed(() => [
         <div class="text-sm font-medium text-slate-700 dark:text-slate-200">
           {{ t('settings.openSource.features') }}
         </div>
-        <ul class="text-xs text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1">
+        <ul class="text-[13px] text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1.5">
           <li v-for="item in features" :key="item.name">
             <span class="text-slate-700 dark:text-slate-200">{{ item.name }}</span> ·
             {{ item.desc }} ·
-            <span class="text-slate-400 dark:text-slate-500">{{ item.license }}</span>
+            <span class="text-slate-500 dark:text-slate-400">{{ item.license }}</span>
           </li>
         </ul>
       </div>
@@ -132,14 +132,14 @@ const backendCore = computed(() => [
       <div class="text-sm font-medium text-slate-700 dark:text-slate-200">
         {{ t('settings.openSource.backendCore') }}
       </div>
-      <ul class="mt-2 text-xs text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1">
+      <ul class="mt-2 text-[13px] text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-1.5">
         <li v-for="item in backendCore" :key="item.name">
           <span class="text-slate-700 dark:text-slate-200">{{ item.name }}</span> ·
           {{ item.desc }} ·
-          <span class="text-slate-400 dark:text-slate-500">{{ item.license }}</span>
+          <span class="text-slate-500 dark:text-slate-400">{{ item.license }}</span>
         </li>
       </ul>
-      <p class="text-xs text-slate-400 dark:text-slate-500 mt-3">
+      <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-3">
         {{ t('settings.openSource.depsListLead')
         }}<a
           class="text-blue-600 hover:underline"

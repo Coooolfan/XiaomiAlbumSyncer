@@ -9,10 +9,10 @@ defineProps<{
   <section>
     <header class="flex items-start justify-between gap-4">
       <div class="min-w-0">
-        <h2 class="text-[15px] font-semibold tracking-tight text-slate-800 dark:text-slate-100">
+        <h2 class="text-lg font-semibold tracking-tight text-slate-800 dark:text-slate-100">
           {{ title }}
         </h2>
-        <p v-if="description" class="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+        <p v-if="description" class="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
           {{ description }}
         </p>
       </div>

@@ -153,7 +153,7 @@ onMounted(() => {
               />
 
               <Divider>
-                <span class="text-xs text-slate-400 dark:text-slate-500">{{
+                <span class="text-[13px] text-slate-500 dark:text-slate-400">{{
                   t('auth.passkey.orPassword')
                 }}</span>
               </Divider>

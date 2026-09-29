@@ -49,10 +49,10 @@ function isActive(to: string) {
 function navItemClasses(to: string) {
   const active = isActive(to)
   return [
-    'group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors',
+    'group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[14px] transition-colors',
     active
       ? 'bg-slate-200/70 text-slate-900 dark:bg-slate-700/60 dark:text-slate-100 font-medium'
-      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 hover:text-slate-800 dark:hover:bg-slate-800/60 dark:hover:text-slate-200',
+      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 hover:text-slate-900 dark:hover:bg-slate-800/60 dark:hover:text-slate-100',
   ].join(' ')
 }
 
@@ -89,38 +89,34 @@ const runtimeLabel = computed(() => {
       class="hidden md:flex md:w-60 md:shrink-0 md:flex-col md:sticky md:top-0 md:h-screen border-r border-slate-200/80 dark:border-slate-800/80 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl"
     >
       <div class="flex items-center gap-2.5 px-4 pt-5 pb-4">
-        <div class="h-6 w-6 shrink-0">
+        <div class="h-[30px] w-[30px] shrink-0">
           <img src="/logo.avif" alt="Logo" class="h-full w-full object-contain" />
         </div>
         <div
-          class="truncate text-[13px] font-semibold tracking-tight text-slate-800 dark:text-slate-100"
+          class="truncate text-[15px] font-semibold tracking-tight text-slate-800 dark:text-slate-100"
         >
           Xiaomi Album Syncer
         </div>
       </div>
 
       <nav class="flex-1 overflow-y-auto px-3 pb-4">
-        <div
-          class="px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500"
-        >
+        <div class="px-2.5 pb-2 text-xs text-slate-500 dark:text-slate-400">
           {{ t('nav.console') }}
         </div>
         <div class="space-y-0.5">
           <template v-for="item in navItems" :key="item.to">
             <RouterLink :to="item.to" :class="navItemClasses(item.to)">
-              <i :class="[item.icon, 'text-[13px]']" />
+              <i :class="[item.icon, 'text-[14px]']" />
               <span class="truncate">{{ item.label }}</span>
             </RouterLink>
 
             <!-- 设置页子目录 -->
             <div
               v-if="item.to === '/dashboard/setting' && isSettingsRoute"
-              class="mb-2 ml-3 space-y-2.5 border-l border-slate-200/70 pl-2 dark:border-slate-700/60"
+              class="mb-2.5 mt-0.5 space-y-3 border-l border-slate-200/70 pl-3 dark:border-slate-700/60"
             >
               <div v-for="group in SETTING_SECTION_GROUPS" :key="group.labelKey">
-                <div
-                  class="px-2 pb-1 pt-1.5 text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500"
-                >
+                <div class="px-2.5 pb-1.5 text-xs text-slate-500 dark:text-slate-400">
                   {{ t(group.labelKey) }}
                 </div>
                 <div class="space-y-0.5">
@@ -128,15 +124,15 @@ const runtimeLabel = computed(() => {
                     v-for="section in group.items"
                     :key="section.key"
                     type="button"
-                    class="flex w-full items-center gap-2 rounded-md px-2 py-1 text-xs transition-colors"
+                    class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors"
                     :class="
                       section.key === activeSettingSection
                         ? 'bg-slate-200/70 text-slate-900 dark:bg-slate-700/60 dark:text-slate-100 font-medium'
-                        : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 hover:text-slate-800 dark:hover:bg-slate-800/60 dark:hover:text-slate-200'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 hover:text-slate-900 dark:hover:bg-slate-800/60 dark:hover:text-slate-100'
                     "
                     @click="selectSettingSection(section.key)"
                   >
-                    <i :class="[section.icon, 'text-[11px]']" />
+                    <i :class="[section.icon, 'text-[13px]']" />
                     <span class="truncate">{{ t(section.labelKey) }}</span>
                   </button>
                 </div>
@@ -149,11 +145,11 @@ const runtimeLabel = computed(() => {
       <div class="px-3 pb-2">
         <button
           type="button"
-          class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-200/50 hover:text-slate-800 dark:hover:bg-slate-800/60 dark:hover:text-slate-200 disabled:opacity-50"
+          class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[14px] text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-200/50 hover:text-slate-900 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 disabled:opacity-50"
           :disabled="loggingOut"
           @click="logout"
         >
-          <i :class="loggingOut ? 'pi pi-spin pi-spinner' : 'pi pi-sign-out'" class="text-[13px]" />
+          <i :class="loggingOut ? 'pi pi-spin pi-spinner' : 'pi pi-sign-out'" class="text-[14px]" />
           <span>{{ t('nav.logout') }}</span>
         </button>
       </div>
@@ -161,7 +157,7 @@ const runtimeLabel = computed(() => {
       <div class="border-t border-slate-200/80 dark:border-slate-800/80 px-3 py-3">
         <div
           v-if="systemInfo"
-          class="flex items-center gap-2 px-2 text-[11px] leading-4 text-slate-400 dark:text-slate-500"
+          class="flex items-center gap-2 px-2 text-xs leading-4 text-slate-500 dark:text-slate-400"
         >
           <div
             class="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -173,10 +169,10 @@ const runtimeLabel = computed(() => {
           <a
             href="https://github.com/coooolfan/xiaomialbumsyncer"
             target="_blank"
-            class="ml-auto text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+            class="ml-auto text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
             aria-label="GitHub"
           >
-            <i class="pi pi-github text-[13px]" />
+            <i class="pi pi-github text-[14px]" />
           </a>
         </div>
       </div>
@@ -189,33 +185,33 @@ const runtimeLabel = computed(() => {
       >
         <div class="flex items-center justify-between px-4 py-2.5">
           <div class="flex items-center gap-2">
-            <img src="/logo.avif" alt="Logo" class="h-5 w-5 object-contain" />
-            <span class="text-[13px] font-semibold text-slate-800 dark:text-slate-100">XAS</span>
+            <img src="/logo.avif" alt="Logo" class="h-6 w-6 object-contain" />
+            <span class="text-[14px] font-semibold text-slate-800 dark:text-slate-100">XAS</span>
           </div>
           <nav class="flex items-center gap-1">
             <RouterLink
               v-for="item in navItems"
               :key="item.to"
               :to="item.to"
-              class="rounded-md px-2.5 py-1 text-[13px] transition-colors"
+              class="rounded-md px-2.5 py-1 text-[14px] transition-colors"
               :class="
                 isActive(item.to)
                   ? 'bg-slate-200/70 text-slate-900 dark:bg-slate-700/60 dark:text-slate-100 font-medium'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
               "
             >
               {{ item.label }}
             </RouterLink>
             <button
               type="button"
-              class="ml-1 rounded-md p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/60 transition-colors"
+              class="ml-1 rounded-md p-1.5 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/60 transition-colors"
               :disabled="loggingOut"
               :aria-label="t('nav.logout')"
               @click="logout"
             >
               <i
                 :class="loggingOut ? 'pi pi-spin pi-spinner' : 'pi pi-sign-out'"
-                class="text-[13px]"
+                class="text-[14px]"
               />
             </button>
           </nav>

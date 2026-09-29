@@ -271,11 +271,11 @@ watch(showHistoryDetailsDialog, (visible) => {
     <div class="flex items-center justify-between">
       <div class="min-w-0">
         <h1
-          class="truncate text-lg font-semibold tracking-tight text-slate-800 dark:text-slate-100"
+          class="truncate text-xl font-semibold tracking-tight text-slate-800 dark:text-slate-100"
         >
           {{ t('schedule.title') }}
         </h1>
-        <p class="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {{ t('schedule.subtitle') }}
         </p>
       </div>
@@ -322,15 +322,13 @@ watch(showHistoryDetailsDialog, (visible) => {
 
     <!-- Task list -->
     <div class="mt-6">
-      <div class="mb-2 flex items-center gap-2 px-1">
-        <h2
-          class="text-[11px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500"
-        >
+      <div class="mb-2.5 flex items-center gap-2 px-1">
+        <h2 class="text-sm font-medium text-slate-600 dark:text-slate-300">
           {{ t('schedule.taskList') }}
         </h2>
         <span
           v-if="crontabs?.length"
-          class="rounded-full bg-slate-200/70 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-700/70 dark:text-slate-400"
+          class="rounded-full bg-slate-200/70 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700/70 dark:text-slate-300"
         >
           {{ crontabs.length }}
         </span>
@@ -355,10 +353,8 @@ watch(showHistoryDetailsDialog, (visible) => {
 
     <!-- Albums -->
     <div class="mt-6">
-      <div class="mb-2 px-1">
-        <h2
-          class="text-[11px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500"
-        >
+      <div class="mb-2.5 px-1">
+        <h2 class="text-sm font-medium text-slate-600 dark:text-slate-300">
           {{ t('schedule.albums') }}
         </h2>
       </div>

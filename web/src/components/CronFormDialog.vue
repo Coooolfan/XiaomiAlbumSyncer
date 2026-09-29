@@ -193,7 +193,7 @@ watch(
             ]"
           />
         </div>
-        <span class="text-xs text-slate-400 dark:text-slate-500 truncate">{{ stepTitle }}</span>
+        <span class="text-[13px] text-slate-500 dark:text-slate-400 truncate">{{ stepTitle }}</span>
       </div>
     </template>
 
@@ -203,7 +203,7 @@ watch(
           <!-- 基本信息 -->
           <div v-if="step === 'basic'" key="basic" class="space-y-4 pt-2">
             <div class="space-y-2">
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+              <label class="block text-[13px] font-medium text-slate-500 dark:text-slate-400">{{
                 t('common.field.name')
               }}</label>
               <InputText
@@ -212,11 +212,13 @@ watch(
                 class="w-full"
                 autofocus
               />
-              <div v-if="formErrors.name" class="text-xs text-red-500">{{ formErrors.name }}</div>
+              <div v-if="formErrors.name" class="text-[13px] text-red-600">
+                {{ formErrors.name }}
+              </div>
             </div>
 
             <div class="space-y-2">
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+              <label class="block text-[13px] font-medium text-slate-500 dark:text-slate-400">{{
                 t('common.field.description')
               }}</label>
               <Textarea
@@ -229,7 +231,7 @@ watch(
             </div>
 
             <div class="space-y-2">
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+              <label class="block text-[13px] font-medium text-slate-500 dark:text-slate-400">{{
                 t('cronform.field.account')
               }}</label>
               <Select
@@ -241,10 +243,10 @@ watch(
                 class="w-full"
                 :disabled="props.isEditing"
               />
-              <div v-if="formErrors.accountId" class="text-xs text-red-500">
+              <div v-if="formErrors.accountId" class="text-[13px] text-red-600">
                 {{ formErrors.accountId }}
               </div>
-              <div v-if="props.isEditing" class="text-[10px] text-slate-400 dark:text-slate-500">
+              <div v-if="props.isEditing" class="text-[13px] text-slate-500 dark:text-slate-400">
                 {{ t('cronform.field.accountLockedHint') }}
               </div>
             </div>
@@ -253,7 +255,7 @@ watch(
           <!-- 同步范围 -->
           <div v-else-if="step === 'scope'" key="scope" class="space-y-4 pt-2">
             <div class="space-y-2">
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+              <label class="block text-[13px] font-medium text-slate-500 dark:text-slate-400">{{
                 t('cronform.field.albums')
               }}</label>
               <MultiSelect
@@ -269,22 +271,22 @@ watch(
             </div>
 
             <div class="grid grid-cols-3 gap-4">
-              <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+              <div class="flex items-center gap-2 text-[13px] text-slate-600 dark:text-slate-300">
                 <Checkbox v-model="form.config.downloadImages" binary />
                 <span>{{ t('cronform.toggle.downloadImages') }}</span>
               </div>
-              <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+              <div class="flex items-center gap-2 text-[13px] text-slate-600 dark:text-slate-300">
                 <Checkbox v-model="form.config.downloadVideos" binary />
                 <span>{{ t('cronform.toggle.downloadVideos') }}</span>
               </div>
-              <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+              <div class="flex items-center gap-2 text-[13px] text-slate-600 dark:text-slate-300">
                 <Checkbox v-model="form.config.downloadAudios" binary />
                 <span>{{ t('cronform.toggle.downloadAudios') }}</span>
               </div>
             </div>
 
             <Message severity="info" variant="simple" icon="pi pi-info-circle">
-              <i18n-t keypath="cronform.notice.text" tag="div" class="text-[12px]">
+              <i18n-t keypath="cronform.notice.text" tag="div" class="text-[13px]">
                 <template #records>
                   <span class="font-semibold">{{ t('cronform.notice.records') }}</span>
                 </template>
@@ -322,7 +324,7 @@ watch(
                 <Tag
                   :value="t(`cronform.badge.${card.badge}`)"
                   :severity="card.badge === 'beta' ? 'warn' : 'success'"
-                  class="text-[10px]! px-1.5! py-0!"
+                  class="text-xs! px-1.5! py-0!"
                 />
               </template>
             </OptionCard>
@@ -330,7 +332,7 @@ watch(
 
           <!-- 调度与存储 -->
           <div v-else key="schedule" class="space-y-4 pt-2">
-            <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+            <div class="flex items-center gap-2 text-[13px] text-slate-600 dark:text-slate-300">
               <Checkbox v-model="form.enabled" binary />
               <span>{{ t('cronform.toggle.enabled') }}</span>
             </div>
@@ -338,7 +340,7 @@ watch(
             <div v-if="form.enabled" class="grid grid-cols-2 gap-4">
               <div class="space-y-2">
                 <div class="flex items-center justify-between">
-                  <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+                  <label class="block text-[13px] font-medium text-slate-500 dark:text-slate-400">{{
                     t('cronform.field.expression')
                   }}</label>
                   <Button
@@ -357,19 +359,20 @@ watch(
                   @focus="openCronHelp"
                 />
 
-                <div v-if="formErrors.expression" class="text-xs text-red-500">
+                <div v-if="formErrors.expression" class="text-[13px] text-red-600">
                   {{ formErrors.expression }}
                 </div>
-                <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                <div class="text-[13px] text-slate-500 dark:text-slate-400">
                   {{ t('cronform.field.expressionHint') }}<br />{{
                     t('cronform.field.expressionExample')
                   }}
                 </div>
               </div>
               <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-4">{{
-                  t('cronform.field.timeZone')
-                }}</label>
+                <label
+                  class="block text-[13px] font-medium text-slate-500 dark:text-slate-400 mb-4"
+                  >{{ t('cronform.field.timeZone') }}</label
+                >
                 <Select
                   v-model="form.config.timeZone"
                   :options="timeZones"
@@ -377,7 +380,7 @@ watch(
                   filter
                   class="w-full"
                 />
-                <div v-if="formErrors.timeZone" class="text-xs text-red-500">
+                <div v-if="formErrors.timeZone" class="text-[13px] text-red-600">
                   {{ formErrors.timeZone }}
                 </div>
               </div>
@@ -385,7 +388,7 @@ watch(
 
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+                <label class="block text-[13px] font-medium text-slate-500 dark:text-slate-400">{{
                   t('cronform.field.targetPath')
                 }}</label>
                 <div class="flex items-center gap-2">
@@ -399,7 +402,7 @@ watch(
                     class="w-6! h-6!"
                     @click="toggleExpressionHelp"
                   />
-                  <span class="text-xs text-slate-500 dark:text-slate-400">{{
+                  <span class="text-[13px] text-slate-500 dark:text-slate-400">{{
                     t('cronform.field.useExpressionPath')
                   }}</span>
                   <Checkbox v-model="useExpressionPath" binary />
@@ -413,10 +416,10 @@ watch(
                 class="w-full"
                 @focus="useExpressionPath && openExpressionHelp()"
               />
-              <div v-if="formErrors.targetPath" class="text-xs text-red-500">
+              <div v-if="formErrors.targetPath" class="text-[13px] text-red-600">
                 {{ formErrors.targetPath }}
               </div>
-              <div class="text-[10px] text-slate-400 dark:text-slate-500">
+              <div class="text-[13px] text-slate-500 dark:text-slate-400">
                 {{
                   useExpressionPath
                     ? t('cronform.field.targetPathExpressionHint')
@@ -429,13 +432,15 @@ watch(
                 variant="simple"
                 icon="pi pi-exclamation-triangle"
               >
-                <div class="text-[11px]">
+                <div class="text-[13px]">
                   {{ t('cronform.field.targetPathMountWarning') }}
                 </div>
               </Message>
             </div>
 
-            <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 pt-1">
+            <div
+              class="flex items-center gap-2 text-[13px] text-slate-600 dark:text-slate-300 pt-1"
+            >
               <Checkbox v-model="form.config.notify" binary />
               <span>{{ t('cronform.toggle.notify') }}</span>
             </div>
@@ -443,38 +448,46 @@ watch(
             <Panel :header="t('cronform.advanced.title')" toggleable collapsed>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="space-y-1">
-                  <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                  <div
+                    class="flex items-center gap-2 text-[13px] text-slate-600 dark:text-slate-300"
+                  >
                     <ToggleSwitch v-model="form.config.rewriteExifTime" />
                     <span>{{ t('cronform.advanced.rewriteExifTime') }}</span>
                   </div>
-                  <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                  <div class="text-[13px] text-slate-500 dark:text-slate-400">
                     {{ t('cronform.advanced.rewriteExifTimeHint') }}
                   </div>
                 </div>
                 <div class="space-y-1">
-                  <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                  <div
+                    class="flex items-center gap-2 text-[13px] text-slate-600 dark:text-slate-300"
+                  >
                     <ToggleSwitch v-model="form.config.skipExistingFile" />
                     <span>{{ t('cronform.advanced.skipExistingFile') }}</span>
                   </div>
-                  <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                  <div class="text-[13px] text-slate-500 dark:text-slate-400">
                     {{ t('cronform.advanced.skipExistingFileHint') }}
                   </div>
                 </div>
                 <div class="space-y-1">
-                  <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                  <div
+                    class="flex items-center gap-2 text-[13px] text-slate-600 dark:text-slate-300"
+                  >
                     <ToggleSwitch v-model="form.config.rewriteFileSystemTime" />
                     <span>{{ t('cronform.advanced.rewriteFileSystemTime') }}</span>
                   </div>
-                  <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                  <div class="text-[13px] text-slate-500 dark:text-slate-400">
                     {{ t('cronform.advanced.rewriteFileSystemTimeHint') }}
                   </div>
                 </div>
                 <div class="space-y-1">
-                  <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                  <div
+                    class="flex items-center gap-2 text-[13px] text-slate-600 dark:text-slate-300"
+                  >
                     <ToggleSwitch v-model="form.config.checkSha1" />
                     <span>{{ t('cronform.advanced.checkSha1') }}</span>
                   </div>
-                  <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                  <div class="text-[13px] text-slate-500 dark:text-slate-400">
                     {{ t('cronform.advanced.checkSha1Hint')
                     }}<span class="font-bold">{{ t('cronform.advanced.checkSha1Warning') }}</span>
                   </div>
@@ -482,7 +495,7 @@ watch(
               </div>
 
               <div v-if="form.config.rewriteExifTime" class="space-y-2 mt-3">
-                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
+                <label class="block text-[13px] font-medium text-slate-500 dark:text-slate-400">{{
                   t('cronform.advanced.exifTimeZone')
                 }}</label>
                 <Select
@@ -492,21 +505,22 @@ watch(
                   filter
                   class="w-full"
                 />
-                <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                <div class="text-[13px] text-slate-500 dark:text-slate-400">
                   {{ t('cronform.advanced.exifTimeZoneHint') }}
                 </div>
               </div>
 
               <Panel :header="t('cronform.concurrency.title')" toggleable collapsed class="mt-4">
-                <div class="text-[10px] text-slate-400 dark:text-slate-500 mb-4">
+                <div class="text-[13px] text-slate-500 dark:text-slate-400 mb-4">
                   {{ t('cronform.concurrency.warning') }}
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <div class="space-y-2">
-                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
-                      t('cronform.concurrency.fetchFromDbSize')
-                    }}</label>
+                    <label
+                      class="block text-[13px] font-medium text-slate-500 dark:text-slate-400"
+                      >{{ t('cronform.concurrency.fetchFromDbSize') }}</label
+                    >
                     <InputNumber
                       v-model="form.config.fetchFromDbSize"
                       :min="1"
@@ -523,18 +537,19 @@ watch(
                         <span class="pi pi-minus" />
                       </template>
                     </InputNumber>
-                    <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                    <div class="text-[13px] text-slate-500 dark:text-slate-400">
                       {{ t('cronform.concurrency.fetchFromDbSizeHint') }}
                     </div>
-                    <div v-if="formErrors.concurrency" class="text-xs text-red-500">
+                    <div v-if="formErrors.concurrency" class="text-[13px] text-red-600">
                       {{ formErrors.concurrency }}
                     </div>
                   </div>
 
                   <div class="space-y-2">
-                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
-                      t('cronform.concurrency.downloaders')
-                    }}</label>
+                    <label
+                      class="block text-[13px] font-medium text-slate-500 dark:text-slate-400"
+                      >{{ t('cronform.concurrency.downloaders') }}</label
+                    >
                     <InputNumber
                       v-model="form.config.downloaders"
                       :min="1"
@@ -551,15 +566,16 @@ watch(
                         <span class="pi pi-minus" />
                       </template>
                     </InputNumber>
-                    <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                    <div class="text-[13px] text-slate-500 dark:text-slate-400">
                       {{ t('cronform.concurrency.downloadersHint') }}
                     </div>
                   </div>
 
                   <div class="space-y-2">
-                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
-                      t('cronform.concurrency.fileTimeWorkers')
-                    }}</label>
+                    <label
+                      class="block text-[13px] font-medium text-slate-500 dark:text-slate-400"
+                      >{{ t('cronform.concurrency.fileTimeWorkers') }}</label
+                    >
                     <InputNumber
                       v-model="form.config.fileTimeWorkers"
                       :min="1"
@@ -576,15 +592,16 @@ watch(
                         <span class="pi pi-minus" />
                       </template>
                     </InputNumber>
-                    <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                    <div class="text-[13px] text-slate-500 dark:text-slate-400">
                       {{ t('cronform.concurrency.fileTimeWorkersHint') }}
                     </div>
                   </div>
 
                   <div class="space-y-2">
-                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
-                      t('cronform.concurrency.verifiers')
-                    }}</label>
+                    <label
+                      class="block text-[13px] font-medium text-slate-500 dark:text-slate-400"
+                      >{{ t('cronform.concurrency.verifiers') }}</label
+                    >
                     <InputNumber
                       v-model="form.config.verifiers"
                       :min="1"
@@ -601,15 +618,16 @@ watch(
                         <span class="pi pi-minus" />
                       </template>
                     </InputNumber>
-                    <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                    <div class="text-[13px] text-slate-500 dark:text-slate-400">
                       {{ t('cronform.concurrency.verifiersHint') }}
                     </div>
                   </div>
 
                   <div class="space-y-2">
-                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{
-                      t('cronform.concurrency.exifProcessors')
-                    }}</label>
+                    <label
+                      class="block text-[13px] font-medium text-slate-500 dark:text-slate-400"
+                      >{{ t('cronform.concurrency.exifProcessors') }}</label
+                    >
                     <InputNumber
                       v-model="form.config.exifProcessors"
                       :min="1"
@@ -626,7 +644,7 @@ watch(
                         <span class="pi pi-minus" />
                       </template>
                     </InputNumber>
-                    <div class="text-[10px] text-slate-400 dark:text-slate-500">
+                    <div class="text-[13px] text-slate-500 dark:text-slate-400">
                       {{ t('cronform.concurrency.exifProcessorsHint') }}
                     </div>
                   </div>

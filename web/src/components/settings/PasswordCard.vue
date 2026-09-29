@@ -101,7 +101,7 @@ async function confirmUpdatePassword() {
     />
     <div
       v-if="isInsecureContext"
-      class="mt-3 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
+      class="mt-3 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-[13px] px-3 py-2 ring-1 ring-red-200 dark:ring-red-900/70"
     >
       {{ t('settings.password.insecureWarning') }}
     </div>

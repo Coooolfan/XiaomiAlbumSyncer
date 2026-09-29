@@ -214,12 +214,20 @@ const lastRunStatus = computed(() => {
   if (h.isCompleted)
     return {
       label: t('schedule.status.completed'),
-      class: 'text-emerald-500',
+      class: 'text-emerald-700 dark:text-emerald-400',
       dot: 'bg-emerald-500',
     }
   if (!h.endTime)
-    return { label: t('schedule.status.running'), class: 'text-blue-500', dot: 'bg-blue-500' }
-  return { label: t('schedule.status.terminated'), class: 'text-amber-500', dot: 'bg-amber-500' }
+    return {
+      label: t('schedule.status.running'),
+      class: 'text-blue-700 dark:text-blue-400',
+      dot: 'bg-blue-500',
+    }
+  return {
+    label: t('schedule.status.terminated'),
+    class: 'text-amber-700 dark:text-amber-400',
+    dot: 'bg-amber-500',
+  }
 })
 
 const enabledOptionTags = computed(() => {
@@ -350,7 +358,7 @@ onUnmounted(() => {
   <div class="group/row">
     <!-- Collapsed row -->
     <div
-      class="flex h-11 cursor-pointer items-center gap-3 px-4 transition-colors hover:bg-slate-100/70 dark:hover:bg-slate-800/50"
+      class="flex h-12 cursor-pointer items-center gap-3 px-4 transition-colors hover:bg-slate-100/70 dark:hover:bg-slate-800/50"
       :class="expanded ? 'bg-slate-100/60 dark:bg-slate-800/40' : ''"
       @click="emit('toggleExpand')"
     >
@@ -382,12 +390,12 @@ onUnmounted(() => {
 
       <!-- name + description -->
       <div class="flex min-w-0 flex-1 items-baseline gap-2">
-        <span class="truncate text-[13px] font-medium text-slate-800 dark:text-slate-100">
+        <span class="truncate text-[14px] font-medium text-slate-800 dark:text-slate-100">
           {{ crontab.name }}
         </span>
         <span
           v-if="crontab.description"
-          class="hidden truncate text-xs text-slate-400 dark:text-slate-500 xl:inline"
+          class="hidden truncate text-[13px] text-slate-500 dark:text-slate-400 xl:inline"
         >
           {{ crontab.description }}
         </span>
@@ -404,11 +412,13 @@ onUnmounted(() => {
             :style="{ width: downloadPercent + '%' }"
           />
         </div>
-        <span class="font-mono text-[10px] text-slate-400">{{ downloadPercent }}%</span>
+        <span class="font-mono text-[13px] tabular-nums text-slate-500 dark:text-slate-400"
+          >{{ downloadPercent }}%</span
+        >
       </div>
       <span
         v-else-if="crontab.running"
-        class="hidden shrink-0 text-[11px] text-blue-500 lg:inline"
+        class="hidden shrink-0 text-[13px] text-blue-700 dark:text-blue-400 lg:inline"
         >{{ t('schedule.row.running') }}</span
       >
 
@@ -457,21 +467,21 @@ onUnmounted(() => {
 
       <!-- cron -->
       <span
-        class="hidden shrink-0 font-mono text-[11px] text-slate-400 dark:text-slate-500 lg:inline"
+        class="hidden shrink-0 font-mono text-[13px] text-slate-500 dark:text-slate-400 lg:inline"
       >
         {{ crontab.config?.expression }}
       </span>
 
       <!-- account -->
       <span
-        class="hidden w-20 shrink-0 truncate text-[11px] text-slate-400 dark:text-slate-500 2xl:inline"
+        class="hidden w-20 shrink-0 truncate text-[13px] text-slate-500 dark:text-slate-400 2xl:inline"
       >
         {{ crontab.account?.nickname || '-' }}
       </span>
 
       <!-- last run -->
       <span
-        class="hidden shrink-0 items-center gap-1.5 text-[11px] sm:flex"
+        class="hidden shrink-0 items-center gap-1.5 text-[13px] sm:flex"
         :class="lastRunStatus ? lastRunStatus.class : 'text-slate-300 dark:text-slate-600'"
       >
         <template v-if="lastRunStatus">
@@ -482,7 +492,7 @@ onUnmounted(() => {
       </span>
 
       <i
-        class="pi shrink-0 text-[10px] text-slate-400 transition-transform duration-200"
+        class="pi shrink-0 text-[13px] text-slate-500 dark:text-slate-400 transition-transform duration-200"
         :class="expanded ? 'pi-chevron-up' : 'pi-chevron-down'"
       />
     </div>
@@ -495,27 +505,27 @@ onUnmounted(() => {
       <div class="grid gap-5 lg:grid-cols-2">
         <!-- left: config -->
         <div class="min-w-0 space-y-3">
-          <div v-if="crontab.description" class="text-[13px] text-slate-500 dark:text-slate-400">
+          <div v-if="crontab.description" class="text-[14px] text-slate-500 dark:text-slate-400">
             {{ crontab.description }}
           </div>
 
-          <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[13px]">
-            <dt class="text-slate-400 dark:text-slate-500">{{ t('schedule.row.account') }}</dt>
+          <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[14px]">
+            <dt class="text-slate-500 dark:text-slate-400">{{ t('schedule.row.account') }}</dt>
             <dd class="truncate text-slate-700 dark:text-slate-200">
               {{ crontab.account?.nickname || '-' }}
             </dd>
-            <dt class="text-slate-400 dark:text-slate-500">{{ t('schedule.row.schedule') }}</dt>
-            <dd class="font-mono text-xs text-slate-700 dark:text-slate-200">
+            <dt class="text-slate-500 dark:text-slate-400">{{ t('schedule.row.schedule') }}</dt>
+            <dd class="font-mono text-[13px] text-slate-700 dark:text-slate-200">
               {{ crontab.config?.expression }}
-              <span class="ml-1 font-sans text-slate-400 dark:text-slate-500"
+              <span class="ml-1 font-sans text-slate-500 dark:text-slate-400"
                 >({{ crontab.config?.timeZone }})</span
               >
             </dd>
-            <dt class="text-slate-400 dark:text-slate-500">{{ t('schedule.row.targetPath') }}</dt>
-            <dd class="truncate font-mono text-xs text-slate-700 dark:text-slate-200">
+            <dt class="text-slate-500 dark:text-slate-400">{{ t('schedule.row.targetPath') }}</dt>
+            <dd class="truncate font-mono text-[13px] text-slate-700 dark:text-slate-200">
               {{ crontab.config?.targetPath ? displayTargetPath(crontab.config.targetPath) : '-' }}
             </dd>
-            <dt class="text-slate-400 dark:text-slate-500">{{ t('common.field.status') }}</dt>
+            <dt class="text-slate-500 dark:text-slate-400">{{ t('common.field.status') }}</dt>
             <dd class="flex items-center gap-2">
               <ToggleSwitch
                 :modelValue="crontab.enabled"
@@ -523,11 +533,11 @@ onUnmounted(() => {
                 @update:modelValue="() => emit('toggle')"
               />
               <span
-                class="text-xs"
+                class="text-[13px]"
                 :class="
                   crontab.enabled
                     ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-slate-400 dark:text-slate-500'
+                    : 'text-slate-500 dark:text-slate-400'
                 "
               >
                 {{ crontab.enabled ? t('schedule.row.enabled') : t('schedule.row.disabled') }}
@@ -539,13 +549,13 @@ onUnmounted(() => {
             <span
               v-for="tag in enabledOptionTags"
               :key="tag"
-              class="rounded border border-slate-200/80 px-1.5 py-0.5 text-[11px] text-slate-500 dark:border-slate-700/80 dark:text-slate-400"
+              class="rounded border border-slate-200/80 px-1.5 py-0.5 text-[13px] text-slate-600 dark:border-slate-700/80 dark:text-slate-300"
             >
               {{ tag }}
             </span>
             <span
               v-if="enabledOptionTags.length === 0"
-              class="text-[11px] text-slate-400 dark:text-slate-500"
+              class="text-[13px] text-slate-500 dark:text-slate-400"
               >{{ t('schedule.row.noOptions') }}</span
             >
           </div>
@@ -555,7 +565,7 @@ onUnmounted(() => {
               v-for="id in crontab.albumIds"
               :key="id"
               :label="albumMap[String(id)]?.label || String(id)"
-              class="!h-6 !px-2 text-[11px]"
+              class="!h-6 !px-2 text-[13px]"
               v-tooltip="isShadowAlbum(id) ? t('schedule.row.shadowAlbumTip') : undefined"
               :class="
                 isShadowAlbum(id)
@@ -565,7 +575,7 @@ onUnmounted(() => {
             />
             <span
               v-if="!crontab.albumIds || crontab.albumIds.length === 0"
-              class="text-[11px] text-slate-400 dark:text-slate-500"
+              class="text-[13px] text-slate-500 dark:text-slate-400"
               >{{ t('schedule.row.noAlbums') }}</span
             >
           </div>
@@ -579,20 +589,20 @@ onUnmounted(() => {
           >
             <div class="mb-2 flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <i class="pi pi-spin pi-spinner text-xs text-blue-500" />
-                <span class="text-xs font-medium text-blue-700 dark:text-blue-300">{{
+                <i class="pi pi-spin pi-spinner text-[13px] text-blue-500" />
+                <span class="text-[13px] font-medium text-blue-700 dark:text-blue-300">{{
                   t('schedule.row.executing')
                 }}</span>
               </div>
               <div class="flex flex-col items-end">
                 <span
-                  class="font-mono text-[10px] text-blue-600/60 dark:text-blue-300/70"
+                  class="font-mono text-[13px] text-blue-600/70 dark:text-blue-300/80"
                   :title="t('schedule.row.statsFetchedAt')"
                   >{{
                     currentStats?.ts ? new Date(currentStats.ts).toLocaleTimeString(locale) : ''
                   }}</span
                 >
-                <span v-if="lastFetchTime" class="font-mono text-[9px] text-blue-400">
+                <span v-if="lastFetchTime" class="font-mono text-[13px] text-blue-500/80">
                   {{
                     t('schedule.row.statsAge', {
                       n: ((now - lastFetchTime) / 1000).toFixed(1),
@@ -604,7 +614,7 @@ onUnmounted(() => {
 
             <div v-if="currentStats" class="space-y-2">
               <div
-                class="flex items-center justify-between border-b border-blue-100 pb-1 text-xs dark:border-blue-900/60"
+                class="flex items-center justify-between border-b border-blue-100 pb-1.5 text-[13px] dark:border-blue-900/60"
               >
                 <span class="text-slate-500 dark:text-slate-400">{{
                   t('schedule.row.totalAssets')
@@ -614,14 +624,14 @@ onUnmounted(() => {
                 }}</span>
               </div>
 
-              <div v-if="currentStats.downloadCompletedCount !== undefined" class="text-xs">
+              <div v-if="currentStats.downloadCompletedCount !== undefined" class="text-[13px]">
                 <div class="mb-1 flex items-center justify-between">
                   <span class="text-slate-500 dark:text-slate-400">{{
                     t('schedule.row.downloadProgress')
                   }}</span>
                   <span class="font-mono text-slate-700 dark:text-slate-200"
                     >{{ currentStats.downloadCompletedCount }}
-                    <span v-if="currentStats.assetCount" class="text-slate-400 dark:text-slate-500"
+                    <span v-if="currentStats.assetCount" class="text-slate-500 dark:text-slate-400"
                       >/ {{ currentStats.assetCount }}</span
                     ></span
                   >
@@ -639,7 +649,7 @@ onUnmounted(() => {
 
               <div
                 v-if="currentStats.sha1VerifiedCount !== undefined && crontab.config?.checkSha1"
-                class="text-xs"
+                class="text-[13px]"
               >
                 <div class="mb-1 flex items-center justify-between">
                   <span class="text-slate-500 dark:text-slate-400">{{
@@ -662,7 +672,7 @@ onUnmounted(() => {
 
               <div
                 v-if="currentStats.exifFilledCount !== undefined && crontab.config?.rewriteExifTime"
-                class="text-xs"
+                class="text-[13px]"
               >
                 <div class="mb-1 flex items-center justify-between">
                   <span class="text-slate-500 dark:text-slate-400">{{
@@ -688,7 +698,7 @@ onUnmounted(() => {
                   currentStats.fsTimeUpdatedCount !== undefined &&
                   crontab.config?.rewriteFileSystemTime
                 "
-                class="text-xs"
+                class="text-[13px]"
               >
                 <div class="mb-1 flex items-center justify-between">
                   <span class="text-slate-500 dark:text-slate-400">{{
@@ -709,50 +719,50 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
-            <div v-else class="py-1 text-xs text-slate-400 dark:text-slate-500">
+            <div v-else class="py-1 text-[13px] text-slate-500 dark:text-slate-400">
               {{ t('schedule.row.fetchingRemote') }}
             </div>
           </div>
 
           <div>
             <div class="mb-1.5 flex items-center justify-between">
-              <span
-                class="text-[11px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500"
-              >
+              <span class="text-[13px] font-medium text-slate-500 dark:text-slate-400">
                 {{ t('schedule.row.recentRuns') }}
               </span>
               <div
                 v-if="historyGroupsTotal > HISTORY_PAGE_SIZE"
-                class="flex items-center mr-2 gap-0.5 text-[9px] leading-none text-slate-400 dark:text-slate-500"
+                class="mr-2 flex items-center gap-1 text-[13px] leading-none text-slate-500 dark:text-slate-400"
               >
                 <button
                   type="button"
-                  class="transition-colors hover:text-slate-600 disabled:opacity-40 dark:hover:text-slate-200"
+                  class="rounded px-0.5 transition-colors hover:bg-slate-200/60 hover:text-slate-700 disabled:opacity-40 dark:hover:bg-slate-800/70 dark:hover:text-slate-200"
                   :disabled="historyPageIndex === 0 || historyLoading"
+                  :aria-label="t('common.action.prevPage')"
                   @click="gotoHistoryPage(-1)"
                 >
-                  <i class="pi pi-angle-left text-[7px]" />
+                  <i class="pi pi-angle-left" />
                 </button>
                 <span class="tabular-nums">{{ historyPageIndex + 1 }}/{{ historyTotalPages }}</span>
                 <button
                   type="button"
-                  class="transition-colors hover:text-slate-600 disabled:opacity-40 dark:hover:text-slate-200"
+                  class="rounded px-0.5 transition-colors hover:bg-slate-200/60 hover:text-slate-700 disabled:opacity-40 dark:hover:bg-slate-800/70 dark:hover:text-slate-200"
                   :disabled="historyPageIndex + 1 >= historyTotalPages || historyLoading"
+                  :aria-label="t('common.action.nextPage')"
                   @click="gotoHistoryPage(1)"
                 >
-                  <i class="pi pi-angle-right text-[7px]" />
+                  <i class="pi pi-angle-right" />
                 </button>
               </div>
             </div>
             <div
               v-if="historyLoading && !historyLoaded"
-              class="text-xs text-slate-400 dark:text-slate-500"
+              class="text-[13px] text-slate-500 dark:text-slate-400"
             >
               {{ t('common.status.loading') }}
             </div>
             <div
               v-else-if="historyGroups.length === 0"
-              class="text-xs text-slate-400 dark:text-slate-500"
+              class="text-[13px] text-slate-500 dark:text-slate-400"
             >
               {{ t('schedule.row.noHistory') }}
             </div>
@@ -761,7 +771,7 @@ onUnmounted(() => {
                 v-for="g in historyGroups"
                 :key="g.historyId + '-' + g.runCount"
                 type="button"
-                class="flex w-full items-center justify-between rounded-md px-2 py-1 text-left transition-colors"
+                class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left transition-colors"
                 :class="
                   g.runCount === 1
                     ? 'hover:bg-slate-200/60 dark:hover:bg-slate-800/70'
@@ -774,12 +784,12 @@ onUnmounted(() => {
                     class="h-1.5 w-1.5 shrink-0 rounded-full"
                     :class="g.endTime ? 'bg-emerald-500' : 'bg-blue-500'"
                   />
-                  <span class="truncate text-xs text-slate-600 dark:text-slate-300">
+                  <span class="truncate text-[13px] text-slate-700 dark:text-slate-200">
                     {{ formatTime(g.startTime) }} → {{ formatTime(g.endTime) }}
                   </span>
                 </div>
                 <div class="flex shrink-0 items-center gap-2">
-                  <span class="text-[11px] text-slate-400 dark:text-slate-500">
+                  <span class="text-[13px] text-slate-500 dark:text-slate-400">
                     {{
                       g.runCount > 1
                         ? t('schedule.row.checks', { n: g.runCount }, g.runCount)
@@ -791,7 +801,7 @@ onUnmounted(() => {
                     :value="
                       g.endTime ? t('schedule.status.completed') : t('schedule.status.running')
                     "
-                    class="!h-5 !px-1.5 !text-[10px]"
+                    class="!h-6 !px-2 !text-[13px]"
                   />
                 </div>
               </button>

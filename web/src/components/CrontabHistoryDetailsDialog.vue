@@ -124,7 +124,7 @@ function handlePage(event: { page?: number; rows?: number }) {
   })
 }
 
-const stepTagClass = '!whitespace-nowrap !text-xs'
+const stepTagClass = '!whitespace-nowrap !text-[13px]'
 </script>
 
 <template>
@@ -150,7 +150,9 @@ const stepTagClass = '!whitespace-nowrap !text-xs'
               </span>
               <Tag :severity="historyStatus.severity" :value="historyStatus.label" />
             </div>
-            <div class="text-xs text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-4 gap-y-1">
+            <div
+              class="text-[13px] text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-4 gap-y-1"
+            >
               <span>{{ t('schedule.details.historyId', { id: history?.id ?? '-' }) }}</span>
               <span>{{ t('schedule.details.totalCount', { n: totalRowCount }) }}</span>
               <span>{{ t('schedule.details.pageSize', { n: pageSize }) }}</span>
@@ -212,7 +214,7 @@ const stepTagClass = '!whitespace-nowrap !text-xs'
                 <span class="text-slate-700 dark:text-slate-200">
                   {{ resolveAlbumName(data) }}
                 </span>
-                <span class="font-mono text-xs text-slate-400 dark:text-slate-500">
+                <span class="font-mono text-[13px] text-slate-500 dark:text-slate-400">
                   {{ 'ID ' + resolveAlbumId(data) }}
                 </span>
               </div>
@@ -221,7 +223,7 @@ const stepTagClass = '!whitespace-nowrap !text-xs'
 
           <Column :header="t('schedule.details.colFilePath')" style="min-width: 18rem">
             <template #body="{ data }">
-              <span class="font-mono text-xs text-slate-600 dark:text-slate-300 break-all">
+              <span class="font-mono text-[13px] text-slate-600 dark:text-slate-300 break-all">
                 {{ data.filePath || '-' }}
               </span>
             </template>

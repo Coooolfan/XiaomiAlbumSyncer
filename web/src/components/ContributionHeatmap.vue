@@ -399,14 +399,14 @@ function tooltipText(day: { dateStr: string; count: number }) {
       <div v-if="label" class="text-sm font-medium text-slate-700 dark:text-slate-200">
         {{ label }}
       </div>
-      <div class="text-[10px] text-slate-400 dark:text-slate-500">
+      <div class="text-xs text-slate-500 dark:text-slate-400">
         {{ rangeText }}
       </div>
     </div>
 
     <!-- Month labels -->
     <div
-      class="grid mb-1 select-none"
+      class="grid mb-1.5 select-none"
       :style="{
         gridTemplateColumns: `repeat(${weeks.length}, var(--cell))`,
         columnGap: 'var(--gap)',
@@ -415,10 +415,10 @@ function tooltipText(day: { dateStr: string; count: number }) {
       <div
         v-for="(week, wi) in weeks"
         :key="`m-${wi}`"
-        class="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap"
+        class="whitespace-nowrap text-xs leading-none text-slate-500 dark:text-slate-400"
         :style="{ width: 'var(--cell)' }"
       >
-        <span v-if="week.monthLabel">{{ week.monthLabel }}</span>
+        <span v-if="week.monthLabel" class="inline-block">{{ week.monthLabel }}</span>
       </div>
     </div>
 
@@ -453,7 +453,7 @@ function tooltipText(day: { dateStr: string; count: number }) {
 
     <!-- Legend -->
     <div
-      class="flex items-center gap-2 mt-3 text-[10px] text-slate-400 dark:text-slate-500 select-none"
+      class="mt-3.5 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 select-none"
     >
       <span>{{ t('heatmap.less') }}</span>
       <div class="flex items-center gap-1">

@@ -49,7 +49,7 @@ const emit = defineEmits<{
   >
     <div
       v-if="props.loading"
-      class="px-4 py-8 text-center text-xs text-slate-400 dark:text-slate-500"
+      class="px-4 py-8 text-center text-[13px] text-slate-500 dark:text-slate-400"
     >
       {{ t('common.status.loading') }}
     </div>
@@ -58,7 +58,9 @@ const emit = defineEmits<{
       class="flex flex-col items-center gap-2 px-4 py-10"
     >
       <i class="pi pi-calendar text-xl text-slate-300 dark:text-slate-600" />
-      <div class="text-xs text-slate-400 dark:text-slate-500">{{ t('schedule.list.empty') }}</div>
+      <div class="text-[13px] text-slate-500 dark:text-slate-400">
+        {{ t('schedule.list.empty') }}
+      </div>
       <Button
         :label="t('schedule.newTask')"
         icon="pi pi-plus"
