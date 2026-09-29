@@ -1,3 +1,4 @@
+import type {CrontabSyncMode} from '../enums/';
 import type {CrontabConfig} from '../static/';
 
 export type CrontabDto = {
@@ -6,6 +7,7 @@ export type CrontabDto = {
         readonly name: string;
         readonly description: string;
         readonly enabled: boolean;
+        readonly syncMode: CrontabSyncMode;
         readonly config: CrontabConfig;
         readonly accountId: number;
         readonly account: {
@@ -18,6 +20,7 @@ export type CrontabDto = {
             readonly id: number;
             readonly startTime: string;
             readonly endTime?: string | undefined;
+            readonly albumSyncCursors?: {readonly [key:string]: string} | undefined;
             readonly fetchedAllAssets: boolean;
             readonly isCompleted: boolean;
             readonly detailsCount: number;

@@ -7,7 +7,9 @@ type Scenario struct {
 	Seed         int64          `json:"seed"`
 	LogicalClock int64          `json:"logicalClock"`
 	Network      NetworkProfile `json:"network"`
-	Accounts     []AccountSpec  `json:"accounts"`
+	// AllItemsPageSize 限制 /gallery/allitems 单页返回条数（<=0 表示按请求 limit），用于测试翻页位点提交
+	AllItemsPageSize int           `json:"allItemsPageSize,omitempty"`
+	Accounts         []AccountSpec `json:"accounts"`
 }
 
 type AccountSpec struct {
@@ -124,11 +126,19 @@ type Recording struct {
 	Version        int64
 }
 
+// AlbumChange 表示相册位点流（/gallery/allitems）中的一条变更记录。
+// 记录在 Changes 中的位置加一即 syncTag，日志长度即 incrementalTag。
+type AlbumChange struct {
+	Asset  *GalleryAsset
+	Status string
+}
+
 type GalleryAlbum struct {
 	AlbumID        int64
 	Name           string
 	LastUpdateTime int64
 	Assets         map[int64]*GalleryAsset
+	Changes        []*AlbumChange
 }
 
 type Account struct {

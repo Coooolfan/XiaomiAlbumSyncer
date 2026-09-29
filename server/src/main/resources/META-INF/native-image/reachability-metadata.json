@@ -2012,6 +2012,17 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.QrLoginController",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.QrLoginManager"
+          ]
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.controller.SystemConfigController",
       "allDeclaredFields": true,
       "methods": [
@@ -3106,6 +3117,26 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.AlbumPropsKt"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.AlbumSyncCursor",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getIncrementalTag",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSyncTag",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.model.AlbumTimeline",
       "allDeclaredFields": true,
       "methods": [
@@ -3743,6 +3774,28 @@
             "boolean",
             "boolean",
             "boolean",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
+            "int",
+            "int",
+            "int",
+            "int",
+            "int",
+            "boolean",
+            "boolean"
+          ]
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "boolean",
+            "boolean",
+            "boolean",
             "boolean",
             "java.lang.String"
           ]
@@ -4233,6 +4286,10 @@
         },
         {
           "name": "getRunning",
+          "parameterTypes": []
+        },
+        {
+          "name": "getSyncMode",
           "parameterTypes": []
         },
         {
@@ -4824,6 +4881,10 @@
           ]
         },
         {
+          "name": "getAlbumSyncCursors",
+          "parameterTypes": []
+        },
+        {
           "name": "getCrontab",
           "parameterTypes": []
         },
@@ -5005,6 +5066,9 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$ALBUM_SYNC_CURSORS$1"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryProps$CRONTAB$1"
     },
     {
@@ -5071,7 +5135,13 @@
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabProps$RUNNING$1"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabProps$SYNC_MODE$1"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabPropsKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabSyncMode"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.McpToken"
@@ -5858,6 +5928,12 @@
           "parameterTypes": [
             "java.lang.String"
           ]
+        },
+        {
+          "name": "syncMode",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabSyncMode"
+          ]
         }
       ]
     },
@@ -5896,6 +5972,19 @@
             "java.lang.String",
             "java.lang.String",
             "java.lang.Boolean",
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabConfig",
+            "java.util.List",
+            "int",
+            "kotlin.jvm.internal.DefaultConstructorMarker"
+          ]
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.Boolean",
+            "com.coooolfan.xiaomialbumsyncer.model.CrontabSyncMode",
             "com.coooolfan.xiaomialbumsyncer.model.CrontabConfig",
             "java.util.List",
             "int",
@@ -6456,6 +6545,9 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$WhenMappings"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$$inlined$transform$1"
     },
     {
@@ -6867,6 +6959,12 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsByDiffTimeline$4$1$1$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsBySyncTag$3"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsBySyncTag$3$1$1"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsFull$1"
@@ -7821,6 +7919,44 @@
           ]
         }
       ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.AlbumSyncInfo"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.AllItemsPage"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.QrLoginManager",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.service.XiaomiAccountService"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.QrLoginManager$Companion"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.QrLoginManager$Session"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.QrLoginManager$createSession$2"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.QrLoginManager$pollLp$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.QrLoginSessionView"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.QrLoginStatus"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.QrLoginStatusView"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager",

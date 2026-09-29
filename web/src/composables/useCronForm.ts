@@ -1,8 +1,13 @@
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { i18n } from '@/i18n'
 import { api } from '@/ApiInstance'
 import type { CrontabDto } from '@/__generated/model/dto'
-import { createEmptyCronForm, mapCrontabToForm, type LocalCronForm } from '@/utils/crontabForm'
+import {
+  createEmptyCronForm,
+  mapCrontabToForm,
+  targetBasePath,
+  type LocalCronForm,
+} from '@/utils/crontabForm'
 
 type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
 
@@ -26,6 +31,9 @@ export function useCronForm(getDefaultAccountId: () => number) {
   let mountCheckTimer: number | undefined
   let mountCheckSeq = 0
 
+  // 仅字面目录变化时才需要重新检测，编辑表达式尾部不触发请求
+  const mountCheckPath = computed(() => targetBasePath(cronForm.value.config.targetPath))
+
   function clearMountCheckTimer() {
     if (mountCheckTimer) {
       window.clearTimeout(mountCheckTimer)
@@ -40,13 +48,7 @@ export function useCronForm(getDefaultAccountId: () => number) {
   }
 
   function shouldSkipMountCheck(): boolean {
-    if (!showCronDialog.value) return true
-
-    const targetPath = cronForm.value.config.targetPath?.trim() ?? ''
-    if (!targetPath) return true
-
-    const expressionTargetPath = cronForm.value.config.expressionTargetPath?.trim() ?? ''
-    return expressionTargetPath.length > 0
+    return !showCronDialog.value || !mountCheckPath.value
   }
 
   function scheduleTargetPathMountCheck() {
@@ -73,7 +75,7 @@ export function useCronForm(getDefaultAccountId: () => number) {
       return
     }
 
-    const path = cronForm.value.config.targetPath.trim()
+    const path = mountCheckPath.value
 
     try {
       const response = await api.systemConfigController.checkMountPath({
@@ -106,33 +108,50 @@ export function useCronForm(getDefaultAccountId: () => number) {
     showCronDialog.value = true
   }
 
-  function validateCronForm(): boolean {
+  function buildCronFormErrors(): Record<string, string> {
     const errors: Record<string, string> = {}
     if (!cronForm.value.name || cronForm.value.name.trim() === '')
       errors.name = i18n.global.t('cronform.errors.required')
-    if (!cronForm.value.config.expression || cronForm.value.config.expression.trim() === '') {
-      errors.expression = i18n.global.t('cronform.errors.required')
-    } else {
-      const crontabExpression = cronForm.value.config.expression.split(' ')
-      if (crontabExpression.length < 6) {
-        errors.expression = i18n.global.t('cronform.errors.invalidExpression')
+    if (cronForm.value.enabled) {
+      if (!cronForm.value.config.expression || cronForm.value.config.expression.trim() === '') {
+        errors.expression = i18n.global.t('cronform.errors.required')
       } else {
-        if (crontabExpression[0] === '*') {
-          errors.expression = i18n.global.t('cronform.errors.tooFrequentPerSecond')
-        } else if (crontabExpression[1] === '*') {
-          errors.expression = i18n.global.t('cronform.errors.tooFrequentPerMinute')
+        const crontabExpression = cronForm.value.config.expression.split(' ')
+        if (crontabExpression.length < 6) {
+          errors.expression = i18n.global.t('cronform.errors.invalidExpression')
+        } else {
+          if (crontabExpression[0] === '*') {
+            errors.expression = i18n.global.t('cronform.errors.tooFrequentPerSecond')
+          } else if (crontabExpression[1] === '*') {
+            errors.expression = i18n.global.t('cronform.errors.tooFrequentPerMinute')
+          }
         }
       }
+      if (!cronForm.value.config.timeZone || cronForm.value.config.timeZone.trim() === '')
+        errors.timeZone = i18n.global.t('cronform.errors.requiredSelect')
     }
-    if (!cronForm.value.config.timeZone || cronForm.value.config.timeZone.trim() === '')
-      errors.timeZone = i18n.global.t('cronform.errors.requiredSelect')
-    if (!cronForm.value.config.targetPath || cronForm.value.config.targetPath.trim() === '')
+    const pathValue = cronForm.value.config.targetPath
+    if (!pathValue || pathValue.trim() === '')
       errors.targetPath = i18n.global.t('cronform.errors.required')
     if (!cronForm.value.accountId)
       errors.accountId = i18n.global.t('cronform.errors.requiredSelect')
 
-    formErrors.value = errors
-    return Object.keys(errors).length === 0
+    return errors
+  }
+
+  function validateCronForm(fields?: readonly string[]): boolean {
+    const errors = buildCronFormErrors()
+    if (!fields) {
+      formErrors.value = errors
+      return Object.keys(errors).length === 0
+    }
+    const next = { ...formErrors.value }
+    for (const field of fields) {
+      if (errors[field]) next[field] = errors[field]
+      else delete next[field]
+    }
+    formErrors.value = next
+    return fields.every((field) => !(field in errors))
   }
 
   function buildTimeZones() {
@@ -162,23 +181,7 @@ export function useCronForm(getDefaultAccountId: () => number) {
     },
   )
 
-  watch(
-    () => cronForm.value.config.targetPath,
-    () => {
-      scheduleTargetPathMountCheck()
-    },
-  )
-
-  watch(
-    () => cronForm.value.config.expressionTargetPath,
-    (value) => {
-      if (value?.trim()) {
-        clearMountWarningState()
-        return
-      }
-      scheduleTargetPathMountCheck()
-    },
-  )
+  watch(mountCheckPath, scheduleTargetPathMountCheck)
 
   watch(showCronDialog, (visible) => {
     if (visible) {

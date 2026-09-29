@@ -21,9 +21,9 @@
 - [x] 📅 填充照片和视频的 Exif 时间信息
 - [x] 📅 填充照片和视频的文件系统时间
 - [x] 👥 支持多小米账号
-- [x] 📃 表达式插值文件下载路径 **>>> [点此查看详情](./README/expression-target-path.md) <<<**
-- [x] 🔒 SSL 支持 **>>> [点此查看详情](./README/ssl-suppot.md) <<<**
-- [x] 🛡️ Passkey 支持 **>>> [点此查看详情](./README/passkey-login.md) <<<**
+- [x] 📃 表达式插值文件下载路径 **>>> [点此查看详情](./docs/expression-target-path.md) <<<**
+- [x] 🔒 SSL 支持 **>>> [点此查看详情](./docs/ssl-suppot.md) <<<**
+- [x] 🛡️ Passkey 支持 **>>> [点此查看详情](./docs/passkey-login.md) <<<**
 
 > [!CAUTION] 
 > 此项目已于 `0.3.0` 完成重构。新版目前仅提供 Web UI，部署方式提供 Docker、JVM、原生二进制版本。旧版 CLI 工具仍然可用，可前往 [0.2.1 releases](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases/tag/0.2.1) 下载。
@@ -136,6 +136,12 @@
 
 
 ### 获取 PassToken 与 UserId
+
+**方式一：扫码登录（推荐）**
+
+访问 `http://localhost:8232/#/dashboard/setting` ，在「小米账号」卡片中点击 `扫码添加`，使用小米手机或平板的「设置 > 小米账号」扫码确认即可，账号凭据会自动写入。对已存在的账号再次扫码可直接刷新其 passToken。
+
+**方式二：手动提取**
 
 1. 登录[小米云服务](https://i.mi.com/)
 2. **[访问一次相册页面](https://i.mi.com/gallery/h5#/)**

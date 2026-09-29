@@ -5,6 +5,7 @@ import {
     CrontabController, 
     McpTokenController, 
     PasskeyController, 
+    QrLoginController, 
     SystemConfigController, 
     TokenController, 
     XiaomiAccountController
@@ -22,6 +23,8 @@ export class Api {
     
     readonly passkeyController: PasskeyController
     
+    readonly qrLoginController: QrLoginController
+    
     readonly systemConfigController: SystemConfigController
     
     readonly tokenController: TokenController
@@ -34,6 +37,7 @@ export class Api {
         this.crontabController = new CrontabController(executor);
         this.mcpTokenController = new McpTokenController(executor);
         this.passkeyController = new PasskeyController(executor);
+        this.qrLoginController = new QrLoginController(executor);
         this.systemConfigController = new SystemConfigController(executor);
         this.tokenController = new TokenController(executor);
         this.xiaomiAccountController = new XiaomiAccountController(executor);

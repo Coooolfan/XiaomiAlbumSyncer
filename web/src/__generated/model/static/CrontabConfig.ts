@@ -5,7 +5,6 @@ export interface CrontabConfig {
     readonly downloadImages: boolean;
     readonly downloadVideos: boolean;
     readonly rewriteExifTime: boolean;
-    readonly diffByTimeline: boolean;
     readonly rewriteExifTimeZone?: string | undefined;
     readonly skipExistingFile: boolean;
     readonly rewriteFileSystemTime: boolean;
@@ -16,6 +15,5 @@ export interface CrontabConfig {
     readonly exifProcessors: number;
     readonly fileTimeWorkers: number;
     readonly downloadAudios: boolean;
-    readonly expressionTargetPath: string;
     readonly notify: boolean;
 }

@@ -1,9 +1,12 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
+import com.coooolfan.xiaomialbumsyncer.controller.XiaomiAccountController.Companion.DEFAULT_XIAOMI_ACCOUNT
 import com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount
+import com.coooolfan.xiaomialbumsyncer.model.userId
 import com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountCreate
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
+import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.noear.solon.annotation.Managed
@@ -37,6 +40,22 @@ class XiaomiAccountService(
      */
     fun create(create: XiaomiAccountCreate): XiaomiAccount {
         return sql.saveCommand(create, SaveMode.INSERT_ONLY).execute().modifiedEntity
+    }
+
+    /**
+     * 按 userId 写入登录凭证：账号已存在则更新 passToken 并刷新 token 缓存，否则以 userId 为默认昵称创建
+     */
+    fun upsertCredentials(userId: String, passToken: String): XiaomiAccount {
+        val existing = sql.executeQuery(XiaomiAccount::class) {
+            where(table.userId eq userId)
+            select(table)
+        }.firstOrNull()
+
+        if (existing != null) {
+            return update(XiaomiAccount(existing) { this.passToken = passToken }, DEFAULT_XIAOMI_ACCOUNT)
+        }
+
+        return create(XiaomiAccountCreate(nickname = userId, passToken = passToken, userId = userId))
     }
 
     /**

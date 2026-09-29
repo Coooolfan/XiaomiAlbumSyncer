@@ -415,7 +415,7 @@ function tooltipText(day: { dateStr: string; count: number }) {
       <div
         v-for="(week, wi) in weeks"
         :key="`m-${wi}`"
-        class="text-[10px] text-slate-400 dark:text-slate-500"
+        class="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap"
         :style="{ width: 'var(--cell)' }"
       >
         <span v-if="week.monthLabel">{{ week.monthLabel }}</span>

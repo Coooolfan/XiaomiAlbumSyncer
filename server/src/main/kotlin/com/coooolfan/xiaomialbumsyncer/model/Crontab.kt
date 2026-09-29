@@ -15,6 +15,8 @@ interface Crontab {
 
     val enabled: Boolean
 
+    val syncMode: CrontabSyncMode
+
     val config: CrontabConfig
 
     @ManyToOne

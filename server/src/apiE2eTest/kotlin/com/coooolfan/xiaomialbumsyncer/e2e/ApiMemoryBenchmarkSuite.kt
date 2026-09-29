@@ -193,7 +193,6 @@ class ApiMemoryBenchmarkSuite {
                 "downloadVideos" to true,
                 "downloadAudios" to false,
                 "rewriteExifTime" to rewriteExifTime,
-                "diffByTimeline" to true,
                 "rewriteExifTimeZone" to "UTC",
                 "skipExistingFile" to true,
                 "rewriteFileSystemTime" to false,
@@ -203,7 +202,6 @@ class ApiMemoryBenchmarkSuite {
                 "verifiers" to verifiers,
                 "exifProcessors" to exifProcessors,
                 "fileTimeWorkers" to fileTimeWorkers,
-                "expressionTargetPath" to "",
                 "notify" to false,
             )
             val crontab = api.json(
@@ -213,6 +211,7 @@ class ApiMemoryBenchmarkSuite {
                         "name" to "Memory Benchmark",
                         "description" to "Stateful mock download benchmark",
                         "enabled" to false,
+                        "syncMode" to "TIMELINE",
                         "config" to config,
                         "accountId" to accountId,
                         "albumIds" to listOf(cameraAlbumId),

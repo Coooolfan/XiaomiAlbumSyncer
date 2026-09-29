@@ -24,6 +24,8 @@ export type {PasskeyRegisterStartRequest} from './PasskeyRegisterStartRequest';
 export type {PasskeyRegisterStartResponse} from './PasskeyRegisterStartResponse';
 export type {PasskeyUpdateNameRequest} from './PasskeyUpdateNameRequest';
 export type {PubKeyCredParam} from './PubKeyCredParam';
+export type {QrLoginSessionView} from './QrLoginSessionView';
+export type {QrLoginStatusView} from './QrLoginStatusView';
 export type {SystemConfigInit} from './SystemConfigInit';
 export type {SystemConfigNotifyConfigUpdate} from './SystemConfigNotifyConfigUpdate';
 export type {SystemConfigPasswordUpdate} from './SystemConfigPasswordUpdate';

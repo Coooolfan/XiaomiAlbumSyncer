@@ -8,6 +8,8 @@ input CrontabCreateInput {
 
     enabled
 
+    syncMode
+
     config
 
     id(account) as accountId
@@ -22,6 +24,8 @@ input CrontabUpdateInput {
     description?
 
     enabled?
+
+    syncMode?
 
     config?
 

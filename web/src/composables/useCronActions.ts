@@ -3,7 +3,7 @@ import { i18n } from '@/i18n'
 import { useActionDialog } from '@/composables/useActionDialog'
 import type { CrontabDto } from '@/__generated/model/dto'
 import type { CrontabCreateInput, CrontabUpdateInput } from '@/__generated/model/static'
-import type { LocalCronForm } from '@/utils/crontabForm'
+import { buildSubmitConfig, type LocalCronForm } from '@/utils/crontabForm'
 
 type Crontab = CrontabDto['CrontabController/DEFAULT_CRONTAB']
 
@@ -77,21 +77,19 @@ export function useCronActions(options: UseCronActionsOptions) {
     if (!validateCronForm()) return
     saving.value = true
     try {
+      const { accountId, ...body } = {
+        ...cronForm.value,
+        config: buildSubmitConfig(cronForm.value),
+      }
       if (isEditing.value && editingId.value !== null) {
-        await crontabsStore.updateCrontab(editingId.value, {
-          name: cronForm.value.name,
-          description: cronForm.value.description,
-          enabled: cronForm.value.enabled,
-          config: cronForm.value.config,
-          albumIds: cronForm.value.albumIds,
-        })
+        await crontabsStore.updateCrontab(editingId.value, body)
         toast.add({
           severity: 'success',
           summary: i18n.global.t('schedule.toast.updated'),
           life: 1600,
         })
       } else {
-        await crontabsStore.createCrontab(cronForm.value)
+        await crontabsStore.createCrontab({ ...body, accountId })
         toast.add({
           severity: 'success',
           summary: i18n.global.t('schedule.toast.created'),

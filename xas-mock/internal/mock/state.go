@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -46,6 +47,12 @@ func (s *State) Reset(seed *int64) error {
 	s.revision++
 	s.stats.Reset()
 	return nil
+}
+
+func (s *State) allItemsPageSize() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.scenario.AllItemsPageSize
 }
 
 func (s *State) Health() (int64, int64) {
@@ -267,6 +274,7 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 				return nil, err
 			}
 			album.Assets[id] = asset
+			appendAlbumChange(album, asset, "custom")
 			album.LastUpdateTime = max(album.LastUpdateTime, data.Clock, asset.DateTaken)
 			delete(data.Deleted, id)
 			ids = append(ids, id)
@@ -289,6 +297,7 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 		updated.Version = current.Version + 1
 		updated.SHA1 = resolveSHA1(seed, updated.ID, updated.Version, updated.Size, updated.ContentPattern, updated.ContentMode, op.Asset.SHA1, op.Asset.SHA1Mode)
 		album.Assets[updated.ID] = updated
+		appendAlbumChange(album, updated, "custom")
 		album.LastUpdateTime = data.Clock
 		return []int64{updated.ID}, nil
 	case "deleteAssets":
@@ -301,6 +310,7 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 			return nil, err
 		}
 		for _, id := range ids {
+			appendAlbumChange(album, album.Assets[id], "deleted")
 			delete(album.Assets, id)
 			data.Deleted[id] = deletedMedia{UserID: account.UserID, Kind: "gallery"}
 		}
@@ -407,6 +417,11 @@ func applyMutation(data *runtimeData, seed int64, op MutationOperation) ([]int64
 	default:
 		return nil, fmt.Errorf("unknown mutation op %q", op.Op)
 	}
+}
+
+// appendAlbumChange 向相册位点流追加一条变更记录。
+func appendAlbumChange(album *GalleryAlbum, asset *GalleryAsset, status string) {
+	album.Changes = append(album.Changes, &AlbumChange{Asset: asset, Status: status})
 }
 
 func setOrClearStorageError(data *runtimeData, id int64, userID, kind string, op MutationOperation) {
@@ -651,6 +666,8 @@ func cloneAccount(account *Account) *Account {
 			value := *asset
 			copyAlbum.Assets[assetID] = &value
 		}
+		// 变更记录只追加不修改，可在快照间共享
+		copyAlbum.Changes = slices.Clone(album.Changes)
 		copyAccount.GalleryAlbums[id] = copyAlbum
 	}
 	for id, recording := range account.Recordings {

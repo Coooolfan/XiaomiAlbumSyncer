@@ -13,11 +13,14 @@ const messages: typeof zh = {
       close: 'Close',
       copy: 'Copy',
       add: 'Add',
+      back: 'Back',
+      next: 'Next',
     },
     status: {
       loading: 'Loading…',
       configured: 'Configured',
       notConfigured: 'Not configured',
+      comingSoon: 'Not yet',
       enabled: 'Enabled',
       disabled: 'Disabled',
       yes: 'Yes',
@@ -108,7 +111,7 @@ const messages: typeof zh = {
       system: 'System',
       appearance: 'Appearance',
       notify: 'Notifications',
-      accounts: 'Xiaomi Accounts',
+      accounts: 'Sync Accounts',
       password: 'Password',
       passkey: 'Passkey',
       mcp: 'MCP Token',
@@ -152,7 +155,6 @@ const messages: typeof zh = {
       audios: 'Audio',
       notify: 'Notifications',
       exif: 'Fill EXIF',
-      diffByTimeline: 'Timeline diff',
       skipExisting: 'Skip existing',
       rewriteFsTime: 'Rewrite file time',
       sha1: 'SHA1 check',
@@ -167,7 +169,6 @@ const messages: typeof zh = {
       account: 'Account',
       schedule: 'Schedule',
       targetPath: 'Target path',
-      expressionPath: 'Expression path',
       enabled: 'Enabled',
       disabled: 'Disabled',
       shadowAlbumTip: 'This album no longer exists remotely. Please check and edit this task.',
@@ -305,11 +306,22 @@ const messages: typeof zh = {
     dayTooltip: '{count} on {dateStr}',
   },
   cronform: {
+    step: {
+      basic: 'Basic Info',
+      scope: 'Sync Scope',
+      mode: 'Sync Mode',
+      schedule: 'Schedule & Storage',
+    },
+    badge: {
+      recommended: 'Recommended',
+      beta: 'Beta',
+    },
     title: {
       create: 'Create scheduled task',
       edit: 'Edit scheduled task',
     },
     field: {
+      defaultName: 'Daily Sync',
       namePlaceholder: 'e.g. Daily sync',
       account: 'Account',
       accountPlaceholder: 'Select a Xiaomi account',
@@ -323,9 +335,9 @@ const messages: typeof zh = {
         'When running in a container, make sure this path is mapped to the host. A folder is created under it for each album.',
       targetPathMountWarning:
         'Warning: this path may only exist inside the container and is not mounted to the host, so data may not be persisted.',
-      expressionTargetPath: 'Expression path (advanced)',
-      expressionTargetPathHint:
-        'Use expressions to customize the path structure. When set, this overrides the "Save path" above.',
+      useExpressionPath: 'Path template',
+      targetPathExpressionHint:
+        'Use a full save path template with variable placeholders. It is recommended to start with / for an absolute path.',
       albums: 'Linked albums',
       albumsPlaceholder: 'Select albums',
     },
@@ -334,6 +346,7 @@ const messages: typeof zh = {
       downloadVideos: 'Download videos',
       downloadAudios: 'Download recordings',
       notify: 'Send notifications',
+      enabled: 'Scheduled trigger',
     },
     notice: {
       text: '{records} are {independent} and {impact} across scheduled tasks. Even for the {sameAsset}, its {status} is {judged} in each task.',
@@ -346,9 +359,14 @@ const messages: typeof zh = {
     },
     advanced: {
       title: 'Advanced',
-      diffByTimeline: 'Diff by timeline',
-      diffByTimelineHint:
+      syncModeFull: 'Full refresh',
+      syncModeTimeline: 'Timeline diff',
+      syncModeCursor: 'Cursor sync',
+      syncModeFullHint: 'Enumerates all assets of the selected albums on every sync.',
+      syncModeTimelineHint:
         'Compares the album timeline from the previous sync and only fetches assets on dates that changed.',
+      syncModeCursorHint:
+        'Record-level incremental fetch driven by per-album cursors, with resumable pagination.',
       rewriteExifTime: 'Fill EXIF time',
       rewriteExifTimeHint:
         "Writes the asset's Xiaomi Cloud time into EXIF, only when the asset has no EXIF time.",
@@ -689,8 +707,8 @@ const messages: typeof zh = {
       deleteFailed: 'Delete failed',
     },
     account: {
-      title: 'Xiaomi Accounts',
-      description: 'Account credentials used to access Xiaomi cloud services',
+      title: 'Sync Accounts',
+      description: 'Account credentials used to access cloud album services',
       add: 'Add account',
       edit: 'Edit account',
       insecureWarning:
@@ -715,6 +733,27 @@ const messages: typeof zh = {
         'Delete account {name}? All data related to this account will be deleted as well',
       confirmDeleteTitle: 'Confirm deletion',
       confirmDeleteAccept: 'Delete',
+      provider: 'Provider',
+      providerXiaomi: 'Xiaomi Cloud',
+      providerXiaomiDesc: 'Sync Xiaomi Cloud albums and recordings',
+      providerIcloud: 'Apple iCloud',
+      providerIcloudDesc: 'Sync iCloud Photos — Advanced Data Protection must be off',
+      methodQrTitle: 'Scan QR code',
+      methodQrDesc:
+        'Scan with a Xiaomi phone or tablet to authorize and get credentials automatically (recommended)',
+      methodManualTitle: 'PassToken sign-in',
+      methodManualDesc:
+        'Enter userId and PassToken manually — see the project homepage for how to obtain them',
+      adpHint: 'Turn off "Advanced Data Protection" in your Xiaomi account first',
+      qrTitle: 'Scan to sign in with Xiaomi account',
+      qrTip:
+        'Scan with your Xiaomi phone or tablet via Settings > Xiaomi Account, or open the link with any QR scanner to authorize',
+      qrGenerating: 'Fetching QR code…',
+      qrWaiting: 'Waiting for scan confirmation…',
+      qrExpired: 'QR code expired. Please fetch a new one',
+      qrFailed: 'QR login failed',
+      qrRetry: 'Fetch again',
+      qrLoggedIn: 'Account {name} signed in',
     },
     mcp: {
       title: 'MCP Token',

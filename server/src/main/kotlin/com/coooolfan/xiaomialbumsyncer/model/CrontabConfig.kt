@@ -1,8 +1,10 @@
 package com.coooolfan.xiaomialbumsyncer.model
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.babyfish.jimmer.sql.Serialized
 
 @Serialized
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class CrontabConfig(
 
     // cron 表达式
@@ -18,8 +20,6 @@ data class CrontabConfig(
     val downloadVideos: Boolean,
 
     val rewriteExifTime: Boolean,
-
-    val diffByTimeline: Boolean = false,
 
     val rewriteExifTimeZone: String?,
 
@@ -40,8 +40,6 @@ data class CrontabConfig(
     val fileTimeWorkers: Int = 2,
 
     val downloadAudios: Boolean = true,
-
-    val expressionTargetPath: String = "",
 
     val notify: Boolean = true,
 )

@@ -5,7 +5,7 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 
-const devServer = 'http://localhost:8080'
+const devServer = process.env.VITE_DEV_SERVER ?? 'http://localhost:8080'
 
 // https://vite.dev/config/
 export default defineConfig({

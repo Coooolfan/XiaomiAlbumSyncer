@@ -85,15 +85,15 @@ class DataImporter(
             name = "旧版本导入"
             description = "由旧版本导入时自动创建，仅用于迁移下载历史。此计划任务默认不启用。"
             enabled = false
+            syncMode = CrontabSyncMode.FULL
             config = CrontabConfig(
                 expression = "0 0 * * * ?",
                 timeZone = "Asia/Shanghai",
-                targetPath = "./download",
+                targetPath = "./download/${CrontabHistoryDetail.DEFAULT_FILE_TEMPLATE}",
                 downloadImages = true,
                 downloadVideos = true,
                 rewriteExifTime = true,
                 rewriteExifTimeZone = "Asia/Shanghai",
-                expressionTargetPath = ""
             )
             albumIds = selectedAlbums
         }
@@ -102,7 +102,6 @@ class DataImporter(
         val crontabHistory = CrontabHistory {
             this.crontabId = crontabId
             startTime = Instant.now()
-            timelineSnapshot = emptyMap()
         }
         val crontabHistoryId = sql.saveCommand(crontabHistory, SaveMode.INSERT_ONLY).execute().modifiedEntity.id
 

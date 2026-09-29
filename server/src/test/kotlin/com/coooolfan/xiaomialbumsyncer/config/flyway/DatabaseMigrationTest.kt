@@ -139,6 +139,143 @@ class DatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun unifiesTargetPathExpression(@TempDir tempDir: Path) {
+        val databaseUrl = "jdbc:sqlite:${tempDir.resolve("target-path.db").toAbsolutePath()}"
+
+        flyway(databaseUrl, target = "0.18.0").migrate()
+        DriverManager.getConnection(databaseUrl).use { connection ->
+            connection.createStatement().use { statement ->
+                statement.executeUpdate(
+                    """
+                    INSERT INTO crontab (name, config, description, enabled, account_id)
+                    VALUES
+                        ('plain', '{"targetPath":"/data","expressionTargetPath":""}', '', 0, 1),
+                        ('missing', '{"targetPath":"/legacy","notify":false}', '', 0, 1),
+                        ('null', '{"targetPath":"/nullable","expressionTargetPath":null}', '', 0, 1),
+                        ('blank', '{"targetPath":"/trailing/","expressionTargetPath":"   "}', '', 0, 1),
+                        ('relative', '{"targetPath":"/data/","expressionTargetPath":"${'$'}{album}/${'$'}{fileName}"}', '', 0, 1),
+                        ('dot-relative', '{"targetPath":"/","expressionTargetPath":"./${'$'}{album}/${'$'}{fileName}"}', '', 0, 1),
+                        ('parent-relative', '{"targetPath":"/data","expressionTargetPath":"../archive/${'$'}{fileName}"}', '', 0, 1),
+                        ('hidden-relative', '{"targetPath":"/data","expressionTargetPath":".archive/${'$'}{fileName}"}', '', 0, 1),
+                        ('absolute', '{"targetPath":"/data","expressionTargetPath":"  /archive/${'$'}{fileName}  "}', '', 0, 1)
+                    """.trimIndent()
+                )
+            }
+        }
+
+        assertEquals(1, flyway(databaseUrl, target = "0.19.0").migrate().migrationsExecuted)
+
+        DriverManager.getConnection(databaseUrl).use { connection ->
+            val paths = connection.createStatement().use { statement ->
+                statement.executeQuery(
+                    "SELECT name, json_extract(config, '$.targetPath'), json_type(config, '$.expressionTargetPath') FROM crontab ORDER BY id"
+                ).use { result ->
+                    buildMap {
+                        while (result.next()) {
+                            assertEquals(null, result.getString(3))
+                            put(result.getString(1), result.getString(2))
+                        }
+                    }
+                }
+            }
+            assertEquals("/data/${'$'}{album}/${'$'}{downloadFileName}", paths.getValue("plain"))
+            assertEquals("/legacy/${'$'}{album}/${'$'}{downloadFileName}", paths.getValue("missing"))
+            assertEquals("/nullable/${'$'}{album}/${'$'}{downloadFileName}", paths.getValue("null"))
+            assertEquals("/trailing/${'$'}{album}/${'$'}{downloadFileName}", paths.getValue("blank"))
+            assertEquals("${'$'}{album}/${'$'}{fileName}", paths.getValue("relative"))
+            assertEquals("./${'$'}{album}/${'$'}{fileName}", paths.getValue("dot-relative"))
+            assertEquals("../archive/${'$'}{fileName}", paths.getValue("parent-relative"))
+            assertEquals(".archive/${'$'}{fileName}", paths.getValue("hidden-relative"))
+            assertEquals("/archive/${'$'}{fileName}", paths.getValue("absolute"))
+
+            val missingConfig = connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT config FROM crontab WHERE name = 'missing'").use { result ->
+                    assertTrue(result.next())
+                    result.getString(1)
+                }
+            }
+            assertEquals(0, connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT json_extract('$missingConfig', '$.notify')").use { result ->
+                    assertTrue(result.next())
+                    result.getInt(1)
+                }
+            })
+        }
+    }
+
+    @Test
+    fun upgradesReleasedSchemaToCursorSyncMode(@TempDir tempDir: Path) {
+        val databaseUrl = "jdbc:sqlite:${tempDir.resolve("album-sync-cursors.db").toAbsolutePath()}"
+
+        // 0.18.1 发布时的最新数据库迁移版本为 0.18.0。
+        flyway(databaseUrl, target = "0.18.0").migrate()
+        DriverManager.getConnection(databaseUrl).use { connection ->
+            assertFalse("sync_mode" in connection.columnNames("crontab"))
+            assertFalse("album_sync_cursors" in connection.columnNames("crontab_history"))
+            connection.createStatement().use { statement ->
+                statement.executeUpdate(
+                    """
+                    INSERT INTO crontab (id, name, config, description, enabled, account_id)
+                    VALUES
+                        (1, 'timeline', '{"targetPath":"/data","diffByTimeline":true}', '', 0, 1),
+                        (2, 'full', '{"targetPath":"/data","diffByTimeline":false}', '', 0, 1),
+                        (3, 'default', '{"targetPath":"/data"}', '', 0, 1)
+                    """.trimIndent()
+                )
+                statement.executeUpdate(
+                    """
+                    INSERT INTO crontab_history
+                        (id, crontab_id, start_time, timeline_snapshot, fetched_all_assets)
+                    VALUES
+                        (1, 1, 100, '{"10":{"2026-09-01":2}}', 1)
+                    """.trimIndent()
+                )
+            }
+        }
+
+        assertEquals(1, flyway(databaseUrl).migrate().migrationsExecuted)
+        assertEquals("0.19.0", flyway(databaseUrl).info().current().version.version)
+        assertEquals(0, flyway(databaseUrl).migrate().migrationsExecuted)
+
+        DriverManager.getConnection(databaseUrl).use { connection ->
+            val modes = connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT name, sync_mode FROM crontab").use { result ->
+                    buildMap {
+                        while (result.next()) put(result.getString(1), result.getString(2))
+                    }
+                }
+            }
+            assertEquals(mapOf("timeline" to "TIMELINE", "full" to "FULL", "default" to "FULL"), modes)
+            connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT json_type(config, '$.diffByTimeline') FROM crontab").use { result ->
+                    while (result.next()) assertEquals(null, result.getString(1))
+                }
+            }
+            connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT * FROM crontab_history WHERE id = 1").use { result ->
+                    assertTrue(result.next())
+                    assertEquals(null, result.getString("album_sync_cursors"))
+                    assertEquals("""{"10":{"2026-09-01":2}}""", result.getString("timeline_snapshot"))
+                    assertTrue(result.getBoolean("fetched_all_assets"))
+                }
+                statement.executeUpdate("""UPDATE crontab_history SET album_sync_cursors = '{"10":"42"}' WHERE id = 1""")
+                statement.executeQuery("SELECT album_sync_cursors FROM crontab_history WHERE id = 1").use { result ->
+                    assertTrue(result.next())
+                    assertEquals("""{"10":"42"}""", result.getString(1))
+                }
+                statement.executeUpdate(
+                    """
+                    INSERT INTO crontab_history
+                        (crontab_id, start_time, timeline_snapshot, fetched_all_assets)
+                    VALUES
+                        (2, 200, NULL, 0)
+                    """.trimIndent()
+                )
+            }
+        }
+    }
+
     private fun flyway(databaseUrl: String, target: String? = null): Flyway {
         val configuration = Flyway.configure()
             .dataSource(databaseUrl, null, null)

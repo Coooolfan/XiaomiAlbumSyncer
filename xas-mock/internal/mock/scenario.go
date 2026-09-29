@@ -125,6 +125,10 @@ func buildRuntime(s Scenario) (*runtimeData, error) {
 					data.Clock = asset.DateTaken
 				}
 			}
+			// 初始资产按 dateTaken 倒序铺入变更日志，作为位点流的存量基线
+			for _, asset := range sortedGalleryAssets(album.Assets) {
+				appendAlbumChange(album, asset, "custom")
+			}
 		}
 		for _, spec := range accountSpec.Recordings {
 			id, err := assignID(spec.ID, &maxID, usedIDs)

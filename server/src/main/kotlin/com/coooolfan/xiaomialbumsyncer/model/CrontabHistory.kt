@@ -19,8 +19,13 @@ interface CrontabHistory {
 
     val endTime: Instant?
 
+    // 时间线同步模式下各相册的快照，用于对比增量；null 表示本次运行未使用时间线模式
     @Serialized
-    val timelineSnapshot: Map<Long, AlbumTimeline>
+    val timelineSnapshot: Map<Long, AlbumTimeline>?
+
+    // 位点同步模式下各相册的拉取位点，页级提交；null 表示本次运行未使用位点模式
+    @Serialized
+    val albumSyncCursors: Map<Long, String>?
 
     val fetchedAllAssets: Boolean
 

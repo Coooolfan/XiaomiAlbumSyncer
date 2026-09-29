@@ -99,6 +99,7 @@ class ApiE2eSuite {
         val albums = api.json(api.get("/api/album/latest/$accountId").expect(200))
         assertEquals(3, albums.size())
         val cameraAlbumId = findAlbumId(albums, "1")
+        val screenshotsAlbumId = findAlbumId(albums, "2")
         val audioAlbumId = findAlbumId(albums, "-1")
         api.get("/api/album").expect(200)
 
@@ -117,7 +118,6 @@ class ApiE2eSuite {
             "downloadImages" to true,
             "downloadVideos" to false,
             "rewriteExifTime" to false,
-            "diffByTimeline" to false,
             "rewriteExifTimeZone" to "UTC",
             "skipExistingFile" to false,
             "rewriteFileSystemTime" to false,
@@ -128,13 +128,13 @@ class ApiE2eSuite {
             "exifProcessors" to 1,
             "fileTimeWorkers" to 1,
             "downloadAudios" to false,
-            "expressionTargetPath" to "",
             "notify" to true,
         )
         val crontabBody = linkedMapOf<String, Any?>(
             "name" to "API E2E",
             "description" to "Native metadata coverage",
             "enabled" to false,
+            "syncMode" to "FULL",
             "config" to config,
             "accountId" to accountId,
             "albumIds" to listOf(cameraAlbumId),
@@ -165,7 +165,7 @@ class ApiE2eSuite {
 
         assertEquals(1, mock.routeCount("/gallery/user/album/list"))
         assertTrue(mock.routeCount("/gallery/user/galleries") >= 2)
-        assertTrue(mock.routeCount("/gallery/user/timeline") >= 1)
+        assertEquals(0, mock.routeCount("/gallery/user/timeline"))
         assertTrue(mock.routeCount("/gallery/storage") >= 1)
         assertTrue(mock.routeCount("/mock/oss/101") >= 1)
         assertTrue(mock.routeCount("/mock/download/101") >= 1)
@@ -182,6 +182,15 @@ class ApiE2eSuite {
         )
 
         api.delete("/api/crontab/$crontabId").expect(200)
+
+        executeCursorSyncWorkflow(
+            api = api,
+            mock = mock,
+            workDir = workDir,
+            accountId = accountId,
+            screenshotsAlbumId = screenshotsAlbumId,
+            baseConfig = config,
+        )
 
         executeRecordingWorkflows(
             api = api,
@@ -403,6 +412,99 @@ class ApiE2eSuite {
         return mcpJson.readTree(payload)
     }
 
+    /**
+     * 位点同步模式（CURSOR）：album/full 预检 + allitems 按 syncTag 翻页拉流。
+     * 覆盖：首轮 tag=0 回放、水位头未变跳过、增量翻页位点推进、清理历史后重置回放。
+     * 使用空相册 Screenshots(remoteId=2)，与相册 1 的既有断言完全隔离。
+     */
+    private fun executeCursorSyncWorkflow(
+        api: ApiClient,
+        mock: MockXiaomiApiServer,
+        workDir: Path,
+        accountId: Long,
+        screenshotsAlbumId: Long,
+        baseConfig: LinkedHashMap<String, Any?>,
+    ) {
+        val cursorConfig = LinkedHashMap(baseConfig).apply {
+            this["targetPath"] = workDir.resolve("cursor-downloads").toString()
+            this["downloadImages"] = true
+            this["downloadVideos"] = false
+            this["downloadAudios"] = false
+            this["notify"] = false
+            this["skipExistingFile"] = false
+        }
+        val cursorCrontab = api.json(
+            api.post(
+                "/api/crontab",
+                linkedMapOf<String, Any?>(
+                    "name" to "Cursor Sync E2E",
+                    "description" to "album/full precheck + allitems cursor stream",
+                    "enabled" to false,
+                    "syncMode" to "CURSOR",
+                    "config" to cursorConfig,
+                    "accountId" to accountId,
+                    "albumIds" to listOf(screenshotsAlbumId),
+                )
+            ).expect(200)
+        )
+        val cursorCrontabId = cursorCrontab.path("id").asLong()
+
+        // 第一轮：无位点基线 → tag=0 回放，空相册单页即追平
+        api.post("/api/crontab/$cursorCrontabId/executions").expect(200)
+        val firstHistoryId = awaitCompletedHistory(api, cursorCrontabId)
+        assertCompletedDetailCount(api, firstHistoryId, 0)
+        assertEquals(listOf("0"), mock.allItemsTags(2), "首轮应从 tag=0 回放")
+
+        // 第二轮：syncTag 已到达 album/full 的水位 → 跳过 allitems
+        api.post("/api/crontab/$cursorCrontabId/executions").expect(200)
+        val secondHistoryId = awaitCompletedHistory(api, cursorCrontabId, afterHistoryId = firstHistoryId)
+        assertEquals(listOf("0"), mock.allItemsTags(2), "水位头未变的相册应跳过拉流")
+
+        // 云端新增 3 个资产 → 按位点增量拉取；allItemsPageSize=2 → 两页 0→2→3
+        mock.mutate(
+            mapOf(
+                "operations" to listOf(
+                    mapOf(
+                        "op" to "addAssets",
+                        "userId" to "mock-user",
+                        "albumId" to 2,
+                        "count" to 3,
+                        "template" to mapOf(
+                            "type" to "image",
+                            "fileName" to "cursor.jpg",
+                            "dateTaken" to 1714651200000L,
+                            "size" to 28,
+                            "sha1Mode" to "exact",
+                            "contentPattern" to "xiaomi-album-syncer-api-e2e\n",
+                        ),
+                    ),
+                )
+            )
+        )
+        api.post("/api/crontab/$cursorCrontabId/executions").expect(200)
+        val thirdHistoryId = awaitCompletedHistory(api, cursorCrontabId, afterHistoryId = secondHistoryId)
+        assertCompletedDetailCount(api, thirdHistoryId, 3)
+        assertEquals(
+            listOf("0", "0", "2"),
+            mock.allItemsTags(2),
+            "增量拉流应从上次位点翻页推进",
+        )
+
+        // 清理下载历史 → 位点随之清零 → 下一轮重新 tag=0 回放
+        api.delete("/api/crontab/$cursorCrontabId/histories").expect(200)
+        api.post("/api/crontab/$cursorCrontabId/executions").expect(200)
+        val fourthHistoryId = awaitCompletedHistory(api, cursorCrontabId, afterHistoryId = thirdHistoryId)
+        assertCompletedDetailCount(api, fourthHistoryId, 3)
+        assertEquals(
+            listOf("0", "0", "2", "0", "2"),
+            mock.allItemsTags(2),
+            "清理历史后应重新从 tag=0 回放",
+        )
+
+        assertEquals(0, mock.timelineCount(2), "位点模式不应请求相册 timeline")
+        api.delete("/api/crontab/$cursorCrontabId").expect(200)
+    }
+
     private fun executeRecordingWorkflows(
         api: ApiClient,
         mock: MockXiaomiApiServer,
@@ -418,7 +520,6 @@ class ApiE2eSuite {
             this["downloadVideos"] = false
             this["downloadAudios"] = true
             this["notify"] = false
-            this["diffByTimeline"] = true
         }
         val recordingCrontab = api.json(
             api.post(
@@ -427,6 +528,7 @@ class ApiE2eSuite {
                     "name" to "Recording API E2E",
                     "description" to "Recorder is independent from gallery",
                     "enabled" to false,
+                    "syncMode" to "TIMELINE",
                     "config" to recordingConfig,
                     "accountId" to accountId,
                     "albumIds" to listOf(audioAlbumId),
@@ -445,7 +547,6 @@ class ApiE2eSuite {
             this["downloadVideos"] = false
             this["downloadAudios"] = true
             this["notify"] = false
-            this["diffByTimeline"] = true
         }
         val mixedCrontab = api.json(
             api.post(
@@ -454,6 +555,7 @@ class ApiE2eSuite {
                     "name" to "Mixed API E2E",
                     "description" to "Gallery and recorder full refresh",
                     "enabled" to false,
+                    "syncMode" to "TIMELINE",
                     "config" to mixedConfig,
                     "accountId" to accountId,
                     "albumIds" to listOf(cameraAlbumId, audioAlbumId),
@@ -469,7 +571,7 @@ class ApiE2eSuite {
         assertTrue(mock.routeCount("/sfs/ns/recorder/dir/0/list") >= 3)
         assertTrue(mock.routePrefixCount("/sfs/ns/recorder/file/201/cb/") >= 2)
         assertEquals(0, mock.timelineCount(-1), "录音是独立远端资源，不应请求 gallery timeline 的 -1")
-        assertTrue(mock.timelineCount(1) >= 2, "混合任务应只为真实相册请求时间线")
+        assertTrue(mock.timelineCount(1) >= 1, "混合任务应只为真实相册请求时间线")
     }
 
     /**
@@ -493,7 +595,6 @@ class ApiE2eSuite {
             this["downloadVideos"] = false
             this["downloadAudios"] = false
             this["notify"] = false
-            this["diffByTimeline"] = false
             this["skipExistingFile"] = false
         }
         val galleryCrontab = api.json(
@@ -503,6 +604,7 @@ class ApiE2eSuite {
                     "name" to "Deleted Gallery E2E",
                     "description" to "云端已删除的相册资产应被跳过而非反复失败",
                     "enabled" to false,
+                    "syncMode" to "FULL",
                     "config" to galleryConfig,
                     "accountId" to accountId,
                     "albumIds" to listOf(cameraAlbumId),
@@ -569,7 +671,6 @@ class ApiE2eSuite {
             this["downloadVideos"] = false
             this["downloadAudios"] = true
             this["notify"] = false
-            this["diffByTimeline"] = false
             this["skipExistingFile"] = false
         }
         val recordingCrontab = api.json(
@@ -579,6 +680,7 @@ class ApiE2eSuite {
                     "name" to "Deleted Recording E2E",
                     "description" to "云端已删除的录音应被跳过而非反复失败",
                     "enabled" to false,
+                    "syncMode" to "FULL",
                     "config" to recordingConfig,
                     "accountId" to accountId,
                     "albumIds" to listOf(audioAlbumId),
@@ -590,7 +692,7 @@ class ApiE2eSuite {
         api.post("/api/crontab/$recordingCrontabId/executions").expect(200)
         awaitCompletedHistory(api, recordingCrontabId)
 
-        // 云端新增录音 203 后被删除：列表可见，storage 返回 code=50202
+        // 云端新增录音 301 后被删除：列表可见，storage 返回 code=50202
         mock.mutate(
             mapOf(
                 "operations" to listOf(
@@ -599,7 +701,7 @@ class ApiE2eSuite {
                         "userId" to "mock-user",
                         "recordings" to listOf(
                             mapOf(
-                                "id" to 203,
+                                "id" to 301,
                                 "fileName" to "deleted-recording.m4a",
                                 "recordingType" to 0,
                                 "createTime" to 1714651200000L,
@@ -612,7 +714,7 @@ class ApiE2eSuite {
                     mapOf(
                         "op" to "markDeleted",
                         "userId" to "mock-user",
-                        "ids" to listOf(203),
+                        "ids" to listOf(301),
                     ),
                 )
             )
@@ -629,9 +731,9 @@ class ApiE2eSuite {
             assertTrue(detail.path("downloadCompleted").asBoolean(), "资产 ${detail.path("asset").path("id")} 应标记下载完成")
             assertTrue(detail.path("message").isMissingNode || detail.path("message").isNull, "跳过不应产生错误消息")
         }
-        val deletedRecording = recordingDetails.path("rows").first { it.path("asset").path("id").asText() == "203" }
+        val deletedRecording = recordingDetails.path("rows").first { it.path("asset").path("id").asText() == "301" }
         assertFalse(Files.exists(Path.of(deletedRecording.path("filePath").asText())), "已删除录音不应产出文件")
-        assertEquals(0, mock.routePrefixCount("/mock/oss/203"), "已删除录音不应请求 OSS 签名直链")
+        assertEquals(0, mock.routePrefixCount("/mock/oss/301"), "已删除录音不应请求 OSS 签名直链")
         api.delete("/api/crontab/$recordingCrontabId").expect(200)
     }
 
@@ -653,7 +755,6 @@ class ApiE2eSuite {
             this["downloadVideos"] = false
             this["downloadAudios"] = false
             this["notify"] = false
-            this["diffByTimeline"] = false
             this["skipExistingFile"] = false
         }
         val crontab = api.json(
@@ -663,6 +764,7 @@ class ApiE2eSuite {
                     "name" to "Transient Storage Error E2E",
                     "description" to "retriable=true 的瞬时错误应在下个周期重试并最终成功",
                     "enabled" to false,
+                    "syncMode" to "FULL",
                     "config" to config,
                     "accountId" to accountId,
                     "albumIds" to listOf(cameraAlbumId),
