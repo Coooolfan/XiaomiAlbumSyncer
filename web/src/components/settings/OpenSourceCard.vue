@@ -143,15 +143,15 @@ const backendCore = computed(() => [
         {{ t('settings.openSource.depsListLead')
         }}<a
           class="text-blue-600 hover:underline"
-          :href="`${docsBaseUrl}/web/README/DEPENDENCIES.md`"
+          :href="`${docsBaseUrl}/web/docs/DEPENDENCIES.md`"
           target="_blank"
-          >web/README/DEPENDENCIES.md</a
+          >web/docs/DEPENDENCIES.md</a
         >{{ t('settings.openSource.depsListAnd')
         }}<a
           class="text-blue-600 hover:underline"
-          :href="`${docsBaseUrl}/server/README/DEPENDENCIES.md`"
+          :href="`${docsBaseUrl}/server/docs/DEPENDENCIES.md`"
           target="_blank"
-          >server/README/DEPENDENCIES.md</a
+          >server/docs/DEPENDENCIES.md</a
         >{{ t('settings.openSource.depsListTail') }}
       </p>
     </div>

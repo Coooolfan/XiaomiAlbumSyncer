@@ -21,9 +21,9 @@
 - [x] 📅 填充照片和视频的 Exif 时间信息
 - [x] 📅 填充照片和视频的文件系统时间
 - [x] 👥 支持多小米账号
-- [x] 📃 表达式插值文件下载路径 **>>> [点此查看详情](./README/expression-target-path.md) <<<**
-- [x] 🔒 SSL 支持 **>>> [点此查看详情](./README/ssl-suppot.md) <<<**
-- [x] 🛡️ Passkey 支持 **>>> [点此查看详情](./README/passkey-login.md) <<<**
+- [x] 📃 表达式插值文件下载路径 **>>> [点此查看详情](./docs/expression-target-path.md) <<<**
+- [x] 🔒 SSL 支持 **>>> [点此查看详情](./docs/ssl-suppot.md) <<<**
+- [x] 🛡️ Passkey 支持 **>>> [点此查看详情](./docs/passkey-login.md) <<<**
 
 > [!CAUTION] 
 > 此项目已于 `0.3.0` 完成重构。新版目前仅提供 Web UI，部署方式提供 Docker、JVM、原生二进制版本。旧版 CLI 工具仍然可用，可前往 [0.2.1 releases](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases/tag/0.2.1) 下载。
