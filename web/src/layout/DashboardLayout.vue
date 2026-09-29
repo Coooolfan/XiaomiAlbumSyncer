@@ -161,11 +161,15 @@ const runtimeLabel = computed(() => {
       <div class="border-t border-slate-200/80 dark:border-slate-800/80 px-3 py-3">
         <div
           v-if="systemInfo"
-          class="flex items-center gap-2 px-2 text-[11px] text-slate-400 dark:text-slate-500"
+          class="flex items-center gap-2 px-2 text-[11px] leading-4 text-slate-400 dark:text-slate-500"
         >
-          <span class="font-mono">{{ versionTag }}</span>
-          <span class="text-slate-300 dark:text-slate-600">·</span>
-          <span>{{ runtimeLabel }}</span>
+          <div
+            class="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <span class="font-mono">{{ versionTag }}</span>
+            <span class="text-slate-300 dark:text-slate-600">·</span>
+            <span>{{ runtimeLabel }}</span>
+          </div>
           <a
             href="https://github.com/coooolfan/xiaomialbumsyncer"
             target="_blank"
