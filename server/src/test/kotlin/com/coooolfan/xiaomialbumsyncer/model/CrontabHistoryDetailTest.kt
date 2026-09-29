@@ -816,7 +816,6 @@ class CrontabHistoryDetailTest {
             id = 1L
             this.crontab = crontab
             this.startTime = startTime
-            timelineSnapshot = emptyMap()
             fetchedAllAssets = false
         }
     }
