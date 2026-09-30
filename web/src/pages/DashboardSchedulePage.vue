@@ -58,7 +58,7 @@ const {
 })
 
 const accountOptions = computed(() =>
-  accounts.value.map((a) => ({ label: a.nickname || a.userId, value: a.id })),
+  accounts.value.map((a) => ({ label: a.nickname || a.userId, value: a.id, provider: a.provider })),
 )
 
 const allAlbumOptions = computed(() =>

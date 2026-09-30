@@ -134,7 +134,7 @@ export default {
   },
   schedule: {
     title: '计划任务',
-    subtitle: '管理和调度小米云相册同步任务',
+    subtitle: '管理和调度云相册同步任务',
     taskList: '任务列表',
     albums: '相册',
     newTask: '新建任务',
@@ -598,8 +598,8 @@ export default {
       bodyTemplatePlaceholder: '通知请求体模板',
       dailySummaryTemplate: '每日汇总通知模板',
       dailySummaryPlaceholder: '日报请求体模板，支持下方日报插值项，留空表示不发送日报',
-      passTokenExpiredTemplate: 'PassToken 失效通知模板',
-      passTokenExpiredPlaceholder: 'PassToken 失效请求体模板，支持下方账号插值项，留空表示不发送',
+      passTokenExpiredTemplate: '账号认证失效通知模板',
+      passTokenExpiredPlaceholder: '账号认证失效请求体模板，支持下方账号插值项，留空表示不发送',
       cronExpression: 'Cron 表达式',
       cronPlaceholder: '如 0 0 23 * * ?（必填）',
       timeZone: '时区',
@@ -607,7 +607,7 @@ export default {
     interpolation: {
       taskTitle: '单任务通知插值项',
       dailyTitle: '日报通知插值项',
-      passTokenTitle: 'PassToken 失效通知插值项',
+      passTokenTitle: '账号认证失效通知插值项',
       crontabName: '计划任务名称',
       crontabId: '计划任务 ID',
       success: '本次同步成功数量',
@@ -621,7 +621,7 @@ export default {
     preview: {
       taskTitle: '定时任务通知预览',
       dailyTitle: '每日汇总通知预览',
-      passTokenTitle: 'PassToken 失效通知预览',
+      passTokenTitle: '账号认证失效通知预览',
       passTokenEmpty: '（留空表示不发送）',
       dailyIncomplete: '（请填写完整日报配置后预览）',
       sample: {
@@ -635,7 +635,7 @@ export default {
     toast: {
       invalidJson: '当前请求体不是有效 JSON，无法格式化',
       invalidDailyJson: '当前日报请求体不是有效 JSON，无法格式化',
-      invalidPassTokenJson: '当前 PassToken 失效请求体不是有效 JSON，无法格式化',
+      invalidPassTokenJson: '当前 账号认证失效请求体不是有效 JSON，无法格式化',
       fetchFailedDetail: '无法获取通知配置',
       turboSendKeyRequired: '请填写 Server酱 Turbo SendKey',
       server3SendKeyRequired: '请填写 Server酱 ³ SendKey',
@@ -648,6 +648,25 @@ export default {
     },
   },
   tokens: {
+    icloud: {
+      status: '认证状态',
+      states: { READY: '已认证', MFA_REQUIRED: '需要验证码', SESSION_EXPIRED: '请重新登录' },
+      appleId: 'Apple 账号',
+      password: '账号密码',
+      region: '账号区域',
+      global: '国际区 (icloud.com)',
+      china: '中国大陆 (icloud.com.cn)',
+      requirements:
+        '请开启「在网页上访问 iCloud 数据」并关闭「高级数据保护」。支持照片、视频、Live Photo 原件和 RAW+JPEG；云端删除不会删除本地文件。',
+      code: '验证码',
+      codeHint: '请输入受信任 Apple 设备上显示的六位验证码。关闭弹窗后可通过账号编辑入口继续验证。',
+      verify: '验证并连接',
+      restart: '重新登录',
+      login: '登录 iCloud',
+      renewHint:
+        '密码和会话加密保存在服务端。Apple 要求重新认证时，请通过账号编辑入口登录或输入验证码。',
+      connected: 'iCloud 认证成功，可刷新相册并创建同步任务',
+    },
     table: {
       actions: '操作',
       createdAt: '创建时间',
@@ -694,8 +713,8 @@ export default {
       add: '添加账号',
       edit: '编辑账号',
       insecureWarning:
-        '警告：当前处于不安全上下文，提交的 passToken 将在网络上以明文传输到服务器，谨防中间人攻击。请仅在受信网络环境使用或通过 HTTPS 访问本页面。',
-      insecureShort: '当前环境不安全，PassToken 将明文传输。',
+        '警告：当前处于不安全上下文，提交的账号凭据将在网络上以明文传输到服务器，谨防中间人攻击。请仅在受信网络环境使用或通过 HTTPS 访问本页面。',
+      insecureShort: '当前环境不安全，账号凭据将明文传输。',
       empty: '暂无账号，请点击上方按钮添加。',
       nickname: '昵称',
       userId: 'User ID',

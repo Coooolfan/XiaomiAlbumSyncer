@@ -1,6 +1,7 @@
 export {AlbumsController} from './AlbumsController';
 export {AssetController} from './AssetController';
 export {CrontabController} from './CrontabController';
+export {ICloudController} from './ICloudController';
 export {McpTokenController} from './McpTokenController';
 export {PasskeyController} from './PasskeyController';
 export {QrLoginController} from './QrLoginController';

@@ -3,6 +3,7 @@ import {
     AlbumsController, 
     AssetController, 
     CrontabController, 
+    ICloudController,
     McpTokenController, 
     PasskeyController, 
     QrLoginController, 
@@ -19,6 +20,8 @@ export class Api {
     
     readonly crontabController: CrontabController
     
+    readonly icloudController: ICloudController
+
     readonly mcpTokenController: McpTokenController
     
     readonly passkeyController: PasskeyController
@@ -35,6 +38,7 @@ export class Api {
         this.albumsController = new AlbumsController(executor);
         this.assetController = new AssetController(executor);
         this.crontabController = new CrontabController(executor);
+        this.icloudController = new ICloudController(executor);
         this.mcpTokenController = new McpTokenController(executor);
         this.passkeyController = new PasskeyController(executor);
         this.qrLoginController = new QrLoginController(executor);
