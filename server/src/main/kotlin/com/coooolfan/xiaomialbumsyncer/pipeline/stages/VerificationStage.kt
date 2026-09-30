@@ -29,7 +29,10 @@ class VerificationStage(
         }
 
         log.info("开始校验资产 {} 的 SHA1", context.asset.id)
-        val sha1 = computeSha1(Path(context.filePath))
+        val sha1 = if (context.asset.cloudAsset != null) {
+            com.coooolfan.xiaomialbumsyncer.icloud.verifyICloudChecksum(Path(context.filePath), context.asset.cloudAsset!!.checksum)
+            context.asset.sha1
+        } else computeSha1(Path(context.filePath))
         if (!sha1.equals(context.asset.sha1, ignoreCase = true)) {
             // TODO: 这里需要思考一下怎么从头再来
             throw RuntimeException("资产 ${context.asset.id} 的 SHA1 校验失败，期望 ${context.asset.sha1} 实际 $sha1")

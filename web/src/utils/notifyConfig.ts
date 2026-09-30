@@ -93,7 +93,7 @@ export function buildPresetDailySummaryBodyTemplate(): string {
 }
 
 export function buildPresetPassTokenExpiredBodyTemplate(): string {
-  return '{"text":"Xiaomi Album Syncer 告警","desp":"账号 ${account.nickname}(${account.userId}) 的 PassToken 已失效，请在设置中更新"}'
+  return '{"text":"Xiaomi Album Syncer 告警","desp":"账号 ${account.nickname}(${account.userId}) 的认证已失效，请在账号设置中重新认证"}'
 }
 
 export function renderNotifyTemplate(template: string, values: Record<string, string>): string {

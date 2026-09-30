@@ -8,8 +8,17 @@ import java.time.Instant
 @Entity
 interface Asset {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonConverter(LongToStringConverter::class)
     val id: Long
+
+    @JsonConverter(LongToStringConverter::class)
+    val xiaomiId: Long?
+
+    val remoteKey: String?
+
+    @Serialized
+    val cloudAsset: ICloudAssetRef?
 
     val fileName: String
 

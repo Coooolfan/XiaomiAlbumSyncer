@@ -27,7 +27,7 @@ const props = defineProps<{
   form: LocalCronForm
   formErrors: Record<string, string>
   timeZones: ReadonlyArray<string>
-  accountOptions: ReadonlyArray<{ label: string; value: number }>
+  accountOptions: ReadonlyArray<{ label: string; value: number; provider?: string }>
   formAlbumOptions: ReadonlyArray<{ label: string; value: number; recording?: boolean }>
   targetPathMountWarning: boolean
   validateCronForm: (fields?: readonly string[]) => boolean
@@ -69,8 +69,19 @@ const hasRecordingAlbum = computed(() =>
   form.value.albumIds.some((id) => formAlbumOptions.value.find((o) => o.value === id)?.recording),
 )
 
+const isICloud = computed(
+  () => accountOptions.value.find((a) => a.value === form.value.accountId)?.provider === 'ICLOUD',
+)
+watch(
+  isICloud,
+  (value) => {
+    if (value) form.value.syncMode = 'FULL'
+  },
+  { immediate: true },
+)
+
 const recommendedMode = computed<CrontabSyncMode>(() =>
-  hasRecordingAlbum.value ? 'FULL' : 'TIMELINE',
+  hasRecordingAlbum.value || isICloud.value ? 'FULL' : 'TIMELINE',
 )
 
 const syncModeCards = computed(() =>
@@ -80,18 +91,20 @@ const syncModeCards = computed(() =>
       ['TIMELINE', 'Timeline', 'pi-history'],
       ['CURSOR', 'Cursor', 'pi-bolt'],
     ] as const
-  ).map(([value, key, icon]) => ({
-    value,
-    icon,
-    label: t(`cronform.advanced.syncMode${key}`),
-    desc: t(`cronform.advanced.syncMode${key}Hint`),
-    badge:
-      value === 'CURSOR'
-        ? ('beta' as const)
-        : recommendedMode.value === value
-          ? ('recommended' as const)
-          : null,
-  })),
+  )
+    .filter(([value]) => !isICloud.value || value === 'FULL')
+    .map(([value, key, icon]) => ({
+      value,
+      icon,
+      label: t(`cronform.advanced.syncMode${key}`),
+      desc: t(`cronform.advanced.syncMode${key}Hint`),
+      badge:
+        value === 'CURSOR'
+          ? ('beta' as const)
+          : recommendedMode.value === value
+            ? ('recommended' as const)
+            : null,
+    })),
 )
 
 function goToStep(target: Step) {

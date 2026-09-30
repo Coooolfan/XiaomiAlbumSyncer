@@ -19,6 +19,16 @@ class NativeImageRegister : RuntimeNativeRegistrar {
         if (metadata == null) return
         log.info("注册 Native Image 配置")
 
+        listOf(
+            com.coooolfan.xiaomialbumsyncer.icloud.ICloudCredentials::class.java,
+            com.coooolfan.xiaomialbumsyncer.model.ICloudAlbumRef::class.java,
+            com.coooolfan.xiaomialbumsyncer.model.ICloudAssetRef::class.java,
+        ).forEach { type ->
+            metadata.registerReflection(type,
+                org.noear.solon.aot.hint.MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+                org.noear.solon.aot.hint.MemberCategory.INVOKE_PUBLIC_METHODS,
+                org.noear.solon.aot.hint.MemberCategory.DECLARED_FIELDS)
+        }
         metadata.registerResourceInclude(MIGRATION_SQL_PATTERN_IN_NATIVE)
 
     }

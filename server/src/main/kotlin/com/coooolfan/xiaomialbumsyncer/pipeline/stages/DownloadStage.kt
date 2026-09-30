@@ -1,7 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.pipeline.stages
 
 import com.coooolfan.xiaomialbumsyncer.model.*
-import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
+import com.coooolfan.xiaomialbumsyncer.service.CloudMediaService
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
@@ -18,7 +18,7 @@ import kotlin.io.path.Path
  */
 @Managed
 class DownloadStage(
-    private val api: XiaoMiApi,
+    private val api: CloudMediaService,
     private val sql: KSqlClient,
 ) {
 
@@ -45,7 +45,7 @@ class DownloadStage(
         } else {
             log.info("开始下载资产 {}", context.asset.id)
             val ok = try {
-                api.downloadAsset(
+                api.download(
                     context.crontabHistory.crontab.accountId,
                     context.asset,
                     tempPath

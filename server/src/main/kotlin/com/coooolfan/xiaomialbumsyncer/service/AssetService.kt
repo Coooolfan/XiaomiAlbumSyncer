@@ -10,7 +10,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.*
@@ -20,7 +19,7 @@ import java.time.Instant
 import java.time.LocalDate
 
 @Managed
-class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
+class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi, private val media: CloudMediaService) {
 
     private val log = LoggerFactory.getLogger(AssetService::class.java)
 
@@ -30,11 +29,9 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             select(table)
         }.firstOrNull() ?: throw IllegalArgumentException("Album $albumId not found, please refresh albums first")
 
-        val fetchAssetList = api.fetchAllAssetsByAlbumId(album)
-        sql.saveEntitiesCommand(fetchAssetList, SaveMode.UPSERT).execute()
+        media.fetchAssets(album) { media.saveAssets(it) }
 
-        // 此处的 fetchAssetList 形状已保证与 fetcher 一致
-        return fetchAssetList
+        return getAssets(albumId, fetcher)
     }
 
     fun refreshAssetsByDiffTimeline(
@@ -91,7 +88,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
                         semaphore.withPermit {
                             log.info("开始刷新相册 {} 的 {} 日的 Asset", albumRemoteId, day)
                             api.fetchAssetsByAlbumId(album, day) { assets ->
-                                sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+                                media.saveAssets(assets)
                             }
                         }
                     }
@@ -169,8 +166,8 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
 
     private fun refreshAlbumFull(album: Album) {
         log.info("开始刷新相册 {} 的 Asset", album.id)
-        val assetCount = api.fetchAssetsByAlbumId(album) { assets ->
-            sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+        val assetCount = media.fetchAssets(album) { assets ->
+            media.saveAssets(assets)
         }
         sql.executeUpdate(Album::class) {
             set(table.assetCount, assetCount)
@@ -208,7 +205,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }
         while (true) {
             if (page.assets.isNotEmpty()) {
-                sql.saveEntitiesCommand(page.assets, SaveMode.UPSERT).execute()
+                media.saveAssets(page.assets)
             }
             val stalled = page.syncTag == syncTag
             syncTag = page.syncTag

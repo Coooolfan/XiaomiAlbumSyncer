@@ -14,6 +14,9 @@ interface Album {
     @JsonConverter(LongToStringConverter::class)
     val remoteId: Long        // 小米云的原始 albumId
 
+    @Serialized
+    val cloudAlbum: ICloudAlbumRef?
+
     val name: String
 
     val assetCount: Long

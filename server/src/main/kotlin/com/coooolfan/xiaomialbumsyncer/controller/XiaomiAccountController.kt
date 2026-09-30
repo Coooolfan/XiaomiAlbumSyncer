@@ -109,6 +109,7 @@ class XiaomiAccountController(private val service: XiaomiAccountService) {
 
     companion object {
         val DEFAULT_XIAOMI_ACCOUNT = newFetcher(XiaomiAccount::class).by {
+            provider()
             nickname()
             userId()
         }

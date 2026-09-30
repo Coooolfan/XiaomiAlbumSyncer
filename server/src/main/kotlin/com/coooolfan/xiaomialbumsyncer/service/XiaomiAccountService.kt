@@ -3,6 +3,8 @@ package com.coooolfan.xiaomialbumsyncer.service
 import com.coooolfan.xiaomialbumsyncer.controller.XiaomiAccountController.Companion.DEFAULT_XIAOMI_ACCOUNT
 import com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount
 import com.coooolfan.xiaomialbumsyncer.model.userId
+import com.coooolfan.xiaomialbumsyncer.model.provider
+import com.coooolfan.xiaomialbumsyncer.model.CloudProvider
 import com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountCreate
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
@@ -15,7 +17,8 @@ import org.slf4j.LoggerFactory
 @Managed
 class XiaomiAccountService(
     private val sql: KSqlClient,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val icloud: com.coooolfan.xiaomialbumsyncer.icloud.ICloudAccountService
 ) {
     private val log = LoggerFactory.getLogger(XiaomiAccountService::class.java)
 
@@ -39,7 +42,7 @@ class XiaomiAccountService(
      * 添加新账号
      */
     fun create(create: XiaomiAccountCreate): XiaomiAccount {
-        return sql.saveCommand(create, SaveMode.INSERT_ONLY).execute().modifiedEntity
+        return sql.saveCommand(create.toEntity { provider = CloudProvider.XIAOMI }, SaveMode.INSERT_ONLY).execute().modifiedEntity
     }
 
     /**
@@ -48,6 +51,7 @@ class XiaomiAccountService(
     fun upsertCredentials(userId: String, passToken: String): XiaomiAccount {
         val existing = sql.executeQuery(XiaomiAccount::class) {
             where(table.userId eq userId)
+            where(table.provider eq CloudProvider.XIAOMI)
             select(table)
         }.firstOrNull()
 
@@ -66,6 +70,7 @@ class XiaomiAccountService(
         if (!exists(account.id))
             throw IllegalArgumentException("账号不存在，ID: ${account.id}")
 
+        require(getById(account.id)?.provider == CloudProvider.XIAOMI) { "请使用 iCloud 登录接口更新该账号" }
         val result = sql.saveCommand(account, SaveMode.UPDATE_ONLY).execute(fetcher)
         // 更新后清除该账号的 token 缓存
         tokenManager.invalidateToken(account.id)
@@ -80,6 +85,7 @@ class XiaomiAccountService(
         // 先清除 token 缓存
         tokenManager.invalidateToken(id)
 
+        icloud.forget(id)
         val rows = sql.deleteById(XiaomiAccount::class, id).affectedRowCount(XiaomiAccount::class)
         if (rows == 0) {
             throw IllegalArgumentException("账号不存在: $id")
