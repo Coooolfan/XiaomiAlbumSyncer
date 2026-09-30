@@ -8077,23 +8077,6 @@
           ]
         },
         {
-          "name": "fetchAllAssetsByAlbumId",
-          "parameterTypes": [
-            "com.coooolfan.xiaomialbumsyncer.model.Album",
-            "java.time.LocalDate"
-          ]
-        },
-        {
-          "name": "fetchAllAssetsByAlbumId$default",
-          "parameterTypes": [
-            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi",
-            "com.coooolfan.xiaomialbumsyncer.model.Album",
-            "java.time.LocalDate",
-            "int",
-            "java.lang.Object"
-          ]
-        },
-        {
           "name": "fetchAssetsByAlbumId",
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.model.Album",

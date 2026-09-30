@@ -55,11 +55,9 @@ class ICloudAccountService(private val sql: KSqlClient, private val secrets: ICl
         return ICloudAccountStatus(accountId, session.state, credentials.domain)
     }
 
-    fun verify(accountId: Long, code: String): ICloudAccountStatus = withClient(accountId, verifying = true) { client ->
-        client.verify(code)
-        alerted.remove(accountId)
-        persist(accountId, client, "READY")
-        status(accountId)
+    fun verify(accountId: Long, code: String): ICloudAccountStatus {
+        withClient(accountId, verifying = true) { it.verify(code) }
+        return status(accountId)
     }
 
     internal fun <T> withClient(accountId: Long, verifying: Boolean = false, action: (ICloudClient) -> T): T {
