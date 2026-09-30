@@ -124,17 +124,6 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         return totalCount
     }
 
-    /**
-     * 获取相册全部资源并返回列表（适用于小相册或需要返回值的场景）
-     */
-    fun fetchAllAssetsByAlbumId(album: Album, day: LocalDate? = null): List<Asset> {
-        val allAssets = mutableListOf<Asset>()
-        fetchAssetsByAlbumId(album, day) { pageAssets ->
-            allAssets.addAll(pageAssets)
-        }
-        return allAssets.toList()
-    }
-
     fun fetchAlbumTimeline(accountId: Long, albumId: Long): AlbumTimeline {
         val responseTree = getJson(accountId, apiProperties.url("gallery/user/timeline?ts=${System.currentTimeMillis()}&albumId=$albumId"))
         val indexHash = responseTree.at("/data/indexHash").asText()

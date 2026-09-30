@@ -267,7 +267,6 @@ async function onSave() {
 
 async function onICloudCompleted(accountId: number) {
   showDialog.value = false
-  await accountsStore.refreshAccounts()
   toast.add({
     severity: 'success',
     summary: t('common.toast.success'),

@@ -19,11 +19,7 @@ class CloudMediaService(private val sql: KSqlClient, private val xiaomi: XiaoMiA
 
     @Synchronized fun saveAssets(assets: List<Asset>): List<Asset> {
         if (assets.isEmpty()) return emptyList()
-        val keys = assets.mapNotNull { it.remoteKey }
-        if (keys.isEmpty()) {
-            sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
-            return assets
-        }
+        val keys = assets.map { requireNotNull(it.remoteKey) { "云端资源缺少 remoteKey" } }
         val existing = sql.executeQuery(Asset::class) {
             where(table.remoteKey valueIn keys)
             select(table)
