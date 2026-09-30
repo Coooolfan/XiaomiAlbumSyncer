@@ -615,9 +615,9 @@ const messages: typeof zh = {
       dailySummaryTemplate: 'Daily summary template',
       dailySummaryPlaceholder:
         'Daily report body template; supports the variables listed below; leave empty to disable',
-      passTokenExpiredTemplate: 'PassToken expired template',
+      passTokenExpiredTemplate: 'Account authentication expired template',
       passTokenExpiredPlaceholder:
-        'PassToken-expired body template; supports the account variables below; leave empty to disable',
+        'Authentication-expired body template; supports the account variables below; leave empty to disable',
       cronExpression: 'Cron expression',
       cronPlaceholder: 'e.g. 0 0 23 * * ? (required)',
       timeZone: 'Time zone',
@@ -625,7 +625,7 @@ const messages: typeof zh = {
     interpolation: {
       taskTitle: 'Task notification variables',
       dailyTitle: 'Daily report variables',
-      passTokenTitle: 'PassToken expired variables',
+      passTokenTitle: 'Account authentication expired variables',
       crontabName: 'Scheduled task name',
       crontabId: 'Scheduled task ID',
       success: 'Successful items in this sync',
@@ -639,7 +639,7 @@ const messages: typeof zh = {
     preview: {
       taskTitle: 'Task notification preview',
       dailyTitle: 'Daily summary preview',
-      passTokenTitle: 'PassToken expired preview',
+      passTokenTitle: 'Account authentication expired preview',
       passTokenEmpty: '(leave empty to disable)',
       dailyIncomplete: '(complete the daily report config to preview)',
       sample: {
@@ -653,7 +653,7 @@ const messages: typeof zh = {
     toast: {
       invalidJson: 'Request body is not valid JSON; cannot format',
       invalidDailyJson: 'Daily report body is not valid JSON; cannot format',
-      invalidPassTokenJson: 'PassToken-expired body is not valid JSON; cannot format',
+      invalidPassTokenJson: 'Authentication-expired body is not valid JSON; cannot format',
       fetchFailedDetail: 'Unable to load notification settings',
       turboSendKeyRequired: 'Enter the Server酱 Turbo SendKey',
       server3SendKeyRequired: 'Enter the Server酱 ³ SendKey',
@@ -666,6 +666,30 @@ const messages: typeof zh = {
     },
   },
   tokens: {
+    icloud: {
+      status: 'Authentication',
+      states: {
+        READY: 'Authenticated',
+        MFA_REQUIRED: 'Verification required',
+        SESSION_EXPIRED: 'Sign in again',
+      },
+      appleId: 'Apple Account',
+      password: 'Account password',
+      region: 'Account region',
+      global: 'Global (icloud.com)',
+      china: 'China mainland (icloud.com.cn)',
+      requirements:
+        'Enable Access iCloud Data on the Web and turn off Advanced Data Protection. Photos, videos, Live Photo originals and RAW+JPEG are supported. Cloud deletions preserve local files.',
+      code: 'Verification code',
+      codeHint:
+        'Enter the six-digit code shown on your trusted Apple device. You can resume verification by editing the account after closing this dialog.',
+      verify: 'Verify and connect',
+      restart: 'Sign in again',
+      login: 'Sign in to iCloud',
+      renewHint:
+        'Your password and session are encrypted on the server. When Apple requires authentication again, edit this account to sign in or enter a verification code.',
+      connected: 'iCloud authenticated. Refresh albums to create a sync task',
+    },
     table: {
       actions: 'Actions',
       createdAt: 'Created',
@@ -714,8 +738,8 @@ const messages: typeof zh = {
       add: 'Add account',
       edit: 'Edit account',
       insecureWarning:
-        'Warning: insecure context. The passToken you submit will be sent to the server in plaintext — beware of man-in-the-middle attacks. Only use this page on a trusted network or over HTTPS.',
-      insecureShort: 'Insecure environment — PassToken will be sent in plaintext.',
+        'Warning: insecure context. The account credentials you submit will be sent to the server in plaintext — beware of man-in-the-middle attacks. Only use this page on a trusted network or over HTTPS.',
+      insecureShort: 'Insecure environment — Account credentials will be sent in plaintext.',
       empty: 'No accounts yet. Click the button above to add one.',
       nickname: 'Nickname',
       userId: 'User ID',

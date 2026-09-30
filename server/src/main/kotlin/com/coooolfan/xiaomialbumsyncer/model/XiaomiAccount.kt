@@ -8,6 +8,9 @@ interface XiaomiAccount {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long
 
+    @Default("XIAOMI")
+    val provider: CloudProvider
+
     val nickname: String      // 账号昵称，用于界面展示
     val passToken: String     // 小米账号 passToken
     val userId: String        // 小米账号 userId

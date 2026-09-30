@@ -234,9 +234,9 @@ class DatabaseMigrationTest {
             }
         }
 
-        assertEquals(1, flyway(databaseUrl).migrate().migrationsExecuted)
-        assertEquals("0.19.0", flyway(databaseUrl).info().current().version.version)
-        assertEquals(0, flyway(databaseUrl).migrate().migrationsExecuted)
+        assertEquals(1, flyway(databaseUrl, target = "0.19.0").migrate().migrationsExecuted)
+        assertEquals("0.19.0", flyway(databaseUrl, target = "0.19.0").info().current().version.version)
+        assertEquals(0, flyway(databaseUrl, target = "0.19.0").migrate().migrationsExecuted)
 
         DriverManager.getConnection(databaseUrl).use { connection ->
             val modes = connection.createStatement().use { statement ->
@@ -274,6 +274,31 @@ class DatabaseMigrationTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun upgradesAccountsForICloudWithoutChangingXiaomiCredentials(@TempDir tempDir: Path) {
+        val url = "jdbc:sqlite:${tempDir.resolve("icloud.db")}"
+        flyway(url, target = "0.19.0").migrate()
+        DriverManager.getConnection(url).use { connection ->
+            connection.createStatement().use { it.executeUpdate("INSERT INTO xiaomi_account(nickname, pass_token, user_id) VALUES ('legacy', 'secret', '100')") }
+        }
+        assertEquals(1, flyway(url).migrate().migrationsExecuted)
+        DriverManager.getConnection(url).use { connection ->
+            connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT provider, pass_token FROM xiaomi_account WHERE user_id='100'").use {
+                    assertTrue(it.next())
+                    assertEquals("XIAOMI", it.getString(1))
+                    assertEquals("secret", it.getString(2))
+                }
+                statement.execute("PRAGMA foreign_keys=ON")
+                statement.executeUpdate("INSERT INTO xiaomi_account(id,nickname,pass_token,user_id,provider) VALUES (100,'Apple','','apple','ICLOUD')")
+                statement.executeUpdate("INSERT INTO icloud_session VALUES (100,'encrypted','READY')")
+                statement.executeUpdate("DELETE FROM xiaomi_account WHERE id=100")
+                statement.executeQuery("SELECT count(*) FROM icloud_session").use { assertTrue(it.next()); assertEquals(0, it.getInt(1)) }
+            }
+        }
+        assertEquals(0, flyway(url).migrate().migrationsExecuted)
     }
 
     private fun flyway(databaseUrl: String, target: String? = null): Flyway {

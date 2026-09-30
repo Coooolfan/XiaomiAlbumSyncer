@@ -1,7 +1,10 @@
+import type {ICloudAlbumRef} from '../static/';
+
 export type AlbumDto = {
     'AlbumsController/DEFAULT_ALBUM': {
         readonly id: number;
         readonly remoteId: string;
+        readonly cloudAlbum?: ICloudAlbumRef | undefined;
         readonly name: string;
         readonly assetCount: number;
         readonly lastUpdateTime: string;
