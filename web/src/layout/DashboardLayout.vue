@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '../ApiInstance'
@@ -15,6 +15,30 @@ const router = useRouter()
 const { t } = useI18n()
 const loggingOut = ref(false)
 const systemInfo = ref<SystemInfoResponse | null>(null)
+const footerViewport = ref<HTMLElement | null>(null)
+const footerTrack = ref<HTMLElement | null>(null)
+const footerOverflow = ref(false)
+const footerScrollDistance = ref(0)
+
+watchEffect(
+  (onCleanup) => {
+    const viewport = footerViewport.value
+    const segment = footerTrack.value?.firstElementChild
+    if (!viewport || !segment) return
+
+    const update = () => {
+      const width = segment.getBoundingClientRect().width
+      footerOverflow.value = width - 28 > viewport.clientWidth
+      footerScrollDistance.value = width
+    }
+    const observer = new ResizeObserver(update)
+    observer.observe(viewport)
+    observer.observe(segment)
+    update()
+    onCleanup(() => observer.disconnect())
+  },
+  { flush: 'post' },
+)
 
 const navItems = computed(() => [
   { label: t('nav.schedule'), to: '/dashboard/schedule', icon: 'pi pi-calendar' },
@@ -159,12 +183,27 @@ const runtimeLabel = computed(() => {
           v-if="systemInfo"
           class="flex items-center gap-2 px-2 text-xs leading-4 text-slate-500 dark:text-slate-400"
         >
-          <div
-            class="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            <span class="font-mono">{{ versionTag }}</span>
-            <span class="text-slate-300 dark:text-slate-600">·</span>
-            <span>{{ runtimeLabel }}</span>
+          <div ref="footerViewport" class="min-w-0 flex-1 overflow-hidden whitespace-nowrap">
+            <div
+              ref="footerTrack"
+              class="flex w-max"
+              :class="{ 'footer-marquee': footerOverflow }"
+              :style="{
+                '--footer-scroll-distance': `${footerScrollDistance}px`,
+                '--footer-scroll-duration': `${footerScrollDistance / 22}s`,
+              }"
+            >
+              <div
+                v-for="copy in footerOverflow ? 2 : 1"
+                :key="copy"
+                :aria-hidden="copy === 2 ? true : undefined"
+                class="flex shrink-0 items-center gap-1.5 pr-7"
+              >
+                <span class="font-mono">{{ versionTag }}</span>
+                <span class="text-slate-300 dark:text-slate-600">·</span>
+                <span>{{ runtimeLabel }}</span>
+              </div>
+            </div>
           </div>
           <a
             href="https://github.com/coooolfan/xiaomialbumsyncer"
@@ -224,3 +263,15 @@ const runtimeLabel = computed(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.footer-marquee {
+  animation: footer-scroll var(--footer-scroll-duration) linear infinite;
+}
+
+@keyframes footer-scroll {
+  to {
+    transform: translateX(calc(-1 * var(--footer-scroll-distance)));
+  }
+}
+</style>
