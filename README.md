@@ -139,7 +139,7 @@
 
 **方式一：扫码登录（推荐）**
 
-访问 `http://localhost:8232/#/dashboard/setting` ，在「小米账号」卡片中点击 `扫码添加`，使用小米手机或平板的「设置 > 小米账号」扫码确认即可，账号凭据会自动写入。对已存在的账号再次扫码可直接刷新其 passToken。
+访问 `http://localhost:8232/#/dashboard/setting` ，在「同步账号」卡片中点击 `添加账号` 并选择 `扫码登录`，使用小米手机或平板的「设置 > 小米账号」扫码确认即可，账号凭据会自动写入。对已存在的账号再次扫码可直接刷新其 passToken。
 
 **方式二：手动提取**
 
@@ -154,11 +154,11 @@
 
 ### 设置 PassToken 与 UserId
 
-访问 `http://localhost:8232/#/dashboard/setting` ，设置 PassToken 与 UserId。
+访问 `http://localhost:8232/#/dashboard/setting` ，在「同步账号」卡片中点击 `添加账号` 并选择 `PassToken 登录`，填写上一步获取到的 userId 与 PassToken。
 
 ### 获取所有相册
 
-访问 `http://localhost:8232/#/dashboard/schedule` 选择 `从远程更新整个相册列表`
+访问 `http://localhost:8232/#/dashboard/schedule` ，在对应账号的相册卡片上点击 `⋯` 按钮，选择 `从远程更新此账号相册列表`
 
 ![fetchlastestalbums](static/fetchlastestalbums.avif)
 
@@ -169,7 +169,7 @@
 
 ### 创建计划任务
 
-访问 `http://localhost:8232/#/dashboard/schedule` 单击 任务计划 卡片右上角的绿色 ➕ 号。按需要填写各项配置。
+访问 `http://localhost:8232/#/dashboard/schedule` 单击页面右上角的 `新建任务` 按钮。按需要填写各项配置。
 
 ![democrontab](./static/democrontab.avif)
 
@@ -182,7 +182,7 @@
 
 ### 手动触发计划任务
 
-不论任务计划是否启用。您都可以在控制台手动触发任务执行
+不论任务计划是否启用。您都可以在控制台手动触发任务执行：鼠标悬停在任务行上，点击 ① 处的执行按钮，并在弹出的确认框中点击 ② 处的 `执行` 确认
 
 ![manualtriggercrontab](static/manualtriggercrontab.avif)
 
