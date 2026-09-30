@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Xiaomi Album Syncer - 全量 / 增量 / 定时下载小米云服务中的相册与录音到本地" />
     <title>Xiaomi Album Syncer</title>
+    <script>
+      try {
+        var t = localStorage.getItem('theme')
+        var dark = t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
+        if (dark) document.documentElement.classList.add('dark')
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

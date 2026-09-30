@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 html,
 body,
 #root {
@@ -8,7 +10,12 @@ body,
 
 body {
   margin: 0;
+  background-color: #fff;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dark body {
   background-color: #000;
   color: #e2e8f0;
-  -webkit-font-smoothing: antialiased;
 }
