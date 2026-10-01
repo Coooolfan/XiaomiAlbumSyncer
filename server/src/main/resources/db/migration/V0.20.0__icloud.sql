@@ -6,8 +6,7 @@ UPDATE asset SET xiaomi_id = id,
     remote_key = 'xiaomi:' || (SELECT account_id FROM album WHERE album.id = asset.album_id) || ':' || id;
 ALTER TABLE asset ADD COLUMN cloud_asset TEXT;
 CREATE UNIQUE INDEX idx_asset_remote_key ON asset(remote_key) WHERE remote_key IS NOT NULL;
-CREATE TABLE icloud_session (
-    id INTEGER NOT NULL PRIMARY KEY REFERENCES xiaomi_account(id) ON DELETE CASCADE,
-    encrypted_data TEXT NOT NULL,
-    state TEXT NOT NULL
-);
+ALTER TABLE xiaomi_account RENAME TO provider_account;
+ALTER TABLE provider_account ADD COLUMN credentials TEXT NOT NULL DEFAULT '{}';
+UPDATE provider_account SET credentials = json_object('passToken', pass_token);
+ALTER TABLE provider_account DROP COLUMN pass_token;

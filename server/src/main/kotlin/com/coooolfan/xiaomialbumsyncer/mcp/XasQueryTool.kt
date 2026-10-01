@@ -94,7 +94,7 @@ class XasQueryTool(
                 )
             }
 
-            DOMAIN_SYSTEM to ACTION_LIST -> service.listSystem(XIAOMI_ACCOUNT_FETCHER)
+            DOMAIN_SYSTEM to ACTION_LIST -> service.listSystem(PROVIDER_ACCOUNT_FETCHER)
 
             else -> throw BadRequestException("domain=$domain 不支持 action=$action")
         }
@@ -182,7 +182,7 @@ class XasQueryTool(
             }
         }
 
-        private val XIAOMI_ACCOUNT_FETCHER = newFetcher(XiaomiAccount::class).by {
+        private val PROVIDER_ACCOUNT_FETCHER = newFetcher(ProviderAccount::class).by {
             nickname()
             userId()
         }

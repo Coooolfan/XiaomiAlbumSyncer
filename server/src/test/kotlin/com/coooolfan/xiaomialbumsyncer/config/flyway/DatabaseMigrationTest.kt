@@ -277,25 +277,34 @@ class DatabaseMigrationTest {
     }
 
     @Test
-    fun upgradesAccountsForICloudWithoutChangingXiaomiCredentials(@TempDir tempDir: Path) {
-        val url = "jdbc:sqlite:${tempDir.resolve("icloud.db")}"
+    fun upgradesToProviderAccountsWithoutChangingCredentialsOrReferences(@TempDir tempDir: Path) {
+        val url = "jdbc:sqlite:${tempDir.resolve("accounts.db")}"
         flyway(url, target = "0.19.0").migrate()
         DriverManager.getConnection(url).use { connection ->
-            connection.createStatement().use { it.executeUpdate("INSERT INTO xiaomi_account(nickname, pass_token, user_id) VALUES ('legacy', 'secret', '100')") }
+            connection.createStatement().use {
+                it.executeUpdate("INSERT INTO xiaomi_account(id,nickname,pass_token,user_id) VALUES (100,'Xiaomi','pass-token','xiaomi')")
+                it.executeUpdate("INSERT INTO album(id,name,remote_id,shadow,last_update_time,asset_count,account_id) VALUES (100,'Photos',1,0,0,0,100)")
+            }
         }
         assertEquals(1, flyway(url).migrate().migrationsExecuted)
+        assertEquals("0.20.0", flyway(url).info().current().version.version)
         DriverManager.getConnection(url).use { connection ->
+            assertEquals(setOf("id", "nickname", "user_id", "provider", "credentials"), connection.columnNames("provider_account"))
             connection.createStatement().use { statement ->
-                statement.executeQuery("SELECT provider, pass_token FROM xiaomi_account WHERE user_id='100'").use {
+                statement.executeQuery("SELECT provider,credentials FROM provider_account WHERE id=100").use {
                     assertTrue(it.next())
                     assertEquals("XIAOMI", it.getString(1))
-                    assertEquals("secret", it.getString(2))
+                    assertEquals("pass-token", com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().readTree(it.getString(2))["passToken"].asText())
                 }
-                statement.execute("PRAGMA foreign_keys=ON")
-                statement.executeUpdate("INSERT INTO xiaomi_account(id,nickname,pass_token,user_id,provider) VALUES (100,'Apple','','apple','ICLOUD')")
-                statement.executeUpdate("INSERT INTO icloud_session VALUES (100,'encrypted','READY')")
-                statement.executeUpdate("DELETE FROM xiaomi_account WHERE id=100")
-                statement.executeQuery("SELECT count(*) FROM icloud_session").use { assertTrue(it.next()); assertEquals(0, it.getInt(1)) }
+                for (table in listOf("album", "crontab")) {
+                    statement.executeQuery("PRAGMA foreign_key_list($table)").use {
+                        assertTrue(it.next()); assertEquals("provider_account", it.getString("table"))
+                    }
+                }
+                statement.executeQuery("PRAGMA foreign_key_check").use { assertFalse(it.next()) }
+                statement.executeQuery("SELECT count(*) FROM sqlite_master WHERE name IN ('xiaomi_account','icloud_session')").use {
+                    assertTrue(it.next()); assertEquals(0, it.getInt(1))
+                }
             }
         }
         assertEquals(0, flyway(url).migrate().migrationsExecuted)

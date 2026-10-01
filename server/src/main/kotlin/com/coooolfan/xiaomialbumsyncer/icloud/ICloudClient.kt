@@ -20,6 +20,7 @@ internal data class ICloudCredentials(
     val clientId: String = UUID.randomUUID().toString(),
     val headers: MutableMap<String, String> = mutableMapOf(),
     var cookies: List<String> = emptyList(),
+    val state: String = "READY",
 )
 
 internal class ICloudApiException(val status: Int, val serverCode: String = "") : RuntimeException(

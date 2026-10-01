@@ -125,7 +125,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi, priv
     fun refreshAssetsBySyncTag(
         crontab: Crontab,
         crontabHistory: CrontabHistory,
-        cursorBaseline: Map<Long, String>
+        cursorBaseline: Map<String, String>
     ) {
         val accountId = crontab.accountId
 
@@ -148,11 +148,11 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi, priv
                         if (remote == null) {
                             log.warn("相册 {} (remoteId={}) 未出现在 album/full 快照中，本次跳过", album.name, album.remoteId)
                         } else {
-                            refreshAlbumBySyncTag(album, remote, cursorBaseline[album.remoteId]) { syncTag ->
+                            refreshAlbumBySyncTag(album, remote, cursorBaseline[album.remoteId.toString()]) { syncTag ->
                                 synchronized(cursors) {
-                                    cursors[album.remoteId] = syncTag
+                                    cursors[album.remoteId.toString()] = syncTag
                                     sql.executeUpdate(CrontabHistory::class) {
-                                        set(table.albumSyncCursors, cursors.toMap())
+                                        set(table.syncCursors, cursors.toMap())
                                         where(table.id eq crontabHistory.id)
                                     }
                                 }
@@ -161,6 +161,32 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi, priv
                     }
                 }
             }.awaitAll()
+        }
+    }
+
+    fun refreshICloudAssetsByCursor(crontab: Crontab, history: CrontabHistory, baseline: Map<String, String>) {
+        val albums = crontabAlbums(crontab)
+        val cursors = baseline.toMutableMap()
+        for ((zone, selected) in albums.groupBy { requireNotNull(it.cloudAlbum).zone }) {
+            // 相册范围改变后建立新基线；账号之间、任务之间不共享同步进度。
+            val key = "icloud:${crontab.accountId}:$zone:${selected.map { it.id }.sorted().joinToString(",")}"
+            media.fetchICloudIncremental(selected, baseline[key], { media.saveAssets(it) }) { token ->
+                cursors[key] = token
+                sql.executeUpdate(CrontabHistory::class) {
+                    set(table.syncCursors, cursors.toMap())
+                    where(table.id eq history.id)
+                }
+            }
+            for (album in selected) {
+                val count = sql.executeQuery(Asset::class) {
+                    where(table.albumId eq album.id)
+                    select(count(table))
+                }.single()
+                sql.executeUpdate(Album::class) {
+                    set(table.assetCount, count)
+                    where(table.id eq album.id)
+                }
+            }
         }
     }
 

@@ -12,10 +12,13 @@ import java.nio.file.Path
 /** 按账号来源分派相册查询和下载；iCloud 资源按相册成员保留独立下载历史。 */
 @Managed
 class CloudMediaService(private val sql: KSqlClient, private val xiaomi: XiaoMiApi, private val icloud: ICloudPhotos) {
-    fun isICloud(accountId: Long): Boolean = sql.findById(XiaomiAccount::class, accountId)?.provider == CloudProvider.ICLOUD
+    fun isICloud(accountId: Long): Boolean = sql.findById(ProviderAccount::class, accountId)?.provider == CloudProvider.ICLOUD
     fun fetchAlbums(accountId: Long): List<Album> = if (isICloud(accountId)) icloud.fetchAlbums(accountId) else xiaomi.fetchAllAlbums(accountId)
     fun fetchAssets(album: Album, handler: (List<Asset>) -> Unit): Long =
-        if (isICloud(album.accountId)) icloud.fetchAssets(album, handler) else xiaomi.fetchAssetsByAlbumId(album, handler = handler)
+        if (album.cloudAlbum != null) icloud.fetchAssets(album, handler) else xiaomi.fetchAssetsByAlbumId(album, handler = handler)
+
+    fun fetchICloudIncremental(albums: List<Album>, cursor: String?, handler: (List<Asset>) -> Unit, commitCursor: (String) -> Unit) =
+        icloud.fetchIncremental(albums, cursor, handler, commitCursor)
 
     @Synchronized fun saveAssets(assets: List<Asset>): List<Asset> {
         if (assets.isEmpty()) return emptyList()
@@ -59,5 +62,5 @@ class CloudMediaService(private val sql: KSqlClient, private val xiaomi: XiaoMiA
     }
 
     fun download(accountId: Long, asset: Asset, path: Path): Boolean =
-        if (isICloud(accountId)) icloud.download(accountId, asset, path) else xiaomi.downloadAsset(accountId, asset, path)
+        if (asset.cloudAsset != null) icloud.download(accountId, asset, path) else xiaomi.downloadAsset(accountId, asset, path)
 }
