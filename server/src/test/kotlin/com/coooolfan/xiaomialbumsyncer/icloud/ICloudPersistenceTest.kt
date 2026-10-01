@@ -20,23 +20,6 @@ import java.nio.file.Path
 import java.time.Instant
 
 class ICloudPersistenceTest {
-    @Test fun encryptsWithReusableKeyAndRejectsTampering(@TempDir directory: Path) {
-        fun secrets() = ICloudSecrets().also {
-            ICloudSecrets::class.java.getDeclaredField("databasePath").apply { isAccessible = true }.set(it, directory.resolve("db.sqlite").toString())
-        }
-        val encrypted = secrets().encrypt("password-and-cookies")
-        assertFalse(encrypted.contains("password"))
-        assertEquals("password-and-cookies", secrets().decrypt(encrypted))
-        val bytes = java.util.Base64.getDecoder().decode(encrypted)
-        bytes[bytes.lastIndex] = (bytes.last().toInt() xor 1).toByte()
-        assertThrows(javax.crypto.AEADBadTagException::class.java) { secrets().decrypt(java.util.Base64.getEncoder().encodeToString(bytes)) }
-        val key = directory.resolve("icloud.key")
-        assertEquals(32L, Files.size(key))
-        if (key.fileSystem.supportedFileAttributeViews().contains("posix")) {
-            assertEquals("rw-------", java.nio.file.attribute.PosixFilePermissions.toString(Files.getPosixFilePermissions(key)))
-        }
-    }
-
     @Test fun upsertsRemoteResourcesWithoutChangingDownloadIdentity(@TempDir directory: Path) {
         val source = HikariDataSource(HikariConfig().apply {
             jdbcUrl = "jdbc:sqlite:${directory.resolve("icloud.db")}"
@@ -50,14 +33,62 @@ class ICloudPersistenceTest {
                 setDatabaseNamingStrategy(DefaultDatabaseNamingStrategy.LOWER_CASE)
             }
             val notify = NotifyService(sql)
-            val accounts = ICloudAccountService(sql, ICloudSecrets(), notify)
+            val accounts = ICloudAccountService(sql, notify)
             val media = CloudMediaService(sql, XiaoMiApi(TokenManager(sql, notify)), ICloudPhotos(accounts))
-            val account = sql.saveCommand(XiaomiAccount {
+            val account = sql.saveCommand(ProviderAccount {
                 nickname = "Apple"
                 provider = CloudProvider.ICLOUD
                 userId = "apple@example.com"
-                passToken = ""
+                credentials = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().writeValueAsString(
+                    ICloudCredentials("apple@example.com", "password", "cn", headers = mutableMapOf("X-Apple-TwoSV-Trust-Token" to "trust")))
             }, org.babyfish.jimmer.sql.ast.mutation.SaveMode.INSERT_ONLY).execute().modifiedEntity
+            source.connection.use { connection ->
+                connection.createStatement().use { statement ->
+                    statement.executeUpdate("CREATE TABLE credential_writes (account_id INTEGER)")
+                    statement.executeUpdate("CREATE TRIGGER audit_credentials AFTER UPDATE OF credentials ON provider_account BEGIN INSERT INTO credential_writes VALUES (NEW.id); END")
+                }
+            }
+            fun credentialWrites(): Int = source.connection.use { connection ->
+                connection.createStatement().use { statement ->
+                    statement.executeQuery("SELECT count(*) FROM credential_writes").use { rows -> rows.next(); rows.getInt(1) }
+                }
+            }
+            assertEquals("cn", accounts.status(account.id).domain)
+            accounts.withClient(account.id) { }
+            assertEquals(0, credentialWrites())
+            accounts.withClient(account.id) { client ->
+                client.credentials.cookies = listOf("session-cookie")
+                client.credentials.headers["X-Apple-Session-Token"] = "renewed-session"
+            }
+            assertEquals(1, credentialWrites())
+            val restored = ICloudAccountService(sql, notify)
+            restored.withClient(account.id) { client ->
+                assertEquals("trust", client.credentials.headers["X-Apple-TwoSV-Trust-Token"])
+                assertEquals("renewed-session", client.credentials.headers["X-Apple-Session-Token"])
+                assertEquals(listOf("session-cookie"), client.credentials.cookies)
+            }
+            assertEquals(1, credentialWrites())
+            assertThrows(com.coooolfan.xiaomialbumsyncer.exception.BadRequestException::class.java) {
+                restored.withClient(account.id) { throw ICloudApiException(503) }
+            }
+            assertEquals("READY", restored.status(account.id).state)
+            assertEquals(1, credentialWrites())
+            repeat(2) {
+                assertThrows(com.coooolfan.xiaomialbumsyncer.exception.BadRequestException::class.java) {
+                    restored.withClient(account.id) { throw ICloudApiException(401) }
+                }
+            }
+            assertEquals("SESSION_EXPIRED", restored.status(account.id).state)
+            assertEquals(2, credentialWrites())
+            assertEquals("Apple", sql.findById(ProviderAccount::class, account.id)!!.nickname)
+            assertFalse(Files.exists(directory.resolve("icloud.key")))
+            source.connection.use { connection ->
+                connection.createStatement().use { statement ->
+                    statement.executeUpdate("INSERT INTO crontab(id,name,config,description,enabled,account_id,sync_mode) VALUES (100,'cursor','{}','',0,${account.id},'CURSOR')")
+                    statement.executeUpdate("""INSERT INTO crontab_history(id,crontab_id,start_time,timeline_snapshot,album_sync_cursors,fetched_all_assets) VALUES (100,100,0,NULL,'{"42":"legacy-tag"}',0)""")
+                }
+            }
+            assertEquals(mapOf("42" to "legacy-tag"), sql.findById(CrontabHistory::class, 100L)!!.syncCursors)
             val album = sql.saveCommand(Album {
                 accountId = account.id
                 remoteId = 1

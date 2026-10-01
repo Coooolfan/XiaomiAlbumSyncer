@@ -368,7 +368,7 @@ const messages: typeof zh = {
       syncModeTimelineHint:
         'Compares the album timeline from the previous sync and only fetches assets on dates that changed.',
       syncModeCursorHint:
-        'Record-level incremental fetch driven by per-album cursors, with resumable pagination.',
+        'Read changes from the previous sync cursor with resume support. The first sync or an invalid cursor builds a full baseline.',
       rewriteExifTime: 'Fill EXIF time',
       rewriteExifTimeHint:
         "Writes the asset's Xiaomi Cloud time into EXIF, only when the asset has no EXIF time.",
@@ -687,7 +687,7 @@ const messages: typeof zh = {
       restart: 'Sign in again',
       login: 'Sign in to iCloud',
       renewHint:
-        'Your password and session are encrypted on the server. When Apple requires authentication again, edit this account to sign in or enter a verification code.',
+        'Your password and session are stored in the server database. When Apple requires authentication again, edit this account to sign in or enter a verification code.',
       connected: 'iCloud authenticated. Refresh albums to create a sync task',
     },
     table: {

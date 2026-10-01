@@ -363,7 +363,8 @@ export default {
       syncModeCursor: '位点增量',
       syncModeFullHint: '每次同步枚举所选相册的全部资产。',
       syncModeTimelineHint: '通过对比上一次同步的相册时间线，将获取范围限定为存在变动的日期。',
-      syncModeCursorHint: '按相册水位位点做记录级增量拉取，支持断点续拉。',
+      syncModeCursorHint:
+        '从上次同步位点读取变化记录，支持断点续拉；首次同步或位点失效时自动建立全量基线。',
       rewriteExifTime: '填充 EXIF 时间',
       rewriteExifTimeHint:
         '将资产在小米云服务的时间写入 EXIF 时间，仅在资产不存在 EXIF 时间时生效。',
@@ -664,7 +665,7 @@ export default {
       restart: '重新登录',
       login: '登录 iCloud',
       renewHint:
-        '密码和会话加密保存在服务端。Apple 要求重新认证时，请通过账号编辑入口登录或输入验证码。',
+        '密码和会话保存在服务端数据库中。Apple 要求重新认证时，请通过账号编辑入口登录或输入验证码。',
       connected: 'iCloud 认证成功，可刷新相册并创建同步任务',
     },
     table: {

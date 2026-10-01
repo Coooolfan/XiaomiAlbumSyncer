@@ -75,13 +75,13 @@ const isICloud = computed(
 watch(
   isICloud,
   (value) => {
-    if (value) form.value.syncMode = 'FULL'
+    if (value && form.value.syncMode === 'TIMELINE') form.value.syncMode = 'CURSOR'
   },
   { immediate: true },
 )
 
 const recommendedMode = computed<CrontabSyncMode>(() =>
-  hasRecordingAlbum.value || isICloud.value ? 'FULL' : 'TIMELINE',
+  isICloud.value ? 'CURSOR' : hasRecordingAlbum.value ? 'FULL' : 'TIMELINE',
 )
 
 const syncModeCards = computed(() =>
@@ -92,7 +92,7 @@ const syncModeCards = computed(() =>
       ['CURSOR', 'Cursor', 'pi-bolt'],
     ] as const
   )
-    .filter(([value]) => !isICloud.value || value === 'FULL')
+    .filter(([value]) => !isICloud.value || value !== 'TIMELINE')
     .map(([value, key, icon]) => ({
       value,
       icon,

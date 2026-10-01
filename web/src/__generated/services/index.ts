@@ -4,7 +4,7 @@ export {CrontabController} from './CrontabController';
 export {ICloudController} from './ICloudController';
 export {McpTokenController} from './McpTokenController';
 export {PasskeyController} from './PasskeyController';
+export {ProviderAccountController} from './ProviderAccountController';
 export {QrLoginController} from './QrLoginController';
 export {SystemConfigController} from './SystemConfigController';
 export {TokenController} from './TokenController';
-export {XiaomiAccountController} from './XiaomiAccountController';

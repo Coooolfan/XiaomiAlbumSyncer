@@ -2,7 +2,7 @@ package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 
 
 import com.coooolfan.xiaomialbumsyncer.config.XiaomiApiProperties
-import com.coooolfan.xiaomialbumsyncer.model.XiaomiAccount
+import com.coooolfan.xiaomialbumsyncer.model.ProviderAccount
 import com.coooolfan.xiaomialbumsyncer.service.NotifyService
 import com.coooolfan.xiaomialbumsyncer.utils.*
 import kotlinx.coroutines.CoroutineScope
@@ -53,7 +53,7 @@ class TokenManager(private val sql: KSqlClient, private val notifyService: Notif
 
             log.info("账号 {} 的 Service token 已过期或不存在，重新获取中...", accountId)
 
-            val account = sql.findById(XiaomiAccount::class, accountId)
+            val account = sql.findById(ProviderAccount::class, accountId)
                 ?: throw IllegalStateException("Account not found: $accountId")
 
             val serviceToken = genServiceToken(account)
@@ -75,9 +75,10 @@ class TokenManager(private val sql: KSqlClient, private val notifyService: Notif
         return Instant.now().isAfter(lastFreshenTime.plusSeconds(60 * 10))
     }
 
-    private fun genServiceToken(account: XiaomiAccount): String {
+    private fun genServiceToken(account: ProviderAccount): String {
 
-        val passToken = account.passToken
+        val passToken = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().readTree(account.credentials).get("passToken")?.asText()
+            ?: throw IllegalArgumentException("小米账号缺少 passToken")
         val userId = account.userId
         val deviceId = "wb_" + UUID.randomUUID().toString()
 
@@ -137,7 +138,7 @@ class TokenManager(private val sql: KSqlClient, private val notifyService: Notif
 
     }
 
-    private fun onPassTokenInvalid(account: XiaomiAccount) {
+    private fun onPassTokenInvalid(account: ProviderAccount) {
         if (!passTokenAlerted.add(account.id)) return
         log.error("账号 {}({}) 的 passToken 已失效，请在设置中更新", account.id, account.userId)
         CoroutineScope(Dispatchers.IO).launch {

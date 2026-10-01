@@ -38,3 +38,5 @@ logs/
 
 .claude/*
 !.claude/skills
+
+/server/db/

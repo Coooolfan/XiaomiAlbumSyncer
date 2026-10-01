@@ -36,5 +36,4 @@ export type {SystemConfigNotifyConfigUpdate} from './SystemConfigNotifyConfigUpd
 export type {SystemConfigPasswordUpdate} from './SystemConfigPasswordUpdate';
 export type {SystemConfigUpdate} from './SystemConfigUpdate';
 export type {SystemInfoResponse} from './SystemInfoResponse';
-export type {XiaomiAccountCreate} from './XiaomiAccountCreate';
-export type {XiaomiAccountUpdate} from './XiaomiAccountUpdate';
+export type {XiaomiAccountInput} from './XiaomiAccountInput';

@@ -44,16 +44,17 @@ class CrontabPipeline(
         // 对资产的刷新操作作为独立步骤执行，不混入后续的并发流，避免状态管理复杂化
         val crontabHistory = crontabService.createCrontabHistory(crontab)
 
-        if (media.isICloud(crontab.accountId)) {
-            assetService.refreshAssetsFull(crontab, crontabHistory)
-        } else when (crontab.syncMode) {
+        when (crontab.syncMode) {
             CrontabSyncMode.CURSOR -> {
-                // 位点同步模式：album/full 预检 + allitems 按位点拉流，基线为最近一次含位点的历史
-                val albumSyncCursors = crontabService.getAlbumSyncCursorsHistory(crontabHistory)
-                assetService.refreshAssetsBySyncTag(crontab, crontabHistory, albumSyncCursors)
+                // 基线为本任务最近一次已提交的游标，按来源读取后续变化记录
+                val syncCursors = crontabService.getSyncCursorsHistory(crontabHistory)
+                if (media.isICloud(crontab.accountId))
+                    assetService.refreshICloudAssetsByCursor(crontab, crontabHistory, syncCursors)
+                else assetService.refreshAssetsBySyncTag(crontab, crontabHistory, syncCursors)
             }
 
             CrontabSyncMode.TIMELINE -> {
+                require(!media.isICloud(crontab.accountId)) { "iCloud 不支持时间线同步，请选择全量或位点增量" }
                 // 对 crontab.albums 进行同步操作, 重新刷新这些相册的所有 Asset 取到上次的 CrontabHistory 的 timelineSnapshot
                 val albumTimelinesHistory = crontabService.getAlbumTimelinesHistory(crontabHistory)
 

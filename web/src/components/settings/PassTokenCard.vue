@@ -13,7 +13,7 @@ import SettingSection from '@/components/settings/SettingSection.vue'
 import OptionCard from '@/components/OptionCard.vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import type { XiaomiAccountDto } from '@/__generated/model/dto'
+import type { ProviderAccountDto } from '@/__generated/model/dto'
 import type { QrLoginSessionView } from '@/__generated/model/static'
 import type { QrLoginStatus } from '@/__generated/model/enums'
 import { storeToRefs } from 'pinia'
@@ -23,7 +23,7 @@ import { useAlbumsStore } from '@/stores/albums'
 import { useCrontabsStore } from '@/stores/crontabs'
 
 // 类型定义
-type Account = XiaomiAccountDto['XiaomiAccountController/DEFAULT_XIAOMI_ACCOUNT']
+type Account = ProviderAccountDto['ProviderAccountController/DEFAULT_PROVIDER_ACCOUNT']
 
 const accountsStore = useAccountsStore()
 const albumsStore = useAlbumsStore()
