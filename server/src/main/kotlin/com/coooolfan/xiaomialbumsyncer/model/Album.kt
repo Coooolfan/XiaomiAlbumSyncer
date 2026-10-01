@@ -29,7 +29,7 @@ interface Album {
 
     @ManyToOne
     @OnDissociate(DissociateAction.DELETE)
-    val account: XiaomiAccount    // 关联的小米账号
+    val account: ProviderAccount    // 关联的小米账号
 
     @IdView("account")
     val accountId: Long           // 账号ID视图

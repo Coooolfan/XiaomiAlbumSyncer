@@ -23,9 +23,10 @@ interface CrontabHistory {
     @Serialized
     val timelineSnapshot: Map<Long, AlbumTimeline>?
 
-    // 位点同步模式下各相册的拉取位点，页级提交；null 表示本次运行未使用位点模式
+    // 任务范围内的来源游标：小米相册 ID 或 iCloud 图库与相册范围；页级提交
     @Serialized
-    val albumSyncCursors: Map<Long, String>?
+    @Column(name = "album_sync_cursors")
+    val syncCursors: Map<String, String>?
 
     val fetchedAllAssets: Boolean
 

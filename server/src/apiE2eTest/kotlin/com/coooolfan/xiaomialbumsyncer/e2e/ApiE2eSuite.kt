@@ -85,8 +85,12 @@ class ApiE2eSuite {
                 )
             ).expect(200)
         )
+        assertFalse(account.has("credentials"))
+        assertFalse(account.has("passToken"))
         val accountId = account.path("id").asLong()
-        api.get("/api/account").expect(200)
+        val accountList = api.json(api.get("/api/account").expect(200))
+        assertFalse(accountList.toString().contains("mock-pass-token"))
+        assertFalse(accountList.toString().contains("credentials"))
         api.put(
             "/api/account/$accountId",
             mapOf(

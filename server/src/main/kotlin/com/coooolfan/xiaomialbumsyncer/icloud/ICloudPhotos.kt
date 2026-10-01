@@ -6,6 +6,8 @@ import org.noear.solon.annotation.Managed
 import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Path
+import java.io.OutputStream
+import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.time.Instant
 import java.util.Base64
@@ -76,6 +78,13 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
             rank += assets.size
         }
         return total
+    }
+
+    fun fetchIncremental(albums: List<Album>, cursor: String?, handler: (List<Asset>) -> Unit, commitCursor: (String) -> Unit) {
+        require(albums.isNotEmpty())
+        accounts.withClient(albums.first().accountId) { client ->
+            fetchIncremental(albums, client, cursor, handler, commitCursor)
+        }
     }
 
     fun download(accountId: Long, asset: Asset, path: Path): Boolean {
@@ -188,13 +197,8 @@ internal fun verifyICloudChecksum(path: Path, checksum: String) {
         else -> error("不支持的 iCloud 文件校验格式")
     }
     val digest = MessageDigest.getInstance("SHA-1")
-    Files.newInputStream(path).use { input ->
-        val buffer = ByteArray(8192)
-        while (true) {
-            val count = input.read(buffer)
-            if (count < 0) break
-            digest.update(buffer, 0, count)
-        }
+    DigestInputStream(Files.newInputStream(path), digest).use {
+        it.transferTo(OutputStream.nullOutputStream())
     }
     require(MessageDigest.isEqual(expected, digest.digest())) { "iCloud 文件校验失败，请重试下载" }
 }
