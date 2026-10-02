@@ -12,13 +12,8 @@ interface Asset {
     @JsonConverter(LongToStringConverter::class)
     val id: Long
 
-    @JsonConverter(LongToStringConverter::class)
-    val xiaomiId: Long?
-
-    val remoteKey: String?
-
-    @Serialized
-    val cloudAsset: ICloudAssetRef?
+    /** 远端文件定位；来源由相册所属账号决定。 */
+    val remoteKey: String
 
     val fileName: String
 

@@ -76,7 +76,7 @@ class ICloudChangesTest {
         }) { photos, client ->
             val rows = mutableListOf<Asset>(); val tokens = mutableListOf<String>()
             photos.fetchIncremental(listOf(album(1, "__all__")), client, null, { rows += it }, { tokens += it })
-            assertEquals(listOf("old", "new"), rows.map { it.cloudAsset!!.recordName })
+            assertEquals(listOf("old", "new"), rows.map { ICloudResourceKey.decode(it.remoteKey).assetId })
             assertEquals(listOf("empty-page", "caught-up"), tokens)
             requests.clear()
             photos.fetchIncremental(listOf(album(1, "__all__")), client, tokens.last(), {}, {})
@@ -101,9 +101,9 @@ class ICloudChangesTest {
             val rows = mutableListOf<Asset>()
             photos.fetchIncremental(listOf(album(1, "__all__"), album(2, "__hidden__"), album(3, "__favorites__"), album(4, "user-album")),
                 client, "previous", { rows += it }, {})
-            assertEquals(setOf(1L, 3L), rows.filter { it.cloudAsset!!.recordName == "normal" }.map { it.album.id }.toSet())
-            assertEquals(listOf(2L), rows.filter { it.cloudAsset!!.recordName == "hidden" }.map { it.album.id })
-            assertEquals(setOf(1L, 4L), rows.filter { it.cloudAsset!!.recordName == "existing" }.map { it.album.id }.toSet())
+            assertEquals(setOf(1L, 3L), rows.filter { ICloudResourceKey.decode(it.remoteKey).assetId == "normal" }.map { it.album.id }.toSet())
+            assertEquals(listOf(2L), rows.filter { ICloudResourceKey.decode(it.remoteKey).assetId == "hidden" }.map { it.album.id })
+            assertEquals(setOf(1L, 4L), rows.filter { ICloudResourceKey.decode(it.remoteKey).assetId == "existing" }.map { it.album.id }.toSet())
         }
     }
 
@@ -132,7 +132,7 @@ class ICloudChangesTest {
                 photos.fetchIncremental(listOf(album(1, "__all__")), client, "expired", { rows += it }, { tokens += it })
                 assertEquals(listOf("expired", "fresh-baseline"), inputTokens)
                 assertEquals(listOf("recovered"), tokens)
-                assertEquals("new", rows.single().cloudAsset!!.recordName)
+                assertEquals("new", ICloudResourceKey.decode(rows.single().remoteKey).assetId)
             }
         }
     }

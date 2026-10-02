@@ -183,9 +183,9 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
     fun downloadAsset(accountId: Long, asset: Asset, targetPath: Path): Boolean {
         val url =
             if (asset.type == AssetType.AUDIO)
-                apiProperties.url("sfs/ns/recorder/file/${asset.xiaomiId ?: asset.id}/cb/dl_sfs_cb_${System.currentTimeMillis()}_0/storage?ts=${System.currentTimeMillis()}")
+                apiProperties.url("sfs/ns/recorder/file/${asset.remoteKey.toLong()}/cb/dl_sfs_cb_${System.currentTimeMillis()}_0/storage?ts=${System.currentTimeMillis()}")
             else
-                apiProperties.url("gallery/storage?ts=${System.currentTimeMillis()}&id=${asset.xiaomiId ?: asset.id}")
+                apiProperties.url("gallery/storage?ts=${System.currentTimeMillis()}&id=${asset.remoteKey.toLong()}")
 
         // 1. 获取 OSS URL
         val fetchOssUrlJson = getJson(accountId, url)
@@ -262,11 +262,8 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 val fullFileName = jsonNode.get("fileName").asText()
 
                 Asset {
-                    remoteKey = "xiaomi:${album.accountId}:${jsonNode.get("id").asLong()}"
-                    xiaomiId = jsonNode.get("id").asLong()
-                    cloudAsset = null
+                    remoteKey = jsonNode.get("id").asLong().toString()
                     recordingType = null
-                    id = jsonNode.get("id").asLong()
                     fileName = fullFileName
                     type = AssetType.valueOf(jsonNode.get("type").asText().uppercase())
                     dateTaken = Instant.ofEpochMilli(jsonNode.get("dateTaken").asLong())
@@ -282,11 +279,8 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 val name = jsonNode.get("name").asText()
                 val recordingName = parseXiaomiRecordingName(name)
                 Asset {
-                    remoteKey = "xiaomi:${album.accountId}:${jsonNode.get("id").asLong()}"
-                    xiaomiId = jsonNode.get("id").asLong()
-                    cloudAsset = null
+                    remoteKey = jsonNode.get("id").asLong().toString()
                     recordingType = null
-                    this.id = jsonNode.get("id").asLong()
                     this.fileName = recordingName.fileName
                     this.type = AssetType.AUDIO
                     this.recordingType = recordingName.recordingType
