@@ -3,6 +3,7 @@ package com.coooolfan.xiaomialbumsyncer.icloud
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.SecureRandom
+import java.util.HexFormat
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -20,7 +21,7 @@ internal class AppleSrp(private val username: String, private val secret: ByteAr
         val b = BigInteger(1, serverKey)
         require(b.mod(N) != BigInteger.ZERO) { "Apple SRP 公钥无效" }
         val pwdHash = hash(password.toByteArray(Charsets.UTF_8))
-        val passwordBytes = if (protocol == "s2k_fo") pwdHash.joinToString("") { "%02x".format(it) }.toByteArray() else pwdHash
+        val passwordBytes = if (protocol == "s2k_fo") HexFormat.of().formatHex(pwdHash).toByteArray() else pwdHash
         val derived = pbkdf2(passwordBytes, salt, iterations)
         val x = BigInteger(1, hash(salt, hash(byteArrayOf(':'.code.toByte()), derived)))
         val u = BigInteger(1, hash(pad(publicKey), pad(bytes(b))))
