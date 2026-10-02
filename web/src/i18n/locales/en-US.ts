@@ -281,6 +281,7 @@ const messages: typeof zh = {
       unnamed: 'Unnamed album',
       hiddenUntilDownload: 'Not visible until downloaded',
       assetCount: 'No items | {n} item | {n} items',
+      countUnknown: 'Count unknown',
       orphanTip: 'Orphaned album — it may have been deleted from the cloud',
       justNow: 'Just now',
       minutesAgo: 'Just now | {n} minute ago | {n} minutes ago',

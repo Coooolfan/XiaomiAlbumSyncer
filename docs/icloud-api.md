@@ -80,7 +80,7 @@ zone
 
 | 字段/位置 | 含义 | XAS 当前行为 |
 | --- | --- | --- |
-| 顶层 `recordName` | 相册标识 | 保存到 `ICloudAlbumRef.recordName` |
+| 顶层 `recordName` | 相册标识 | 保存到相册 remote_key 的 albumId |
 | `albumNameEnc` | Base64 编码的 UTF-8 相册名称 | 解码；失败或为空时用 recordName |
 | `isDeleted` | 相册删除状态 | 跳过 |
 | `position` | 相册在容器中的位置 | 未读取 |
@@ -121,7 +121,7 @@ XAS 创建以下本地虚拟相册；`__all__` 等是 XAS 自己的标识，不�
 | 个人收藏 | `__favorites__` | `CPLAssetAndMasterInSmartAlbumByAssetDate` | `smartAlbum=FAVORITE` |
 | 用户相册 | 实际相册 recordName | `CPLContainerRelationLiveByAssetDate` | `parentId=<相册标识>` |
 
-上游还使用 `VIDEO`、`LIVE`、`SCREENSHOT`、`PANORAMA`、`SLOMO`、`TIMELAPSE` 等 smartAlbum 条件；最近删除使用 `CPLAssetAndMasterDeletedByExpungedDate`，连拍使用专门索引。XAS 当前未暴露这些集合。照片总数可通过上游的 `internal/records/query/batch` + `HyperionIndexCountLookup` 查询 `itemCount`，XAS 当前未调用；本地相册构造时 `assetCount=0`，不代表远端空相册。[icloudpd 查询实现](https://github.com/icloud-photos-downloader/icloud_photos_downloader/blob/master/src/pyicloud_ipd/services/photos.py)
+上游还使用 `VIDEO`、`LIVE`、`SCREENSHOT`、`PANORAMA`、`SLOMO`、`TIMELAPSE` 等 smartAlbum 条件；最近删除使用 `CPLAssetAndMasterDeletedByExpungedDate`，连拍使用专门索引。XAS 当前未暴露这些集合。照片总数可通过上游的 `internal/records/query/batch` + `HyperionIndexCountLookup` 查询 `itemCount`，XAS 当前未调用；未取得远端数量时 `assetCount=null`，不代表远端空相册。[icloudpd 查询实现](https://github.com/icloud-photos-downloader/icloud_photos_downloader/blob/master/src/pyicloud_ipd/services/photos.py)
 
 ## 4. 逻辑资产：CPLAsset
 
@@ -183,13 +183,13 @@ XAS 创建以下本地虚拟相册；`__all__` 等是 XAS 自己的标识，不�
 
 | 本地字段 | 来源/含义 |
 | --- | --- |
-| `Album.cloudAlbum` | zone、服务端相册标识或虚拟标识、查询索引、smartAlbum 条件 |
-| `Album.remoteId` | XAS 对 zone/recordName 求哈希得到的 Long，不是 Apple 返回的数字 ID |
-| `Album.lastUpdateTime` | 构造时为 Instant.EPOCH，未映射相册修改时间 |
+| `Album.remoteKey` | iCloud 为固定字段顺序的 JSON：zone、albumId；小米为远端相册 ID 字符串，录音集合为 -1 |
+| `Album.assetCount` | 远端相册成员数量，iCloud 当前未读取，保存 null；不使用本地备份文件数代替 |
+| `Album.lastUpdateTime` | 远端相册修改时间，iCloud 当前未读取，保存 null |
 | `Asset.remoteKey` | iCloud 为固定字段顺序的 JSON：assetId、resource；小米为远端数字 ID 的字符串 |
 | `Asset.sha1` | 保存 `icloud:<fileChecksum>`，不是普通十六进制 SHA-1 |
 | `Asset.fileName` | 原始文件名加稳定资源后缀，不是原样复制 filenameEnc |
 
-资产唯一约束为 `(album_id, remote_key, sha1)`；账号与来源由相册关联查询，iCloud zone 由相册 cloudAlbum 提供，masterId 在下载时通过 masterRef 查询，校验值仅保存在 sha1。同一照片放入多个所选相册时，XAS 为每个相册建立独立下载记录。通过本地 assetCount 或下载文件数反推 Apple 照片应用的计数时，应先统一统计口径。
+相册唯一约束为 `(account_id, remote_key)`；查询索引与智能集合条件由 albumId 推导，不持久化。资产唯一约束为 `(album_id, remote_key, sha1)`；账号与来源由相册关联查询，iCloud zone 由相册 remote_key 提供，masterId 在下载时通过 masterRef 查询，校验值仅保存在 sha1。同一照片放入多个所选相册时，XAS 为每个相册建立独立下载记录。通过本地 assetCount 或下载文件数反推 Apple 照片应用的计数时，应先统一统计口径。
 
 实现入口：[ICloudPhotos.kt](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudPhotos.kt)、[ICloudChanges.kt](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudChanges.kt)、[ICloudClient.kt](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudClient.kt)。

@@ -26,10 +26,10 @@ class XasQueryService(
         }.map { album ->
             AlbumItem(
                 id = album.id.toString(),
-                remoteId = album.remoteId.toString(),
+                remoteKey = album.remoteKey,
                 name = album.name,
                 assetCount = album.assetCount,
-                lastUpdateTime = album.lastUpdateTime.toString(),
+                lastUpdateTime = album.lastUpdateTime?.toString(),
                 shadow = album.shadow,
                 accountNickname = album.account.nickname,
             )

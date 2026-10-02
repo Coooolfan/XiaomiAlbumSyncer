@@ -180,7 +180,7 @@ class ApiMemoryBenchmarkSuite {
             )
             val accountId = account.path("id").asLong()
             val albums = api.json(api.get("/api/album/latest/$accountId").expect(200))
-            val cameraAlbumId = albums.firstOrNull { it.path("remoteId").asLong() == 1L }
+            val cameraAlbumId = albums.firstOrNull { it.path("remoteKey").asText() == "1" }
                 ?.path("id")
                 ?.asLong()
                 ?: error("内存场景未返回相机相册: $albums")

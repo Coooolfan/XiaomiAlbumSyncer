@@ -20,7 +20,7 @@ export type CrontabDto = {
             readonly id: number;
             readonly startTime: string;
             readonly endTime?: string | undefined;
-            readonly albumSyncCursors?: {readonly [key:string]: string} | undefined;
+            readonly syncCursors?: {readonly [key:string]: string} | undefined;
             readonly fetchedAllAssets: boolean;
             readonly isCompleted: boolean;
             readonly detailsCount: number;

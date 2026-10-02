@@ -3,7 +3,6 @@ package com.coooolfan.xiaomialbumsyncer.icloud
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.fasterxml.jackson.databind.JsonNode
 import org.noear.solon.annotation.Managed
-import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.io.OutputStream
@@ -24,9 +23,9 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
         return zones.flatMap { zone ->
             checkIndex(client, zone)
             val prefix = if (zone == "PrimarySync") "" else "共享图库 / "
-            val result = mutableListOf(album(accountId, "${prefix}所有照片", ICloudAlbumRef(zone, "__all__", "CPLAssetAndMasterByAssetDateWithoutHiddenOrDeleted")))
-            result += album(accountId, "${prefix}隐藏", ICloudAlbumRef(zone, "__hidden__", "CPLAssetAndMasterHiddenByAssetDate"))
-            result += album(accountId, "${prefix}个人收藏", ICloudAlbumRef(zone, "__favorites__", "CPLAssetAndMasterInSmartAlbumByAssetDate", "FAVORITE"))
+            val result = mutableListOf(album(accountId, "${prefix}所有照片", ICloudAlbumKey(zone, "__all__")))
+            result += album(accountId, "${prefix}隐藏", ICloudAlbumKey(zone, "__hidden__"))
+            result += album(accountId, "${prefix}个人收藏", ICloudAlbumKey(zone, "__favorites__"))
             var marker: JsonNode? = null
             val seenMarkers = mutableSetOf<String>()
             do {
@@ -37,7 +36,7 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
                     val name = record.path("recordName").asText()
                     if (name in setOf("----Root-Folder----", "----Project-Root-Folder----") || field(record, "isDeleted").asBoolean()) continue
                     val title = decodeName(field(record, "albumNameEnc").asText()).ifBlank { name }
-                    result += album(accountId, prefix + title, ICloudAlbumRef(zone, name, "CPLContainerRelationLiveByAssetDate"))
+                    result += album(accountId, prefix + title, ICloudAlbumKey(zone, name))
                 }
                 marker = page.get("continuationMarker")?.takeUnless { it.isNull }
                 if (marker != null) require(seenMarkers.add(marker.toString())) { "iCloud 相册分页没有推进" }
@@ -49,16 +48,17 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
     fun fetchAssets(album: Album, handler: (List<Asset>) -> Unit): Long = accounts.withClient(album.accountId) { fetchAssets(album, it, handler) }
 
     internal fun fetchAssets(album: Album, client: ICloudClient, handler: (List<Asset>) -> Unit): Long {
-        val ref = requireNotNull(album.cloudAlbum) { "iCloud 相册信息缺失" }
+        val ref = ICloudAlbumKey.decode(album.remoteKey)
         checkIndex(client, ref.zone)
         var rank = 0L
         var total = 0L
         val seen = mutableSetOf<String>()
         while (true) {
             val filters = mutableListOf(filter("startRank", "INT64", rank), filter("direction", "STRING", "ASCENDING"))
-            if (ref.smartAlbum != null) filters += filter("smartAlbum", "STRING", ref.smartAlbum)
-            else if (!ref.recordName.startsWith("__")) filters += filter("parentId", "STRING", ref.recordName)
-            val page = client.cloud("records/query", mapOf("query" to mapOf("recordType" to ref.queryType, "filterBy" to filters),
+            val smartAlbum = ref.smartAlbum()
+            if (smartAlbum != null) filters += filter("smartAlbum", "STRING", smartAlbum)
+            else if (!ref.albumId.startsWith("__")) filters += filter("parentId", "STRING", ref.albumId)
+            val page = client.cloud("records/query", mapOf("query" to mapOf("recordType" to ref.queryType(), "filterBy" to filters),
                 "resultsLimit" to 200, "zoneID" to zoneId(ref.zone)))
             val records = page.path("records").toList()
             val assets = records.filter { it.path("recordType").asText() == "CPLAsset" }
@@ -131,12 +131,11 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
     private fun lookup(client: ICloudClient, zone: String, names: List<String>): List<JsonNode> =
         client.cloud("records/lookup", mapOf("zoneID" to zoneId(zone), "records" to names.map { mapOf("recordName" to it) })).path("records").toList()
 
-    private fun album(accountId: Long, title: String, ref: ICloudAlbumRef): Album = Album {
-        remoteId = ByteBuffer.wrap(MessageDigest.getInstance("SHA-256").digest("${ref.zone}/${ref.recordName}".toByteArray())).long and Long.MAX_VALUE
+    private fun album(accountId: Long, title: String, ref: ICloudAlbumKey): Album = Album {
+        remoteKey = ref.encode()
         name = title
-        cloudAlbum = ref
-        assetCount = 0
-        lastUpdateTime = Instant.EPOCH
+        assetCount = null
+        lastUpdateTime = null
         shadow = false
         this.accountId = accountId
     }

@@ -22,7 +22,7 @@ class NativeImageRegister : RuntimeNativeRegistrar {
         listOf(
             com.coooolfan.xiaomialbumsyncer.icloud.ICloudCredentials::class.java,
             com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountInput::class.java,
-            com.coooolfan.xiaomialbumsyncer.model.ICloudAlbumRef::class.java,
+            com.coooolfan.xiaomialbumsyncer.icloud.ICloudAlbumKey::class.java,
             com.coooolfan.xiaomialbumsyncer.icloud.ICloudResourceKey::class.java,
         ).forEach { type ->
             metadata.registerReflection(type,

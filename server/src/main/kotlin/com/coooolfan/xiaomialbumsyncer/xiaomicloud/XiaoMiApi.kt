@@ -45,13 +45,12 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             for (albumJson in albumArrayJson) {
                 val albumId = albumJson.get("albumId").asLong()
                 allAlbums.add(Album {
-                    cloudAlbum = null
-                    remoteId = albumId
+                    remoteKey = albumId.toString()
                     name = XIAOMI_ALBUM_NAME_BY_ID[albumId]
                         ?: albumJson.get("name")?.asText()
                         ?: "Unknown Album"
-                    assetCount = albumJson.get("mediaCount").asLong()
-                    lastUpdateTime = Instant.ofEpochMilli(albumJson.get("lastUpdateTime")?.asLong() ?: 0L)
+                    assetCount = albumJson.get("mediaCount")?.asLong()
+                    lastUpdateTime = albumJson.get("lastUpdateTime")?.let { Instant.ofEpochMilli(it.asLong()) }
                     this.accountId = accountId
                     shadow = false
                 })
@@ -63,11 +62,11 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         }
 
         allAlbums.add(Album {
-            cloudAlbum = null
-            remoteId = -1
+            remoteKey = "-1"
             name = "录音"
-            assetCount = 0
-            lastUpdateTime = Instant.now()
+            assetCount = null
+            lastUpdateTime = null
+            shadow = false
             this.accountId = accountId
         })
 
@@ -92,7 +91,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 if (album.isAudioAlbum())
                     apiProperties.url("sfs/ns/recorder/dir/0/list?ts=${System.currentTimeMillis()}&limit=$pageSize&offset=${pageNum * pageSize}")
                 else
-                    apiProperties.url("gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.remoteId}")
+                    apiProperties.url("gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.remoteKey}")
 
 
             val responseTree = getJson(album.accountId, url + urlDayParams)
@@ -102,7 +101,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 else
                     responseTree.at("/data/galleries")
 
-            log.info("解析用户 ${album.accountId} 的相册 ${album.name} ID=${album.remoteId}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
+            log.info("解析用户 ${album.accountId} 的相册 ${album.name} ID=${album.remoteKey}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
 
             // 处理当前页数据
             val pageAssets = assetArrayJson.map { parseJsonNode(it, album) }
@@ -161,7 +160,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             accountId,
             apiProperties.url(
                 "gallery/allitems?ts=${System.currentTimeMillis()}" +
-                    "&groupId=${album.remoteId}&tag=$tag&limit=200&simpleResult=false"
+                    "&groupId=${album.remoteKey}&tag=$tag&limit=200&simpleResult=false"
             )
         )
         responseTree.throwIfBizError()

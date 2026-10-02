@@ -9,7 +9,6 @@ export type {CrontabHistoryGroup} from './CrontabHistoryGroup';
 export type {CrontabUpdateInput} from './CrontabUpdateInput';
 export type {HasPasskeysResponse} from './HasPasskeysResponse';
 export type {ICloudAccountStatus} from './ICloudAccountStatus';
-export type {ICloudAlbumRef} from './ICloudAlbumRef';
 export type {ICloudLoginInput} from './ICloudLoginInput';
 export type {ICloudVerifyInput} from './ICloudVerifyInput';
 export type {IsInitResponse} from './IsInitResponse';
