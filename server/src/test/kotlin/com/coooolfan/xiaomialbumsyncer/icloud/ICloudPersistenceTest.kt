@@ -114,6 +114,10 @@ class ICloudPersistenceTest {
             val replaced = media.saveAssets(listOf(resource("changed"))).single()
             assertEquals(first.id, repeated.id)
             assertNotEquals(first.id, replaced.id)
+            val mixed = media.saveAssets(listOf(Asset(resource("first")) { title = "updated" }, resource("second")))
+            assertEquals(first.id, mixed.first { it.sha1 == first.sha1 }.id)
+            assertEquals("updated", sql.findById(Asset::class, first.id)!!.title)
+            assertNotEquals(first.id, mixed.first { it.sha1 == "icloud:second" }.id)
             assertEquals("record", ICloudResourceKey.decode(sql.findById(Asset::class, first.id)!!.remoteKey).assetId)
             val xiaomi = Asset(resource("xiaomi")) {
                 remoteKey = first.id.toString()

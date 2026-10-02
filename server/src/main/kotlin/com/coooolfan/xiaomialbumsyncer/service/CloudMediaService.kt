@@ -6,7 +6,6 @@ import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.KSqlClient
-import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
 import org.noear.solon.annotation.Managed
 import java.nio.file.Path
 
@@ -23,22 +22,8 @@ class CloudMediaService(private val sql: KSqlClient, private val xiaomi: XiaoMiA
 
     @Synchronized fun saveAssets(assets: List<Asset>): List<Asset> {
         if (assets.isEmpty()) return emptyList()
-        fun identity(asset: Asset) = Triple(asset.album.id, asset.remoteKey, asset.sha1)
-        val distinct = assets.distinctBy(::identity)
-        val existing = sql.executeQuery(Asset::class) {
-            where(table.album.id valueIn distinct.map { it.album.id }.distinct())
-            where(table.remoteKey valueIn distinct.map { it.remoteKey }.distinct())
-            where(table.sha1 valueIn distinct.map { it.sha1 }.distinct())
-            select(table)
-        }.associateBy(::identity)
-        val entries = distinct.map { asset ->
-            val previous = existing[identity(asset)]
-            (previous == null) to if (previous == null) asset else Asset(asset) { id = previous.id }
-        }
-        return entries.groupBy { it.first }.flatMap { (insert, group) ->
-            sql.saveEntitiesCommand(group.map { it.second }, if (insert) SaveMode.INSERT_ONLY else SaveMode.UPDATE_ONLY)
-                .execute().items.map { it.modifiedEntity }
-        }
+        val distinct = assets.distinctBy { Triple(it.album.id, it.remoteKey, it.sha1) }
+        return sql.saveEntitiesCommand(distinct, SaveMode.UPSERT).execute().items.map { it.modifiedEntity }
     }
 
     fun download(accountId: Long, asset: Asset, path: Path): Boolean {

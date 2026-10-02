@@ -10,6 +10,7 @@ import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.time.Instant
 import java.util.Base64
+import java.util.HexFormat
 
 @Managed
 class ICloudPhotos(private val accounts: ICloudAccountService) {
@@ -65,7 +66,7 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
             if (assets.isEmpty()) break
             val masters = records.filter { it.path("recordType").asText() == "CPLMaster" }.associateBy { it.path("recordName").asText() }
             val missing = assets.map { field(it, "masterRef").path("recordName").asText() }.filterNot(masters::containsKey).distinct()
-            val allMasters = masters + if (missing.isEmpty()) emptyMap() else lookup(client, ref.zone, missing).associateBy { it.path("recordName").asText() }
+            val allMasters = masters + if (missing.isEmpty()) emptyMap() else lookupRecords(client, ref.zone, missing).associateBy { it.path("recordName").asText() }
             val rows = assets.flatMap { asset ->
                 val recordName = asset.path("recordName").asText()
                 require(seen.add(recordName)) { "iCloud 资产分页重复，请重试同步" }
@@ -109,13 +110,13 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
     }
 
     internal fun resolveResource(client: ICloudClient, zone: String, key: ICloudResourceKey): JsonNode {
-        val asset = lookup(client, zone, listOf(key.assetId)).singleOrNull()
+        val asset = lookupRecords(client, zone, listOf(key.assetId)).singleOrNull()
             ?: error("iCloud 资产已不可用")
         val resource = field(asset, key.resource + "Res")
         if (!resource.isMissingNode && !resource.isNull) return resource
         val masterName = field(asset, "masterRef").path("recordName").asText()
         require(masterName.isNotBlank()) { "iCloud 资产缺少原件标识" }
-        val master = lookup(client, zone, listOf(masterName)).singleOrNull()
+        val master = lookupRecords(client, zone, listOf(masterName)).singleOrNull()
             ?: error("iCloud 原件已不可用")
         return field(master, key.resource + "Res").also {
             require(!it.isMissingNode && !it.isNull) { "iCloud 文件资源已不可用" }
@@ -127,9 +128,6 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
             .at("/records/0/fields/state/value").asText()
         require(state == "FINISHED") { "iCloud 照片仍在建立索引，请稍后重试" }
     }
-
-    private fun lookup(client: ICloudClient, zone: String, names: List<String>): List<JsonNode> =
-        client.cloud("records/lookup", mapOf("zoneID" to zoneId(zone), "records" to names.map { mapOf("recordName" to it) })).path("records").toList()
 
     private fun album(accountId: Long, title: String, ref: ICloudAlbumKey): Album = Album {
         remoteKey = ref.encode()
@@ -156,7 +154,7 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
             val ext = if (variant == "resOriginal") safeName.substringAfterLast('.', extension) else extension
             // 内容和资源标识参与文件名，避免同名照片被 skipExistingFile 错误跳过。
             val identity = "$recordName/$variant/$checksum"
-            val suffix = MessageDigest.getInstance("SHA-256").digest(identity.toByteArray()).take(6).joinToString("") { "%02x".format(it) }
+            val suffix = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(identity.toByteArray()), 0, 6)
             Asset {
                 remoteKey = ICloudResourceKey(recordName, variant).encode()
                 fileName = "${stem}_$suffix.$ext"
@@ -172,7 +170,7 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
         }
     }
     private fun decodeName(encoded: String) = runCatching { String(Base64.getDecoder().decode(encoded), Charsets.UTF_8) }.getOrDefault("")
-    private fun field(record: JsonNode, key: String): JsonNode = record.path("fields").path(key).path("value")
+    internal fun field(record: JsonNode, key: String): JsonNode = record.path("fields").path(key).path("value")
     private fun zoneId(zone: String) = mapOf("zoneName" to zone)
     private fun filter(name: String, type: String, value: Any) = mapOf("fieldName" to name, "comparator" to "EQUALS", "fieldValue" to mapOf("type" to type, "value" to value))
     private fun mediaType(uti: String): Pair<String, String> = when (uti) {
@@ -207,3 +205,16 @@ internal fun verifyICloudChecksum(path: Path, checksum: String) {
     }
     require(MessageDigest.isEqual(expected, digest.digest())) { "iCloud 文件校验失败，请重试下载" }
 }
+
+internal fun lookupRecords(client: ICloudClient, zone: String, names: List<String>): List<JsonNode> =
+    names.distinct().chunked(200).flatMap { batch ->
+        val records = client.cloud("records/lookup", mapOf("zoneID" to mapOf("zoneName" to zone),
+            "records" to batch.map { mapOf("recordName" to it) })).path("records")
+        require(records.isArray) { "iCloud 记录查询响应无效" }
+        require(batch.toSet() == records.map { it.path("recordName").asText() }.toSet()) { "iCloud 记录查询响应不完整" }
+        records.filter { record ->
+            val error = record.path("serverErrorCode").asText()
+            require(error.isBlank() || error == "NOT_FOUND" || error == "UNKNOWN_ITEM") { "iCloud 记录查询失败：$error" }
+            error.isBlank() && !record.path("deleted").asBoolean()
+        }
+    }

@@ -72,36 +72,36 @@ private fun ICloudPhotos.readChanges(
         val records = page.path("records").toList()
         val assets = records.filter { it.path("recordType").asText() == "CPLAsset" }.associateBy { it.path("recordName").asText() }.toMutableMap()
         val addedMembers = records.filter { it.path("recordType").asText() == "CPLContainerRelation" && live(it) }
-            .filter { value(it, "containerId").asText() in selectedContainers }
-            .map { value(it, "itemId").asText().also { id -> require(id.isNotBlank()) { "iCloud 相册成员缺少资产标识" } } }
-        lookupChanges(client, zone, addedMembers.filterNot(assets::containsKey)).forEach { assets[it.path("recordName").asText()] = it }
+            .filter { field(it, "containerId").asText() in selectedContainers }
+            .map { field(it, "itemId").asText().also { id -> require(id.isNotBlank()) { "iCloud 相册成员缺少资产标识" } } }
+        lookupRecords(client, zone, addedMembers.filterNot(assets::containsKey)).forEach { assets[it.path("recordName").asText()] = it }
         val liveAssets = assets.values.filter(::live)
         val masters = records.filter { it.path("recordType").asText() == "CPLMaster" }.associateBy { it.path("recordName").asText() }.toMutableMap()
-        val masterNames = liveAssets.map { value(it, "masterRef").path("recordName").asText().also { name ->
+        val masterNames = liveAssets.map { field(it, "masterRef").path("recordName").asText().also { name ->
             require(name.isNotBlank()) { "iCloud 变化资产缺少原件标识" }
         } }
-        lookupChanges(client, zone, masterNames.filterNot(masters::containsKey)).forEach { masters[it.path("recordName").asText()] = it }
+        lookupRecords(client, zone, masterNames.filterNot(masters::containsKey)).forEach { masters[it.path("recordName").asText()] = it }
         // 成员关系的 recordName 可直接 lookup；查询的是当前成员状态，跨页关系也不会漏掉。
         val relationNames = liveAssets.flatMap { asset -> userAlbums.map { "${asset.path("recordName").asText()}-IN-${albumKeys.getValue(it.id).albumId}" } }
-        val memberships = lookupChanges(client, zone, relationNames).filter(::live).map { it.path("recordName").asText() }.toSet()
+        val memberships = lookupRecords(client, zone, relationNames).filter(::live).map { it.path("recordName").asText() }.toSet()
         val rows = liveAssets.flatMap { changed ->
             val name = changed.path("recordName").asText()
             var asset = changed
-            var master = masters[value(asset, "masterRef").path("recordName").asText()]
+            var master = masters[field(asset, "masterRef").path("recordName").asText()]
             if (master == null) {
                 // 变更流中的资产可能已被永久删除，确认当前状态后再决定是否推进。
-                asset = lookupChanges(client, zone, listOf(name)).singleOrNull()?.takeIf(::live)
+                asset = lookupRecords(client, zone, listOf(name)).singleOrNull()?.takeIf(::live)
                     ?: return@flatMap emptyList()
-                master = lookupChanges(client, zone, listOf(value(asset, "masterRef").path("recordName").asText())).singleOrNull()
+                master = lookupRecords(client, zone, listOf(field(asset, "masterRef").path("recordName").asText())).singleOrNull()
                     ?: error("iCloud 变化资产缺少原件记录，请稍后重试")
             }
             if (!live(master)) return@flatMap emptyList()
             albums.filter { album ->
                 val ref = albumKeys.getValue(album.id)
                 when (ref.albumId) {
-                    "__all__" -> !value(asset, "isHidden").asBoolean()
-                    "__hidden__" -> value(asset, "isHidden").asBoolean()
-                    "__favorites__" -> value(asset, "isFavorite").asBoolean() && !value(asset, "isHidden").asBoolean()
+                    "__all__" -> !field(asset, "isHidden").asBoolean()
+                    "__hidden__" -> field(asset, "isHidden").asBoolean()
+                    "__favorites__" -> field(asset, "isFavorite").asBoolean() && !field(asset, "isHidden").asBoolean()
                     else -> "$name-IN-${ref.albumId}" in memberships
                 }
             }.flatMap { parseResources(it, asset, master) }
@@ -114,19 +114,5 @@ private fun ICloudPhotos.readChanges(
     }
 }
 
-private fun value(record: JsonNode, key: String): JsonNode = record.path("fields").path(key).path("value")
 private fun live(record: JsonNode): Boolean = !record.path("deleted").asBoolean() &&
-    !value(record, "isDeleted").asBoolean() && !value(record, "isExpunged").asBoolean()
-
-private fun lookupChanges(client: ICloudClient, zone: String, names: List<String>): List<JsonNode> =
-    names.distinct().chunked(200).flatMap { batch ->
-        val records = client.cloud("records/lookup", mapOf("zoneID" to mapOf("zoneName" to zone),
-            "records" to batch.map { mapOf("recordName" to it) })).path("records")
-        require(records.isArray) { "iCloud 记录查询响应无效" }
-        require(batch.toSet() == records.map { it.path("recordName").asText() }.toSet()) { "iCloud 记录查询响应不完整" }
-        records.filter { record ->
-            val error = record.path("serverErrorCode").asText()
-            require(error.isBlank() || error == "NOT_FOUND" || error == "UNKNOWN_ITEM") { "iCloud 记录查询失败：$error" }
-            error.isBlank() && !record.path("deleted").asBoolean()
-        }
-    }
+    !field(record, "isDeleted").asBoolean() && !field(record, "isExpunged").asBoolean()

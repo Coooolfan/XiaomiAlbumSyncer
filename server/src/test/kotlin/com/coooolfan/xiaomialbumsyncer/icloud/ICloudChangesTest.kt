@@ -54,6 +54,42 @@ class ICloudChangesTest {
         } finally { server.stop(0) }
     }
 
+    @Test fun lookupDeduplicatesAndSplitsRequestsAtTheCloudKitLimit() {
+        val batches = mutableListOf<List<String>>()
+        withServer({ path, body ->
+            assertEquals("lookup", path)
+            val names = body.path("records").map { it.path("recordName").asText() }
+            batches += names
+            mapOf("records" to names.map { record("CPLAsset", it) })
+        }) { _, client ->
+            val names = (0..200).map { "asset-$it" }
+            assertTrue(lookupRecords(client, "PrimarySync", emptyList()).isEmpty())
+            val records = lookupRecords(client, "PrimarySync", names + names.first())
+            assertEquals(listOf(200, 1), batches.map { it.size })
+            assertEquals(names, records.map { it.path("recordName").asText() })
+        }
+    }
+
+    @Test fun lookupFiltersUnavailableRecordsAndRejectsIncompleteOrFailedResponses() {
+        withServer({ _, _ -> mapOf("records" to listOf(
+            mapOf("recordName" to "live"), mapOf("recordName" to "deleted", "deleted" to true),
+            mapOf("recordName" to "missing", "serverErrorCode" to "NOT_FOUND"),
+            mapOf("recordName" to "unknown", "serverErrorCode" to "UNKNOWN_ITEM"),
+        )) }) { _, client ->
+            assertEquals(listOf("live"), lookupRecords(client, "PrimarySync", listOf("live", "deleted", "missing", "unknown"))
+                .map { it.path("recordName").asText() })
+        }
+        for (response in listOf(
+            mapOf("records" to emptyList<Any>()),
+            mapOf("records" to listOf(mapOf("recordName" to "asset", "serverErrorCode" to "THROTTLED"))),
+            emptyMap<String, Any>(),
+        )) {
+            withServer({ _, _ -> response }) { _, client ->
+                assertThrows(IllegalArgumentException::class.java) { lookupRecords(client, "PrimarySync", listOf("asset")) }
+            }
+        }
+    }
+
     @Test fun establishesBaselineThenReadsOnlyDeltasIncludingEmptyPages() {
         val requests = mutableListOf<String>(); var delta = 0
         withServer({ path, body ->
