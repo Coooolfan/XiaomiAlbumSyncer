@@ -22,38 +22,17 @@ class CloudMediaService(private val sql: KSqlClient, private val xiaomi: XiaoMiA
 
     @Synchronized fun saveAssets(assets: List<Asset>): List<Asset> {
         if (assets.isEmpty()) return emptyList()
-        val keys = assets.map { requireNotNull(it.remoteKey) { "云端资源缺少 remoteKey" } }
+        fun identity(asset: Asset) = Triple(asset.album.id, asset.remoteKey, asset.sha1)
+        val distinct = assets.distinctBy(::identity)
         val existing = sql.executeQuery(Asset::class) {
-            where(table.remoteKey valueIn keys)
+            where(table.album.id valueIn distinct.map { it.album.id }.distinct())
+            where(table.remoteKey valueIn distinct.map { it.remoteKey }.distinct())
+            where(table.sha1 valueIn distinct.map { it.sha1 }.distinct())
             select(table)
-        }.associateBy { it.remoteKey }
-        val sourceIds = assets.filter { it.xiaomiId != null && it.remoteKey !in existing }.map { it.id }
-        val occupiedIds = if (sourceIds.isEmpty()) emptySet() else sql.executeQuery(Asset::class) {
-            where(table.id valueIn sourceIds)
-            select(table.id)
-        }.toSet()
-        val entries = assets.map { asset ->
-            val previous = existing[asset.remoteKey]
-            val entity = when {
-                previous != null -> Asset(asset) { id = previous.id }
-                asset.xiaomiId != null && asset.id in occupiedIds -> Asset {
-                    // 保留小米远端标识，另分配本地 ID，防止覆盖其他来源的资产。
-                    xiaomiId = asset.xiaomiId
-                    remoteKey = asset.remoteKey
-                    cloudAsset = null
-                    album = asset.album
-                    fileName = asset.fileName
-                    type = asset.type
-                    recordingType = asset.recordingType
-                    dateTaken = asset.dateTaken
-                    sha1 = asset.sha1
-                    mimeType = asset.mimeType
-                    title = asset.title
-                    size = asset.size
-                }
-                else -> asset
-            }
-            (previous == null) to entity
+        }.associateBy(::identity)
+        val entries = distinct.map { asset ->
+            val previous = existing[identity(asset)]
+            (previous == null) to if (previous == null) asset else Asset(asset) { id = previous.id }
         }
         return entries.groupBy { it.first }.flatMap { (insert, group) ->
             sql.saveEntitiesCommand(group.map { it.second }, if (insert) SaveMode.INSERT_ONLY else SaveMode.UPDATE_ONLY)
@@ -61,6 +40,12 @@ class CloudMediaService(private val sql: KSqlClient, private val xiaomi: XiaoMiA
         }
     }
 
-    fun download(accountId: Long, asset: Asset, path: Path): Boolean =
-        if (asset.cloudAsset != null) icloud.download(accountId, asset, path) else xiaomi.downloadAsset(accountId, asset, path)
+    fun download(accountId: Long, asset: Asset, path: Path): Boolean {
+        val album = requireNotNull(sql.findById(Album::class, asset.album.id)) { "资产所属相册不存在" }
+        require(album.accountId == accountId) { "资产所属账号与下载账号不一致" }
+        return if (isICloud(album.accountId)) {
+            val zone = requireNotNull(album.cloudAlbum) { "iCloud 相册信息缺失" }.zone
+            icloud.download(album.accountId, zone, asset, path)
+        } else xiaomi.downloadAsset(album.accountId, asset, path)
+    }
 }

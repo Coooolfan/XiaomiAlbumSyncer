@@ -99,9 +99,7 @@ class ICloudPersistenceTest {
                 cloudAlbum = ICloudAlbumRef("PrimarySync", "album", "query")
             }, org.babyfish.jimmer.sql.ast.mutation.SaveMode.INSERT_ONLY).execute().modifiedEntity
             fun resource(checksum: String) = Asset {
-                xiaomiId = null
-                remoteKey = "icloud:${account.id}:${album.id}:record:$checksum"
-                cloudAsset = ICloudAssetRef("PrimarySync", "record", "master", "resOriginal", checksum)
+                remoteKey = ICloudResourceKey("record", "resOriginal").encode()
                 albumId = album.id
                 fileName = "photo.jpg"
                 type = AssetType.IMAGE
@@ -117,27 +115,46 @@ class ICloudPersistenceTest {
             val replaced = media.saveAssets(listOf(resource("changed"))).single()
             assertEquals(first.id, repeated.id)
             assertNotEquals(first.id, replaced.id)
-            assertEquals("PrimarySync", sql.findById(Asset::class, first.id)!!.cloudAsset!!.zone)
+            assertEquals("record", ICloudResourceKey.decode(sql.findById(Asset::class, first.id)!!.remoteKey).assetId)
             val xiaomi = Asset(resource("xiaomi")) {
-                id = first.id
-                xiaomiId = first.id
-                remoteKey = "xiaomi:${account.id}:${first.id}"
-                cloudAsset = null
+                remoteKey = first.id.toString()
             }
             val isolated = media.saveAssets(listOf(xiaomi)).single()
             assertNotEquals(first.id, isolated.id)
-            assertEquals(first.id, isolated.xiaomiId)
+            assertEquals(first.id.toString(), isolated.remoteKey)
             assertEquals(isolated.id, media.saveAssets(listOf(xiaomi)).single().id)
-            assertNotNull(sql.findById(Asset::class, first.id)!!.cloudAsset)
+            assertEquals(first.remoteKey, sql.findById(Asset::class, first.id)!!.remoteKey)
+
+            val otherAlbum = sql.saveCommand(Album(album) {
+                id = album.id + 1
+                remoteId = 2
+                name = "Other"
+            }, org.babyfish.jimmer.sql.ast.mutation.SaveMode.INSERT_ONLY).execute().modifiedEntity
+            val otherMembership = media.saveAssets(listOf(Asset(resource("first")) { albumId = otherAlbum.id })).single()
+            assertNotEquals(first.id, otherMembership.id)
+            assertEquals(first.remoteKey, otherMembership.remoteKey)
+            assertEquals(otherMembership.id, media.saveAssets(listOf(Asset(resource("first")) { albumId = otherAlbum.id })).single().id)
+            assertEquals(1, media.saveAssets(listOf(resource("first"), resource("first"))).size)
 
             val mapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
             val ranks = mutableListOf<Long>()
+            val lookups = mutableListOf<Pair<String, String>>()
             val server = com.sun.net.httpserver.HttpServer.create(java.net.InetSocketAddress("127.0.0.1", 0), 0)
             server.createContext("/") { exchange ->
                 val body = mapper.readTree(exchange.requestBody.readAllBytes())
                 val response: Any = if (exchange.requestURI.path == "/setup/validate") {
                     mapOf("dsInfo" to mapOf("hsaVersion" to 2, "dsid" to "id"), "hsaTrustedBrowser" to true,
                         "webservices" to mapOf("ckdatabasews" to mapOf("url" to "http://127.0.0.1:${server.address.port}")))
+                } else if (body.path("records").isArray) {
+                    val name = body.at("/records/0/recordName").asText()
+                    lookups += body.at("/zoneID/zoneName").asText() to name
+                    val fields = when (name) {
+                        "direct" -> mapOf("resOriginalRes" to mapOf("value" to mapOf("downloadURL" to "https://example.com/direct")))
+                        "record" -> mapOf("masterRef" to mapOf("value" to mapOf("recordName" to "current-master")))
+                        "current-master" -> mapOf("resOriginalRes" to mapOf("value" to mapOf("downloadURL" to "https://example.com/master")))
+                        else -> emptyMap<String, Any>()
+                    }
+                    mapOf("records" to listOf(mapOf("recordName" to name, "fields" to fields)))
                 } else if (body.at("/query/recordType").asText() == "CheckIndexingState") {
                     mapper.readTree("""{"records":[{"fields":{"state":{"value":"FINISHED"}}}]}""")
                 } else {
@@ -159,6 +176,14 @@ class ICloudPersistenceTest {
                 val root = "http://127.0.0.1:${server.address.port}"
                 val client = ICloudClient(ICloudCredentials("apple", "password", "com", headers = mutableMapOf("X-Apple-Session-Token" to "session")),
                     ICloudClient.Endpoints("$root/auth", "$root/setup", root))
+                val photos = ICloudPhotos(accounts)
+                val masterResource = photos.resolveResource(client, "PrimarySync", ICloudResourceKey.decode(first.remoteKey))
+                assertEquals("https://example.com/master", masterResource.path("downloadURL").asText())
+                assertEquals(listOf("PrimarySync" to "record", "PrimarySync" to "current-master"), lookups)
+                lookups.clear()
+                val direct = photos.resolveResource(client, "SharedSync-example", ICloudResourceKey("direct", "resOriginal"))
+                assertEquals("https://example.com/direct", direct.path("downloadURL").asText())
+                assertEquals(listOf("SharedSync-example" to "direct"), lookups)
                 val files = mutableListOf<Asset>()
                 val count = ICloudPhotos(accounts).fetchAssets(album, client) { files += it }
                 assertEquals(2L, count)

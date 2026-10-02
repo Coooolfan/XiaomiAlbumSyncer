@@ -87,15 +87,11 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
         }
     }
 
-    fun download(accountId: Long, asset: Asset, path: Path): Boolean {
-        val ref = requireNotNull(asset.cloudAsset)
+    fun download(accountId: Long, zone: String, asset: Asset, path: Path): Boolean {
+        val key = ICloudResourceKey.decode(asset.remoteKey)
         repeat(2) { attempt ->
             val (client, url) = accounts.withClient(accountId) { client ->
-                val records = lookup(client, ref.zone, listOf(ref.recordName, ref.masterName))
-                val resource = records.firstOrNull { it.path("recordName").asText() == ref.recordName }
-                    ?.let { field(it, ref.resource + "Res") }?.takeUnless { it.isMissingNode || it.isNull }
-                    ?: records.firstOrNull { it.path("recordName").asText() == ref.masterName }?.let { field(it, ref.resource + "Res") }
-                    ?: error("iCloud 文件资源已不可用")
+                val resource = resolveResource(client, zone, key)
                 val url = resource.path("downloadURL").asText()
                 require(url.isNotBlank()) { "iCloud 文件没有下载地址" }
                 client to url
@@ -110,6 +106,20 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
             }
         }
         error("iCloud 下载失败")
+    }
+
+    internal fun resolveResource(client: ICloudClient, zone: String, key: ICloudResourceKey): JsonNode {
+        val asset = lookup(client, zone, listOf(key.assetId)).singleOrNull()
+            ?: error("iCloud 资产已不可用")
+        val resource = field(asset, key.resource + "Res")
+        if (!resource.isMissingNode && !resource.isNull) return resource
+        val masterName = field(asset, "masterRef").path("recordName").asText()
+        require(masterName.isNotBlank()) { "iCloud 资产缺少原件标识" }
+        val master = lookup(client, zone, listOf(masterName)).singleOrNull()
+            ?: error("iCloud 原件已不可用")
+        return field(master, key.resource + "Res").also {
+            require(!it.isMissingNode && !it.isNull) { "iCloud 文件资源已不可用" }
+        }
     }
 
     private fun checkIndex(client: ICloudClient, zone: String) {
@@ -134,9 +144,7 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
 }
 
     internal fun parseResources(album: Album, asset: JsonNode, master: JsonNode): List<Asset> {
-        val ref = requireNotNull(album.cloudAlbum)
         val recordName = asset.path("recordName").asText()
-        val masterName = master.path("recordName").asText()
         val originalName = decodeName(field(master, "filenameEnc").asText()).ifBlank { "$recordName.bin" }
         return listOf("resOriginal", "resOriginalAlt", "resOriginalVidCompl").mapNotNull { variant ->
             val resource = field(master, variant + "Res")
@@ -151,9 +159,7 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
             val identity = "$recordName/$variant/$checksum"
             val suffix = MessageDigest.getInstance("SHA-256").digest(identity.toByteArray()).take(6).joinToString("") { "%02x".format(it) }
             Asset {
-                xiaomiId = null
-                remoteKey = "icloud:${album.accountId}:${album.id}:$identity"
-                cloudAsset = ICloudAssetRef(ref.zone, recordName, masterName, variant, checksum)
+                remoteKey = ICloudResourceKey(recordName, variant).encode()
                 fileName = "${stem}_$suffix.$ext"
                 type = if (mime.startsWith("video/")) AssetType.VIDEO else AssetType.IMAGE
                 recordingType = null
