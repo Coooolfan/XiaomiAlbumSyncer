@@ -278,6 +278,7 @@ export default {
       unnamed: '未命名相册',
       hiddenUntilDownload: '下载前不可见',
       assetCount: '{n} 个项目',
+      countUnknown: '数量未知',
       orphanTip: '孤立相册，此相册可能已在云端被删除',
       justNow: '刚刚',
       minutesAgo: '{n} 分钟前',

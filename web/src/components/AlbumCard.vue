@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RECORDING_ALBUM_REMOTE_ID } from '@/utils/album'
+import { RECORDING_ALBUM_REMOTE_KEY } from '@/utils/album'
 
 type Props = {
   name?: string
-  remoteId?: string
-  assetCount?: number
-  lastUpdateTime?: string
+  remoteKey?: string
+  assetCount?: number | null
+  lastUpdateTime?: string | null
   shadow?: boolean
 }
 
@@ -15,13 +15,11 @@ const props = defineProps<Props>()
 
 const { t } = useI18n()
 
-const isRecording = computed(() => props.remoteId === RECORDING_ALBUM_REMOTE_ID)
+const isRecording = computed(() => props.remoteKey === RECORDING_ALBUM_REMOTE_KEY)
 const displayName = computed(() => props.name ?? t('album.card.unnamed'))
 const displayCount = computed(() => {
-  if (props.assetCount === 0 && isRecording.value) {
-    return t('album.card.hiddenUntilDownload')
-  }
-  const n = props.assetCount ?? 0
+  if (props.assetCount == null) return t('album.card.countUnknown')
+  const n = props.assetCount
   return t('album.card.assetCount', { n }, n)
 })
 

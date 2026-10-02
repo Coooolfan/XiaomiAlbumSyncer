@@ -15,9 +15,8 @@ import java.time.Instant
 class ICloudChangesTest {
     private val mapper = jacksonObjectMapper()
     private fun album(id: Long, name: String) = Album {
-        this.id = id; remoteId = id; accountId = 1; this.name = name
+        this.id = id; remoteKey = ICloudAlbumKey("PrimarySync", name).encode(); accountId = 1; this.name = name
         shadow = false; lastUpdateTime = Instant.EPOCH; assetCount = 0
-        cloudAlbum = ICloudAlbumRef("PrimarySync", name, "CPLAssetAndMasterByAssetDateWithoutHiddenOrDeleted")
     }
     private fun record(type: String, name: String, fields: Map<String, Any> = emptyMap()): JsonNode = mapper.valueToTree(mapOf(
         "recordType" to type, "recordName" to name, "fields" to fields.mapValues { mapOf("value" to it.value) }))

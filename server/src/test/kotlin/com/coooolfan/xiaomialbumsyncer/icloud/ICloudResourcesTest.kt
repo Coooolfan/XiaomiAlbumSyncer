@@ -10,7 +10,7 @@ class ICloudResourcesTest {
     private fun album(id: Long) = Album {
         this.id = id
         accountId = 10
-        cloudAlbum = ICloudAlbumRef("PrimarySync", "album-uuid", "CPLContainerRelationLiveByAssetDate")
+        remoteKey = ICloudAlbumKey("PrimarySync", "album-uuid").encode()
     }
     private val asset = mapper.readTree("""{"recordName":"asset-uuid","fields":{"masterRef":{"value":{"recordName":"master-uuid"}},"assetDate":{"value":1000}}}""")
     private val master = mapper.readTree("""{"recordName":"master-uuid","fields":{

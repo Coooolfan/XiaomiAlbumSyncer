@@ -19,7 +19,7 @@ fun String.toTimeZone(): TimeZone {
 }
 
 fun Album.isAudioAlbum(): Boolean {
-    return this.remoteId == -1L
+    return this.remoteKey == "-1"
 }
 
 val AppContext.objectMapper: ObjectMapper

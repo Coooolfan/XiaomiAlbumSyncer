@@ -10,8 +10,8 @@ internal fun ICloudPhotos.fetchIncremental(
     albums: List<Album>, client: ICloudClient, cursor: String?,
     handler: (List<Asset>) -> Unit, commitCursor: (String) -> Unit,
 ) {
-    val zone = requireNotNull(albums.first().cloudAlbum).zone
-    require(albums.all { it.accountId == albums.first().accountId && it.cloudAlbum?.zone == zone })
+    val zone = ICloudAlbumKey.decode(albums.first().remoteKey).zone
+    require(albums.all { it.accountId == albums.first().accountId && ICloudAlbumKey.decode(it.remoteKey).zone == zone })
     fun establishBaseline(): String {
         // 在全量枚举之前取水位，再回放枚举期间的变更，防止漏掉同时上传的资产。
         val token = client.cloud("records/query", mapOf(
@@ -41,7 +41,10 @@ private fun ICloudPhotos.readChanges(
     albums: List<Album>, client: ICloudClient, initial: String,
     handler: (List<Asset>) -> Unit, commitCursor: (String) -> Unit,
 ) {
-    val zone = requireNotNull(albums.first().cloudAlbum).zone
+    val albumKeys = albums.associate { it.id to ICloudAlbumKey.decode(it.remoteKey) }
+    val zone = albumKeys.getValue(albums.first().id).zone
+    val userAlbums = albums.filter { !albumKeys.getValue(it.id).albumId.startsWith("__") }
+    val selectedContainers = userAlbums.map { albumKeys.getValue(it.id).albumId }.toSet()
     var token = initial
     val seen = mutableSetOf(initial)
     while (true) {
@@ -68,8 +71,6 @@ private fun ICloudPhotos.readChanges(
         if (more.asBoolean()) require(seen.add(next)) { "iCloud 变更分页位点没有推进" }
         val records = page.path("records").toList()
         val assets = records.filter { it.path("recordType").asText() == "CPLAsset" }.associateBy { it.path("recordName").asText() }.toMutableMap()
-        val userAlbums = albums.filter { !requireNotNull(it.cloudAlbum).recordName.startsWith("__") }
-        val selectedContainers = userAlbums.map { requireNotNull(it.cloudAlbum).recordName }.toSet()
         val addedMembers = records.filter { it.path("recordType").asText() == "CPLContainerRelation" && live(it) }
             .filter { value(it, "containerId").asText() in selectedContainers }
             .map { value(it, "itemId").asText().also { id -> require(id.isNotBlank()) { "iCloud 相册成员缺少资产标识" } } }
@@ -81,7 +82,7 @@ private fun ICloudPhotos.readChanges(
         } }
         lookupChanges(client, zone, masterNames.filterNot(masters::containsKey)).forEach { masters[it.path("recordName").asText()] = it }
         // 成员关系的 recordName 可直接 lookup；查询的是当前成员状态，跨页关系也不会漏掉。
-        val relationNames = liveAssets.flatMap { asset -> userAlbums.map { "${asset.path("recordName").asText()}-IN-${it.cloudAlbum!!.recordName}" } }
+        val relationNames = liveAssets.flatMap { asset -> userAlbums.map { "${asset.path("recordName").asText()}-IN-${albumKeys.getValue(it.id).albumId}" } }
         val memberships = lookupChanges(client, zone, relationNames).filter(::live).map { it.path("recordName").asText() }.toSet()
         val rows = liveAssets.flatMap { changed ->
             val name = changed.path("recordName").asText()
@@ -96,12 +97,12 @@ private fun ICloudPhotos.readChanges(
             }
             if (!live(master)) return@flatMap emptyList()
             albums.filter { album ->
-                val ref = requireNotNull(album.cloudAlbum)
-                when (ref.recordName) {
+                val ref = albumKeys.getValue(album.id)
+                when (ref.albumId) {
                     "__all__" -> !value(asset, "isHidden").asBoolean()
                     "__hidden__" -> value(asset, "isHidden").asBoolean()
                     "__favorites__" -> value(asset, "isFavorite").asBoolean() && !value(asset, "isHidden").asBoolean()
-                    else -> "$name-IN-${ref.recordName}" in memberships
+                    else -> "$name-IN-${ref.albumId}" in memberships
                 }
             }.flatMap { parseResources(it, asset, master) }
         }

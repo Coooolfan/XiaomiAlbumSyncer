@@ -1,6 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
 import com.coooolfan.xiaomialbumsyncer.icloud.ICloudPhotos
+import com.coooolfan.xiaomialbumsyncer.icloud.ICloudAlbumKey
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
@@ -15,7 +16,7 @@ class CloudMediaService(private val sql: KSqlClient, private val xiaomi: XiaoMiA
     fun isICloud(accountId: Long): Boolean = sql.findById(ProviderAccount::class, accountId)?.provider == CloudProvider.ICLOUD
     fun fetchAlbums(accountId: Long): List<Album> = if (isICloud(accountId)) icloud.fetchAlbums(accountId) else xiaomi.fetchAllAlbums(accountId)
     fun fetchAssets(album: Album, handler: (List<Asset>) -> Unit): Long =
-        if (album.cloudAlbum != null) icloud.fetchAssets(album, handler) else xiaomi.fetchAssetsByAlbumId(album, handler = handler)
+        if (isICloud(album.accountId)) icloud.fetchAssets(album, handler) else xiaomi.fetchAssetsByAlbumId(album, handler = handler)
 
     fun fetchICloudIncremental(albums: List<Album>, cursor: String?, handler: (List<Asset>) -> Unit, commitCursor: (String) -> Unit) =
         icloud.fetchIncremental(albums, cursor, handler, commitCursor)
@@ -44,7 +45,7 @@ class CloudMediaService(private val sql: KSqlClient, private val xiaomi: XiaoMiA
         val album = requireNotNull(sql.findById(Album::class, asset.album.id)) { "资产所属相册不存在" }
         require(album.accountId == accountId) { "资产所属账号与下载账号不一致" }
         return if (isICloud(album.accountId)) {
-            val zone = requireNotNull(album.cloudAlbum) { "iCloud 相册信息缺失" }.zone
+            val zone = ICloudAlbumKey.decode(album.remoteKey).zone
             icloud.download(album.accountId, zone, asset, path)
         } else xiaomi.downloadAsset(album.accountId, asset, path)
     }

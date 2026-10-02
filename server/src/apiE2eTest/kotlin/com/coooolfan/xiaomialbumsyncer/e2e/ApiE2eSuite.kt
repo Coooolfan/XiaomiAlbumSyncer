@@ -419,7 +419,7 @@ class ApiE2eSuite {
     /**
      * 位点同步模式（CURSOR）：album/full 预检 + allitems 按 syncTag 翻页拉流。
      * 覆盖：首轮 tag=0 回放、水位头未变跳过、增量翻页位点推进、清理历史后重置回放。
-     * 使用空相册 Screenshots(remoteId=2)，与相册 1 的既有断言完全隔离。
+     * 使用空相册 Screenshots(remoteKey=2)，与相册 1 的既有断言完全隔离。
      */
     private fun executeCursorSyncWorkflow(
         api: ApiClient,
@@ -876,11 +876,11 @@ class ApiE2eSuite {
         return assets.first { it.path("remoteKey").asText() == remoteKey }.path("id").asText()
     }
 
-    private fun findAlbumId(albums: JsonNode, remoteId: String): Long {
-        return albums.firstOrNull { it.path("remoteId").asText() == remoteId }
+    private fun findAlbumId(albums: JsonNode, remoteKey: String): Long {
+        return albums.firstOrNull { it.path("remoteKey").asText() == remoteKey }
             ?.path("id")
             ?.asLong()
-            ?: error("未找到 remoteId=$remoteId 的相册，响应: $albums")
+            ?: error("未找到 remoteKey=$remoteKey 的相册，响应: $albums")
     }
 
     private fun awaitCompletedHistory(api: ApiClient, crontabId: Long, afterHistoryId: Long? = null): Long {
