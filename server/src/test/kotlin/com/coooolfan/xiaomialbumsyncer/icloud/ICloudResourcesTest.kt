@@ -28,7 +28,8 @@ class ICloudResourcesTest {
         assertTrue(files.first { it.type == AssetType.VIDEO }.fileName.endsWith(".mov"))
         assertTrue(files.first().fileName.startsWith("IMG_0001_"))
         val other = parseResources(album(2), asset, master)
-        assertTrue(files.map { it.remoteKey }.toSet().intersect(other.map { it.remoteKey }.toSet()).isEmpty())
+        assertEquals(files.map { it.remoteKey }, other.map { it.remoteKey })
+        assertNotEquals(files.first().album.id, other.first().album.id)
         assertEquals(files.map { it.fileName }, other.map { it.fileName })
     }
 }

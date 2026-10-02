@@ -663,7 +663,8 @@ class ApiE2eSuite {
             assertTrue(detail.path("downloadCompleted").asBoolean(), "资产 ${detail.path("asset").path("id")} 应标记下载完成")
             assertTrue(detail.path("message").isMissingNode || detail.path("message").isNull, "跳过不应产生错误消息")
         }
-        val deletedGallery = galleryDetails.path("rows").first { it.path("asset").path("id").asText() == "103" }
+        val deletedGalleryId = findAssetId(api, cameraAlbumId, "103")
+        val deletedGallery = galleryDetails.path("rows").first { it.path("asset").path("id").asText() == deletedGalleryId }
         assertFalse(Files.exists(Path.of(deletedGallery.path("filePath").asText())), "已删除资产不应产出文件")
         assertEquals(0, mock.routePrefixCount("/mock/oss/103"), "已删除资产不应请求 OSS 签名直链")
         api.delete("/api/crontab/$galleryCrontabId").expect(200)
@@ -735,7 +736,8 @@ class ApiE2eSuite {
             assertTrue(detail.path("downloadCompleted").asBoolean(), "资产 ${detail.path("asset").path("id")} 应标记下载完成")
             assertTrue(detail.path("message").isMissingNode || detail.path("message").isNull, "跳过不应产生错误消息")
         }
-        val deletedRecording = recordingDetails.path("rows").first { it.path("asset").path("id").asText() == "301" }
+        val deletedRecordingId = findAssetId(api, audioAlbumId, "301")
+        val deletedRecording = recordingDetails.path("rows").first { it.path("asset").path("id").asText() == deletedRecordingId }
         assertFalse(Files.exists(Path.of(deletedRecording.path("filePath").asText())), "已删除录音不应产出文件")
         assertEquals(0, mock.routePrefixCount("/mock/oss/301"), "已删除录音不应请求 OSS 签名直链")
         api.delete("/api/crontab/$recordingCrontabId").expect(200)
@@ -823,7 +825,8 @@ class ApiE2eSuite {
         )
         assertEquals(1, failedDetails.path("totalRowCount").asInt())
         val failedDetail = failedDetails.path("rows").first()
-        assertEquals("104", failedDetail.path("asset").path("id").asText())
+        val retryAssetId = findAssetId(api, cameraAlbumId, "104")
+        assertEquals(retryAssetId, failedDetail.path("asset").path("id").asText())
         assertFalse(failedDetail.path("downloadCompleted").asBoolean(), "瞬时错误不应标记下载完成")
         assertTrue(failedDetail.path("message").asText().contains("50051"), "失败消息应包含错误码")
 
@@ -848,7 +851,7 @@ class ApiE2eSuite {
         )
         assertEquals(1, recoveredDetails.path("totalRowCount").asInt())
         val recoveredDetail = recoveredDetails.path("rows").first()
-        assertEquals("104", recoveredDetail.path("asset").path("id").asText())
+        assertEquals(retryAssetId, recoveredDetail.path("asset").path("id").asText())
         assertTrue(recoveredDetail.path("downloadCompleted").asBoolean(), "恢复后应下载成功")
         assertTrue(recoveredDetail.path("message").isMissingNode || recoveredDetail.path("message").isNull)
         assertTrue(Files.exists(Path.of(recoveredDetail.path("filePath").asText())), "恢复后应产出文件")
@@ -866,6 +869,11 @@ class ApiE2eSuite {
             assertTrue(detail.path("sha1Verified").asBoolean())
             assertTrue(detail.path("message").isMissingNode || detail.path("message").isNull)
         }
+    }
+
+    private fun findAssetId(api: ApiClient, albumId: Long, remoteKey: String): String {
+        val assets = api.json(api.get("/api/asset/$albumId").expect(200))
+        return assets.first { it.path("remoteKey").asText() == remoteKey }.path("id").asText()
     }
 
     private fun findAlbumId(albums: JsonNode, remoteId: String): Long {

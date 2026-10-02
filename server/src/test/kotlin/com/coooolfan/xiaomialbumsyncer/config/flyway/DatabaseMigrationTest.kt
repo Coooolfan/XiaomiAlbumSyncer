@@ -284,13 +284,22 @@ class DatabaseMigrationTest {
             connection.createStatement().use {
                 it.executeUpdate("INSERT INTO xiaomi_account(id,nickname,pass_token,user_id) VALUES (100,'Xiaomi','pass-token','xiaomi')")
                 it.executeUpdate("INSERT INTO album(id,name,remote_id,shadow,last_update_time,asset_count,account_id) VALUES (100,'Photos',1,0,0,0,100)")
+                it.executeUpdate("INSERT INTO asset(id,file_name,type,date_taken,album_id,sha1,mime_type,title,size) VALUES (200,'photo.jpg','IMAGE',0,100,'original-checksum','image/jpeg','photo',10)")
             }
         }
         assertEquals(1, flyway(url).migrate().migrationsExecuted)
         assertEquals("0.20.0", flyway(url).info().current().version.version)
         DriverManager.getConnection(url).use { connection ->
             assertEquals(setOf("id", "nickname", "user_id", "provider", "credentials"), connection.columnNames("provider_account"))
+            assertFalse("xiaomi_id" in connection.columnNames("asset"))
+            assertFalse("cloud_asset" in connection.columnNames("asset"))
             connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT id,remote_key,sha1 FROM asset WHERE id=200").use {
+                    assertTrue(it.next())
+                    assertEquals(200L, it.getLong(1))
+                    assertEquals("200", it.getString(2))
+                    assertEquals("original-checksum", it.getString(3))
+                }
                 statement.executeQuery("SELECT provider,credentials FROM provider_account WHERE id=100").use {
                     assertTrue(it.next())
                     assertEquals("XIAOMI", it.getString(1))

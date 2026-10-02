@@ -212,7 +212,10 @@ class CrontabService(private val sql: KSqlClient) {
                         accountId()
                     }
                 }
-                asset { allScalarFields() }
+                asset {
+                    allScalarFields()
+                    album()
+                }
             })
         }
     }
