@@ -13,6 +13,7 @@ interface Asset {
     val id: Long
 
     /** 远端文件定位；来源由相册所属账号决定。 */
+    @Key
     val remoteKey: String
 
     val fileName: String
@@ -25,8 +26,10 @@ interface Asset {
 
     @OnDissociate(DissociateAction.DELETE)
     @ManyToOne
+    @Key
     val album: Album
 
+    @Key
     val sha1: String
 
     val mimeType: String
