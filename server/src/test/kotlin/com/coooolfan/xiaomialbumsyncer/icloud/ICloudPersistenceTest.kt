@@ -91,12 +91,11 @@ class ICloudPersistenceTest {
             assertEquals(mapOf("42" to "legacy-tag"), sql.findById(CrontabHistory::class, 100L)!!.syncCursors)
             val album = sql.saveCommand(Album {
                 accountId = account.id
-                remoteId = 1
+                remoteKey = ICloudAlbumKey("PrimarySync", "album").encode()
                 name = "Photos"
                 shadow = false
                 lastUpdateTime = Instant.EPOCH
                 assetCount = 1
-                cloudAlbum = ICloudAlbumRef("PrimarySync", "album", "query")
             }, org.babyfish.jimmer.sql.ast.mutation.SaveMode.INSERT_ONLY).execute().modifiedEntity
             fun resource(checksum: String) = Asset {
                 remoteKey = ICloudResourceKey("record", "resOriginal").encode()
@@ -127,7 +126,7 @@ class ICloudPersistenceTest {
 
             val otherAlbum = sql.saveCommand(Album(album) {
                 id = album.id + 1
-                remoteId = 2
+                remoteKey = ICloudAlbumKey("PrimarySync", "other-album").encode()
                 name = "Other"
             }, org.babyfish.jimmer.sql.ast.mutation.SaveMode.INSERT_ONLY).execute().modifiedEntity
             val otherMembership = media.saveAssets(listOf(Asset(resource("first")) { albumId = otherAlbum.id })).single()
@@ -138,6 +137,7 @@ class ICloudPersistenceTest {
 
             val mapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
             val ranks = mutableListOf<Long>()
+            val assetQueries = mutableListOf<com.fasterxml.jackson.databind.JsonNode>()
             val lookups = mutableListOf<Pair<String, String>>()
             val server = com.sun.net.httpserver.HttpServer.create(java.net.InetSocketAddress("127.0.0.1", 0), 0)
             server.createContext("/") { exchange ->
@@ -145,6 +145,10 @@ class ICloudPersistenceTest {
                 val response: Any = if (exchange.requestURI.path == "/setup/validate") {
                     mapOf("dsInfo" to mapOf("hsaVersion" to 2, "dsid" to "id"), "hsaTrustedBrowser" to true,
                         "webservices" to mapOf("ckdatabasews" to mapOf("url" to "http://127.0.0.1:${server.address.port}")))
+                } else if (exchange.requestURI.path.endsWith("/zones/list")) {
+                    mapOf("zones" to listOf("PrimarySync", "SharedSync-example").map { mapOf("zoneID" to mapOf("zoneName" to it)) })
+                } else if (body.at("/query/recordType").asText() == "CPLAlbumByPositionLive") {
+                    mapper.readTree("""{"records":[{"recordType":"CPLAlbum","recordName":"album","fields":{"albumNameEnc":{"value":"UGhvdG9z"}}}]}""")
                 } else if (body.path("records").isArray) {
                     val name = body.at("/records/0/recordName").asText()
                     lookups += body.at("/zoneID/zoneName").asText() to name
@@ -158,6 +162,7 @@ class ICloudPersistenceTest {
                 } else if (body.at("/query/recordType").asText() == "CheckIndexingState") {
                     mapper.readTree("""{"records":[{"fields":{"state":{"value":"FINISHED"}}}]}""")
                 } else {
+                    assetQueries.add(body)
                     val rank = body.at("/query/filterBy/0/fieldValue/value").asLong()
                     ranks += rank
                     if (rank < 2) {
@@ -189,6 +194,27 @@ class ICloudPersistenceTest {
                 assertEquals(2L, count)
                 assertEquals(listOf(0L, 1L, 2L), ranks)
                 assertEquals(2, files.map { it.remoteKey }.toSet().size)
+                val remoteAlbums = photos.fetchAlbums(account.id, client)
+                assertEquals(8, remoteAlbums.size)
+                assertTrue(remoteAlbums.all { it.assetCount == null && it.lastUpdateTime == null })
+                assertEquals(8, remoteAlbums.map { it.remoteKey }.toSet().size)
+                for (name in listOf("__all__", "__hidden__", "__favorites__", "album")) {
+                    assetQueries.clear()
+                    val selected = Album(remoteAlbums.first { ICloudAlbumKey.decode(it.remoteKey) == ICloudAlbumKey("PrimarySync", name) }) { id = album.id }
+                    photos.fetchAssets(selected, client) { }
+                    val query = assetQueries.first().path("query")
+                    val expected = when (name) {
+                        "__all__" -> "CPLAssetAndMasterByAssetDateWithoutHiddenOrDeleted"
+                        "__hidden__" -> "CPLAssetAndMasterHiddenByAssetDate"
+                        "__favorites__" -> "CPLAssetAndMasterInSmartAlbumByAssetDate"
+                        else -> "CPLContainerRelationLiveByAssetDate"
+                    }
+                    assertEquals(expected, query.path("recordType").asText())
+                    val filters = query.path("filterBy").associate { it.path("fieldName").asText() to it.at("/fieldValue/value").asText() }
+                    assertEquals(if (name == "__favorites__") "FAVORITE" else null, filters["smartAlbum"])
+                    assertEquals(if (name == "album") "album" else null, filters["parentId"])
+                }
+
             } finally { server.stop(0) }
 
         }

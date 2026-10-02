@@ -293,12 +293,25 @@ class DatabaseMigrationTest {
             assertEquals(setOf("id", "nickname", "user_id", "provider", "credentials"), connection.columnNames("provider_account"))
             assertFalse("xiaomi_id" in connection.columnNames("asset"))
             assertFalse("cloud_asset" in connection.columnNames("asset"))
+            assertEquals(setOf("id", "remote_key", "name", "asset_count", "last_update_time", "account_id", "shadow"), connection.columnNames("album"))
             connection.createStatement().use { statement ->
                 statement.executeQuery("SELECT id,remote_key,sha1 FROM asset WHERE id=200").use {
                     assertTrue(it.next())
                     assertEquals(200L, it.getLong(1))
                     assertEquals("200", it.getString(2))
                     assertEquals("original-checksum", it.getString(3))
+                }
+                statement.executeQuery("SELECT remote_key,asset_count,last_update_time FROM album WHERE id=100").use {
+                    assertTrue(it.next())
+                    assertEquals("1", it.getString(1))
+                    assertEquals(0L, it.getLong(2))
+                    assertEquals(0L, it.getLong(3))
+                }
+                statement.executeUpdate("UPDATE album SET asset_count=NULL,last_update_time=NULL WHERE id=100")
+                statement.executeQuery("SELECT asset_count,last_update_time FROM album WHERE id=100").use {
+                    assertTrue(it.next())
+                    assertEquals(null, it.getObject(1))
+                    assertEquals(null, it.getObject(2))
                 }
                 statement.executeQuery("SELECT provider,credentials FROM provider_account WHERE id=100").use {
                     assertTrue(it.next())

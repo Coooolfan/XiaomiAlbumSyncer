@@ -48,9 +48,9 @@ class AlbumsService(
         }
 
         // TODO: 应该用 @Key 来一把 upsert
-        // 使用 remoteId + accountId 组合进行 upsert
+        // 使用 remoteKey + accountId 组合进行 upsert
         for (remoteAlbum in remoteAlbums) {
-            val existing = existingAlbums.find { it.remoteId == remoteAlbum.remoteId }
+            val existing = existingAlbums.find { it.remoteKey == remoteAlbum.remoteKey }
             if (existing != null) {
                 // 更新现有相册
                 sql.executeUpdate(Album::class) {
@@ -58,7 +58,6 @@ class AlbumsService(
                     set(table.assetCount, remoteAlbum.assetCount)
                     set(table.lastUpdateTime, remoteAlbum.lastUpdateTime)
                     set(table.shadow, false)
-                    set(table.cloudAlbum, remoteAlbum.cloudAlbum)
                     where(table.id eq existing.id)
                 }
             } else {

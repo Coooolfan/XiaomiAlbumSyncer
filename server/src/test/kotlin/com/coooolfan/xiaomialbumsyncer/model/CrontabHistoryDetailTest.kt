@@ -823,7 +823,7 @@ class CrontabHistoryDetailTest {
     private fun buildAlbum(name: String): Album {
         return Album {
             id = 10L
-            remoteId = 20L
+            remoteKey = "20"
             this.name = name
             assetCount = 0L
             lastUpdateTime = Instant.parse("2024-01-01T00:00:00Z")

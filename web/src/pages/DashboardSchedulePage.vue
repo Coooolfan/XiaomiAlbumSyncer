@@ -20,7 +20,7 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { useHeatmapTimeline } from '@/composables/useHeatmapTimeline'
 import { useCronForm } from '@/composables/useCronForm'
 import { useCronActions } from '@/composables/useCronActions'
-import { RECORDING_ALBUM_REMOTE_ID } from '@/utils/album'
+import { RECORDING_ALBUM_REMOTE_KEY } from '@/utils/album'
 import { api } from '@/ApiInstance'
 import type { CrontabDto, CrontabHistoryDetailDto } from '@/__generated/model/dto'
 
@@ -90,7 +90,7 @@ const formAlbumOptions = computed(() => {
     .map((a) => ({
       label: a.name ?? `ID ${a.id}`,
       value: a.id,
-      recording: a.remoteId === RECORDING_ALBUM_REMOTE_ID,
+      recording: a.remoteKey === RECORDING_ALBUM_REMOTE_KEY,
     }))
 })
 

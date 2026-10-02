@@ -18,10 +18,10 @@ data class AlbumListOutput(
 
 data class AlbumItem(
     val id: String,
-    val remoteId: String,
+    val remoteKey: String,
     val name: String,
-    val assetCount: Long,
-    val lastUpdateTime: String,
+    val assetCount: Long?,
+    val lastUpdateTime: String?,
     val shadow: Boolean,
     val accountNickname: String?,
 )
