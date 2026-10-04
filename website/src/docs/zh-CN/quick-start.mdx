@@ -1,0 +1,52 @@
+export const meta = {
+  title: '快速开始',
+  description: '用 Docker 启动 Xiaomi Album Syncer 并完成第一次相册同步。',
+  section: '快速开始',
+  order: 20,
+  slug: 'quick-start',
+}
+
+# 快速开始
+
+本流程使用 Docker 启动服务，扫码绑定小米账号，然后触发第一次全量下载。
+
+## 1. 启动服务
+
+```bash
+docker run -d \
+  -p 8232:8080 \
+  --name xiaomi-album-syncer \
+  -v ~/xiaomi-album-syncer/download:/app/download \
+  -v ~/xiaomi-album-syncer/db:/app/db \
+  coolfan1024/xiaomi-album-syncer:latest
+```
+
+启动后访问 `http://localhost:8232`。
+
+> 容器内服务监听 `8080` 端口，`-p` 左侧可按需改成任意宿主端口。
+
+## 2. 绑定小米账号
+
+1. 打开 Web UI，进入账号页面。
+2. 使用小米手机扫码完成登录。
+3. Cookie 会自动续期，无需重复扫码。
+
+### 多账号
+
+在账号页面可以继续添加其他账号，所有账号共享同一套下载任务配置。
+
+## 3. 触发同步
+
+在任务页面新建同步任务：
+
+| 配置项 | 说明 |
+| ------ | ---- |
+| 同步模式 | `full` 全量 / `incremental` 增量 |
+| 定时表达式 | 标准 Crontab，如 `0 3 * * *` |
+| 下载目录 | 宿主机挂载目录下的相对路径 |
+
+保存后点击「立即执行」，下载进度会实时显示在页面上。
+
+## 下一步
+
+更多部署方式见 [安装](/zh-CN/docs/install)。

@@ -1,0 +1,57 @@
+export const meta = {
+  title: '安装',
+  description: 'Docker、原生二进制与 JVM 三种部署方式。',
+  section: '快速开始',
+  order: 30,
+  slug: 'install',
+}
+
+# 安装
+
+Xiaomi Album Syncer 提供三种部署方式，按需选择其一即可。
+
+## 方式对比
+
+| 方式 | 适用场景 | 运行时依赖 |
+| ---- | -------- | ---------- |
+| Docker | 服务器 / NAS 长期运行 | Docker |
+| 原生二进制 | 无 Java 环境的桌面或服务器 | 无 |
+| JVM | 已有 Java 运行时的环境 | JVM 25+ |
+
+## Docker
+
+推荐使用 Docker Compose：
+
+```yaml
+services:
+  xiaomi-album-syncer:
+    image: coolfan1024/xiaomi-album-syncer:latest
+    ports:
+      - "8232:8080"
+    volumes:
+      - ./download:/app/download
+      - ./db:/app/db
+    restart: unless-stopped
+```
+
+```bash
+docker compose up -d
+```
+
+## 原生二进制
+
+前往 [Releases](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases) 下载对应平台的压缩包，解压后直接运行：
+
+```bash
+./xiaomi-album-syncer
+```
+
+## JVM
+
+需要 JVM 25 或更高版本：
+
+```bash
+java -jar xiaomi-album-syncer.jar
+```
+
+> 三种方式产出的数据格式一致，数据库文件可以互相通用。

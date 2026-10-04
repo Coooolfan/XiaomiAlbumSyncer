@@ -6,6 +6,7 @@ export default {
   nav: {
     features: 'Features',
     deploy: 'Deploy',
+    docs: 'Docs',
     theme: 'Toggle theme',
     language: '中文',
   },
@@ -66,5 +67,23 @@ export default {
   footer: {
     license: 'Xiaomi Album Syncer · GPL-3.0 License',
     qq: 'QQ Group 1059332701',
+  },
+  docs: {
+    title: 'Docs',
+    menu: 'Menu',
+    onThisPage: 'On this page',
+    languageSwitch: 'Language',
+    index: {
+      title: 'Xiaomi Album Syncer Docs',
+      body: 'Choose a documentation language to browse the docs site.',
+      defaultTag: 'Default',
+      secondaryTag: 'Translation',
+    },
+    notFound: {
+      title: 'Page not found',
+      body: 'The requested page does not exist. Head back home or jump into the docs entry point.',
+      backHome: 'Back to home',
+      openDocs: 'Open docs',
+    },
   },
 }

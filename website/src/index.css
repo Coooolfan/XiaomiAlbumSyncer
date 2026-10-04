@@ -8,6 +8,10 @@ body,
   min-height: 100%;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   background-color: #fff;
@@ -18,4 +22,126 @@ body {
 .dark body {
   background-color: #000;
   color: #e2e8f0;
+}
+
+/* Docs theme tokens — light */
+:root {
+  --xas-bg: #ffffff;
+  --xas-bg-secondary: #fafafa;
+  --xas-ink: #171717;
+  --xas-muted: #525252;
+  --xas-line: #e5e5e5;
+  --xas-code-bg: #f5f5f5;
+  --xas-code-text: #171717;
+  --xas-pre-bg: #f6f8fa;
+  --xas-pre-text: #24292f;
+  --xas-pre-scrollbar: rgba(31, 35, 40, 0.18);
+  --xas-pre-scrollbar-hover: rgba(31, 35, 40, 0.3);
+  --xas-docs-scrollbar: rgba(23, 23, 23, 0.14);
+  --xas-docs-scrollbar-hover: rgba(23, 23, 23, 0.28);
+  --xas-pre-selection: rgba(9, 105, 218, 0.22);
+  --xas-blockquote-bg: #fafafa;
+  --xas-blockquote-border: #e5e5e5;
+  --xas-blockquote-text: #525252;
+  --xas-table-header-bg: #fafafa;
+  --xas-table-border: #e5e5e5;
+  --xas-table-text: #525252;
+}
+
+/* Docs theme tokens — dark */
+.dark {
+  --xas-bg: #0a0a0a;
+  --xas-bg-secondary: #141414;
+  --xas-ink: #ededed;
+  --xas-muted: #a3a3a3;
+  --xas-line: #262626;
+  --xas-code-bg: #1a1a1a;
+  --xas-code-text: #e5e5e5;
+  --xas-pre-bg: #141414;
+  --xas-pre-text: #e5e5e5;
+  --xas-pre-scrollbar: rgba(255, 255, 255, 0.15);
+  --xas-pre-scrollbar-hover: rgba(255, 255, 255, 0.25);
+  --xas-docs-scrollbar: rgba(255, 255, 255, 0.14);
+  --xas-docs-scrollbar-hover: rgba(255, 255, 255, 0.28);
+  --xas-pre-selection: rgba(255, 255, 255, 0.2);
+  --xas-blockquote-bg: #141414;
+  --xas-blockquote-border: #262626;
+  --xas-blockquote-text: #a3a3a3;
+  --xas-table-header-bg: #141414;
+  --xas-table-border: #262626;
+  --xas-table-text: #a3a3a3;
+}
+
+/* Docs dark-mode: invert light-only SVG diagrams */
+.dark #docs-content img[src$='.svg'] {
+  filter: invert(1);
+}
+
+/* Code block scrollbar */
+pre {
+  scrollbar-width: thin;
+  scrollbar-color: var(--xas-pre-scrollbar) transparent;
+}
+
+pre::-webkit-scrollbar {
+  height: 6px;
+}
+
+pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+pre::-webkit-scrollbar-thumb {
+  background: var(--xas-pre-scrollbar);
+  border-radius: 3px;
+}
+
+pre::-webkit-scrollbar-thumb:hover {
+  background: var(--xas-pre-scrollbar-hover);
+}
+
+/* Desktop docs navigation scrollbar */
+.docs-scrollbar {
+  scrollbar-color: var(--xas-docs-scrollbar) transparent;
+  scrollbar-width: thin;
+}
+
+.docs-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.docs-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.docs-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--xas-docs-scrollbar);
+  border-radius: 999px;
+}
+
+.docs-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--xas-docs-scrollbar-hover);
+}
+
+/* Code block selection */
+pre ::selection {
+  background: var(--xas-pre-selection);
+  color: inherit;
+}
+
+/* Shiki emits both token palettes at build time; the site theme selects one. */
+.shiki,
+.shiki span {
+  color: var(--shiki-light);
+  font-style: var(--shiki-light-font-style);
+  font-weight: var(--shiki-light-font-weight);
+  text-decoration: var(--shiki-light-text-decoration);
+}
+
+.dark .shiki,
+.dark .shiki span {
+  color: var(--shiki-dark);
+  font-style: var(--shiki-dark-font-style);
+  font-weight: var(--shiki-dark-font-weight);
+  text-decoration: var(--shiki-dark-text-decoration);
 }
