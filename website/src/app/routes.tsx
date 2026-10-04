@@ -1,9 +1,14 @@
 import { Navigate, Route, Routes, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import HomePage from '../pages/HomePage'
 import SiteNotFoundPage from '../pages/SiteNotFoundPage'
-import DocsIndexPage from '../pages/DocsIndexPage'
 import { DocsPage } from '../features/docs/DocsPage'
-import { getDocEntry, isDocsLocale } from '../features/docs/registry'
+import { getDocEntry, getDocsRootHref, getPreferredDocsLocale, isDocsLocale } from '../features/docs/registry'
+
+function DocsRedirect() {
+  const { i18n } = useTranslation()
+  return <Navigate replace to={getDocsRootHref(getPreferredDocsLocale(i18n.language))} />
+}
 
 function LocaleDocsPage() {
   const { locale, '*': slug = '' } = useParams()
@@ -23,7 +28,7 @@ export function WebsiteRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/docs" element={<DocsIndexPage />} />
+      <Route path="/docs" element={<DocsRedirect />} />
       <Route path="/:locale/docs" element={<LocaleDocsPage />} />
       <Route path="/:locale/docs/*" element={<LocaleDocsPage />} />
       <Route path="/404" element={<SiteNotFoundPage />} />
