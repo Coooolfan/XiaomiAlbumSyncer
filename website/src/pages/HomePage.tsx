@@ -142,7 +142,7 @@ export default function HomePage() {
         <p className="mb-6 rounded-full border border-black/20 bg-white/60 px-4 py-1 font-mono text-xs tracking-widest text-slate-700 backdrop-blur-sm dark:border-white/25 dark:bg-black/50 dark:text-slate-200">
           {t('hero.badge')}
         </p>
-        <h1 className="font-mono text-3xl leading-tight font-bold tracking-tight whitespace-nowrap text-slate-900 sm:text-5xl lg:text-6xl dark:text-white">
+        <h1 className="font-mono text-3xl leading-tight font-bold tracking-tight text-balance text-slate-900 sm:text-5xl lg:text-6xl dark:text-white">
           Xiaomi Album Syncer
         </h1>
         <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-300">

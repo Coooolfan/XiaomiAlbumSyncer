@@ -293,7 +293,9 @@ export function DocsPage({ locale }: { locale: DocsLocale }) {
   const { t, i18n } = useTranslation()
   const currentSlug = (params['*'] ?? '').replace(/^\/+|\/+$/g, '')
   const entry = getDocEntry(locale, currentSlug)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [menuState, setMenuState] = useState<'closed' | 'open' | 'closing'>('closed')
+  const openMenu = () => setMenuState('open')
+  const closeMenu = () => setMenuState((state) => (state === 'open' ? 'closing' : state))
   const tocItems = useTableOfContents(`${locale}:${currentSlug}:${entry?.meta.title ?? '404'}`)
   const activeTocItems = useVisibleTocItems(tocItems, `${locale}:${currentSlug}:${entry?.meta.title ?? '404'}`)
   const targetLocale = getOtherDocsLocale(locale)
@@ -306,7 +308,13 @@ export function DocsPage({ locale }: { locale: DocsLocale }) {
   }, [locale, i18n.language])
 
   useEffect(() => {
-    setIsMenuOpen(false)
+    if (menuState !== 'closing') return
+    const timer = window.setTimeout(() => setMenuState('closed'), 180)
+    return () => window.clearTimeout(timer)
+  }, [menuState])
+
+  useEffect(() => {
+    setMenuState('closed')
   }, [locale, currentSlug])
 
   useEffect(() => {
@@ -366,7 +374,7 @@ export function DocsPage({ locale }: { locale: DocsLocale }) {
               <GithubIcon className="h-4 w-4" />
               GitHub
             </a>
-            <button type="button" onClick={() => setIsMenuOpen(true)} className={`lg:hidden ${headerBtnClass}`}>
+            <button type="button" onClick={openMenu} className={`lg:hidden ${headerBtnClass}`}>
               <List className="h-4 w-4" />
               {t('docs.menu')}
             </button>
@@ -392,16 +400,20 @@ export function DocsPage({ locale }: { locale: DocsLocale }) {
         </aside>
       </div>
 
-      {isMenuOpen ? (
-        <div className="fixed inset-0 z-50 bg-neutral-950/50 backdrop-blur-sm lg:hidden">
-          <div className="ml-auto h-full w-full max-w-sm bg-white p-6 shadow-2xl transition-colors duration-300 dark:bg-black">
+      {menuState !== 'closed' ? (
+        <div data-closing={menuState === 'closing' || undefined} className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="docs-menu-overlay absolute inset-0 bg-neutral-950/50 backdrop-blur-sm"
+            onClick={closeMenu}
+          />
+          <div className="docs-menu-panel relative ml-auto h-full w-full max-w-sm bg-white p-6 shadow-2xl transition-colors duration-300 dark:bg-black">
             <div className="mb-6 flex items-center justify-between">
               <p className="text-sm font-semibold tracking-[0.18em] text-neutral-400 uppercase transition-colors duration-300 dark:text-neutral-500">
                 {t('docs.menu')}
               </p>
               <button
                 type="button"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={closeMenu}
                 className="rounded p-2 text-neutral-500 transition-colors duration-300 hover:text-black dark:text-neutral-400 dark:hover:text-white"
                 aria-label="Close menu"
               >
@@ -411,7 +423,7 @@ export function DocsPage({ locale }: { locale: DocsLocale }) {
             <DocsNavigation
               locale={locale}
               currentSlug={entry?.meta.slug ?? currentSlug}
-              onNavigate={() => setIsMenuOpen(false)}
+              onNavigate={closeMenu}
             />
           </div>
         </div>
