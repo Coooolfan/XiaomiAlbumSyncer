@@ -73,12 +73,6 @@ export default {
     menu: 'Menu',
     onThisPage: 'On this page',
     languageSwitch: 'Language',
-    index: {
-      title: 'Xiaomi Album Syncer Docs',
-      body: 'Choose a documentation language to browse the docs site.',
-      defaultTag: 'Default',
-      secondaryTag: 'Translation',
-    },
     notFound: {
       title: 'Page not found',
       body: 'The requested page does not exist. Head back home or jump into the docs entry point.',

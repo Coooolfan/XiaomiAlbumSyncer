@@ -108,6 +108,38 @@ function renderDocument({ appHtml, seo }, clientEntry) {
 `
 }
 
+function renderDocsIndexDocument(page) {
+  const detectScript = `<script>
+      (function () {
+        var locale = ${JSON.stringify(page.defaultHref.match(/^\/([^/]+)\//)[1])}
+        try {
+          var stored = localStorage.getItem('locale')
+          if (stored === 'zh-CN' || stored === 'en-US') locale = stored
+          else if (!/^zh/i.test(navigator.language || '')) locale = 'en-US'
+        } catch (e) {}
+        window.location.replace('/' + locale + '/docs/')
+      })()
+    </script>`
+
+  return `<!doctype html>
+<html lang="${escapeHtml(page.seo.lang)}">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${escapeHtml(page.seo.title)}</title>
+    <meta data-xas-seo="description" name="description" content="${escapeHtml(page.seo.description)}">
+    <meta data-xas-seo="robots" name="robots" content="${escapeHtml(page.seo.robots ?? 'noindex')}">
+    <link data-xas-seo="canonical" rel="canonical" href="${escapeHtml(page.seo.canonical)}">
+    <meta http-equiv="refresh" content="0; url=${escapeHtml(page.defaultHref)}">
+    ${detectScript}
+  </head>
+  <body>
+    <p>Redirecting to <a href="${escapeHtml(page.defaultHref)}">${escapeHtml(page.defaultHref)}</a>...</p>
+  </body>
+</html>
+`
+}
+
 function renderRedirectDocument(page) {
   return `<!doctype html>
 <html lang="${escapeHtml(page.seo.lang)}">
@@ -153,6 +185,11 @@ for (const page of pages) {
 
   if (page.kind === 'redirect') {
     writeHtmlFile(outputFile, renderRedirectDocument(page))
+    continue
+  }
+
+  if (page.kind === 'docs-index') {
+    writeHtmlFile(outputFile, renderDocsIndexDocument(page))
     continue
   }
 

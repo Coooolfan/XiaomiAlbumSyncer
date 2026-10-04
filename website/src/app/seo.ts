@@ -53,23 +53,6 @@ function buildDocsAlternates(locale: DocsLocale, slug: string) {
   return links
 }
 
-export function getDocsIndexSeo(locale: DocsLocale = defaultDocsLocale): PageSeoData {
-  return {
-    alternates: [
-      { href: toAbsoluteUrl(getDocsRootHref('zh-CN')), hrefLang: 'zh-CN' },
-      { href: toAbsoluteUrl(getDocsRootHref('en-US')), hrefLang: 'en-US' },
-      { href: toAbsoluteUrl('/docs/'), hrefLang: 'x-default' },
-    ],
-    canonical: toAbsoluteUrl('/docs/'),
-    description:
-      locale === 'zh-CN'
-        ? '选择文档语言以浏览 Xiaomi Album Syncer 的静态文档站点。'
-        : 'Choose a documentation language to browse the Xiaomi Album Syncer docs site.',
-    lang: locale,
-    title: 'Xiaomi Album Syncer Docs',
-  }
-}
-
 export function getHomeSeo(locale: DocsLocale = defaultDocsLocale): PageSeoData {
   return {
     alternates: [],
@@ -141,7 +124,7 @@ export function getSeoForPath(pathname: string): PageSeoData {
   }
 
   if (normalizedPathname === '/docs') {
-    return getDocsIndexSeo(defaultDocsLocale)
+    return getRedirectSeo(getDocsRootHref(defaultDocsLocale), defaultDocsLocale)
   }
 
   const docsMatch = normalizedPathname.match(/^\/(zh-CN|en-US)\/docs(?:\/(.*))?$/)

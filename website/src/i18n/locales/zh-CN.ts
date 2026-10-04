@@ -47,12 +47,6 @@ export default {
     menu: '目录',
     onThisPage: '本页内容',
     languageSwitch: '语言',
-    index: {
-      title: 'Xiaomi Album Syncer 文档',
-      body: '请选择一种文档语言以浏览文档站点。',
-      defaultTag: '默认',
-      secondaryTag: '翻译',
-    },
     notFound: {
       title: '页面不存在',
       body: '请求的页面不存在，请返回首页或前往文档入口。',
