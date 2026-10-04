@@ -38,13 +38,15 @@ void i18n.use(initReactI18next).init({
   returnNull: false,
 })
 
-const applyDocumentMeta = (lng: string) => {
-  document.documentElement.lang = lng
-  document
-    .querySelector('meta[name="description"]')
-    ?.setAttribute('content', i18n.t('meta.description'))
+if (typeof document !== 'undefined') {
+  const applyDocumentMeta = (lng: string) => {
+    document.documentElement.lang = lng
+    document
+      .querySelector('meta[name="description"]')
+      ?.setAttribute('content', i18n.t('meta.description'))
+  }
+  applyDocumentMeta(i18n.language)
+  i18n.on('languageChanged', applyDocumentMeta)
 }
-applyDocumentMeta(i18n.language)
-i18n.on('languageChanged', applyDocumentMeta)
 
 export default i18n

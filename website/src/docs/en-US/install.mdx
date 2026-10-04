@@ -1,0 +1,57 @@
+export const meta = {
+  title: 'Install',
+  description: 'Three deployment options: Docker, native binary, and JVM.',
+  section: 'Getting Started',
+  order: 30,
+  slug: 'install',
+}
+
+# Install
+
+Xiaomi Album Syncer offers three deployment options — pick whichever fits.
+
+## Comparison
+
+| Method | Best for | Runtime dependency |
+| ------ | -------- | ------------------ |
+| Docker | Long-running servers / NAS | Docker |
+| Native binary | Desktops or servers without Java | None |
+| JVM | Environments that already run Java | JVM 25+ |
+
+## Docker
+
+Docker Compose is recommended:
+
+```yaml
+services:
+  xiaomi-album-syncer:
+    image: coolfan1024/xiaomi-album-syncer:latest
+    ports:
+      - "8232:8080"
+    volumes:
+      - ./download:/app/download
+      - ./db:/app/db
+    restart: unless-stopped
+```
+
+```bash
+docker compose up -d
+```
+
+## Native binary
+
+Grab the archive for your platform from [Releases](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases), extract it, and run:
+
+```bash
+./xiaomi-album-syncer
+```
+
+## JVM
+
+Requires JVM 25 or newer:
+
+```bash
+java -jar xiaomi-album-syncer.jar
+```
+
+> All three options produce identical data formats — database files are interchangeable.
