@@ -5,6 +5,7 @@ export default {
   nav: {
     features: '功能',
     deploy: '部署',
+    docs: '文档',
     theme: '切换主题',
     language: 'EN',
   },
@@ -40,5 +41,23 @@ export default {
   footer: {
     license: 'Xiaomi Album Syncer · GPL-3.0 License',
     qq: 'QQ 群 1059332701',
+  },
+  docs: {
+    title: '文档',
+    menu: '目录',
+    onThisPage: '本页内容',
+    languageSwitch: '语言',
+    index: {
+      title: 'Xiaomi Album Syncer 文档',
+      body: '请选择一种文档语言以浏览文档站点。',
+      defaultTag: '默认',
+      secondaryTag: '翻译',
+    },
+    notFound: {
+      title: '页面不存在',
+      body: '请求的页面不存在，请返回首页或前往文档入口。',
+      backHome: '返回首页',
+      openDocs: '查看文档',
+    },
   },
 }

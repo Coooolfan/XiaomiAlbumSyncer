@@ -1,0 +1,25 @@
+export const meta = {
+  title: 'FAQ',
+  description: 'Common questions about sign-in, syncing, and downloads.',
+  section: 'Miscellaneous',
+  order: 40,
+  slug: 'faq',
+}
+
+# FAQ
+
+## How long does the sign-in last
+
+After QR-code sign-in, cookies are refreshed automatically and normally no re-login is needed. If an account goes offline, the page will prompt you to scan again.
+
+## How does incremental sync detect changes
+
+Each sync records fingerprints of downloaded assets, and later runs skip files that already exist. Deleting a local file causes it to be downloaded again on the next run.
+
+## Wrong timestamps on downloaded photos
+
+With "timestamp backfill" enabled, Exif capture time and filesystem time are written automatically after download. Without it, you can replay the option on historical tasks manually.
+
+## Where are recordings saved
+
+Recordings share the same download root as album assets and are placed into directories according to the task's path expression.

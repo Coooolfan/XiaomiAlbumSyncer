@@ -1,0 +1,52 @@
+export const meta = {
+  title: 'Quick Start',
+  description: 'Start Xiaomi Album Syncer with Docker and finish your first album sync.',
+  section: 'Getting Started',
+  order: 20,
+  slug: 'quick-start',
+}
+
+# Quick Start
+
+This flow starts the service with Docker, binds a Xiaomi account via QR code, and triggers the first full download.
+
+## 1. Start the service
+
+```bash
+docker run -d \
+  -p 8232:8080 \
+  --name xiaomi-album-syncer \
+  -v ~/xiaomi-album-syncer/download:/app/download \
+  -v ~/xiaomi-album-syncer/db:/app/db \
+  coolfan1024/xiaomi-album-syncer:latest
+```
+
+Then open `http://localhost:8232`.
+
+> The service listens on port `8080` inside the container; map the left side of `-p` to any host port you like.
+
+## 2. Bind your Xiaomi account
+
+1. Open the Web UI and go to the accounts page.
+2. Scan the QR code with a Xiaomi phone to sign in.
+3. Cookies are refreshed automatically — no repeated scans needed.
+
+### Multiple accounts
+
+You can keep adding accounts on the accounts page; all accounts share the same download task configuration.
+
+## 3. Trigger a sync
+
+Create a sync task on the tasks page:
+
+| Option | Description |
+| ------ | ----------- |
+| Sync mode | `full` / `incremental` |
+| Schedule | Standard crontab, e.g. `0 3 * * *` |
+| Download path | Relative path under the mounted host directory |
+
+Save it and click "Run now" — progress is shown live on the page.
+
+## Next steps
+
+See [Install](/en-US/docs/install) for more deployment options.
