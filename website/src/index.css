@@ -145,3 +145,44 @@ pre ::selection {
   font-weight: var(--shiki-dark-font-weight);
   text-decoration: var(--shiki-dark-text-decoration);
 }
+
+/* Docs mobile menu */
+@keyframes docs-menu-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes docs-menu-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes docs-menu-panel-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes docs-menu-panel-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.docs-menu-overlay {
+  animation: docs-menu-fade-in 0.2s ease-out both;
+}
+
+.docs-menu-panel {
+  animation: docs-menu-panel-in 0.25s ease-out both;
+}
+
+[data-closing] .docs-menu-overlay {
+  animation: docs-menu-fade-out 0.18s ease-in both;
+}
+
+[data-closing] .docs-menu-panel {
+  animation: docs-menu-panel-out 0.18s ease-in both;
+}
