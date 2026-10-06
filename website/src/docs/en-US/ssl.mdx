@@ -1,0 +1,64 @@
+export const meta = {
+  title: 'SSL / HTTPS',
+  description: 'Enable HTTPS for the service by configuring a keystore via environment variables.',
+  section: 'Features',
+  order: 50,
+  slug: 'ssl',
+}
+
+# SSL / HTTPS
+
+The service enables HTTPS through Solon's `server.ssl` options — pass a keystore via environment variables:
+
+| Variable | Description |
+| --- | --- |
+| `SSL_KEYSTORE` | Keystore path; only `.jks` / `.pfx` / `.p12` formats are supported |
+| `SSL_KEYSTORE_PASSWORD` | Keystore password |
+
+> If these variables are unset (or empty), the service keeps running on plain HTTP.
+
+## JVM / Binary
+
+```bash
+export SSL_KEYSTORE=/data/_ca/demo.jks
+export SSL_KEYSTORE_PASSWORD=demo
+
+java -jar xiaomi-album-syncer.jar   # JVM
+./xiaomi-album-syncer               # Native binary
+```
+
+## Docker
+
+Mount the certificate files into the container read-only:
+
+```bash
+docker run -d \
+  -p 8232:8080 \
+  -e SSL_KEYSTORE=/certs/demo.pfx \
+  -e SSL_KEYSTORE_PASSWORD=demo \
+  -v ~/xiaomi-album-syncer/download:/app/download \
+  -v ~/xiaomi-album-syncer/db:/app/db \
+  -v /local/certs:/certs:ro \
+  --name xiaomi-album-syncer \
+  coolfan1024/xiaomi-album-syncer:latest
+```
+
+## Docker Compose
+
+```yaml
+services:
+  xiaomi-album-syncer:
+    image: coolfan1024/xiaomi-album-syncer:latest
+    ports:
+      - "8232:8080"
+    environment:
+      SSL_KEYSTORE: /certs/demo.pfx
+      SSL_KEYSTORE_PASSWORD: demo
+    volumes:
+      - ./download:/app/download
+      - ./db:/app/db
+      - ./certs:/certs:ro
+    restart: unless-stopped
+```
+
+> You can also keep the service on plain HTTP and terminate TLS at a reverse proxy. When exposing the service beyond localhost, always access it over HTTPS.

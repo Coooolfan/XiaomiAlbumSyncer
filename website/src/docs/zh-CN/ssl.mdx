@@ -1,0 +1,64 @@
+export const meta = {
+  title: 'SSL / HTTPS',
+  description: '通过环境变量配置证书库，为服务启用 HTTPS。',
+  section: '功能',
+  order: 50,
+  slug: 'ssl',
+}
+
+# SSL / HTTPS
+
+服务基于 Solon 的 `server.ssl` 配置启用 HTTPS，通过环境变量传入证书库即可：
+
+| 环境变量 | 说明 |
+| --- | --- |
+| `SSL_KEYSTORE` | 证书库路径，仅支持 `.jks` / `.pfx` / `.p12` 格式 |
+| `SSL_KEYSTORE_PASSWORD` | 证书库密码 |
+
+> 不配置（或留空）这两个变量时，服务仍以 HTTP 运行。
+
+## JVM / 二进制
+
+```bash
+export SSL_KEYSTORE=/data/_ca/demo.jks
+export SSL_KEYSTORE_PASSWORD=demo
+
+java -jar xiaomi-album-syncer.jar   # JVM 版
+./xiaomi-album-syncer               # 二进制版
+```
+
+## Docker
+
+证书文件通过额外的只读挂载传入容器：
+
+```bash
+docker run -d \
+  -p 8232:8080 \
+  -e SSL_KEYSTORE=/certs/demo.pfx \
+  -e SSL_KEYSTORE_PASSWORD=demo \
+  -v ~/xiaomi-album-syncer/download:/app/download \
+  -v ~/xiaomi-album-syncer/db:/app/db \
+  -v /local/certs:/certs:ro \
+  --name xiaomi-album-syncer \
+  coolfan1024/xiaomi-album-syncer:latest
+```
+
+## Docker Compose
+
+```yaml
+services:
+  xiaomi-album-syncer:
+    image: coolfan1024/xiaomi-album-syncer:latest
+    ports:
+      - "8232:8080"
+    environment:
+      SSL_KEYSTORE: /certs/demo.pfx
+      SSL_KEYSTORE_PASSWORD: demo
+    volumes:
+      - ./download:/app/download
+      - ./db:/app/db
+      - ./certs:/certs:ro
+    restart: unless-stopped
+```
+
+> 也可以让服务保持 HTTP，在反向代理层统一终止 TLS。对外暴露服务时，建议始终通过 HTTPS 访问。

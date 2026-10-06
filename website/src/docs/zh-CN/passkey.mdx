@@ -1,0 +1,53 @@
+export const meta = {
+  title: 'Passkey 登录',
+  description: '使用 Passkey（WebAuthn）进行无密码登录。',
+  section: '功能',
+  order: 60,
+  slug: 'passkey',
+}
+
+# Passkey 登录
+
+支持使用 Passkey（WebAuthn）无密码登录：Touch ID、Face ID、Windows Hello 等生物识别，YubiKey 等硬件安全密钥，以及通过 iCloud 钥匙串、Google 密码管理器同步的 Passkey。
+
+## 前置要求
+
+- **安全上下文**：必须在 HTTPS 下使用，`localhost` 仅用于本地测试。非安全上下文下浏览器会阻止 WebAuthn API 调用。HTTPS 配置见 [SSL / HTTPS](/zh-CN/docs/ssl)。
+- **浏览器**：需要支持 WebAuthn 的现代浏览器（Chrome / Edge 67+、Firefox 60+、Safari 13+）。
+
+## 配置
+
+通过环境变量配置 Relying Party：
+
+| 环境变量 | 说明 | 默认值 |
+| --- | --- | --- |
+| `WEBAUTHN_RP_ID` | Relying Party ID，必须是当前域名或其父域名 | `localhost` |
+| `WEBAUTHN_RP_NAME` | 注册时向用户显示的名称 | `XiaomiAlbumSyncer` |
+
+> `rpId` 必须与访问域名匹配。例如通过 `https://sync.example.com` 访问时，`rpId` 应设置为 `sync.example.com` 或 `example.com`。
+
+```bash
+docker run -d \
+  -p 8232:8080 \
+  -e WEBAUTHN_RP_ID=sync.example.com \
+  -e WEBAUTHN_RP_NAME="我的相册同步" \
+  -v ~/xiaomi-album-syncer/download:/app/download \
+  -v ~/xiaomi-album-syncer/db:/app/db \
+  --name xiaomi-album-syncer \
+  coolfan1024/xiaomi-album-syncer:latest
+```
+
+JVM / 二进制部署通过同名环境变量传入即可。
+
+## 使用
+
+1. **初始化**：首次访问时设置管理员密码。
+2. **注册**：进入设置页的 Passkey 管理，点击注册新 Passkey，输入当前密码和名称后按浏览器提示完成验证。
+3. **登录**：登录页点击「使用 Passkey 登录」，完成生物识别或 PIN 验证。
+4. **管理**：设置页可查看、重命名、删除已注册的 Passkey。
+
+## 注意事项
+
+- Passkey 与域名绑定，在 `example.com` 注册的 Passkey 无法用于其他域名。
+- 跨设备同步取决于操作系统与浏览器（iCloud 钥匙串、Google 密码管理器等）。
+- 建议保留密码登录作为备用方式，以防 Passkey 设备丢失。
