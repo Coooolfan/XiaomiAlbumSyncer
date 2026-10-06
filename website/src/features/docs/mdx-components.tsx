@@ -63,7 +63,7 @@ export const mdxComponents = {
   blockquote: ({ className, ...props }: HTMLAttributes<HTMLQuoteElement>) => (
     <blockquote
       className={mergeClassName(
-        'mt-6 rounded border border-(--xas-blockquote-border) bg-(--xas-blockquote-bg) px-5 py-4 text-sm leading-7 text-(--xas-blockquote-text)',
+        'mt-6 space-y-3 rounded border border-(--xas-blockquote-border) bg-(--xas-blockquote-bg) px-5 py-4 text-sm leading-7 text-(--xas-blockquote-text) [&_p]:m-0 [&_p]:text-inherit [&_p]:text-[length:inherit] [&_p]:leading-[inherit]',
         className,
       )}
       {...props}
