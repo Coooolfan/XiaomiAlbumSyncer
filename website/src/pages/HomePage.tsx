@@ -9,18 +9,6 @@ const RELEASES_URL = `${GITHUB_URL}/releases`
 const DOCKER_URL = 'https://hub.docker.com/r/coolfan1024/xiaomi-album-syncer'
 const QQ_URL = 'https://qm.qq.com/q/H2trW6JWM4'
 
-const dockerCommand = `docker run -d \\
-  -p 8232:8080 \\
-  --name xiaomi-album-syncer \\
-  -v ~/xiaomi-album-syncer/download:/app/download \\
-  -v ~/xiaomi-album-syncer/db:/app/db \\
-  coolfan1024/xiaomi-album-syncer:latest`
-
-interface FeatureItem {
-  title: string
-  desc: string
-}
-
 function SunIcon() {
   return (
     <svg
@@ -58,7 +46,6 @@ export default function HomePage() {
   const { t, i18n } = useTranslation()
   const { theme, toggle } = useTheme()
   const dark = theme === 'dark'
-  const features = t('features.items', { returnObjects: true }) as FeatureItem[]
   const nextLocale: AppLocale = i18n.language === 'zh-CN' ? 'en-US' : 'zh-CN'
 
   return (
@@ -87,18 +74,6 @@ export default function HomePage() {
             </span>
           </a>
           <nav className="flex items-center gap-2 text-sm text-slate-600 sm:gap-6 dark:text-slate-300">
-            <a
-              href="#features"
-              className="hidden transition-colors hover:text-black sm:inline dark:hover:text-white"
-            >
-              {t('nav.features')}
-            </a>
-            <a
-              href="#deploy"
-              className="hidden transition-colors hover:text-black sm:inline dark:hover:text-white"
-            >
-              {t('nav.deploy')}
-            </a>
             <Link
               to="/docs"
               className="hidden transition-colors hover:text-black sm:inline dark:hover:text-white"
@@ -173,61 +148,6 @@ export default function HomePage() {
           >
             Docker Hub →
           </a>
-        </div>
-      </section>
-
-      {/* 功能 */}
-      <section id="features" className="mx-auto max-w-5xl scroll-mt-20 px-6 pb-24">
-        <h2 className="mb-10 text-center font-mono text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
-          {t('features.title')}
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((f) => (
-            <div
-              key={f.title}
-              className="rounded-lg border border-black/10 bg-white/60 p-5 backdrop-blur-sm transition-colors hover:border-black/25 dark:border-white/10 dark:bg-black/50 dark:hover:border-white/25"
-            >
-              <h3 className="mb-2 font-mono text-sm font-semibold text-slate-900 dark:text-white">
-                {f.title}
-              </h3>
-              <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 部署 */}
-      <section id="deploy" className="mx-auto max-w-5xl scroll-mt-20 px-6 pb-24">
-        <h2 className="mb-10 text-center font-mono text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
-          {t('deploy.title')}
-        </h2>
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="rounded-lg border border-black/10 bg-white/60 p-5 backdrop-blur-sm lg:col-span-2 dark:border-white/10 dark:bg-black/50">
-            <h3 className="mb-3 font-mono text-sm font-semibold text-slate-900 dark:text-white">
-              Docker
-            </h3>
-            <pre className="overflow-x-auto rounded-md border border-black/10 bg-black/5 p-4 font-mono text-xs leading-relaxed text-slate-700 dark:border-white/10 dark:bg-black/60 dark:text-slate-300">
-              {dockerCommand}
-            </pre>
-          </div>
-          <div className="flex flex-col gap-4">
-            <div className="flex-1 rounded-lg border border-black/10 bg-white/60 p-5 backdrop-blur-sm dark:border-white/10 dark:bg-black/50">
-              <h3 className="mb-2 font-mono text-sm font-semibold text-slate-900 dark:text-white">
-                {t('deploy.binary.title')}
-              </h3>
-              <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                {t('deploy.binary.desc')}
-              </p>
-            </div>
-            <div className="flex-1 rounded-lg border border-black/10 bg-white/60 p-5 backdrop-blur-sm dark:border-white/10 dark:bg-black/50">
-              <h3 className="mb-2 font-mono text-sm font-semibold text-slate-900 dark:text-white">
-                {t('deploy.jvm.title')}
-              </h3>
-              <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                {t('deploy.jvm.desc')}
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 
