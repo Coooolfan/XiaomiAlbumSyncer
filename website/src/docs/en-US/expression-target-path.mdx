@@ -1,0 +1,88 @@
+export const meta = {
+  title: 'Download Path Expression',
+  description: 'Customize where downloaded files are saved with ${...} interpolation.',
+  section: 'Features',
+  order: 40,
+  slug: 'expression-target-path',
+}
+
+# Download Path Expression
+
+The task option `expressionTargetPath` customizes where downloaded files are saved, filling in dynamic values via `${...}` interpolation.
+
+- When the expression is empty, blank, or contains no supported placeholders, it falls back to the default rules:
+  - Non-audio: `targetPath/album/fileName`
+  - Audio: `targetPath/album/{assetId}_{fileName}` (avoids overwriting recordings with duplicate names)
+- When the expression is valid, `targetPath` is not part of the path; relative expressions stay relative, so write a full path yourself if needed.
+- Time formatting uses the timezone from the task's `timeZone` option, falling back to the system default if it cannot be parsed.
+- Time patterns follow the Java `DateTimeFormatter` syntax (e.g. `yyyy-MM-dd`, `yyyy/MM`).
+- `album` / `fileName` / `title` are automatically sanitized for use in paths.
+
+> Path sanitization replaces `\ / : * ? " < > |`, newlines, tabs, and similar characters with `_`.
+
+## Placeholders
+
+| Placeholder | Description |
+| --- | --- |
+| `${crontabId}` | Task ID |
+| `${crontabName}` | Task name |
+| `${historyId}` | ID of this run's history record |
+| `${album}` / `${albumName}` | Album name (sanitized) |
+| `${fileName}` | File name (sanitized) |
+| `${fileStem}` | File name without extension (based on `${fileName}`) |
+| `${fileExt}` | File extension (without the dot) |
+| `${assetId}` | Asset ID |
+| `${assetType}` | Asset type in lowercase (`image` / `video` / `audio`) |
+| `${recordingTypeId}` | Raw recording category ID (empty for non-recordings, e.g. `0` / `1` / `2` / `3`) |
+| `${recordingType}` | Recording category name in Chinese (empty for non-recordings) |
+| `${sha1}` | Asset SHA1 |
+| `${title}` | Asset title (sanitized) |
+| `${size}` | Asset size in bytes |
+| `${downloadEpochMillis}` | Download start time in milliseconds |
+| `${takenEpochMillis}` | Capture time in milliseconds |
+| `${downloadEpochSeconds}` | Download start time in seconds |
+| `${takenEpochSeconds}` | Capture time in seconds |
+
+## Time formatting
+
+Use these prefixes with a `DateTimeFormatter` pattern:
+
+- `${download_<pattern>}`: based on the download start time
+- `${taken_<pattern>}`: based on the capture time
+
+For `2024-05-06T12:00:00Z`:
+
+| Placeholder | Result |
+| --- | --- |
+| `${download_YYYYMM}` | `202405` |
+| `${download_yyyy-MM-dd}` | `2024-05-06` |
+| `${taken_yyyy/MM}` | `2024/05` |
+
+> If the pattern is invalid, the original `${...}` is kept as-is.
+
+## Rules
+
+- Time formatting only applies to `${download_<pattern>}` and `${taken_<pattern>}`.
+- `${download}` alone is not a valid placeholder: a template containing only unsupported placeholders is treated as invalid and falls back to the default rules; if the template also contains valid placeholders, `${download}` is left untouched in the result.
+
+## Examples
+
+Archive by album and month (absolute path):
+
+```
+/data/${album}/${download_YYYYMM}/${fileName}
+```
+
+Resolves to (album `旅行`, file `photo.jpg`):
+
+```
+/data/旅行/202405/photo.jpg
+```
+
+Keep original names for audio files (relative path):
+
+```
+${album}/${fileName}
+```
+
+A recording `rec.m4a` is saved as `Recordings/rec.m4a`. To avoid name collisions yourself, include `${assetId}` or similar fields in the template.

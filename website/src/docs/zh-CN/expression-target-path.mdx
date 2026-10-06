@@ -1,0 +1,88 @@
+export const meta = {
+  title: '下载路径表达式',
+  description: '使用 ${...} 插值自定义下载文件的保存路径。',
+  section: '功能',
+  order: 40,
+  slug: 'expression-target-path',
+}
+
+# 下载路径表达式
+
+任务的 `expressionTargetPath` 配置允许自定义下载文件的保存路径，并通过 `${...}` 插值填充动态信息。
+
+- 表达式为空、只包含空白，或不包含任何支持的插值项时，回退到默认规则：
+  - 非音频：`targetPath/album/fileName`
+  - 音频：`targetPath/album/{assetId}_{fileName}`（避免录音重名覆盖）
+- 表达式有效时，`targetPath` 不参与路径拼接；相对路径会保持相对，需自行写全路径。
+- 时间格式化使用任务 `timeZone` 配置对应的时区，解析失败则使用系统默认时区。
+- 时间格式遵循 Java `DateTimeFormatter` 标准（如 `yyyy-MM-dd`、`yyyy/MM`）。
+- `album` / `fileName` / `title` 会自动做路径安全处理。
+
+> 路径安全处理会将 `\ / : * ? " < > |` 以及换行、制表符等替换为 `_`。
+
+## 插值项
+
+| 插值 | 说明 |
+| --- | --- |
+| `${crontabId}` | 任务 ID |
+| `${crontabName}` | 任务名称 |
+| `${historyId}` | 本次运行历史 ID |
+| `${album}` / `${albumName}` | 相册名称（已做路径安全处理） |
+| `${fileName}` | 文件名（已做路径安全处理） |
+| `${fileStem}` | 去掉扩展名的文件名（基于 `${fileName}`） |
+| `${fileExt}` | 文件扩展名（不含点） |
+| `${assetId}` | 资源 ID |
+| `${assetType}` | 资源类型（小写，如 `image` / `video` / `audio`） |
+| `${recordingTypeId}` | 录音分类原始 ID（非录音为空，如 `0` / `1` / `2` / `3`） |
+| `${recordingType}` | 录音分类中文名（非录音为空，如 `录音机录音` / `通话录音` / `FM录音` / `应用录音`） |
+| `${sha1}` | 资源 SHA1 |
+| `${title}` | 资源标题（已做路径安全处理） |
+| `${size}` | 资源大小（字节） |
+| `${downloadEpochMillis}` | 下载开始时间毫秒时间戳 |
+| `${takenEpochMillis}` | 拍摄时间毫秒时间戳 |
+| `${downloadEpochSeconds}` | 下载开始时间秒时间戳 |
+| `${takenEpochSeconds}` | 拍摄时间秒时间戳 |
+
+## 时间格式化
+
+通过以下前缀进行时间格式化：
+
+- `${download_<pattern>}`：基于下载开始时间
+- `${taken_<pattern>}`：基于拍摄时间
+
+以 `2024-05-06T12:00:00Z` 为例：
+
+| 插值 | 结果 |
+| --- | --- |
+| `${download_YYYYMM}` | `202405` |
+| `${download_yyyy-MM-dd}` | `2024-05-06` |
+| `${taken_yyyy/MM}` | `2024/05` |
+
+> 格式非法时会保留原始 `${...}` 内容不替换。
+
+## 规则说明
+
+- 时间格式化只对 `${download_<pattern>}`、`${taken_<pattern>}` 生效。
+- `${download}` 不是有效插值：模板中仅包含这类非支持插值时会被视为无效模板并回退默认规则；若模板中同时存在有效插值，则 `${download}` 会原样保留在结果路径中。
+
+## 示例
+
+按相册与月份归档（绝对路径）：
+
+```
+/data/${album}/${download_YYYYMM}/${fileName}
+```
+
+解析结果（相册 `旅行`、文件 `photo.jpg`）：
+
+```
+/data/旅行/202405/photo.jpg
+```
+
+音频文件保持原名（相对路径）：
+
+```
+${album}/${fileName}
+```
+
+录音 `rec.m4a` 会保存为 `Recordings/rec.m4a`。如需自行避免重名，可在模板中拼接 `${assetId}` 等字段。

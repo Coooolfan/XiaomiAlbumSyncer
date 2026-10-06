@@ -1,0 +1,53 @@
+export const meta = {
+  title: 'Passkey Sign-in',
+  description: 'Passwordless sign-in with Passkey (WebAuthn).',
+  section: 'Features',
+  order: 60,
+  slug: 'passkey',
+}
+
+# Passkey Sign-in
+
+The app supports passwordless sign-in with Passkey (WebAuthn): biometrics like Touch ID, Face ID, and Windows Hello, hardware security keys like YubiKey, and passkeys synced via iCloud Keychain or Google Password Manager.
+
+## Prerequisites
+
+- **Secure context**: Passkey only works over HTTPS; `localhost` is allowed for local testing. Browsers block WebAuthn APIs in insecure contexts. For HTTPS setup see [SSL / HTTPS](/en-US/docs/ssl).
+- **Browser**: a modern browser with WebAuthn support (Chrome / Edge 67+, Firefox 60+, Safari 13+).
+
+## Configuration
+
+Configure the Relying Party via environment variables:
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `WEBAUTHN_RP_ID` | Relying Party ID; must be the current domain or a parent domain | `localhost` |
+| `WEBAUTHN_RP_NAME` | Display name shown to users during registration | `XiaomiAlbumSyncer` |
+
+> `rpId` must match the domain you use to access the service. For example, when serving `https://sync.example.com`, set `rpId` to `sync.example.com` or `example.com`.
+
+```bash
+docker run -d \
+  -p 8232:8080 \
+  -e WEBAUTHN_RP_ID=sync.example.com \
+  -e WEBAUTHN_RP_NAME="My Album Syncer" \
+  -v ~/xiaomi-album-syncer/download:/app/download \
+  -v ~/xiaomi-album-syncer/db:/app/db \
+  --name xiaomi-album-syncer \
+  coolfan1024/xiaomi-album-syncer:latest
+```
+
+For JVM / binary deployments, pass the same environment variables.
+
+## Usage
+
+1. **Initialize**: set an admin password on first visit.
+2. **Register**: go to Passkey management in Settings, click "Register new passkey", enter your current password and a name, then follow the browser prompt.
+3. **Sign in**: click "Sign in with passkey" on the login page and complete biometric or PIN verification.
+4. **Manage**: view, rename, or delete registered passkeys in Settings.
+
+## Notes
+
+- Passkeys are bound to a domain — one registered on `example.com` cannot be used on another domain.
+- Cross-device sync depends on the OS and browser (iCloud Keychain, Google Password Manager, etc.).
+- Keep password sign-in as a fallback in case a passkey device is lost.
