@@ -276,7 +276,6 @@ export default {
     },
     card: {
       unnamed: '未命名相册',
-      hiddenUntilDownload: '下载前不可见',
       assetCount: '{n} 个项目',
       countUnknown: '数量未知',
       orphanTip: '孤立相册，此相册可能已在云端被删除',
@@ -461,7 +460,7 @@ export default {
         title: '资源标题',
         assetId: '资源 ID',
         size: '文件大小',
-        sha1: '文件 SHA1',
+        checksum: '文件校验值',
         crontabName: '任务名称',
         crontabId: '任务 ID',
         historyId: '历史 ID',

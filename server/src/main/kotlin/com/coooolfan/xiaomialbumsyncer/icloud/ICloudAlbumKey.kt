@@ -14,11 +14,16 @@ data class ICloudAlbumKey(val zone: String, val albumId: String) {
     fun queryType(): String = when (albumId) {
         "__all__" -> "CPLAssetAndMasterByAssetDateWithoutHiddenOrDeleted"
         "__hidden__" -> "CPLAssetAndMasterHiddenByAssetDate"
-        "__favorites__" -> "CPLAssetAndMasterInSmartAlbumByAssetDate"
+        "__favorites__", "__screenshots__" -> "CPLAssetAndMasterInSmartAlbumByAssetDate"
+        "__bursts__" -> "CPLBurstStackAssetAndMasterByAssetDate"
         else -> "CPLContainerRelationLiveByAssetDate"
     }
 
-    fun smartAlbum(): String? = if (albumId == "__favorites__") "FAVORITE" else null
+    fun smartAlbum(): String? = when (albumId) {
+        "__favorites__" -> "FAVORITE"
+        "__screenshots__" -> "SCREENSHOT"
+        else -> null
+    }
 
     fun encode(): String = mapper.writeValueAsString(this)
 

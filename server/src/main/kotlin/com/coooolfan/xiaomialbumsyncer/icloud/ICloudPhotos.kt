@@ -27,6 +27,8 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
             val result = mutableListOf(album(accountId, "${prefix}所有照片", ICloudAlbumKey(zone, "__all__")))
             result += album(accountId, "${prefix}隐藏", ICloudAlbumKey(zone, "__hidden__"))
             result += album(accountId, "${prefix}个人收藏", ICloudAlbumKey(zone, "__favorites__"))
+            result += album(accountId, "${prefix}截图", ICloudAlbumKey(zone, "__screenshots__"))
+            result += album(accountId, "${prefix}连拍", ICloudAlbumKey(zone, "__bursts__"))
             var marker: JsonNode? = null
             val seenMarkers = mutableSetOf<String>()
             do {
@@ -162,7 +164,7 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
                 recordingType = null
                 dateTaken = Instant.ofEpochMilli(field(asset, "assetDate").asLong())
                 albumId = album.id
-                sha1 = "icloud:$checksum"
+                this.checksum = checksum
                 mimeType = mime
                 title = stem
                 size = resource.path("size").asLong()

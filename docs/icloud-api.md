@@ -119,9 +119,15 @@ XAS 创建以下本地虚拟相册；`__all__` 等是 XAS 自己的标识，不�
 | 所有照片 | `__all__` | `CPLAssetAndMasterByAssetDateWithoutHiddenOrDeleted` | 无；排除隐藏和已删除 |
 | 隐藏 | `__hidden__` | `CPLAssetAndMasterHiddenByAssetDate` | 无 |
 | 个人收藏 | `__favorites__` | `CPLAssetAndMasterInSmartAlbumByAssetDate` | `smartAlbum=FAVORITE` |
+| 截图 | `__screenshots__` | `CPLAssetAndMasterInSmartAlbumByAssetDate` | `smartAlbum=SCREENSHOT` |
+| 连拍 | `__bursts__` | `CPLBurstStackAssetAndMasterByAssetDate` | 无；使用连拍专用索引 |
 | 用户相册 | 实际相册 recordName | `CPLContainerRelationLiveByAssetDate` | `parentId=<相册标识>` |
 
-上游还使用 `VIDEO`、`LIVE`、`SCREENSHOT`、`PANORAMA`、`SLOMO`、`TIMELAPSE` 等 smartAlbum 条件；最近删除使用 `CPLAssetAndMasterDeletedByExpungedDate`，连拍使用专门索引。XAS 当前未暴露这些集合。照片总数可通过上游的 `internal/records/query/batch` + `HyperionIndexCountLookup` 查询 `itemCount`，XAS 当前未调用；未取得远端数量时 `assetCount=null`，不代表远端空相册。[icloudpd 查询实现](https://github.com/icloud-photos-downloader/icloud_photos_downloader/blob/master/src/pyicloud_ipd/services/photos.py)
+上游还使用 `VIDEO`、`LIVE`、`PANORAMA`、`SLOMO`、`TIMELAPSE` 等 smartAlbum 条件；最近删除使用 `CPLAssetAndMasterDeletedByExpungedDate`。XAS 当前未暴露这些集合。照片总数可通过上游的 `internal/records/query/batch` + `HyperionIndexCountLookup` 查询 `itemCount`，XAS 当前未调用；未取得远端数量时 `assetCount=null`，不代表远端空相册。[icloudpd 查询实现](https://github.com/icloud-photos-downloader/icloud_photos_downloader/blob/master/src/pyicloud_ipd/services/photos.py)
+
+截图与连拍的全量查询沿用 `startRank` + `direction=ASCENDING` 分页，处理返回的 `CPLAsset` / `CPLMaster` 原件记录，不按本地资源文件数推进 rank。连拍按服务端堆栈索引返回的资产备份，不额外展开整个连拍序列。
+
+位点增量中，截图使用 `assetSubtypeV2=3`（请求启用 `remapEnums=true`），连拍使用非空 `burstId`，均排除隐藏、软删除、永久删除资产；同一资产可以同时属于两个集合。不要将 CloudKit 的枚举值与 PhotoKit 的截图位掩码混用。字段分类依据 [rclone 的 CloudKit 枚举和智能集合实现](https://github.com/rclone/rclone/blob/master/backend/iclouddrive/api/photos.go)。当前不接入最近删除，远端删除不会清理本地备份。
 
 ## 4. 逻辑资产：CPLAsset
 
@@ -134,7 +140,7 @@ XAS 创建以下本地虚拟相册；`__all__` 等是 XAS 自己的标识，不�
 | `isDeleted` | 业务删除状态 | 增量时排除 |
 | `isExpunged` | 清除状态 | 增量时排除 |
 
-补充元数据可能包含 `addedDate`（加入图库日期）、`orientation`（方向）、`duration`（视频时长）、`captionEnc`（说明编码）、经纬度、`timeZoneOffset`、`assetSubtype` / `assetSubtypeV2`（子类型）、`assetHDRType`、连拍标记及 `burstId`、编辑类型和渲染类型。XAS 当前不解析它们；时长、时区与枚举的精确单位/取值需按响应和类型验证。`Enc` 后缀不保证内容均为可直接解码的 UTF-8；名称字段的处理不能直接套用于位置或编辑数据。[pyicloud 资产字段列表](https://github.com/picklepete/pyicloud/blob/master/pyicloud/services/photos.py)
+补充元数据可能包含 `addedDate`（加入图库日期）、`orientation`（方向）、`duration`（视频时长）、`captionEnc`（说明编码）、经纬度、`timeZoneOffset`、`assetSubtype` / `assetSubtypeV2`（子类型）、`assetHDRType`、连拍标记及 `burstId`、编辑类型和渲染类型。XAS 当前仅在位点增量中读取其中的 `assetSubtypeV2` 和 `burstId` 以分类截图、连拍，不持久化这些字段；时长、时区与枚举的精确单位/取值需按响应和类型验证。`Enc` 后缀不保证内容均为可直接解码的 UTF-8；名称字段的处理不能直接套用于位置或编辑数据。[pyicloud 资产字段列表](https://github.com/picklepete/pyicloud/blob/master/pyicloud/services/photos.py)
 
 ## 5. 原件与文件资源：CPLMaster
 
@@ -187,9 +193,9 @@ XAS 创建以下本地虚拟相册；`__all__` 等是 XAS 自己的标识，不�
 | `Album.assetCount` | 远端相册成员数量，iCloud 当前未读取，保存 null；不使用本地备份文件数代替 |
 | `Album.lastUpdateTime` | 远端相册修改时间，iCloud 当前未读取，保存 null |
 | `Asset.remoteKey` | iCloud 为固定字段顺序的 JSON：assetId、resource；小米为远端数字 ID 的字符串 |
-| `Asset.sha1` | 保存 `icloud:<fileChecksum>`，不是普通十六进制 SHA-1 |
+| `Asset.checksum` | 原样保存 CloudKit 的 Base64 `fileChecksum`；小米来源保存其十六进制 SHA-1 |
 | `Asset.fileName` | 原始文件名加稳定资源后缀，不是原样复制 filenameEnc |
 
-相册唯一约束为 `(account_id, remote_key)`；查询索引与智能集合条件由 albumId 推导，不持久化。资产唯一约束为 `(album_id, remote_key, sha1)`；账号与来源由相册关联查询，iCloud zone 由相册 remote_key 提供，masterId 在下载时通过 masterRef 查询，校验值仅保存在 sha1。同一照片放入多个所选相册时，XAS 为每个相册建立独立下载记录。通过本地 assetCount 或下载文件数反推 Apple 照片应用的计数时，应先统一统计口径。
+相册唯一约束为 `(account_id, remote_key)`；查询索引与智能集合条件由 albumId 推导，不持久化。资产唯一约束为 `(album_id, remote_key, checksum)`；账号与来源由相册关联查询，iCloud zone 由相册 remote_key 提供，masterId 在下载时通过 masterRef 查询，校验值仅保存在 checksum。同一照片放入多个所选相册时，XAS 为每个相册建立独立下载记录。通过本地 assetCount 或下载文件数反推 Apple 照片应用的计数时，应先统一统计口径。
 
 实现入口：[ICloudPhotos.kt](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudPhotos.kt)、[ICloudChanges.kt](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudChanges.kt)、[ICloudClient.kt](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudClient.kt)。

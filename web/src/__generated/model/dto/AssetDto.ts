@@ -11,7 +11,7 @@ export type AssetDto = {
         readonly type: AssetType;
         readonly recordingType?: RecordingType | undefined;
         readonly dateTaken: string;
-        readonly sha1: string;
+        readonly checksum: string;
         readonly mimeType: string;
         readonly title: string;
         readonly size: number;

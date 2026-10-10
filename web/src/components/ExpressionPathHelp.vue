@@ -123,9 +123,9 @@
             <div
               class="p-2 bg-slate-50 dark:bg-slate-900/40 rounded border border-slate-100 dark:border-slate-800"
             >
-              <div class="font-mono text-blue-600 mb-0.5">${sha1}</div>
+              <div class="font-mono text-blue-600 mb-0.5">${checksum}</div>
               <div class="text-slate-500 dark:text-slate-400 text-[13px]">
-                {{ t('help.expression.token.sha1') }}
+                {{ t('help.expression.token.checksum') }}
               </div>
             </div>
             <div

@@ -69,7 +69,7 @@ class DataImporter(
                 type = AssetType.valueOf(assetsResultSet.getString("media_type").uppercase(getDefault()))
                 dateTaken = Instant.ofEpochMilli(assetsResultSet.getLong("date_modified"))
                 albumId = assetsResultSet.getLong("album_id")
-                sha1 = assetsResultSet.getString("sha1")
+                checksum = assetsResultSet.getString("sha1")
                 mimeType = assetsResultSet.getString("mime_type")
                 title = assetsResultSet.getString("filename").substringBeforeLast('.')
                 size = 0L

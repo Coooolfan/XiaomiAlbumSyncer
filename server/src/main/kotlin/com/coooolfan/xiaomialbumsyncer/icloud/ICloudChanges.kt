@@ -102,6 +102,9 @@ private fun ICloudPhotos.readChanges(
                     "__all__" -> !field(asset, "isHidden").asBoolean()
                     "__hidden__" -> field(asset, "isHidden").asBoolean()
                     "__favorites__" -> field(asset, "isFavorite").asBoolean() && !field(asset, "isHidden").asBoolean()
+                    // remapEnums=true：CloudKit 截图枚举为 3，不是 PhotoKit 的位掩码。
+                    "__screenshots__" -> field(asset, "assetSubtypeV2").asInt() == 3 && !field(asset, "isHidden").asBoolean()
+                    "__bursts__" -> field(asset, "burstId").asText("").isNotBlank() && !field(asset, "isHidden").asBoolean()
                     else -> "$name-IN-${ref.albumId}" in memberships
                 }
             }.flatMap { parseResources(it, asset, master) }

@@ -287,19 +287,26 @@ class DatabaseMigrationTest {
                 it.executeUpdate("INSERT INTO asset(id,file_name,type,date_taken,album_id,sha1,mime_type,title,size) VALUES (200,'photo.jpg','IMAGE',0,100,'original-checksum','image/jpeg','photo',10)")
             }
         }
-        assertEquals(1, flyway(url).migrate().migrationsExecuted)
-        assertEquals("0.20.0", flyway(url).info().current().version.version)
+        assertEquals(1, flyway(url, target = "0.20.0").migrate().migrationsExecuted)
+        assertEquals("0.20.0", flyway(url, target = "0.20.0").info().current().version.version)
         DriverManager.getConnection(url).use { connection ->
             assertEquals(setOf("id", "nickname", "user_id", "provider", "credentials"), connection.columnNames("provider_account"))
             assertFalse("xiaomi_id" in connection.columnNames("asset"))
             assertFalse("cloud_asset" in connection.columnNames("asset"))
+            assertTrue("checksum" in connection.columnNames("asset"))
+            assertFalse("sha1" in connection.columnNames("asset"))
             assertEquals(setOf("id", "remote_key", "name", "asset_count", "last_update_time", "account_id", "shadow"), connection.columnNames("album"))
             connection.createStatement().use { statement ->
-                statement.executeQuery("SELECT id,remote_key,sha1 FROM asset WHERE id=200").use {
+                statement.executeQuery("SELECT id,remote_key,checksum FROM asset WHERE id=200").use {
                     assertTrue(it.next())
                     assertEquals(200L, it.getLong(1))
                     assertEquals("200", it.getString(2))
                     assertEquals("original-checksum", it.getString(3))
+                }
+                statement.executeQuery("PRAGMA index_info(idx_asset_remote_key)").use {
+                    val columns = mutableListOf<String>()
+                    while (it.next()) columns += it.getString("name")
+                    assertEquals(listOf("album_id", "remote_key", "checksum"), columns)
                 }
                 statement.executeQuery("SELECT remote_key,asset_count,last_update_time FROM album WHERE id=100").use {
                     assertTrue(it.next())
@@ -329,7 +336,7 @@ class DatabaseMigrationTest {
                 }
             }
         }
-        assertEquals(0, flyway(url).migrate().migrationsExecuted)
+        assertEquals(0, flyway(url, target = "0.20.0").migrate().migrationsExecuted)
     }
 
     private fun flyway(databaseUrl: String, target: String? = null): Flyway {

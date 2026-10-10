@@ -21,6 +21,7 @@ class ICloudResourcesTest {
     }}""")
     @Test fun keepsAllOriginalResourcesAndAlbumMembershipsSeparate() {
         val files = parseResources(album(1), asset, master)
+        assertEquals(setOf("checksum-photo", "checksum-video", "checksum-jpeg"), files.map { it.checksum }.toSet())
         assertEquals(3, files.size)
         assertEquals(3, files.map { it.remoteKey }.toSet().size)
         assertEquals(3, files.map { it.fileName }.toSet().size)
