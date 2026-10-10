@@ -73,7 +73,7 @@ class CrontabPipeline(
             CrontabSyncMode.FULL -> assetService.refreshAssetsFull(crontab, crontabHistory)
         }
 
-        // 记录一下，以后如果支持恢复暂停的任务可以从这开始
+        // 标记元数据枚举完成。
         crontabService.finishCrontabHistoryFetchedAllAssets(crontabHistory)
 
         val systemConfig = systemConfigService.getConfig(NORMAL_SYSTEM_CONFIG)

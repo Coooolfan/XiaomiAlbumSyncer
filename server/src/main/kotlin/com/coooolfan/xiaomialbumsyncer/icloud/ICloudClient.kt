@@ -80,7 +80,7 @@ internal class ICloudClient(val credentials: ICloudCredentials, endpoints: Endpo
         val complete = request("$auth/signin/complete?isRememberMeEnabled=true", mapOf(
             "accountName" to credentials.appleId, "c" to init.path("c").asText(), "m1" to b64(m1), "m2" to b64(m2),
             "rememberMe" to true, "trustTokens" to listOfNotNull(credentials.headers["X-Apple-TwoSV-Trust-Token"])), authHeaders = true, accepted = setOf(409))
-        // 新的 Apple 流程需要显式触发受信任设备验证码。
+        // 登录要求双重认证时，显式请求受信任设备验证码。
         if (complete.path("_httpStatus").asInt() == 409) {
             request("$auth/verify/trusteddevice/securitycode", method = "PUT", authHeaders = true)
             mfaRequired = true

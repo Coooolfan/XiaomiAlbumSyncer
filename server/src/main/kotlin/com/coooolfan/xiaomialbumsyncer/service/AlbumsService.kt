@@ -47,7 +47,6 @@ class AlbumsService(
             set(table.shadow, true)
         }
 
-        // TODO: 应该用 @Key 来一把 upsert
         // 使用 remoteKey + accountId 组合进行 upsert
         for (remoteAlbum in remoteAlbums) {
             val existing = existingAlbums.find { it.remoteKey == remoteAlbum.remoteKey }
