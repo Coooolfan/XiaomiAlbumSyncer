@@ -16,9 +16,9 @@ class ICloudChecksumTest {
         val hash = MessageDigest.getInstance("SHA-1").digest(content)
         val raw = Base64.getEncoder().encodeToString(hash)
         val tagged = Base64.getEncoder().encodeToString(byteArrayOf(1) + hash)
-        verifyICloudChecksum(path, raw)
-        verifyICloudChecksum(path, tagged)
+        assertTrue(verifyICloudChecksum(path, raw))
+        assertTrue(verifyICloudChecksum(path, tagged))
         Files.writeString(path, "corrupted")
-        assertThrows(IllegalArgumentException::class.java) { verifyICloudChecksum(path, tagged) }
+        assertFalse(verifyICloudChecksum(path, tagged))
     }
 }
