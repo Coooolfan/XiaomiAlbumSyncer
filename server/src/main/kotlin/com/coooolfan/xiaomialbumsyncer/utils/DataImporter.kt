@@ -45,6 +45,7 @@ class DataImporter(
         while (albumsResultSet.next()) {
             val album = Album {
                 id = albumsResultSet.getLong("id")
+                remoteKey = albumsResultSet.getLong("id").toString()
                 name = albumsResultSet.getString("name")
                 assetCount = albumsResultSet.getLong("media_count")
                 lastUpdateTime = Instant.now()
@@ -63,11 +64,12 @@ class DataImporter(
         while (assetsResultSet.next()) {
             val asset = Asset {
                 id = assetsResultSet.getLong("id")
+                remoteKey = assetsResultSet.getLong("id").toString()
                 fileName = assetsResultSet.getString("filename")
                 type = AssetType.valueOf(assetsResultSet.getString("media_type").uppercase(getDefault()))
                 dateTaken = Instant.ofEpochMilli(assetsResultSet.getLong("date_modified"))
                 albumId = assetsResultSet.getLong("album_id")
-                sha1 = assetsResultSet.getString("sha1")
+                checksum = assetsResultSet.getString("sha1")
                 mimeType = assetsResultSet.getString("mime_type")
                 title = assetsResultSet.getString("filename").substringBeforeLast('.')
                 size = 0L

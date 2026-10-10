@@ -8,8 +8,13 @@ import java.time.Instant
 @Entity
 interface Asset {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonConverter(LongToStringConverter::class)
     val id: Long
+
+    /** 远端文件定位；来源由相册所属账号决定。 */
+    @Key
+    val remoteKey: String
 
     val fileName: String
 
@@ -21,9 +26,12 @@ interface Asset {
 
     @OnDissociate(DissociateAction.DELETE)
     @ManyToOne
+    @Key
     val album: Album
 
-    val sha1: String
+    /** 来源返回的文件校验值；解码格式由账号来源决定。 */
+    @Key
+    val checksum: String
 
     val mimeType: String
 

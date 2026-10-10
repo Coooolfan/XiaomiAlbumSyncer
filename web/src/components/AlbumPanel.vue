@@ -7,13 +7,13 @@ import AlbumCard from '@/components/AlbumCard.vue'
 import { useToast } from 'primevue/usetoast'
 import { ref } from 'vue'
 import type { AlbumDto } from '@/__generated/model/dto/AlbumDto'
-import type { XiaomiAccountDto } from '@/__generated/model/dto/XiaomiAccountDto'
+import type { ProviderAccountDto } from '@/__generated/model/dto/ProviderAccountDto'
 import { storeToRefs } from 'pinia'
 import { useAlbumsStore } from '@/stores/albums'
 import { useAccountsStore } from '@/stores/accounts'
 
 type Album = AlbumDto['AlbumsController/DEFAULT_ALBUM']
-type XiaomiAccount = XiaomiAccountDto['XiaomiAccountController/DEFAULT_XIAOMI_ACCOUNT']
+type ProviderAccount = ProviderAccountDto['ProviderAccountController/DEFAULT_PROVIDER_ACCOUNT']
 
 const { t } = useI18n()
 const toast = useToast()
@@ -26,7 +26,7 @@ const { accounts } = storeToRefs(accountsStore)
 const groupMenus = ref<Array<InstanceType<typeof Menu> | null>>([])
 
 const groupedAlbums = computed(() => {
-  const groups: Array<{ account: XiaomiAccount; albums: Album[] }> = []
+  const groups: Array<{ account: ProviderAccount; albums: Album[] }> = []
 
   // 创建一个映射以便通过账号ID快速查找相册
   const albumsByAccount = new Map<number, Album[]>()
@@ -197,7 +197,7 @@ onMounted(() => {
             v-for="a in group.albums"
             :key="a.id"
             :name="a.name"
-            :remote-id="a.remoteId"
+            :remote-key="a.remoteKey"
             :asset-count="a.assetCount"
             :last-update-time="a.lastUpdateTime"
             :shadow="a.shadow"

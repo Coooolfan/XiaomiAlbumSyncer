@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '@/ApiInstance'
-import type { XiaomiAccountDto } from '@/__generated/model/dto'
-import type { XiaomiAccountCreate, XiaomiAccountUpdate } from '@/__generated/model/static'
+import type { ProviderAccountDto } from '@/__generated/model/dto'
+import type { XiaomiAccountInput } from '@/__generated/model/static'
 
-type Account = XiaomiAccountDto['XiaomiAccountController/DEFAULT_XIAOMI_ACCOUNT']
+type Account = ProviderAccountDto['ProviderAccountController/DEFAULT_PROVIDER_ACCOUNT']
 
 type FetchOptions = { force?: boolean }
 
@@ -19,7 +19,7 @@ export const useAccountsStore = defineStore('accounts', () => {
     loading.value = true
     error.value = null
     try {
-      const list = await api.xiaomiAccountController.listAll()
+      const list = await api.providerAccountController.listAll()
       accounts.value = list
       loaded.value = true
       return list
@@ -35,20 +35,20 @@ export const useAccountsStore = defineStore('accounts', () => {
     return fetchAccounts({ force: true })
   }
 
-  async function createAccount(body: XiaomiAccountCreate) {
-    const created = await api.xiaomiAccountController.create({ body })
+  async function createAccount(body: XiaomiAccountInput) {
+    const created = await api.providerAccountController.create({ body })
     await refreshAccounts()
     return created
   }
 
-  async function updateAccount(id: number, body: XiaomiAccountUpdate) {
-    const updated = await api.xiaomiAccountController.update({ id, body })
+  async function updateAccount(id: number, body: XiaomiAccountInput) {
+    const updated = await api.providerAccountController.update({ id, body })
     await refreshAccounts()
     return updated
   }
 
   async function deleteAccount(id: number) {
-    await api.xiaomiAccountController.delete({ id })
+    await api.providerAccountController.delete({ id })
     await refreshAccounts()
   }
 

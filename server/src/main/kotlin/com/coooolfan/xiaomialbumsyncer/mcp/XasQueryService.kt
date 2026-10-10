@@ -26,10 +26,10 @@ class XasQueryService(
         }.map { album ->
             AlbumItem(
                 id = album.id.toString(),
-                remoteId = album.remoteId.toString(),
+                remoteKey = album.remoteKey,
                 name = album.name,
                 assetCount = album.assetCount,
-                lastUpdateTime = album.lastUpdateTime.toString(),
+                lastUpdateTime = album.lastUpdateTime?.toString(),
                 shadow = album.shadow,
                 accountNickname = album.account.nickname,
             )
@@ -177,13 +177,13 @@ class XasQueryService(
         )
     }
 
-    fun listSystem(accountFetcher: Fetcher<XiaomiAccount>): SystemListOutput {
+    fun listSystem(accountFetcher: Fetcher<ProviderAccount>): SystemListOutput {
         val timeZone = sql.executeQuery(SystemConfig::class) {
             where(table.id eq SystemConfigService.CONFIG_ID)
             select(table.assetsDateMapTimeZone)
         }.firstOrNull()
 
-        val accounts = sql.executeQuery(XiaomiAccount::class) {
+        val accounts = sql.executeQuery(ProviderAccount::class) {
             select(table.fetch(accountFetcher))
         }.map { account ->
             McpAccountItem(nickname = account.nickname, userId = account.userId)

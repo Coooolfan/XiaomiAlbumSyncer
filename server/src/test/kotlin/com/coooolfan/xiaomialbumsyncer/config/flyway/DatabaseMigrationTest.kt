@@ -234,9 +234,9 @@ class DatabaseMigrationTest {
             }
         }
 
-        assertEquals(1, flyway(databaseUrl).migrate().migrationsExecuted)
-        assertEquals("0.19.0", flyway(databaseUrl).info().current().version.version)
-        assertEquals(0, flyway(databaseUrl).migrate().migrationsExecuted)
+        assertEquals(1, flyway(databaseUrl, target = "0.19.0").migrate().migrationsExecuted)
+        assertEquals("0.19.0", flyway(databaseUrl, target = "0.19.0").info().current().version.version)
+        assertEquals(0, flyway(databaseUrl, target = "0.19.0").migrate().migrationsExecuted)
 
         DriverManager.getConnection(databaseUrl).use { connection ->
             val modes = connection.createStatement().use { statement ->
@@ -274,6 +274,69 @@ class DatabaseMigrationTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun upgradesToProviderAccountsWithoutChangingCredentialsOrReferences(@TempDir tempDir: Path) {
+        val url = "jdbc:sqlite:${tempDir.resolve("accounts.db")}"
+        flyway(url, target = "0.19.0").migrate()
+        DriverManager.getConnection(url).use { connection ->
+            connection.createStatement().use {
+                it.executeUpdate("INSERT INTO xiaomi_account(id,nickname,pass_token,user_id) VALUES (100,'Xiaomi','pass-token','xiaomi')")
+                it.executeUpdate("INSERT INTO album(id,name,remote_id,shadow,last_update_time,asset_count,account_id) VALUES (100,'Photos',1,0,0,0,100)")
+                it.executeUpdate("INSERT INTO asset(id,file_name,type,date_taken,album_id,sha1,mime_type,title,size) VALUES (200,'photo.jpg','IMAGE',0,100,'original-checksum','image/jpeg','photo',10)")
+            }
+        }
+        assertEquals(1, flyway(url, target = "0.20.0").migrate().migrationsExecuted)
+        assertEquals("0.20.0", flyway(url, target = "0.20.0").info().current().version.version)
+        DriverManager.getConnection(url).use { connection ->
+            assertEquals(setOf("id", "nickname", "user_id", "provider", "credentials"), connection.columnNames("provider_account"))
+            assertFalse("xiaomi_id" in connection.columnNames("asset"))
+            assertFalse("cloud_asset" in connection.columnNames("asset"))
+            assertTrue("checksum" in connection.columnNames("asset"))
+            assertFalse("sha1" in connection.columnNames("asset"))
+            assertEquals(setOf("id", "remote_key", "name", "asset_count", "last_update_time", "account_id", "shadow"), connection.columnNames("album"))
+            connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT id,remote_key,checksum FROM asset WHERE id=200").use {
+                    assertTrue(it.next())
+                    assertEquals(200L, it.getLong(1))
+                    assertEquals("200", it.getString(2))
+                    assertEquals("original-checksum", it.getString(3))
+                }
+                statement.executeQuery("PRAGMA index_info(idx_asset_remote_key)").use {
+                    val columns = mutableListOf<String>()
+                    while (it.next()) columns += it.getString("name")
+                    assertEquals(listOf("album_id", "remote_key", "checksum"), columns)
+                }
+                statement.executeQuery("SELECT remote_key,asset_count,last_update_time FROM album WHERE id=100").use {
+                    assertTrue(it.next())
+                    assertEquals("1", it.getString(1))
+                    assertEquals(0L, it.getLong(2))
+                    assertEquals(0L, it.getLong(3))
+                }
+                statement.executeUpdate("UPDATE album SET asset_count=NULL,last_update_time=NULL WHERE id=100")
+                statement.executeQuery("SELECT asset_count,last_update_time FROM album WHERE id=100").use {
+                    assertTrue(it.next())
+                    assertEquals(null, it.getObject(1))
+                    assertEquals(null, it.getObject(2))
+                }
+                statement.executeQuery("SELECT provider,credentials FROM provider_account WHERE id=100").use {
+                    assertTrue(it.next())
+                    assertEquals("XIAOMI", it.getString(1))
+                    assertEquals("pass-token", com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().readTree(it.getString(2))["passToken"].asText())
+                }
+                for (table in listOf("album", "crontab")) {
+                    statement.executeQuery("PRAGMA foreign_key_list($table)").use {
+                        assertTrue(it.next()); assertEquals("provider_account", it.getString("table"))
+                    }
+                }
+                statement.executeQuery("PRAGMA foreign_key_check").use { assertFalse(it.next()) }
+                statement.executeQuery("SELECT count(*) FROM sqlite_master WHERE name IN ('xiaomi_account','icloud_session')").use {
+                    assertTrue(it.next()); assertEquals(0, it.getInt(1))
+                }
+            }
+        }
+        assertEquals(0, flyway(url, target = "0.20.0").migrate().migrationsExecuted)
     }
 
     private fun flyway(databaseUrl: String, target: String? = null): Flyway {

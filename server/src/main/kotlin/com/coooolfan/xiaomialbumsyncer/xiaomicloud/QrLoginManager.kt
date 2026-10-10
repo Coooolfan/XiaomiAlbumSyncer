@@ -1,6 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 
-import com.coooolfan.xiaomialbumsyncer.service.XiaomiAccountService
+import com.coooolfan.xiaomialbumsyncer.service.ProviderAccountService
 import com.coooolfan.xiaomialbumsyncer.utils.*
 import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.*
@@ -29,7 +29,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * 4. 成功后 upsert 账号凭证（userId + passToken）
  */
 @Managed
-class QrLoginManager(private val accountService: XiaomiAccountService) {
+class QrLoginManager(private val accountService: ProviderAccountService) {
 
     private val log = LoggerFactory.getLogger(QrLoginManager::class.java)
     private val mapper by lazy { Solon.context().objectMapper }

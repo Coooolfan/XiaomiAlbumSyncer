@@ -17,7 +17,6 @@ interface CrontabHistoryDetail {
     @ManyToOne
     val crontabHistory: CrontabHistory
 
-    // TODO)) 这个字段可以删掉了
     val downloadTime: Instant
 
     @OnDissociate(DissociateAction.DELETE)
@@ -66,7 +65,7 @@ interface CrontabHistoryDetail {
     /**
      * 生成下载目标路径。
      * targetPath 始终是完整路径表达式，支持 ${} 插值（含时间格式化前缀）。
-     * 为兼容直接调用 API 的旧客户端，不含插值的目录会自动补全默认相册/文件名模板。
+     * 不含插值的目录自动补全默认相册/文件名模板。
      */
     fun genFilePath(history: CrontabHistory, asset: Asset): String {
         val config = history.crontab.config
@@ -101,7 +100,8 @@ interface CrontabHistoryDetail {
             put("assetType", asset.type.name.lowercase(Locale.ROOT))
             put("recordingTypeId", asset.recordingType?.code?.toString() ?: "")
             put("recordingType", asset.recordingType?.label ?: "")
-            put("sha1", asset.sha1)
+            put("checksum", asset.checksum)
+            put("sha1", asset.checksum)
             put("title", sanitizeSegment(asset.title))
             put("size", asset.size.toString())
             put("downloadEpochMillis", downloadTime.toEpochMilli().toString())

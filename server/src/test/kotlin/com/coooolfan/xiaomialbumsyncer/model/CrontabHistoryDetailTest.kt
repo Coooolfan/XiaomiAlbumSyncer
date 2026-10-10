@@ -295,6 +295,20 @@ class CrontabHistoryDetailTest {
     }
 
     @Test
+    fun expressionInterpolatesChecksum() {
+        val template = "\${album}/\${checksum}_\${fileName}"
+        val config = buildConfig(targetPath = resolveTargetPath("/base", template))
+        val history = buildHistory(config, Instant.parse("2024-05-06T12:00:00Z"))
+        val album = buildAlbum("Photos")
+        val asset = buildAsset(AssetType.IMAGE, "photo.jpg", album)
+
+        val detail = CrontabHistoryDetail.init(history, asset)
+
+        val expected = Path("/base", "Photos/deadbeef_photo.jpg").toString()
+        assertEquals(expected, detail.filePath)
+    }
+
+    @Test
     fun expressionInterpolatesTitle() {
         val template = "\${title}/\${fileName}"
         val config = buildConfig(targetPath = resolveTargetPath("/base", template))
@@ -823,7 +837,7 @@ class CrontabHistoryDetailTest {
     private fun buildAlbum(name: String): Album {
         return Album {
             id = 10L
-            remoteId = 20L
+            remoteKey = "20"
             this.name = name
             assetCount = 0L
             lastUpdateTime = Instant.parse("2024-01-01T00:00:00Z")
@@ -844,7 +858,7 @@ class CrontabHistoryDetailTest {
             this.recordingType = recordingType
             dateTaken = Instant.parse("2024-04-01T00:00:00Z")
             this.album = album
-            sha1 = "deadbeef"
+            checksum = "deadbeef"
             mimeType = "image/jpeg"
             title = "title"
             size = 123L
@@ -865,7 +879,7 @@ class CrontabHistoryDetailTest {
             this.recordingType = recordingType
             dateTaken = Instant.parse("2024-04-01T00:00:00Z")
             this.album = album
-            sha1 = "deadbeef"
+            checksum = "deadbeef"
             mimeType = "image/jpeg"
             title = "title"
             size = 123L

@@ -32,9 +32,16 @@ class CrontabService(private val sql: KSqlClient) {
     private val log = LoggerFactory.getLogger(this.javaClass)
 
     fun createCrontab(input: CrontabCreateInput, fetcher: Fetcher<Crontab>): Crontab {
+        validateSyncMode(input.accountId, input.syncMode)
         val execute = sql.saveCommand(input, SaveMode.INSERT_ONLY).execute(fetcher)
         taskScheduler.initJobs()
         return execute.modifiedEntity
+    }
+
+    private fun validateSyncMode(accountId: Long, mode: CrontabSyncMode) {
+        require(mode != CrontabSyncMode.TIMELINE || sql.findById(ProviderAccount::class, accountId)?.provider != CloudProvider.ICLOUD) {
+            "iCloud 不支持时间线同步，请选择全量或位点增量"
+        }
     }
 
     fun queryCrontab(fetcher: Fetcher<Crontab>): List<Crontab> {
@@ -120,6 +127,10 @@ class CrontabService(private val sql: KSqlClient) {
 
 
     fun updateCrontab(crontab: Crontab, fetcher: Fetcher<Crontab>): Crontab {
+        if (org.babyfish.jimmer.ImmutableObjects.isLoaded(crontab, "syncMode")) {
+            val existing = sql.findById(Crontab::class, crontab.id) ?: throw IllegalArgumentException("定时任务不存在")
+            validateSyncMode(existing.accountId, crontab.syncMode)
+        }
         val execute = sql.saveCommand(crontab, SaveMode.UPDATE_ONLY).execute(fetcher)
         taskScheduler.initJobs()
         return execute.modifiedEntity
@@ -168,13 +179,13 @@ class CrontabService(private val sql: KSqlClient) {
      * 位点同步模式的基线：取本任务最近一次含位点的历史。
      * 与时间线模式不同，此处不过滤 endTime——崩溃任务的位点即恢复点，实现断点续拉
      */
-    fun getAlbumSyncCursorsHistory(history: CrontabHistory): Map<Long, String> {
+    fun getSyncCursorsHistory(history: CrontabHistory): Map<String, String> {
         return sql.createQuery(CrontabHistory::class) {
             orderBy(table.startTime.desc())
             where(table.crontabId eq history.crontab.id)
             where(table.id ne history.id)
-            where(table.albumSyncCursors ne null)
-            select(table.albumSyncCursors)
+            where(table.syncCursors ne null)
+            select(table.syncCursors)
         }.limit(1).execute().firstOrNull() ?: emptyMap()
     }
 
@@ -201,7 +212,10 @@ class CrontabService(private val sql: KSqlClient) {
                         accountId()
                     }
                 }
-                asset { allScalarFields() }
+                asset {
+                    allScalarFields()
+                    album()
+                }
             })
         }
     }

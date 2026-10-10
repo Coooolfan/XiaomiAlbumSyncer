@@ -96,7 +96,7 @@ class NotifyService(private val sql: KSqlClient) {
         sendRequest(url, renderedBody, notifyConfig.headers, "daily-summary")
     }
 
-    fun sendPassTokenExpired(account: XiaomiAccount) {
+    fun sendPassTokenExpired(account: ProviderAccount) {
         val notifyConfig = sql.findOneById(SystemConfig::class, CONFIG_ID).notifyConfig
         val url = notifyConfig.url.trim()
         val template = notifyConfig.passTokenExpiredBody?.trim()

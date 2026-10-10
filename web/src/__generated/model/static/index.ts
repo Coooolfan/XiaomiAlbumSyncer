@@ -8,6 +8,9 @@ export type {CrontabCurrentStats} from './CrontabCurrentStats';
 export type {CrontabHistoryGroup} from './CrontabHistoryGroup';
 export type {CrontabUpdateInput} from './CrontabUpdateInput';
 export type {HasPasskeysResponse} from './HasPasskeysResponse';
+export type {ICloudAccountStatus} from './ICloudAccountStatus';
+export type {ICloudLoginInput} from './ICloudLoginInput';
+export type {ICloudVerifyInput} from './ICloudVerifyInput';
 export type {IsInitResponse} from './IsInitResponse';
 export type {McpTokenCreateRequest} from './McpTokenCreateRequest';
 export type {McpTokenCreatedResponse} from './McpTokenCreatedResponse';
@@ -31,5 +34,4 @@ export type {SystemConfigNotifyConfigUpdate} from './SystemConfigNotifyConfigUpd
 export type {SystemConfigPasswordUpdate} from './SystemConfigPasswordUpdate';
 export type {SystemConfigUpdate} from './SystemConfigUpdate';
 export type {SystemInfoResponse} from './SystemInfoResponse';
-export type {XiaomiAccountCreate} from './XiaomiAccountCreate';
-export type {XiaomiAccountUpdate} from './XiaomiAccountUpdate';
+export type {XiaomiAccountInput} from './XiaomiAccountInput';

@@ -1,6 +1,8 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
 import com.coooolfan.xiaomialbumsyncer.model.*
+import com.coooolfan.xiaomialbumsyncer.icloud.ICloudAlbumKey
+import com.coooolfan.xiaomialbumsyncer.icloud.ICloudPhotos
 import com.coooolfan.xiaomialbumsyncer.utils.isAudioAlbum
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.AlbumSyncInfo
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
@@ -10,7 +12,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.*
@@ -20,7 +21,7 @@ import java.time.Instant
 import java.time.LocalDate
 
 @Managed
-class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
+class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi, private val media: CloudMediaService, private val icloud: ICloudPhotos) {
 
     private val log = LoggerFactory.getLogger(AssetService::class.java)
 
@@ -30,11 +31,9 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             select(table)
         }.firstOrNull() ?: throw IllegalArgumentException("Album $albumId not found, please refresh albums first")
 
-        val fetchAssetList = api.fetchAllAssetsByAlbumId(album)
-        sql.saveEntitiesCommand(fetchAssetList, SaveMode.UPSERT).execute()
+        media.fetchAssets(album) { media.saveAssets(it) }
 
-        // 此处的 fetchAssetList 形状已保证与 fetcher 一致
-        return fetchAssetList
+        return getAssets(albumId, fetcher)
     }
 
     fun refreshAssetsByDiffTimeline(
@@ -44,7 +43,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
     ) {
         val accountId = crontab.accountId
 
-        // 获取相册列表（需要 remoteId）
+        // 获取相册列表（需要 remoteKey）
         val albums = crontabAlbums(crontab)
 
         // 1. 获取这些相册最新的 timeline
@@ -68,7 +67,8 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             albumsDayCountNeedRefresh[albumRemoteId] = (timelineLatest - timelineHistory).filter { it.value > 0 }.keys
             sql.executeUpdate(Album::class) {
                 set(table.assetCount, timelineLatest.dayCount.values.sum())
-                where(table.id eq albumRemoteId)
+                where(table.remoteKey eq albumRemoteId.toString())
+                where(table.accountId eq accountId)
             }
         }
         log.info(
@@ -81,7 +81,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             val semaphore = Semaphore(10)
             albumsDayCountNeedRefresh.flatMap { (albumRemoteId, dayList) ->
                 val album = sql.executeQuery(Album::class) {
-                    where(table.remoteId eq albumRemoteId)
+                    where(table.remoteKey eq albumRemoteId.toString())
                     where(table.accountId eq accountId)
                     select(table)
                 }.firstOrNull() ?: throw IllegalStateException("Cannot find album $albumRemoteId")
@@ -91,7 +91,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
                         semaphore.withPermit {
                             log.info("开始刷新相册 {} 的 {} 日的 Asset", albumRemoteId, day)
                             api.fetchAssetsByAlbumId(album, day) { assets ->
-                                sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+                                media.saveAssets(assets)
                             }
                         }
                     }
@@ -128,7 +128,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
     fun refreshAssetsBySyncTag(
         crontab: Crontab,
         crontabHistory: CrontabHistory,
-        cursorBaseline: Map<Long, String>
+        cursorBaseline: Map<String, String>
     ) {
         val accountId = crontab.accountId
 
@@ -147,15 +147,15 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             galleryAlbums.map { album ->
                 async {
                     semaphore.withPermit {
-                        val remote = remoteInfos[album.remoteId]
+                        val remote = remoteInfos[album.remoteKey.toLong()]
                         if (remote == null) {
-                            log.warn("相册 {} (remoteId={}) 未出现在 album/full 快照中，本次跳过", album.name, album.remoteId)
+                            log.warn("相册 {} (remoteKey={}) 未出现在 album/full 快照中，本次跳过", album.name, album.remoteKey)
                         } else {
-                            refreshAlbumBySyncTag(album, remote, cursorBaseline[album.remoteId]) { syncTag ->
+                            refreshAlbumBySyncTag(album, remote, cursorBaseline[album.remoteKey]) { syncTag ->
                                 synchronized(cursors) {
-                                    cursors[album.remoteId] = syncTag
+                                    cursors[album.remoteKey] = syncTag
                                     sql.executeUpdate(CrontabHistory::class) {
-                                        set(table.albumSyncCursors, cursors.toMap())
+                                        set(table.syncCursors, cursors.toMap())
                                         where(table.id eq crontabHistory.id)
                                     }
                                 }
@@ -167,14 +167,32 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }
     }
 
+    fun refreshICloudAssetsByCursor(crontab: Crontab, history: CrontabHistory, baseline: Map<String, String>) {
+        val albums = crontabAlbums(crontab)
+        val cursors = baseline.toMutableMap()
+        for ((zone, selected) in albums.groupBy { ICloudAlbumKey.decode(it.remoteKey).zone }) {
+            // 相册范围改变后建立新基线；账号之间、任务之间不共享同步进度。
+            val key = "icloud:${crontab.accountId}:$zone:${selected.map { it.id }.sorted().joinToString(",")}"
+            icloud.fetchIncremental(selected, baseline[key], { media.saveAssets(it) }) { token ->
+                cursors[key] = token
+                sql.executeUpdate(CrontabHistory::class) {
+                    set(table.syncCursors, cursors.toMap())
+                    where(table.id eq history.id)
+                }
+            }
+        }
+    }
+
     private fun refreshAlbumFull(album: Album) {
         log.info("开始刷新相册 {} 的 Asset", album.id)
-        val assetCount = api.fetchAssetsByAlbumId(album) { assets ->
-            sql.saveEntitiesCommand(assets, SaveMode.UPSERT).execute()
+        val assetCount = media.fetchAssets(album) { assets ->
+            media.saveAssets(assets)
         }
-        sql.executeUpdate(Album::class) {
-            set(table.assetCount, assetCount)
-            where(table.id eq album.id)
+        if (!media.isICloud(album.accountId)) {
+            sql.executeUpdate(Album::class) {
+                set(table.assetCount, assetCount)
+                where(table.id eq album.id)
+            }
         }
     }
 
@@ -208,7 +226,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         }
         while (true) {
             if (page.assets.isNotEmpty()) {
-                sql.saveEntitiesCommand(page.assets, SaveMode.UPSERT).execute()
+                media.saveAssets(page.assets)
             }
             val stalled = page.syncTag == syncTag
             syncTag = page.syncTag
@@ -223,7 +241,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
             }
             page = api.fetchAllItemsPage(accountId, album, syncTag)
         }
-        log.info("相册 {} (remoteId={}) 位点同步完成，当前位点 {}", album.name, album.remoteId, syncTag)
+        log.info("相册 {} (remoteKey={}) 位点同步完成，当前位点 {}", album.name, album.remoteKey, syncTag)
     }
 
     private fun crontabAlbums(crontab: Crontab): List<Album> = sql.executeQuery(Album::class) {
@@ -273,7 +291,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi) {
         val albumTimelines = mutableMapOf<Long, AlbumTimeline>()
         albums.filterNot { it.isAudioAlbum() }.forEach { album ->
             // remoteID -> AlbumTimeline
-            albumTimelines[album.remoteId] = api.fetchAlbumTimeline(accountId, album.remoteId)
+            albumTimelines[album.remoteKey.toLong()] = api.fetchAlbumTimeline(accountId, album.remoteKey.toLong())
         }
         return albumTimelines
     }

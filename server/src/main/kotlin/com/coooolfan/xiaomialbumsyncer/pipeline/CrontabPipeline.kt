@@ -29,6 +29,7 @@ class CrontabPipeline(
     private val fileTimeStage: FileTimeStage,
     private val systemConfigService: SystemConfigService,
     private val assetService: AssetService,
+    private val media: com.coooolfan.xiaomialbumsyncer.service.CloudMediaService,
     private val crontabService: CrontabService,
     private val notifyService: NotifyService,
 ) {
@@ -45,12 +46,15 @@ class CrontabPipeline(
 
         when (crontab.syncMode) {
             CrontabSyncMode.CURSOR -> {
-                // 位点同步模式：album/full 预检 + allitems 按位点拉流，基线为最近一次含位点的历史
-                val albumSyncCursors = crontabService.getAlbumSyncCursorsHistory(crontabHistory)
-                assetService.refreshAssetsBySyncTag(crontab, crontabHistory, albumSyncCursors)
+                // 基线为本任务最近一次已提交的游标，按来源读取后续变化记录
+                val syncCursors = crontabService.getSyncCursorsHistory(crontabHistory)
+                if (media.isICloud(crontab.accountId))
+                    assetService.refreshICloudAssetsByCursor(crontab, crontabHistory, syncCursors)
+                else assetService.refreshAssetsBySyncTag(crontab, crontabHistory, syncCursors)
             }
 
             CrontabSyncMode.TIMELINE -> {
+                require(!media.isICloud(crontab.accountId)) { "iCloud 不支持时间线同步，请选择全量或位点增量" }
                 // 对 crontab.albums 进行同步操作, 重新刷新这些相册的所有 Asset 取到上次的 CrontabHistory 的 timelineSnapshot
                 val albumTimelinesHistory = crontabService.getAlbumTimelinesHistory(crontabHistory)
 
@@ -69,7 +73,7 @@ class CrontabPipeline(
             CrontabSyncMode.FULL -> assetService.refreshAssetsFull(crontab, crontabHistory)
         }
 
-        // 记录一下，以后如果支持恢复暂停的任务可以从这开始
+        // 标记元数据枚举完成。
         crontabService.finishCrontabHistoryFetchedAllAssets(crontabHistory)
 
         val systemConfig = systemConfigService.getConfig(NORMAL_SYSTEM_CONFIG)
@@ -183,7 +187,7 @@ class CrontabPipeline(
             return "该任务的最新执行记录无可用于对比的时间线数据"
         }
 
-        val crontabAlbumRemoteIds = crontab.albums.mapTo(mutableSetOf()) { it.remoteId }
+        val crontabAlbumRemoteIds = crontab.albums.mapTo(mutableSetOf()) { it.remoteKey.toLong() }
         if (crontabAlbumRemoteIds.contains(-1L)) {
             return "\"录音\"不支持时间线对比"
         }

@@ -45,12 +45,12 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             for (albumJson in albumArrayJson) {
                 val albumId = albumJson.get("albumId").asLong()
                 allAlbums.add(Album {
-                    remoteId = albumId
+                    remoteKey = albumId.toString()
                     name = XIAOMI_ALBUM_NAME_BY_ID[albumId]
                         ?: albumJson.get("name")?.asText()
                         ?: "Unknown Album"
-                    assetCount = albumJson.get("mediaCount").asLong()
-                    lastUpdateTime = Instant.ofEpochMilli(albumJson.get("lastUpdateTime")?.asLong() ?: 0L)
+                    assetCount = albumJson.get("mediaCount")?.asLong()
+                    lastUpdateTime = albumJson.get("lastUpdateTime")?.let { Instant.ofEpochMilli(it.asLong()) }
                     this.accountId = accountId
                     shadow = false
                 })
@@ -62,10 +62,11 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         }
 
         allAlbums.add(Album {
-            remoteId = -1
+            remoteKey = "-1"
             name = "录音"
-            assetCount = 0
-            lastUpdateTime = Instant.now()
+            assetCount = null
+            lastUpdateTime = null
+            shadow = false
             this.accountId = accountId
         })
 
@@ -90,7 +91,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 if (album.isAudioAlbum())
                     apiProperties.url("sfs/ns/recorder/dir/0/list?ts=${System.currentTimeMillis()}&limit=$pageSize&offset=${pageNum * pageSize}")
                 else
-                    apiProperties.url("gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.remoteId}")
+                    apiProperties.url("gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.remoteKey}")
 
 
             val responseTree = getJson(album.accountId, url + urlDayParams)
@@ -100,7 +101,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 else
                     responseTree.at("/data/galleries")
 
-            log.info("解析用户 ${album.accountId} 的相册 ${album.name} ID=${album.remoteId}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
+            log.info("解析用户 ${album.accountId} 的相册 ${album.name} ID=${album.remoteKey}${if (day != null) " day=$day" else ""} 第 ${pageNum + 1} 页数据，此页共 ${assetArrayJson.size()} 个资源")
 
             // 处理当前页数据
             val pageAssets = assetArrayJson.map { parseJsonNode(it, album) }
@@ -120,17 +121,6 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
         }
 
         return totalCount
-    }
-
-    /**
-     * 获取相册全部资源并返回列表（适用于小相册或需要返回值的场景）
-     */
-    fun fetchAllAssetsByAlbumId(album: Album, day: LocalDate? = null): List<Asset> {
-        val allAssets = mutableListOf<Asset>()
-        fetchAssetsByAlbumId(album, day) { pageAssets ->
-            allAssets.addAll(pageAssets)
-        }
-        return allAssets.toList()
     }
 
     fun fetchAlbumTimeline(accountId: Long, albumId: Long): AlbumTimeline {
@@ -170,7 +160,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             accountId,
             apiProperties.url(
                 "gallery/allitems?ts=${System.currentTimeMillis()}" +
-                    "&groupId=${album.remoteId}&tag=$tag&limit=200&simpleResult=false"
+                    "&groupId=${album.remoteKey}&tag=$tag&limit=200&simpleResult=false"
             )
         )
         responseTree.throwIfBizError()
@@ -192,9 +182,9 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
     fun downloadAsset(accountId: Long, asset: Asset, targetPath: Path): Boolean {
         val url =
             if (asset.type == AssetType.AUDIO)
-                apiProperties.url("sfs/ns/recorder/file/${asset.id}/cb/dl_sfs_cb_${System.currentTimeMillis()}_0/storage?ts=${System.currentTimeMillis()}")
+                apiProperties.url("sfs/ns/recorder/file/${asset.remoteKey.toLong()}/cb/dl_sfs_cb_${System.currentTimeMillis()}_0/storage?ts=${System.currentTimeMillis()}")
             else
-                apiProperties.url("gallery/storage?ts=${System.currentTimeMillis()}&id=${asset.id}")
+                apiProperties.url("gallery/storage?ts=${System.currentTimeMillis()}&id=${asset.remoteKey.toLong()}")
 
         // 1. 获取 OSS URL
         val fetchOssUrlJson = getJson(accountId, url)
@@ -271,12 +261,13 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 val fullFileName = jsonNode.get("fileName").asText()
 
                 Asset {
-                    id = jsonNode.get("id").asLong()
+                    remoteKey = jsonNode.get("id").asLong().toString()
+                    recordingType = null
                     fileName = fullFileName
                     type = AssetType.valueOf(jsonNode.get("type").asText().uppercase())
                     dateTaken = Instant.ofEpochMilli(jsonNode.get("dateTaken").asLong())
                     albumId = album.id
-                    sha1 = jsonNode.get("sha1").asText()
+                    checksum = jsonNode.get("sha1").asText()
                     mimeType = jsonNode.get("mimeType").asText()
                     title = jsonNode.get("title")?.asText() ?: fullFileName.substringBeforeLast('.')
                     size = jsonNode.get("size")?.asLong() ?: 0L
@@ -287,13 +278,14 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 val name = jsonNode.get("name").asText()
                 val recordingName = parseXiaomiRecordingName(name)
                 Asset {
-                    this.id = jsonNode.get("id").asLong()
+                    remoteKey = jsonNode.get("id").asLong().toString()
+                    recordingType = null
                     this.fileName = recordingName.fileName
                     this.type = AssetType.AUDIO
                     this.recordingType = recordingName.recordingType
                     this.dateTaken = Instant.ofEpochMilli(jsonNode.get("create_time").asLong())
                     this.albumId = album.id
-                    this.sha1 = jsonNode.get("sha1").asText()
+                    this.checksum = jsonNode.get("sha1").asText()
                     this.mimeType = Files.probeContentType(Path(recordingName.fileName)) ?: "application/octet-stream"
                     this.title = recordingName.fileName.substringBeforeLast(".")
                     this.size = jsonNode.get("size").asLong()
@@ -334,7 +326,7 @@ internal data class XiaomiRecordingName(
 internal fun parseXiaomiRecordingName(name: String): XiaomiRecordingName {
     val match = XIAOMI_RECORDING_NAME_REGEX.matchEntire(name)
     if (match == null) {
-        // 兼容历史/异常格式：仍按旧逻辑从右侧剥离四段尾缀。
+        // 名称不符合标准格式时，从右侧剥离四段尾缀，类型记为 UNKNOWN。
         return XiaomiRecordingName(
             fileName = name.substringBeforeLast("_").substringBeforeLast("_").substringBeforeLast("_")
                 .substringBeforeLast("_"),

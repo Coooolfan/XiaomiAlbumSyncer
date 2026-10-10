@@ -1,6 +1,9 @@
 package com.coooolfan.xiaomialbumsyncer.pipeline.stages
 
+import com.coooolfan.xiaomialbumsyncer.icloud.verifyICloudChecksum
+import com.coooolfan.xiaomialbumsyncer.service.CloudMediaService
 import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
+import com.coooolfan.xiaomialbumsyncer.model.downloadCompleted
 import com.coooolfan.xiaomialbumsyncer.model.id
 import com.coooolfan.xiaomialbumsyncer.model.sha1Verified
 import org.babyfish.jimmer.sql.kt.KSqlClient
@@ -8,8 +11,6 @@ import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
-import java.nio.file.Path
-import java.security.MessageDigest
 import kotlin.io.path.Path
 
 /**
@@ -18,23 +19,43 @@ import kotlin.io.path.Path
 @Managed
 class VerificationStage(
     private val sql: KSqlClient,
+    private val media: CloudMediaService,
 ) {
 
     private val log = LoggerFactory.getLogger(VerificationStage::class.java)
 
     fun process(context: CrontabHistoryDetail): CrontabHistoryDetail {
         if (context.sha1Verified) {
-            log.info("资产 {} 的 SHA1 校验已完成或者被标记为无需处理，跳过校验阶段", context.asset.id)
+            log.info("资产 {} 的文件校验已完成或者被标记为无需处理，跳过校验阶段", context.asset.id)
             return context
         }
 
-        log.info("开始校验资产 {} 的 SHA1", context.asset.id)
-        val sha1 = computeSha1(Path(context.filePath))
-        if (!sha1.equals(context.asset.sha1, ignoreCase = true)) {
-            // TODO: 这里需要思考一下怎么从头再来
-            throw RuntimeException("资产 ${context.asset.id} 的 SHA1 校验失败，期望 ${context.asset.sha1} 实际 $sha1")
+        if (media.isICloud(context.crontabHistory.crontab.accountId)) {
+            log.info("开始校验 iCloud 资产 {} 的文件", context.asset.id)
+            val path = Path(context.filePath)
+            if (!verifyICloudChecksum(path, context.asset.checksum)) {
+                val failure = IllegalStateException("资产 ${context.asset.id} 的 iCloud 文件校验失败，请重试下载")
+                // 两项清理分别尝试，避免重试时复用损坏文件。
+                try {
+                    sql.executeUpdate(CrontabHistoryDetail::class) {
+                        set(table.downloadCompleted, false)
+                        set(table.sha1Verified, false)
+                        where(table.id eq context.id)
+                    }
+                } catch (cleanupError: Exception) {
+                    failure.addSuppressed(cleanupError)
+                }
+                try {
+                    Files.deleteIfExists(path)
+                } catch (cleanupError: Exception) {
+                    failure.addSuppressed(cleanupError)
+                }
+                throw failure
+            }
+            log.info("iCloud 资产 {} 的文件校验成功", context.asset.id)
+        } else {
+            log.info("资产 {} 来自小米云，跳过 SHA-1 校验", context.asset.id)
         }
-        log.info("资产 {} 的 SHA1 校验成功", context.asset.id)
 
         sql.executeUpdate(CrontabHistoryDetail::class) {
             set(table.sha1Verified, true)
@@ -43,19 +64,6 @@ class VerificationStage(
         return CrontabHistoryDetail(context) {
             sha1Verified = true
         }
-    }
-
-
-    private fun computeSha1(path: Path): String {
-        val digest = MessageDigest.getInstance("SHA-1")
-        Files.newInputStream(path).use { input ->
-            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-            var read: Int
-            while (input.read(buffer).also { read = it } > 0) {
-                digest.update(buffer, 0, read)
-            }
-        }
-        return digest.digest().joinToString("") { byte -> "%02x".format(byte) }
     }
 
 }

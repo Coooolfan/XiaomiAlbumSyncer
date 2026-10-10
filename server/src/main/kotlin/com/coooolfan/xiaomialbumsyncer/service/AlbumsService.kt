@@ -18,7 +18,7 @@ import java.time.LocalDate
 @Managed
 class AlbumsService(
     private val sql: KSqlClient,
-    private val api: XiaoMiApi
+    private val api: CloudMediaService
 ) {
     private val log = LoggerFactory.getLogger(AlbumsService::class.java)
 
@@ -34,7 +34,7 @@ class AlbumsService(
      */
     fun refreshAlbumsByAccount(accountId: Long, fetcher: Fetcher<Album>): List<Album> {
         log.info("刷新账号 {} 的相册列表", accountId)
-        val remoteAlbums = api.fetchAllAlbums(accountId)
+        val remoteAlbums = api.fetchAlbums(accountId)
 
         // 获取当前账号已有的相册 (用于对比删除)
         val existingAlbums = sql.executeQuery(Album::class) {
@@ -47,10 +47,9 @@ class AlbumsService(
             set(table.shadow, true)
         }
 
-        // TODO: 应该用 @Key 来一把 upsert
-        // 使用 remoteId + accountId 组合进行 upsert
+        // 使用 remoteKey + accountId 组合进行 upsert
         for (remoteAlbum in remoteAlbums) {
-            val existing = existingAlbums.find { it.remoteId == remoteAlbum.remoteId }
+            val existing = existingAlbums.find { it.remoteKey == remoteAlbum.remoteKey }
             if (existing != null) {
                 // 更新现有相册
                 sql.executeUpdate(Album::class) {
