@@ -192,7 +192,7 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
         else -> "application/octet-stream" to "bin"
     }
 
-internal fun verifyICloudChecksum(path: Path, checksum: String) {
+internal fun verifyICloudChecksum(path: Path, checksum: String): Boolean {
     require(checksum.isNotBlank()) { "iCloud 文件缺少校验值" }
     val encoded = Base64.getDecoder().decode(checksum)
     // CloudKit 的文件校验值包含一个算法标记字节（SHA-1 为 0x01）。
@@ -205,7 +205,7 @@ internal fun verifyICloudChecksum(path: Path, checksum: String) {
     DigestInputStream(Files.newInputStream(path), digest).use {
         it.transferTo(OutputStream.nullOutputStream())
     }
-    require(MessageDigest.isEqual(expected, digest.digest())) { "iCloud 文件校验失败，请重试下载" }
+    return MessageDigest.isEqual(expected, digest.digest())
 }
 
 internal fun lookupRecords(client: ICloudClient, zone: String, names: List<String>): List<JsonNode> =
