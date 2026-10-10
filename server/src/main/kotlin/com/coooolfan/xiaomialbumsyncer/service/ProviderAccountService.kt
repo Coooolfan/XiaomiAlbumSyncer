@@ -19,9 +19,6 @@ class ProviderAccountService(
     private val tokenManager: TokenManager,
     private val icloud: com.coooolfan.xiaomialbumsyncer.icloud.ICloudAccountService
 ) {
-    /**
-     * 获取所有账号列表
-     */
     fun listAll(fetcher: Fetcher<ProviderAccount>): List<ProviderAccount> {
         return sql.executeQuery(ProviderAccount::class) {
             select(table.fetch(fetcher))
@@ -29,14 +26,14 @@ class ProviderAccountService(
     }
 
     /**
-     * 添加新账号
+     * 创建小米账号
      */
     fun create(create: XiaomiAccountInput): ProviderAccount {
         return sql.saveCommand(create.toEntity(), SaveMode.INSERT_ONLY).execute(DEFAULT_PROVIDER_ACCOUNT).modifiedEntity
     }
 
     /**
-     * 按 userId 写入登录凭证：账号已存在则更新 passToken 并刷新 token 缓存，否则以 userId 为默认昵称创建
+     * 按小米 userId 写入凭据；已有账号更新 passToken 并失效缓存，新账号使用 userId 作为昵称
      */
     fun upsertCredentials(userId: String, passToken: String): ProviderAccount {
         val existing = sql.executeQuery(ProviderAccount::class) {
@@ -53,24 +50,21 @@ class ProviderAccountService(
     }
 
     /**
-     * 更新账号信息
+     * 更新小米账号信息及凭据
      */
     fun update(account: ProviderAccount, fetcher: Fetcher<ProviderAccount>): ProviderAccount {
         val existing = sql.findById(ProviderAccount::class, account.id)
             ?: throw IllegalArgumentException("账号不存在，ID: ${account.id}")
         require(existing.provider == CloudProvider.XIAOMI) { "请使用 iCloud 登录接口更新该账号" }
         val result = sql.saveCommand(account, SaveMode.UPDATE_ONLY).execute(fetcher)
-        // 更新后清除该账号的 token 缓存
         tokenManager.invalidateToken(account.id)
         return result.modifiedEntity
     }
 
     /**
-     * 删除账号
-     * 注意：删除账号会同时删除关联的相册和定时任务（由数据库外键约束处理）
+     * 删除云服务账号；数据库外键级联删除关联相册和定时任务
      */
     fun delete(id: Long) {
-        // 先清除 token 缓存
         tokenManager.invalidateToken(id)
 
         icloud.forget(id)

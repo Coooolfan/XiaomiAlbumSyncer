@@ -2,7 +2,6 @@
 
 iCloud 认证、照片查询及 SRP 互操作参考以下 MIT 项目。
 
-
 ## icloudpd
 
 Source: https://github.com/icloud-photos-downloader/icloud_photos_downloader
@@ -81,8 +80,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## kei 协议调研
+## kei 协议参考
 
 Source: https://github.com/rhoopr/kei/blob/main/docs/synctoken-reference.md
 
-CloudKit 图库变更游标、分页和相册成员关系的协议行为参考该项目的公开调研。XAS 使用自身的任务历史、资产存储和下载流水线实现同步。
+CloudKit 图库变更游标、分页和相册成员关系的协议行为参考该项目的公开协议文档。

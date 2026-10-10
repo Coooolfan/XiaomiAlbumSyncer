@@ -21,7 +21,7 @@ interface Crontab {
 
     @ManyToOne
     @OnDissociate(DissociateAction.DELETE)
-    val account: ProviderAccount    // 绑定的小米账号
+    val account: ProviderAccount    // 绑定的云服务账号
 
     @IdView("account")
     val accountId: Long           // 账号ID视图

@@ -5,7 +5,7 @@ import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.fasterxml.jackson.databind.JsonNode
 import org.slf4j.LoggerFactory
 
-/** CloudKit 图库变更流；协议参考 kei 的 syncToken 调研（见 THIRD_PARTY_NOTICES）。 */
+/** CloudKit 图库变更流；协议参考 kei 的 syncToken 文档（见 THIRD_PARTY_NOTICES）。 */
 internal fun ICloudPhotos.fetchIncremental(
     albums: List<Album>, client: ICloudClient, cursor: String?,
     handler: (List<Asset>) -> Unit, commitCursor: (String) -> Unit,

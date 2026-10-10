@@ -1,8 +1,55 @@
-# iCloud Photos API 字段参考
+# iCloud Photos 开发参考
 
-本文整理 XAS `feat/icloud` 分支使用的 iCloud Photos / CloudKit 接口，重点说明相册与资产的关系。字段以当前客户端读取行为为主；补充字段来自上游客户端或公开协议实测，不代表每个账号、每种资源都会返回。本文没有使用真实账号抓包核验全部字段，也不是 Apple 对 Photos 私有 schema 的兼容性承诺。
+本文定义 XAS 的 iCloud Photos / CloudKit 协议、数据映射和同步约定。字段说明区分客户端使用的字段与外部协议参考；私有 schema 的可用字段可能因账号和资源类型而异。
 
-## 1. 图库、相册、照片与文件
+## 1. 认证与会话
+
+### 账号条件与端点
+
+账号必须启用 iCloud 照片、允许网页数据访问，并关闭高级数据保护（ADP）。客户端不支持受信任设备临时授权的 ADP 网页访问、应用专用密码、扫码、传统 2SA 或短信验证码认证。
+
+`domain` 取 `com` 或 `cn`，对应国际和中国大陆端点：
+
+| 服务 | 国际端点 | 中国大陆端点 |
+| --- | --- | --- |
+| Apple Auth | `https://idmsa.apple.com/appleauth/auth` | `https://idmsa.apple.com.cn/appleauth/auth` |
+| iCloud Setup | `https://setup.icloud.com/setup/ws/1` | `https://setup.icloud.com.cn/setup/ws/1` |
+| CloudKit | 由 `accountLogin` 或 `validate` 响应中的 `webservices.ckdatabasews.url` 提供 | 同左 |
+
+### 登录与双重认证
+
+认证使用 SRP-6a、SHA-256 与 Apple `s2k` / `s2k_fo` 密码派生。trust token 随密码登录提交，不能代替密码。
+
+```mermaid
+sequenceDiagram
+    participant X as XAS
+    participant A as Apple Auth
+    participant S as iCloud Setup
+    X->>A: POST /signin/init
+    A-->>X: salt、b、iteration、protocol、c
+    X->>A: POST /signin/complete（SRP 证明、trustTokens）
+    alt HTTP 409，需要受信任设备验证码
+        X->>A: PUT /verify/trusteddevice/securitycode
+        Note over X: 保存 MFA_REQUIRED，等待六位验证码
+        X->>A: POST /verify/trusteddevice/securitycode
+        X->>A: GET /2sv/trust
+    end
+    X->>S: POST /accountLogin
+    S-->>X: 账号状态与服务地址
+    Note over X: 检查 hsaChallengeRequired、hsaTrustedBrowser；必要时请求验证码
+```
+
+XAS 接口均要求登录：`POST /api/icloud/login` 创建或重新认证账号，`POST /api/icloud/{id}/verify` 提交验证码，`GET /api/icloud/{id}/status` 读取认证状态。账号列表与删除使用 `/api/account`；该路径的创建、更新接口只接受小米凭据。
+
+### 会话检查与重试
+
+CloudKit 请求前执行 `ensureAuthenticated()`。内存账号状态在十分钟内通过验证时直接复用；该窗口是本地缓存时间。其他情况下，存在 session token 时先调用 `POST /validate`，验证返回 401、421、450 或没有 token 时执行密码登录。CloudKit 请求返回 421、450 时强制重新登录并重发原请求一次。Apple 要求验证码时停止业务请求并保存 `MFA_REQUIRED`；非验证码提交场景的 401 保存 `SESSION_EXPIRED`，错误验证码保留 `MFA_REQUIRED`。
+
+同账号的认证与 CloudKit 操作串行执行，CDN 传输不占用认证锁。`withClient` 操作结束时持久化认证状态与会话；cookie 按账号隔离。Apple 决定 session 和 trust token 的有效期。
+
+`SystemConfig.passTokenExpiredBody` 是小米和 iCloud 共用的认证失效通知模板。非空时，同一进程内对同一账号的失效状态只通知一次，认证成功后恢复通知能力。
+
+## 2. 图库、相册、照片与文件
 
 | 对象 | 标识 | 含义与关系 |
 | --- | --- | --- |
@@ -27,7 +74,7 @@ zone
 
 因此，相册成员数、逻辑资产数和下载文件数是不同的统计口径。相册名称不是唯一标识；标识需要保留 zone 和 recordName。`SharedSync-*` 的名字本身不足以判断全部共享能力；XAS 当前按共享图库区域处理，不支持产品中的「共享相册」服务。
 
-## 2. 接口与返回结构
+## 3. CloudKit 接口与返回结构
 
 基础地址来自登录结果 `webservices.ckdatabasews.url`，XAS 拼接：
 
@@ -72,9 +119,9 @@ zone
 
 其他通用字段可能包括 `recordChangeTag`（记录版本标记）、`created` / `modified`（创建与修改信息）、`zoneID`。字段的 `type` 表达服务端类型；照片协议的状态值也可能以 INT64 的 0/1 表示。时间戳按 Unix 毫秒处理。[Apple 通用字典说明](https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/Types.html)
 
-## 3. 相册相关字段与查询
+## 4. 相册相关字段与查询
 
-### 3.1 相册列表：CPLAlbum
+### 4.1 相册列表：CPLAlbum
 
 请求 `records/query`，设置 `query.recordType="CPLAlbumByPositionLive"` 和 `zoneID`。这是查询索引名称，不是返回记录类型 `CPLAlbum` 的同义字段。
 
@@ -95,7 +142,7 @@ zone
 
 XAS 跳过 `----Root-Folder----` 和 `----Project-Root-Folder----` 两个根容器。当前不保存父文件夹关系，相册在本地作为平面列表展示。请求按 position 枚举相册，不表示相册内照片也按相同字段排序。
 
-### 3.2 相册成员：CPLContainerRelation
+### 4.2 相册成员：CPLContainerRelation
 
 | 字段/位置 | 含义 | XAS 当前行为 |
 | --- | --- | --- |
@@ -110,7 +157,7 @@ XAS 跳过 `----Root-Folder----` 和 `----Project-Root-Folder----` 两个根容�
 
 枚举某个用户相册时，使用索引 `CPLContainerRelationLiveByAssetDate`，条件为 `parentId=<相册 recordName>`。**这里 parentId 是请求过滤参数，返回关系上的相册字段是 containerId**。XAS 从该查询响应中处理 CPLAsset 和 CPLMaster；缺少原件时执行 lookup。不应要求每页的所有关联记录都齐全。
 
-### 3.3 系统集合与智能相册
+### 4.3 系统集合与智能相册
 
 XAS 创建以下本地虚拟相册；`__all__` 等是 XAS 自己的标识，不是服务端 CPLAlbum.recordName。
 
@@ -127,9 +174,9 @@ XAS 创建以下本地虚拟相册；`__all__` 等是 XAS 自己的标识，不�
 
 截图与连拍的全量查询沿用 `startRank` + `direction=ASCENDING` 分页，处理返回的 `CPLAsset` / `CPLMaster` 原件记录，不按本地资源文件数推进 rank。连拍按服务端堆栈索引返回的资产备份，不额外展开整个连拍序列。
 
-位点增量中，截图使用 `assetSubtypeV2=3`（请求启用 `remapEnums=true`），连拍使用非空 `burstId`，均排除隐藏、软删除、永久删除资产；同一资产可以同时属于两个集合。不要将 CloudKit 的枚举值与 PhotoKit 的截图位掩码混用。字段分类依据 [rclone 的 CloudKit 枚举和智能集合实现](https://github.com/rclone/rclone/blob/master/backend/iclouddrive/api/photos.go)。当前不接入最近删除，远端删除不会清理本地备份。
+位点增量中，截图使用 `assetSubtypeV2=3`（请求启用 `remapEnums=true`），连拍使用非空 `burstId`，均排除隐藏、软删除、永久删除资产；同一资产可以同时属于两个集合。不要将 CloudKit 的枚举值与 PhotoKit 的截图位掩码混用。字段分类依据 [rclone 的 CloudKit 枚举和智能集合实现](https://github.com/rclone/rclone/blob/master/backend/iclouddrive/api/photos.go)。
 
-## 4. 逻辑资产：CPLAsset
+## 5. 逻辑资产：CPLAsset
 
 | 字段 | 含义 | XAS 当前行为 |
 | --- | --- | --- |
@@ -139,10 +186,12 @@ XAS 创建以下本地虚拟相册；`__all__` 等是 XAS 自己的标识，不�
 | `isHidden` | 隐藏标志 | 增量时分配所有照片/隐藏集合 |
 | `isDeleted` | 业务删除状态 | 增量时排除 |
 | `isExpunged` | 清除状态 | 增量时排除 |
+| `assetSubtypeV2` | remapEnums 后的资产子类型 | 增量时以 3 判断截图，不持久化 |
+| `burstId` | 连拍标识 | 增量时以非空值判断连拍，不持久化 |
 
-补充元数据可能包含 `addedDate`（加入图库日期）、`orientation`（方向）、`duration`（视频时长）、`captionEnc`（说明编码）、经纬度、`timeZoneOffset`、`assetSubtype` / `assetSubtypeV2`（子类型）、`assetHDRType`、连拍标记及 `burstId`、编辑类型和渲染类型。XAS 当前仅在位点增量中读取其中的 `assetSubtypeV2` 和 `burstId` 以分类截图、连拍，不持久化这些字段；时长、时区与枚举的精确单位/取值需按响应和类型验证。`Enc` 后缀不保证内容均为可直接解码的 UTF-8；名称字段的处理不能直接套用于位置或编辑数据。[pyicloud 资产字段列表](https://github.com/picklepete/pyicloud/blob/master/pyicloud/services/photos.py)
+补充元数据可能包含 `addedDate`（加入图库日期）、`orientation`（方向）、`duration`（视频时长）、`captionEnc`（说明编码）、经纬度、`timeZoneOffset`、`assetSubtype`（子类型）、`assetHDRType`、连拍标记、编辑类型和渲染类型。XAS 不读取这些补充字段；时长、时区与枚举的精确单位/取值需按响应和类型验证。`Enc` 后缀不保证内容均为可直接解码的 UTF-8；名称字段的处理不能直接套用于位置或编辑数据。[pyicloud 资产字段列表](https://github.com/picklepete/pyicloud/blob/master/pyicloud/services/photos.py)
 
-## 5. 原件与文件资源：CPLMaster
+## 6. 原件与文件资源：CPLMaster
 
 | 字段 | 含义 | XAS 当前行为 |
 | --- | --- | --- |
@@ -170,9 +219,20 @@ XAS 创建以下本地虚拟相册；`__all__` 等是 XAS 自己的标识，不�
 
 资源可能在 CPLAsset 或 CPLMaster 上；当前 XAS 全量/增量枚举从 master 读取三种原件，下载刷新先查询 asset 上同名资源，缺失时沿实时 masterRef 查询 master。Live Photo 通常产生图片和视频两个本地 Asset，RAW+JPEG 也可产生两个；不意味着远端有两个 CPLAsset。
 
-## 6. 索引状态与增量字段
+## 7. 元数据同步与位点
+
+iCloud 支持全量和位点增量模式，不支持时间线比较。全量模式每次枚举所选相册。
 
 `CheckIndexingState` 的响应读取 `records[0].fields.state.value`；只有 `FINISHED` 才继续枚举。
+
+位点存放在任务历史的 `syncCursors` JSON 中，按任务、图库及所选相册范围隔离。首次同步、选择范围变化或位点失效时重建基线：
+
+1. 查询图库当前 `syncToken`。
+2. 全量枚举所选相册并持久化资产。
+3. 从第 1 步位点读取变更，覆盖枚举期间的上传和成员变化。
+4. 每页资产持久化成功后提交该页位点；空页也按 `moreComing` 判断是否继续。
+
+网络、限流、lookup 或落库失败保留已提交位点。下载失败通过本地待处理资产与任务历史重试，不回退元数据位点。截图与连拍的增量分类规则见系统集合表；连拍全量使用堆栈索引，增量使用 `burstId`，两者的资产范围不保证完全一致。
 
 `changes/zone` 每个 zone 的主要返回字段：
 
@@ -185,7 +245,17 @@ XAS 创建以下本地虚拟相册；`__all__` 等是 XAS 自己的标识，不�
 
 当前 XAS 使用变更流中的 CPLAsset、CPLMaster 和新增成员关系，并 lookup 当前相册成员状态。不会依据删除事件清理已有备份，也没有将流中的 CPLAlbum 改名/排序变更直接应用到本地相册元数据。
 
-## 7. 与 XAS 本地模型的区别
+## 8. 下载与文件处理
+
+下载 URL 按需通过 lookup 刷新，初始地址必须为 HTTPS。CDN 客户端不携带 Apple 认证头和 cookie，支持重定向。首次 CDN 请求返回 401、403、410 时重新 lookup 并重试一次；其他失败直接交给任务重试。
+
+下载写入 `{fileName}.{detailId}.tmp`，检查长度后移动到目标路径；优先原子移动，不支持时使用覆盖移动，异常时清理临时文件。`skipExistingFile=true` 且目标文件存在时直接复用文件，后续处理仍由任务配置控制。`checkSha1=true` 时由校验阶段按来源解析 `Asset.checksum` 并校验；下载阶段只检查文件大小。EXIF 与文件时间重写分别由对应阶段执行，完成标记与错误保存在任务历史明细中。
+
+资源范围见 CPLMaster 字段表，不下载编辑渲染版本、缩略图或 sidecar。文件名使用稳定资源后缀，避免一个逻辑资产的多个原件覆盖彼此。
+
+## 9. 本地存储
+
+`provider_account.provider` 标识来源，`credentials` 是明文 JSON 文本列：小米保存 `passToken`；iCloud 保存 Apple ID、密码、区域、clientId、认证 headers、cookies 和状态。小米短期 `serviceToken` 仅保存在内存；iCloud 服务地址、下载地址和校验结果不写入凭据。账号列表、认证响应与生成的前端 API 不返回凭据。数据库备份包含全部持久化凭据，无独立密钥文件，需限制数据库及备份的访问权限。
 
 | 本地字段 | 来源/含义 |
 | --- | --- |
@@ -198,4 +268,8 @@ XAS 创建以下本地虚拟相册；`__all__` 等是 XAS 自己的标识，不�
 
 相册唯一约束为 `(account_id, remote_key)`；查询索引与智能集合条件由 albumId 推导，不持久化。资产唯一约束为 `(album_id, remote_key, checksum)`；账号与来源由相册关联查询，iCloud zone 由相册 remote_key 提供，masterId 在下载时通过 masterRef 查询，校验值仅保存在 checksum。同一照片放入多个所选相册时，XAS 为每个相册建立独立下载记录。通过本地 assetCount 或下载文件数反推 Apple 照片应用的计数时，应先统一统计口径。
 
-实现入口：[ICloudPhotos.kt](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudPhotos.kt)、[ICloudChanges.kt](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudChanges.kt)、[ICloudClient.kt](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudClient.kt)。
+## 10. 实现与验证
+
+认证入口为 `ICloudController` → `ICloudAccountService` → [ICloudClient](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudClient.kt)；相册和资产解析由 [ICloudPhotos](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudPhotos.kt)、[ICloudChanges](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudChanges.kt) 负责。`CloudMediaService` 分派来源，`AssetService` 持久化元数据与位点，`DownloadStage`、`VerificationStage` 执行下载和校验。协议来源与许可证见 [第三方声明](THIRD_PARTY_NOTICES.md)。
+
+自动化测试覆盖 SRP 与 pysrp 固定向量互操作、双重认证、会话恢复、区域端点、Live Photo / RAW+JPEG 资源映射、相册成员隔离、截图与连拍分类、变更分页与失效位点恢复、落库失败不推进位点、文件校验及数据库升级。协议测试使用本地模拟服务，不覆盖真实 Apple 账号的权限和私有接口兼容性。

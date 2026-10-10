@@ -326,7 +326,7 @@ internal data class XiaomiRecordingName(
 internal fun parseXiaomiRecordingName(name: String): XiaomiRecordingName {
     val match = XIAOMI_RECORDING_NAME_REGEX.matchEntire(name)
     if (match == null) {
-        // 兼容历史/异常格式：仍按旧逻辑从右侧剥离四段尾缀。
+        // 名称不符合标准格式时，从右侧剥离四段尾缀，类型记为 UNKNOWN。
         return XiaomiRecordingName(
             fileName = name.substringBeforeLast("_").substringBeforeLast("_").substringBeforeLast("_")
                 .substringBeforeLast("_"),
