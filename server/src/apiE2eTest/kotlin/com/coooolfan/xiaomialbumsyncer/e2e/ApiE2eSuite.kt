@@ -108,7 +108,7 @@ class ApiE2eSuite {
         api.get("/api/album").expect(200)
 
         val cameraAssets = api.json(api.get("/api/asset/$cameraAlbumId/latest").expect(200))
-        assertEquals(mock.mediaSha1, cameraAssets.first().path("sha1").asText())
+        assertEquals(mock.mediaSha1, cameraAssets.first().path("checksum").asText())
         api.get("/api/asset/$cameraAlbumId").expect(200)
         val audioAssets = api.json(api.get("/api/asset/$audioAlbumId/latest").expect(200))
         assertEquals("sample-audio.m4a", audioAssets.first().path("fileName").asText())

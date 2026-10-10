@@ -194,6 +194,40 @@ class ICloudChangesTest {
         }
     }
 
+    @Test fun routesScreenshotsAndBurstsByCloudKitMetadataAndSkipsUnavailableAssets() {
+        fun classified(name: String, fields: Map<String, Any>) = record("CPLAsset", name, mapOf(
+            "masterRef" to mapOf("recordName" to "master-$name"), "assetDate" to 1000) + fields)
+        val records = listOf(
+            classified("screenshot", mapOf("assetSubtypeV2" to 3)),
+            classified("burst", mapOf("burstId" to "burst-sequence")),
+            classified("both", mapOf("assetSubtypeV2" to 3, "burstId" to "burst-sequence")),
+            classified("ordinary", emptyMap()),
+            classified("live-photo", mapOf("assetSubtypeV2" to 2)),
+            classified("legacy-subtype", mapOf("assetSubtype" to 3)),
+            classified("empty-burst", mapOf("burstId" to "")),
+            classified("null-burst", mapOf("burstId" to mapper.nullNode())),
+            classified("blank-burst", mapOf("burstId" to " ")),
+            classified("hidden", mapOf("assetSubtypeV2" to 3, "burstId" to "burst-sequence", "isHidden" to 1)),
+            classified("trashed", mapOf("assetSubtypeV2" to 3, "burstId" to "burst-sequence", "isDeleted" to 1)),
+            classified("expunged", mapOf("assetSubtypeV2" to 3, "burstId" to "burst-sequence", "isExpunged" to 1)),
+            classified("purged", mapOf("assetSubtypeV2" to 3)).also {
+                (it as com.fasterxml.jackson.databind.node.ObjectNode).put("deleted", true)
+            },
+        )
+        withServer({ path, _ ->
+            assertEquals("zone", path)
+            page("next", false, records + records.map { master(it.path("recordName").asText()) })
+        }) { photos, client ->
+            val rows = mutableListOf<Asset>(); val tokens = mutableListOf<String>()
+            photos.fetchIncremental(listOf(album(1, "__screenshots__"), album(2, "__bursts__")), client,
+                "previous", { rows += it }, { tokens += it })
+            assertEquals(setOf(1L to "screenshot", 1L to "both", 2L to "burst", 2L to "both"),
+                rows.map { it.album.id to ICloudResourceKey.decode(it.remoteKey).assetId }.toSet())
+            assertEquals(4, rows.size)
+            assertEquals(listOf("next"), tokens)
+        }
+    }
+
     @Test fun failedPersistenceDoesNotAdvanceCursor() {
         withServer({ _, _ -> page("next", false, listOf(asset("new"), master("new"))) }) { photos, client ->
             val tokens = mutableListOf<String>()

@@ -2,6 +2,7 @@ package com.coooolfan.xiaomialbumsyncer.service
 
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.icloud.ICloudAlbumKey
+import com.coooolfan.xiaomialbumsyncer.icloud.ICloudPhotos
 import com.coooolfan.xiaomialbumsyncer.utils.isAudioAlbum
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.AlbumSyncInfo
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
@@ -20,7 +21,7 @@ import java.time.Instant
 import java.time.LocalDate
 
 @Managed
-class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi, private val media: CloudMediaService) {
+class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi, private val media: CloudMediaService, private val icloud: ICloudPhotos) {
 
     private val log = LoggerFactory.getLogger(AssetService::class.java)
 
@@ -172,7 +173,7 @@ class AssetService(private val sql: KSqlClient, private val api: XiaoMiApi, priv
         for ((zone, selected) in albums.groupBy { ICloudAlbumKey.decode(it.remoteKey).zone }) {
             // 相册范围改变后建立新基线；账号之间、任务之间不共享同步进度。
             val key = "icloud:${crontab.accountId}:$zone:${selected.map { it.id }.sorted().joinToString(",")}"
-            media.fetchICloudIncremental(selected, baseline[key], { media.saveAssets(it) }) { token ->
+            icloud.fetchIncremental(selected, baseline[key], { media.saveAssets(it) }) { token ->
                 cursors[key] = token
                 sql.executeUpdate(CrontabHistory::class) {
                     set(table.syncCursors, cursors.toMap())

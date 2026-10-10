@@ -17,12 +17,9 @@ class CloudMediaService(private val sql: KSqlClient, private val xiaomi: XiaoMiA
     fun fetchAssets(album: Album, handler: (List<Asset>) -> Unit): Long =
         if (isICloud(album.accountId)) icloud.fetchAssets(album, handler) else xiaomi.fetchAssetsByAlbumId(album, handler = handler)
 
-    fun fetchICloudIncremental(albums: List<Album>, cursor: String?, handler: (List<Asset>) -> Unit, commitCursor: (String) -> Unit) =
-        icloud.fetchIncremental(albums, cursor, handler, commitCursor)
-
     @Synchronized fun saveAssets(assets: List<Asset>): List<Asset> {
         if (assets.isEmpty()) return emptyList()
-        val distinct = assets.distinctBy { Triple(it.album.id, it.remoteKey, it.sha1) }
+        val distinct = assets.distinctBy { Triple(it.album.id, it.remoteKey, it.checksum) }
         return sql.saveEntitiesCommand(distinct, SaveMode.UPSERT).execute().items.map { it.modifiedEntity }
     }
 

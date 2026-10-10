@@ -29,8 +29,9 @@ interface Asset {
     @Key
     val album: Album
 
+    /** 来源返回的文件校验值；解码格式由账号来源决定。 */
     @Key
-    val sha1: String
+    val checksum: String
 
     val mimeType: String
 

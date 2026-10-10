@@ -279,7 +279,6 @@ const messages: typeof zh = {
     },
     card: {
       unnamed: 'Unnamed album',
-      hiddenUntilDownload: 'Not visible until downloaded',
       assetCount: 'No items | {n} item | {n} items',
       countUnknown: 'Count unknown',
       orphanTip: 'Orphaned album — it may have been deleted from the cloud',
@@ -470,7 +469,7 @@ const messages: typeof zh = {
         title: 'Asset title',
         assetId: 'Asset ID',
         size: 'File size',
-        sha1: 'File SHA1',
+        checksum: 'File checksum',
         crontabName: 'Task name',
         crontabId: 'Task ID',
         historyId: 'History ID',

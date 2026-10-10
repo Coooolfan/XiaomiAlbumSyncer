@@ -6658,7 +6658,8 @@
         {
           "name": "<init>",
           "parameterTypes": [
-            "org.babyfish.jimmer.sql.kt.KSqlClient"
+            "org.babyfish.jimmer.sql.kt.KSqlClient",
+            "com.coooolfan.xiaomialbumsyncer.service.CloudMediaService"
           ]
         },
         {
@@ -6758,7 +6759,9 @@
           "name": "<init>",
           "parameterTypes": [
             "org.babyfish.jimmer.sql.kt.KSqlClient",
-            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi",
+            "com.coooolfan.xiaomialbumsyncer.service.CloudMediaService",
+            "com.coooolfan.xiaomialbumsyncer.icloud.ICloudPhotos"
           ]
         },
         {

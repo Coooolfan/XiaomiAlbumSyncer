@@ -104,7 +104,7 @@ class ICloudPersistenceTest {
                 type = AssetType.IMAGE
                 recordingType = null
                 dateTaken = Instant.EPOCH
-                sha1 = "icloud:$checksum"
+                this.checksum = checksum
                 mimeType = "image/jpeg"
                 title = "photo"
                 size = 10
@@ -115,9 +115,9 @@ class ICloudPersistenceTest {
             assertEquals(first.id, repeated.id)
             assertNotEquals(first.id, replaced.id)
             val mixed = media.saveAssets(listOf(Asset(resource("first")) { title = "updated" }, resource("second")))
-            assertEquals(first.id, mixed.first { it.sha1 == first.sha1 }.id)
+            assertEquals(first.id, mixed.first { it.checksum == first.checksum }.id)
             assertEquals("updated", sql.findById(Asset::class, first.id)!!.title)
-            assertNotEquals(first.id, mixed.first { it.sha1 == "icloud:second" }.id)
+            assertNotEquals(first.id, mixed.first { it.checksum == "second" }.id)
             assertEquals("record", ICloudResourceKey.decode(sql.findById(Asset::class, first.id)!!.remoteKey).assetId)
             val xiaomi = Asset(resource("xiaomi")) {
                 remoteKey = first.id.toString()
@@ -199,24 +199,32 @@ class ICloudPersistenceTest {
                 assertEquals(listOf(0L, 1L, 2L), ranks)
                 assertEquals(2, files.map { it.remoteKey }.toSet().size)
                 val remoteAlbums = photos.fetchAlbums(account.id, client)
-                assertEquals(8, remoteAlbums.size)
+                assertEquals(12, remoteAlbums.size)
                 assertTrue(remoteAlbums.all { it.assetCount == null && it.lastUpdateTime == null })
-                assertEquals(8, remoteAlbums.map { it.remoteKey }.toSet().size)
-                for (name in listOf("__all__", "__hidden__", "__favorites__", "album")) {
+                assertEquals(12, remoteAlbums.map { it.remoteKey }.toSet().size)
+                for (name in listOf("__all__", "__hidden__", "__favorites__", "__screenshots__", "__bursts__", "album")) {
                     assetQueries.clear()
+                    ranks.clear()
                     val selected = Album(remoteAlbums.first { ICloudAlbumKey.decode(it.remoteKey) == ICloudAlbumKey("PrimarySync", name) }) { id = album.id }
                     photos.fetchAssets(selected, client) { }
+                    assertEquals(listOf(0L, 1L, 2L), ranks)
                     val query = assetQueries.first().path("query")
                     val expected = when (name) {
                         "__all__" -> "CPLAssetAndMasterByAssetDateWithoutHiddenOrDeleted"
                         "__hidden__" -> "CPLAssetAndMasterHiddenByAssetDate"
-                        "__favorites__" -> "CPLAssetAndMasterInSmartAlbumByAssetDate"
+                        "__favorites__", "__screenshots__" -> "CPLAssetAndMasterInSmartAlbumByAssetDate"
+                        "__bursts__" -> "CPLBurstStackAssetAndMasterByAssetDate"
                         else -> "CPLContainerRelationLiveByAssetDate"
                     }
                     assertEquals(expected, query.path("recordType").asText())
                     val filters = query.path("filterBy").associate { it.path("fieldName").asText() to it.at("/fieldValue/value").asText() }
-                    assertEquals(if (name == "__favorites__") "FAVORITE" else null, filters["smartAlbum"])
+                    assertEquals(when (name) {
+                        "__favorites__" -> "FAVORITE"
+                        "__screenshots__" -> "SCREENSHOT"
+                        else -> null
+                    }, filters["smartAlbum"])
                     assertEquals(if (name == "album") "album" else null, filters["parentId"])
+                    assertEquals("ASCENDING", filters["direction"])
                 }
 
             } finally { server.stop(0) }
