@@ -19,6 +19,15 @@ data class ICloudAlbumKey(val zone: String, val albumId: String) {
         else -> "CPLContainerRelationLiveByAssetDate"
     }
 
+    fun countIndex(): String = when (albumId) {
+        "__all__" -> "CPLAssetByAssetDateWithoutHiddenOrDeleted"
+        "__hidden__" -> "CPLAssetHiddenByAssetDate"
+        "__favorites__" -> "CPLAssetInSmartAlbumByAssetDate:Favorite"
+        "__screenshots__" -> "CPLAssetInSmartAlbumByAssetDate:Screenshot"
+        "__bursts__" -> "CPLAssetBurstStackAssetByAssetDate"
+        else -> "CPLContainerRelationNotDeletedByAssetDate:$albumId"
+    }
+
     fun smartAlbum(): String? = when (albumId) {
         "__favorites__" -> "FAVORITE"
         "__screenshots__" -> "SCREENSHOT"

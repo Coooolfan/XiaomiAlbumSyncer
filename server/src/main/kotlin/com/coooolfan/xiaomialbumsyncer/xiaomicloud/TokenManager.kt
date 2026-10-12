@@ -1,6 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 
 
+import com.coooolfan.xiaomialbumsyncer.model.dto.xiaomiCredentialsMapper
 import com.coooolfan.xiaomialbumsyncer.config.XiaomiApiProperties
 import com.coooolfan.xiaomialbumsyncer.model.ProviderAccount
 import com.coooolfan.xiaomialbumsyncer.service.NotifyService
@@ -77,7 +78,7 @@ class TokenManager(private val sql: KSqlClient, private val notifyService: Notif
 
     private fun genServiceToken(account: ProviderAccount): String {
 
-        val passToken = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().readTree(account.credentials).get("passToken")?.asText()
+        val passToken = xiaomiCredentialsMapper.readTree(account.credentials).get("passToken")?.asText()
             ?: throw IllegalArgumentException("小米账号缺少 passToken")
         val userId = account.userId
         val deviceId = "wb_" + UUID.randomUUID().toString()

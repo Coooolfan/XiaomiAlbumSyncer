@@ -30,13 +30,13 @@ class VerificationStageTest {
     private val content = "original photo".toByteArray()
     private val digest = MessageDigest.getInstance("SHA-1").digest(content)
     private val checksums = listOf(
-        CloudProvider.ICLOUD to Base64.getEncoder().encodeToString(digest),
-        CloudProvider.ICLOUD to Base64.getEncoder().encodeToString(byteArrayOf(1) + digest),
+        Base64.getEncoder().encodeToString(digest),
+        Base64.getEncoder().encodeToString(byteArrayOf(1) + digest),
     )
 
     @Test fun corruptionClearsDownloadStateAndRemovesFile() {
-        checksums.forEach { (provider, checksum) ->
-            withDetail(provider, checksum) { sql, stage, detail ->
+        checksums.forEach { checksum ->
+            withDetail(CloudProvider.ICLOUD, checksum) { sql, stage, detail ->
                 Files.writeString(Path.of(detail.filePath), "corrupted")
                 assertThrows(IllegalStateException::class.java) { stage.process(detail) }
                 val stored = sql.findById(CrontabHistoryDetail::class, detail.id)!!
@@ -48,8 +48,8 @@ class VerificationStageTest {
     }
 
     @Test fun validContentKeepsDownloadAndMarksVerified() {
-        checksums.forEach { (provider, checksum) ->
-            withDetail(provider, checksum) { sql, stage, detail ->
+        checksums.forEach { checksum ->
+            withDetail(CloudProvider.ICLOUD, checksum) { sql, stage, detail ->
                 val result = stage.process(detail)
                 val stored = sql.findById(CrontabHistoryDetail::class, detail.id)!!
                 assertTrue(result.sha1Verified)
@@ -74,7 +74,7 @@ class VerificationStageTest {
     }
 
     @Test fun unreadableFileDoesNotResetDownloadState() {
-        withDetail(checksums.first().first, checksums.first().second) { sql, stage, detail ->
+        withDetail(CloudProvider.ICLOUD, checksums.first()) { sql, stage, detail ->
             Files.delete(Path.of(detail.filePath))
             assertThrows(java.nio.file.NoSuchFileException::class.java) { stage.process(detail) }
             assertTrue(sql.findById(CrontabHistoryDetail::class, detail.id)!!.downloadCompleted)
@@ -82,7 +82,7 @@ class VerificationStageTest {
     }
 
     @Test fun fileIsRemovedEvenWhenStateUpdateFails() {
-        withDetail(checksums.first().first, checksums.first().second) { sql, stage, detail ->
+        withDetail(CloudProvider.ICLOUD, checksums.first()) { sql, stage, detail ->
             sql.javaClient.connectionManager.execute { connection ->
                 connection.createStatement().use {
                     it.execute("CREATE TRIGGER fail_reset BEFORE UPDATE ON crontab_history_detail BEGIN SELECT RAISE(ABORT, 'reset failed'); END")

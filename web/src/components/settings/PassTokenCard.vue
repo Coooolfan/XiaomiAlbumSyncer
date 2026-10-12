@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
+import ProviderTag from '@/components/ProviderTag.vue'
 import Textarea from 'primevue/textarea'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
@@ -340,16 +341,7 @@ function confirmDelete(account: Account) {
       <Column field="userId" :header="t('tokens.account.userId')"></Column>
       <Column :header="t('tokens.account.provider')">
         <template #body="{ data }">
-          <Tag
-            :value="
-              t(
-                data.provider === 'ICLOUD'
-                  ? 'tokens.account.providerIcloud'
-                  : 'tokens.account.providerXiaomi',
-              )
-            "
-            severity="info"
-          />
+          <ProviderTag :provider="data.provider" full-name />
         </template>
       </Column>
       <Column :header="t('tokens.icloud.status')">
@@ -386,7 +378,7 @@ function confirmDelete(account: Account) {
 
   <!-- 添加/编辑 弹窗 -->
   <Dialog v-model:visible="showDialog" modal :header="dialogHeader" class="w-full sm:w-[480px]">
-    <div class="overflow-x-hidden">
+    <div class="-mx-1 overflow-x-hidden px-1">
       <Transition :name="slideDir" mode="out-in">
         <!-- 渠道选择 -->
         <div v-if="dialogStep === 'provider'" key="provider" class="flex flex-col gap-3 pt-2">
@@ -488,9 +480,9 @@ function confirmDelete(account: Account) {
               />
             </div>
             <div class="flex-1">
-              <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1"
-                >{{ t('tokens.account.nickname') }} ({{ t('common.field.optional') }})</label
-              >
+              <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">{{
+                t('tokens.account.nickname')
+              }}</label>
               <InputText
                 v-model="form.nickname"
                 :placeholder="t('tokens.account.nicknamePlaceholder')"

@@ -44,9 +44,41 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
                 marker = page.get("continuationMarker")?.takeUnless { it.isNull }
                 if (marker != null) require(seenMarkers.add(marker.toString())) { "iCloud 相册分页没有推进" }
             } while (marker != null)
-            result
+            fetchAlbumCounts(result, client)
         }
     }
+
+    fun fetchAlbumCounts(albums: List<Album>): List<Album> {
+        if (albums.isEmpty()) return emptyList()
+        require(albums.all { it.accountId == albums.first().accountId })
+        return accounts.withClient(albums.first().accountId) { fetchAlbumCounts(albums, it) }
+    }
+
+    internal fun fetchAlbumCounts(albums: List<Album>, client: ICloudClient): List<Album> =
+        albums.groupBy { ICloudAlbumKey.decode(it.remoteKey).zone }.flatMap { (zone, selected) ->
+            selected.chunked(200).flatMap { batch ->
+                val queries = batch.map { entry ->
+                    mapOf("resultsLimit" to 1, "zoneWide" to true, "zoneID" to zoneId(zone),
+                        "query" to mapOf("recordType" to "HyperionIndexCountLookup", "filterBy" to mapOf(
+                            "fieldName" to "indexCountID", "comparator" to "IN", "fieldValue" to mapOf(
+                                "type" to "STRING_LIST", "value" to listOf(ICloudAlbumKey.decode(entry.remoteKey).countIndex())))))
+                }
+                val counts = client.cloud("internal/records/query/batch", mapOf("batch" to queries)).path("batch")
+                require(counts.isArray && counts.size() == batch.size) { "iCloud 相册计数响应不完整" }
+                batch.mapIndexed { index, entry ->
+                    val response = counts[index]
+                    val records = response.path("records")
+                    val count = field(records.path(0), "itemCount")
+                    Album(entry) {
+                        assetCount = count.takeIf {
+                            response.path("serverErrorCode").asText().isBlank() && records.isArray && records.size() == 1 &&
+                                records[0].path("serverErrorCode").asText().isBlank() &&
+                                it.isIntegralNumber && it.canConvertToLong() && it.asLong() >= 0
+                        }?.asLong()
+                    }
+                }
+            }
+        }
 
     fun fetchAssets(album: Album, handler: (List<Asset>) -> Unit): Long = accounts.withClient(album.accountId) { fetchAssets(album, it, handler) }
 

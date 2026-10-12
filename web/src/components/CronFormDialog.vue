@@ -14,10 +14,11 @@ import Panel from 'primevue/panel'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import Tag from 'primevue/tag'
+import ProviderTag from '@/components/ProviderTag.vue'
 import ExpressionPathHelp from '@/components/ExpressionPathHelp.vue'
 import OptionCard from '@/components/OptionCard.vue'
 import CronHelp from '@/components/CronHelp.vue'
-import type { CrontabSyncMode } from '@/__generated/model/enums'
+import type { CloudProvider, CrontabSyncMode } from '@/__generated/model/enums'
 import type { LocalCronForm } from '@/utils/crontabForm'
 
 const props = defineProps<{
@@ -27,7 +28,7 @@ const props = defineProps<{
   form: LocalCronForm
   formErrors: Record<string, string>
   timeZones: ReadonlyArray<string>
-  accountOptions: ReadonlyArray<{ label: string; value: number; provider?: string }>
+  accountOptions: ReadonlyArray<{ label: string; value: number; provider?: CloudProvider }>
   formAlbumOptions: ReadonlyArray<{ label: string; value: number; recording?: boolean }>
   targetPathMountWarning: boolean
   validateCronForm: (fields?: readonly string[]) => boolean
@@ -48,6 +49,9 @@ const visibleProxy = computed({
 const form = toRef(props, 'form')
 const formErrors = toRef(props, 'formErrors')
 const accountOptions = computed(() => [...props.accountOptions])
+const selectedAccount = computed(() =>
+  accountOptions.value.find((account) => account.value === form.value.accountId),
+)
 const formAlbumOptions = computed(() => [...props.formAlbumOptions])
 const timeZones = computed(() => [...props.timeZones])
 
@@ -69,13 +73,14 @@ const hasRecordingAlbum = computed(() =>
   form.value.albumIds.some((id) => formAlbumOptions.value.find((o) => o.value === id)?.recording),
 )
 
-const isICloud = computed(
-  () => accountOptions.value.find((a) => a.value === form.value.accountId)?.provider === 'ICLOUD',
-)
+const isICloud = computed(() => selectedAccount.value?.provider === 'ICLOUD')
 watch(
-  isICloud,
-  (value) => {
+  [isICloud, () => form.value.config.checkSha1],
+  ([value]) => {
     if (value && form.value.syncMode === 'TIMELINE') form.value.syncMode = 'CURSOR'
+    if (!value && form.value.config.checkSha1) {
+      form.value.config = { ...form.value.config, checkSha1: false }
+    }
   },
   { immediate: true },
 )
@@ -255,7 +260,21 @@ watch(
                 :placeholder="t('cronform.field.accountPlaceholder')"
                 class="w-full"
                 :disabled="props.isEditing"
-              />
+              >
+                <template #value="slotProps">
+                  <div v-if="selectedAccount" class="flex min-w-0 items-center gap-2">
+                    <span class="truncate">{{ selectedAccount.label }}</span>
+                    <ProviderTag :provider="selectedAccount.provider" class="shrink-0 text-xs" />
+                  </div>
+                  <span v-else>{{ slotProps.placeholder }}</span>
+                </template>
+                <template #option="{ option }">
+                  <div class="flex min-w-0 items-center gap-2">
+                    <span class="truncate">{{ option.label }}</span>
+                    <ProviderTag :provider="option.provider" class="shrink-0 text-xs" />
+                  </div>
+                </template>
+              </Select>
               <div v-if="formErrors.accountId" class="text-[13px] text-red-600">
                 {{ formErrors.accountId }}
               </div>
@@ -493,7 +512,7 @@ watch(
                     {{ t('cronform.advanced.rewriteFileSystemTimeHint') }}
                   </div>
                 </div>
-                <div class="space-y-1">
+                <div v-if="isICloud" class="space-y-1">
                   <div
                     class="flex items-center gap-2 text-[13px] text-slate-600 dark:text-slate-300"
                   >
@@ -501,8 +520,7 @@ watch(
                     <span>{{ t('cronform.advanced.checkSha1') }}</span>
                   </div>
                   <div class="text-[13px] text-slate-500 dark:text-slate-400">
-                    {{ t('cronform.advanced.checkSha1Hint')
-                    }}<span class="font-bold">{{ t('cronform.advanced.checkSha1Warning') }}</span>
+                    {{ t('cronform.advanced.checkSha1Hint') }}
                   </div>
                 </div>
               </div>

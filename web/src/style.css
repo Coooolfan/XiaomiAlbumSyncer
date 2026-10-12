@@ -11,6 +11,16 @@ html.dark {
   color-scheme: dark;
 }
 
+.provider-apple {
+  --p-tag-secondary-background: light-dark(#e2e8f0, #334155);
+  --p-tag-secondary-color: light-dark(#334155, #e2e8f0);
+}
+
+.provider-xiaomi {
+  --p-tag-secondary-background: light-dark(#ffedd5, #431407);
+  --p-tag-secondary-color: light-dark(#c2410c, #fdba74);
+}
+
 html,
 body,
 #app {

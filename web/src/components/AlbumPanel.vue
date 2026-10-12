@@ -3,6 +3,7 @@ import { onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
 import Menu from 'primevue/menu'
+import ProviderTag from '@/components/ProviderTag.vue'
 import AlbumCard from '@/components/AlbumCard.vue'
 import { useToast } from 'primevue/usetoast'
 import { ref } from 'vue'
@@ -138,6 +139,10 @@ onMounted(() => {
           >
             <i class="pi pi-user text-[13px]" />
             <span class="truncate">{{ group.account.nickname }}</span>
+            <ProviderTag
+              :provider="group.account.provider"
+              class="shrink-0 leading-none [--p-tag-font-size:12px] [--p-tag-font-weight:500] [--p-tag-padding:3px_6px]"
+            />
             <span class="text-slate-300 dark:text-slate-600">·</span>
             <span>{{
               t('album.panel.albumCount', { n: group.albums.length }, group.albums.length)

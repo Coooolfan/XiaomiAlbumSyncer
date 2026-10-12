@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
+import com.coooolfan.xiaomialbumsyncer.model.dto.xiaomiCredentialsMapper
 import com.coooolfan.xiaomialbumsyncer.controller.ProviderAccountController.Companion.DEFAULT_PROVIDER_ACCOUNT
 import com.coooolfan.xiaomialbumsyncer.model.ProviderAccount
 import com.coooolfan.xiaomialbumsyncer.model.userId
@@ -43,7 +44,7 @@ class ProviderAccountService(
         }.firstOrNull()
 
         if (existing != null) {
-            return update(ProviderAccount(existing) { credentials = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().writeValueAsString(mapOf("passToken" to passToken)) }, DEFAULT_PROVIDER_ACCOUNT)
+            return update(ProviderAccount(existing) { credentials = xiaomiCredentialsMapper.writeValueAsString(mapOf("passToken" to passToken)) }, DEFAULT_PROVIDER_ACCOUNT)
         }
 
         return create(XiaomiAccountInput(nickname = userId, passToken = passToken, userId = userId))

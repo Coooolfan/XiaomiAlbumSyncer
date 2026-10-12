@@ -70,6 +70,73 @@ class ICloudChangesTest {
         }
     }
 
+    @Test fun queriesOnlySelectedAlbumCountsAndKeepsLibrariesSeparate() {
+        val requests = mutableListOf<Pair<String, List<String>>>()
+        withServer({ path, body ->
+            assertEquals("batch", path)
+            val queries = body.path("batch")
+            val zones = queries.map { it.at("/zoneID/zoneName").asText() }.toSet()
+            assertEquals(1, zones.size)
+            val zone = zones.single()
+            requests += zone to queries.map { it.at("/query/filterBy/fieldValue/value/0").asText() }
+            mapOf("batch" to queries.mapIndexed { index, _ -> mapOf("records" to listOf(
+                record("Count", "count", mapOf("itemCount" to if (zone == "PrimarySync") index else 42)))) })
+        }) { photos, client ->
+            assertTrue(photos.fetchAlbumCounts(emptyList(), client).isEmpty())
+            val shared = Album(album(3, "__all__")) {
+                remoteKey = ICloudAlbumKey("SharedSync-example", "__all__").encode()
+            }
+            val selected = listOf(album(1, "__screenshots__"), shared, album(2, "custom-album"))
+            val counts = photos.fetchAlbumCounts(selected, client).associate { it.id to it.assetCount }
+            assertEquals(mapOf(1L to 0L, 2L to 1L, 3L to 42L), counts)
+            assertEquals(listOf(
+                "PrimarySync" to listOf("CPLAssetInSmartAlbumByAssetDate:Screenshot", "CPLContainerRelationNotDeletedByAssetDate:custom-album"),
+                "SharedSync-example" to listOf("CPLAssetByAssetDateWithoutHiddenOrDeleted"),
+            ), requests)
+        }
+    }
+
+    @Test fun albumCountsKeepUnavailableValuesUnknownAndRejectIncompleteBatches() {
+        val valid = mapOf("records" to listOf(record("Count", "count", mapOf("itemCount" to 0))))
+        val invalid = listOf(
+            mapOf("records" to emptyList<Any>()),
+            mapOf("records" to listOf(record("Count", "count", mapOf("itemCount" to -1)))),
+            mapOf("records" to listOf(record("Count", "count", mapOf("itemCount" to "12")))),
+            mapOf("records" to listOf(record("Count", "count"))),
+            valid + ("serverErrorCode" to "UNKNOWN_ITEM"),
+            mapOf("records" to listOf(mapOf("serverErrorCode" to "NOT_FOUND",
+                "fields" to mapOf("itemCount" to mapOf("value" to 12))))),
+        )
+        for (bad in invalid) {
+            withServer({ path, body ->
+                when (path) {
+                    "list" -> mapOf("zones" to listOf(mapOf("zoneID" to mapOf("zoneName" to "PrimarySync"))))
+                    "query" -> if (body.at("/query/recordType").asText() == "CheckIndexingState")
+                        mapOf("records" to listOf(record("Index", "index", mapOf("state" to "FINISHED"))))
+                    else mapOf("records" to emptyList<Any>())
+                    "batch" -> mapOf("batch" to listOf(bad, valid, valid, valid, valid))
+                    else -> error("Unexpected request")
+                }
+            }) { photos, client ->
+                val albums = photos.fetchAlbums(1, client)
+                assertNull(albums.first().assetCount)
+                assertTrue(albums.drop(1).all { it.assetCount == 0L })
+            }
+        }
+        withServer({ path, body ->
+            when (path) {
+                "list" -> mapOf("zones" to listOf(mapOf("zoneID" to mapOf("zoneName" to "PrimarySync"))))
+                "query" -> if (body.at("/query/recordType").asText() == "CheckIndexingState")
+                    mapOf("records" to listOf(record("Index", "index", mapOf("state" to "FINISHED"))))
+                else mapOf("records" to emptyList<Any>())
+                "batch" -> mapOf("batch" to listOf(valid))
+                else -> error("Unexpected request")
+            }
+        }) { photos, client ->
+            assertThrows(IllegalArgumentException::class.java) { photos.fetchAlbums(1, client) }
+        }
+    }
+
     @Test fun lookupFiltersUnavailableRecordsAndRejectsIncompleteOrFailedResponses() {
         withServer({ _, _ -> mapOf("records" to listOf(
             mapOf("recordName" to "live"), mapOf("recordName" to "deleted", "deleted" to true),
