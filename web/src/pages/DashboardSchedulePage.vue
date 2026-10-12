@@ -35,7 +35,7 @@ type CrontabHistoryDetail =
 
 const { accounts } = storeToRefs(accountsStore)
 const { albums, loaded: albumsLoaded } = storeToRefs(albumsStore)
-const { crontabs, loading: loadingCrons } = storeToRefs(crontabsStore)
+const { crontabs, loading: loadingCrons, loaded: cronsLoaded } = storeToRefs(crontabsStore)
 const { optimizeHeatmap } = storeToRefs(preferencesStore)
 
 const toast = useToast()
@@ -335,7 +335,7 @@ watch(showHistoryDetailsDialog, (visible) => {
       </div>
       <CrontabList
         :crontabs="crontabs"
-        :loading="loadingCrons"
+        :loading="loadingCrons && !cronsLoaded"
         :album-options="allAlbumOptions"
         :updating-row="updatingRow"
         @refresh="fetchCrontabs"
