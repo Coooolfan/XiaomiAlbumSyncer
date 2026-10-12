@@ -10,6 +10,7 @@ interface Album {
     val id: Long
 
     /** 远端相册定位；来源由所属账号决定。 */
+    @Key
     val remoteKey: String
 
     val name: String
@@ -23,6 +24,7 @@ interface Album {
     val shadow: Boolean
 
     @ManyToOne
+    @Key
     @OnDissociate(DissociateAction.DELETE)
     val account: ProviderAccount    // 所属云服务账号
 
