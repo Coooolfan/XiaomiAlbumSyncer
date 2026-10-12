@@ -293,8 +293,7 @@ export default {
       updatingDetail: '请暂时不要离开此页面，同步正在进行',
       updated: '已更新',
       updateFailed: '更新失败',
-      updateFailedDetail:
-        '请确保您已配置有效的 passToken 与 UserId。\n并确保已完成相册服务的二次验证',
+      updateFailedDetail: '请在同步账号设置中检查认证状态，并确认已允许访问云端相册。',
     },
   },
   heatmap: {
@@ -323,7 +322,7 @@ export default {
       defaultName: '每日同步',
       namePlaceholder: '例如：每日同步',
       account: '归属账号',
-      accountPlaceholder: '选择小米账号',
+      accountPlaceholder: '选择同步账号',
       accountLockedHint: '计划任务创建后无法更改归属账号',
       expression: 'Cron 表达式',
       expressionHint: '支持标准 6/7 字段 Cron 表达式',
@@ -366,16 +365,15 @@ export default {
       syncModeCursorHint:
         '从上次同步位点读取变化记录，支持断点续拉；首次同步或位点失效时自动建立全量基线。',
       rewriteExifTime: '填充 EXIF 时间',
-      rewriteExifTimeHint:
-        '将资产在小米云服务的时间写入 EXIF 时间，仅在资产不存在 EXIF 时间时生效。',
+      rewriteExifTimeHint: '将云端记录的资产时间写入 EXIF，仅在文件缺少 EXIF 时间时生效。',
       skipExistingFile: '跳过已存在文件',
       skipExistingFileHint:
         '若资产的目标文件路径已存在，将跳过下载。仅适用于保存路径中已有存量数据。',
       rewriteFileSystemTime: '重写文件时间',
-      rewriteFileSystemTimeHint: '同步完成后，将资产的文件系统时间修改为对应的小米云服务上的时间。',
-      checkSha1: '校验 SHA1',
-      checkSha1Hint: '比对文件 SHA1，校验失败会终止对应资产后续处理。',
-      checkSha1Warning: '有BUG，别开。对已存在的文件无效。',
+      rewriteFileSystemTimeHint: '将文件系统时间修改为云端记录的资产时间。',
+      checkSha1: '校验文件',
+      checkSha1Hint:
+        '比对文件下载后的校验值，校验失败会终止对应资产后续处理，并在下一轮任务中重新处理',
       exifTimeZone: 'EXIF 时区',
       exifTimeZoneHint: '用于写入 EXIF 的时区；仅在开启“填充 EXIF 时间”后生效。',
     },
@@ -657,15 +655,12 @@ export default {
       region: '账号区域',
       global: '国际区 (icloud.com)',
       china: '中国大陆 (icloud.com.cn)',
-      requirements:
-        '请开启「在网页上访问 iCloud 数据」并关闭「高级数据保护」。支持照片、视频、Live Photo 原件和 RAW+JPEG；云端删除不会删除本地文件。',
       code: '验证码',
       codeHint: '请输入受信任 Apple 设备上显示的六位验证码。关闭弹窗后可通过账号编辑入口继续验证。',
       verify: '验证并连接',
       restart: '重新登录',
       login: '登录 iCloud',
-      renewHint:
-        '密码和会话保存在服务端数据库中。Apple 要求重新认证时，请通过账号编辑入口登录或输入验证码。',
+      loginHint: '请在 iCloud 设置中开启「在网页上访问 iCloud 数据」，并关闭「高级数据保护」。',
       connected: 'iCloud 认证成功，可刷新相册并创建同步任务',
     },
     table: {

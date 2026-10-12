@@ -10,8 +10,9 @@ internal fun ICloudPhotos.fetchIncremental(
     albums: List<Album>, client: ICloudClient, cursor: String?,
     handler: (List<Asset>) -> Unit, commitCursor: (String) -> Unit,
 ) {
-    val zone = ICloudAlbumKey.decode(albums.first().remoteKey).zone
-    require(albums.all { it.accountId == albums.first().accountId && ICloudAlbumKey.decode(it.remoteKey).zone == zone })
+    val albumKeys = albums.associate { it.id to ICloudAlbumKey.decode(it.remoteKey) }
+    val zone = albumKeys.getValue(albums.first().id).zone
+    require(albums.all { it.accountId == albums.first().accountId && albumKeys.getValue(it.id).zone == zone })
     fun establishBaseline(): String {
         // 在全量枚举之前取水位，再回放枚举期间的变更，防止漏掉同时上传的资产。
         val token = client.cloud("records/query", mapOf(
@@ -26,11 +27,11 @@ internal fun ICloudPhotos.fetchIncremental(
         return token
     }
     try {
-        readChanges(albums, client, cursor?.takeIf { it.isNotBlank() } ?: establishBaseline(), handler, commitCursor)
+        readChanges(albums, albumKeys, client, cursor?.takeIf { it.isNotBlank() } ?: establishBaseline(), handler, commitCursor)
     } catch (e: InvalidICloudCursor) {
         if (cursor.isNullOrBlank()) throw e
         LoggerFactory.getLogger(ICloudPhotos::class.java).warn("iCloud 图库 {} 位点失效，重新建立全量基线", zone)
-        readChanges(albums, client, establishBaseline(), handler, commitCursor)
+        readChanges(albums, albumKeys, client, establishBaseline(), handler, commitCursor)
     }
 }
 
@@ -38,10 +39,9 @@ private class InvalidICloudCursor : RuntimeException("iCloud 同步位点失效"
 private val expiredCursorCodes = setOf("CHANGE_TOKEN_EXPIRED", "SYNC_TOKEN_EXPIRED", "INVALID_SYNC_TOKEN", "ZONE_NOT_FOUND")
 
 private fun ICloudPhotos.readChanges(
-    albums: List<Album>, client: ICloudClient, initial: String,
+    albums: List<Album>, albumKeys: Map<Long, ICloudAlbumKey>, client: ICloudClient, initial: String,
     handler: (List<Asset>) -> Unit, commitCursor: (String) -> Unit,
 ) {
-    val albumKeys = albums.associate { it.id to ICloudAlbumKey.decode(it.remoteKey) }
     val zone = albumKeys.getValue(albums.first().id).zone
     val userAlbums = albums.filter { !albumKeys.getValue(it.id).albumId.startsWith("__") }
     val selectedContainers = userAlbums.map { albumKeys.getValue(it.id).albumId }.toSet()

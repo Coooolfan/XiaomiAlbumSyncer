@@ -279,7 +279,6 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
                 val recordingName = parseXiaomiRecordingName(name)
                 Asset {
                     remoteKey = jsonNode.get("id").asLong().toString()
-                    recordingType = null
                     this.fileName = recordingName.fileName
                     this.type = AssetType.AUDIO
                     this.recordingType = recordingName.recordingType

@@ -136,7 +136,7 @@ const messages: typeof zh = {
   },
   schedule: {
     title: 'Scheduled Tasks',
-    subtitle: 'Manage and schedule Xiaomi Cloud album sync tasks',
+    subtitle: 'Manage and schedule cloud album sync tasks',
     taskList: 'Tasks',
     albums: 'Albums',
     newTask: 'New Task',
@@ -297,7 +297,7 @@ const messages: typeof zh = {
       updated: 'Updated',
       updateFailed: 'Update failed',
       updateFailedDetail:
-        'Make sure you have a valid passToken and UserId,\nand that album service verification is complete.',
+        'Check the authentication status in Sync Accounts and confirm that access to cloud albums is allowed.',
     },
   },
   heatmap: {
@@ -326,7 +326,7 @@ const messages: typeof zh = {
       defaultName: 'Daily Sync',
       namePlaceholder: 'e.g. Daily sync',
       account: 'Account',
-      accountPlaceholder: 'Select a Xiaomi account',
+      accountPlaceholder: 'Select a sync account',
       accountLockedHint: 'The account cannot be changed once the task is created',
       expression: 'Cron expression',
       expressionHint: 'Supports standard 6/7-field cron expressions',
@@ -371,17 +371,16 @@ const messages: typeof zh = {
         'Read changes from the previous sync cursor with resume support. The first sync or an invalid cursor builds a full baseline.',
       rewriteExifTime: 'Fill EXIF time',
       rewriteExifTimeHint:
-        "Writes the asset's Xiaomi Cloud time into EXIF, only when the asset has no EXIF time.",
+        'Writes the asset time recorded in the cloud into EXIF, only when the file has no EXIF time.',
       skipExistingFile: 'Skip existing files',
       skipExistingFileHint:
         'Skips the download if the target file already exists. Only applies when the save path already contains data.',
       rewriteFileSystemTime: 'Rewrite file time',
       rewriteFileSystemTimeHint:
-        "After syncing, sets the file system time to the asset's time on Xiaomi Cloud.",
-      checkSha1: 'Verify SHA1',
+        'Sets the file system time to the asset time recorded in the cloud.',
+      checkSha1: 'Verify files',
       checkSha1Hint:
-        'Compares the file SHA1; a failed check stops further processing of that asset.',
-      checkSha1Warning: 'Buggy — leave it off. Does not apply to existing files.',
+        'Compares the checksum after downloading. If verification fails, further processing of the asset stops and it is retried in the next task run.',
       exifTimeZone: 'EXIF time zone',
       exifTimeZoneHint:
         'Time zone used when writing EXIF; only applies when "Fill EXIF time" is enabled.',
@@ -678,16 +677,14 @@ const messages: typeof zh = {
       region: 'Account region',
       global: 'Global (icloud.com)',
       china: 'China mainland (icloud.com.cn)',
-      requirements:
-        'Enable Access iCloud Data on the Web and turn off Advanced Data Protection. Photos, videos, Live Photo originals and RAW+JPEG are supported. Cloud deletions preserve local files.',
       code: 'Verification code',
       codeHint:
         'Enter the six-digit code shown on your trusted Apple device. You can resume verification by editing the account after closing this dialog.',
       verify: 'Verify and connect',
       restart: 'Sign in again',
       login: 'Sign in to iCloud',
-      renewHint:
-        'Your password and session are stored in the server database. When Apple requires authentication again, edit this account to sign in or enter a verification code.',
+      loginHint:
+        'Enable Access iCloud Data on the Web and turn off Advanced Data Protection in your iCloud settings.',
       connected: 'iCloud authenticated. Refresh albums to create a sync task',
     },
     table: {

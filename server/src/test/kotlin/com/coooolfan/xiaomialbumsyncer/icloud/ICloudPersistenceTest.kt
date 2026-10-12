@@ -151,6 +151,23 @@ class ICloudPersistenceTest {
                         "webservices" to mapOf("ckdatabasews" to mapOf("url" to "http://127.0.0.1:${server.address.port}")))
                 } else if (exchange.requestURI.path.endsWith("/zones/list")) {
                     mapOf("zones" to listOf("PrimarySync", "SharedSync-example").map { mapOf("zoneID" to mapOf("zoneName" to it)) })
+                } else if (exchange.requestURI.path.endsWith("/internal/records/query/batch")) {
+                    val expected = listOf("CPLAssetByAssetDateWithoutHiddenOrDeleted", "CPLAssetHiddenByAssetDate",
+                        "CPLAssetInSmartAlbumByAssetDate:Favorite", "CPLAssetInSmartAlbumByAssetDate:Screenshot",
+                        "CPLAssetBurstStackAssetByAssetDate", "CPLContainerRelationNotDeletedByAssetDate:album")
+                    val queries = body.path("batch")
+                    assertEquals(expected, queries.map { it.at("/query/filterBy/fieldValue/value/0").asText() })
+                    assertEquals(1, queries.map { it.at("/zoneID/zoneName").asText() }.toSet().size)
+                    assertTrue(queries.all {
+                        it.path("zoneWide").asBoolean() && it.path("resultsLimit").asInt() == 1 &&
+                            it.at("/query/recordType").asText() == "HyperionIndexCountLookup" &&
+                            it.at("/query/filterBy/fieldName").asText() == "indexCountID" &&
+                            it.at("/query/filterBy/comparator").asText() == "IN" &&
+                            it.at("/query/filterBy/fieldValue/type").asText() == "STRING_LIST"
+                    })
+                    val offset = if (queries[0].at("/zoneID/zoneName").asText() == "PrimarySync") 0 else 10
+                    mapOf("batch" to queries.mapIndexed { i, _ -> mapOf("records" to listOf(
+                        mapOf("fields" to mapOf("itemCount" to mapOf("value" to i + offset)))) ) })
                 } else if (body.at("/query/recordType").asText() == "CPLAlbumByPositionLive") {
                     mapper.readTree("""{"records":[{"recordType":"CPLAlbum","recordName":"album","fields":{"albumNameEnc":{"value":"UGhvdG9z"}}}]}""")
                 } else if (body.path("records").isArray) {
@@ -200,7 +217,8 @@ class ICloudPersistenceTest {
                 assertEquals(2, files.map { it.remoteKey }.toSet().size)
                 val remoteAlbums = photos.fetchAlbums(account.id, client)
                 assertEquals(12, remoteAlbums.size)
-                assertTrue(remoteAlbums.all { it.assetCount == null && it.lastUpdateTime == null })
+                assertEquals((0L..5L).toList() + (10L..15L).toList(), remoteAlbums.map { it.assetCount })
+                assertTrue(remoteAlbums.all { it.lastUpdateTime == null })
                 assertEquals(12, remoteAlbums.map { it.remoteKey }.toSet().size)
                 for (name in listOf("__all__", "__hidden__", "__favorites__", "__screenshots__", "__bursts__", "album")) {
                     assetQueries.clear()

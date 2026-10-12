@@ -15,7 +15,7 @@ const accounts = useAccountsStore()
 const appleId = ref(props.appleId ?? '')
 const nickname = ref(props.nickname ?? '')
 const password = ref('')
-const domain = ref('com')
+const domain = ref('cn')
 const code = ref('')
 const accountId = ref(props.accountId)
 const state = ref('LOGIN')
@@ -68,7 +68,6 @@ async function submit() {
 
 <template>
   <form class="flex flex-col gap-4 pt-2" @submit.prevent="submit">
-    <Message severity="info" :closable="false">{{ t('tokens.icloud.requirements') }}</Message>
     <Message v-if="error" severity="error" :closable="false">{{ error }}</Message>
     <template v-if="state === 'MFA_REQUIRED'">
       <p class="text-sm">{{ t('tokens.icloud.codeHint') }}</p>
@@ -120,7 +119,7 @@ async function submit() {
         option-value="value"
         :disabled="busy"
       />
-      <p class="text-sm text-slate-500">{{ t('tokens.icloud.renewHint') }}</p>
+      <p class="text-sm text-slate-500">{{ t('tokens.icloud.loginHint') }}</p>
       <Button type="submit" :label="t('tokens.icloud.login')" :loading="busy" />
     </template>
   </form>

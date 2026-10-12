@@ -170,7 +170,7 @@ XAS 创建以下本地虚拟相册；`__all__` 等是 XAS 自己的标识，不�
 | 连拍 | `__bursts__` | `CPLBurstStackAssetAndMasterByAssetDate` | 无；使用连拍专用索引 |
 | 用户相册 | 实际相册 recordName | `CPLContainerRelationLiveByAssetDate` | `parentId=<相册标识>` |
 
-上游还使用 `VIDEO`、`LIVE`、`PANORAMA`、`SLOMO`、`TIMELAPSE` 等 smartAlbum 条件；最近删除使用 `CPLAssetAndMasterDeletedByExpungedDate`。XAS 当前未暴露这些集合。照片总数可通过上游的 `internal/records/query/batch` + `HyperionIndexCountLookup` 查询 `itemCount`，XAS 当前未调用；未取得远端数量时 `assetCount=null`，不代表远端空相册。[icloudpd 查询实现](https://github.com/icloud-photos-downloader/icloud_photos_downloader/blob/master/src/pyicloud_ipd/services/photos.py)
+上游还使用 `VIDEO`、`LIVE`、`PANORAMA`、`SLOMO`、`TIMELAPSE` 等 smartAlbum 条件；最近删除使用 `CPLAssetAndMasterDeletedByExpungedDate`。XAS 当前未暴露这些集合。刷新相册列表，以及全量或位点增量任务开始刷新资产元数据时，XAS 按图库通过 `internal/records/query/batch` + `HyperionIndexCountLookup` 批量查询远端 `itemCount`。条件 `indexCountID` 使用相应计数索引：所有照片为 `CPLAssetByAssetDateWithoutHiddenOrDeleted`，隐藏为 `CPLAssetHiddenByAssetDate`，收藏/截图为 `CPLAssetInSmartAlbumByAssetDate:Favorite` / `:Screenshot`，连拍为 `CPLAssetBurstStackAssetByAssetDate`，普通相册为 `CPLContainerRelationNotDeletedByAssetDate:<相册ID>`。有效的零计数保存为 0；缺失、错误或无效计数保存为 null，不代表远端空相册。任务只更新所选相册的计数；即使增量没有资产变化也会查询。批次响应不完整或请求失败时，本次相册或任务刷新失败。[icloudpd 查询实现](https://github.com/icloud-photos-downloader/icloud_photos_downloader/blob/master/src/pyicloud_ipd/services/photos.py)
 
 截图与连拍的全量查询沿用 `startRank` + `direction=ASCENDING` 分页，处理返回的 `CPLAsset` / `CPLMaster` 原件记录，不按本地资源文件数推进 rank。连拍按服务端堆栈索引返回的资产备份，不额外展开整个连拍序列。
 
@@ -260,7 +260,7 @@ iCloud 支持全量和位点增量模式，不支持时间线比较。全量模�
 | 本地字段 | 来源/含义 |
 | --- | --- |
 | `Album.remoteKey` | iCloud 为固定字段顺序的 JSON：zone、albumId；小米为远端相册 ID 字符串，录音集合为 -1 |
-| `Album.assetCount` | 远端相册成员数量，iCloud 当前未读取，保存 null；不使用本地备份文件数代替 |
+| `Album.assetCount` | 远端相册成员数量；iCloud 从计数索引读取，未取得有效计数时为 null，不使用本地备份文件数代替 |
 | `Album.lastUpdateTime` | 远端相册修改时间，iCloud 当前未读取，保存 null |
 | `Asset.remoteKey` | iCloud 为固定字段顺序的 JSON：assetId、resource；小米为远端数字 ID 的字符串 |
 | `Asset.checksum` | 原样保存 CloudKit 的 Base64 `fileChecksum`；小米来源保存其十六进制 SHA-1 |
@@ -272,4 +272,4 @@ iCloud 支持全量和位点增量模式，不支持时间线比较。全量模�
 
 认证入口为 `ICloudController` → `ICloudAccountService` → [ICloudClient](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudClient.kt)；相册和资产解析由 [ICloudPhotos](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudPhotos.kt)、[ICloudChanges](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudChanges.kt) 负责。`CloudMediaService` 分派来源，`AssetService` 持久化元数据与位点，`DownloadStage`、`VerificationStage` 执行下载和校验。协议来源与许可证见 [第三方声明](THIRD_PARTY_NOTICES.md)。
 
-自动化测试覆盖 SRP 与 pysrp 固定向量互操作、双重认证、会话恢复、区域端点、Live Photo / RAW+JPEG 资源映射、相册成员隔离、截图与连拍分类、变更分页与失效位点恢复、落库失败不推进位点、文件校验及数据库升级。协议测试使用本地模拟服务，不覆盖真实 Apple 账号的权限和私有接口兼容性。
+自动化测试覆盖 SRP 与 pysrp 固定向量互操作、双重认证、会话恢复、区域端点、Live Photo / RAW+JPEG 资源映射、相册成员隔离、普通相册及系统集合的远端计数、截图与连拍分类、变更分页与失效位点恢复、落库失败不推进位点、文件校验及数据库升级。协议测试使用本地模拟服务，不覆盖真实 Apple 账号的权限和私有接口兼容性。
