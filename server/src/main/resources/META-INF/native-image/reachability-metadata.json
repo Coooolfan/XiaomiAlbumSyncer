@@ -1415,6 +1415,9 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.config.flyway.AlbumDeduplicationCallback"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.config.flyway.DatabaseMigration",
       "allDeclaredFields": true,
       "methods": [

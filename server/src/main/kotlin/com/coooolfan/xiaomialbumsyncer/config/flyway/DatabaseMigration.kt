@@ -23,6 +23,7 @@ class DatabaseMigration {
             .locations(MIGRATION_SQL_PATH_IN_JVM)
             .baselineOnMigrate(true)
             .validateOnMigrate(true)
+            .callbacks(AlbumDeduplicationCallback())
 
         val flyway =
             if (inNativeImage() || isAotRuntime()) {
