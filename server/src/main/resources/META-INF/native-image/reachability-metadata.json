@@ -6436,6 +6436,9 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountInputsKt"
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline",
       "allDeclaredFields": true,
       "methods": [
