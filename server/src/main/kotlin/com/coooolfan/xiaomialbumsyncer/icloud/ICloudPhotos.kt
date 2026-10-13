@@ -3,6 +3,7 @@ package com.coooolfan.xiaomialbumsyncer.icloud
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.fasterxml.jackson.databind.JsonNode
 import org.noear.solon.annotation.Managed
+import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.io.OutputStream
@@ -14,6 +15,8 @@ import java.util.HexFormat
 
 @Managed
 class ICloudPhotos(private val accounts: ICloudAccountService) {
+    private val log = LoggerFactory.getLogger(ICloudPhotos::class.java)
+
     fun fetchAlbums(accountId: Long): List<Album> = accounts.withClient(accountId) { fetchAlbums(accountId, it) }
 
     internal fun fetchAlbums(accountId: Long, client: ICloudClient): List<Album> {
@@ -158,9 +161,24 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
     }
 
     private fun checkIndex(client: ICloudClient, zone: String) {
-        val state = client.cloud("records/query", mapOf("query" to mapOf("recordType" to "CheckIndexingState"), "zoneID" to zoneId(zone)))
-            .at("/records/0/fields/state/value").asText()
-        require(state == "FINISHED") { "iCloud 照片仍在建立索引，请稍后重试" }
+        val response = client.cloud("records/query", mapOf("query" to mapOf("recordType" to "CheckIndexingState"), "zoneID" to zoneId(zone)))
+        val records = response.path("records")
+        val record = records.path(0)
+        val state = record.at("/fields/state/value")
+        val serverCode = record.path("serverErrorCode").asText()
+        if (serverCode.isNotBlank()) {
+            log.error("iCloud 索引状态查询失败: zone={}, serverErrorCode={}, reason={}", zone, serverCode, record.path("reason"))
+            error("iCloud 索引状态查询失败（错误码：$serverCode）")
+        }
+        if (!records.isArray || records.size() != 1 || !state.isTextual || state.asText().isBlank()) {
+            log.error("iCloud 索引状态响应异常: zone={}, recordsType={}, recordsCount={}, state={}, responseFields={}, recordFields={}",
+                zone, records.nodeType, records.size(), state, response.fieldNames().asSequence().toList(), record.fieldNames().asSequence().toList())
+            error("iCloud 索引状态响应异常：缺少有效的索引状态，请查看服务端日志")
+        }
+        if (state.asText() != "FINISHED") {
+            log.warn("iCloud 照片索引尚未完成: zone={}, state={}", zone, state.asText())
+            error("iCloud 照片索引尚未完成（状态：${state.asText()}），请稍后重试")
+        }
     }
 
     private fun album(accountId: Long, title: String, ref: ICloudAlbumKey): Album = Album {

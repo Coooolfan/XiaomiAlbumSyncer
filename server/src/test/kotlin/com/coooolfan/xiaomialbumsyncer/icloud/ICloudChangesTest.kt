@@ -54,6 +54,30 @@ class ICloudChangesTest {
         } finally { server.stop(0) }
     }
 
+    @Test fun distinguishesUnfinishedIndexFromMalformedResponsesAndRecordErrors() {
+        val cases = listOf(
+            mapOf("records" to listOf(record("Index", "index", mapOf("state" to "RUNNING")))) to "索引尚未完成（状态：RUNNING）",
+            emptyMap<String, Any>() to "索引状态响应异常",
+            mapOf("records" to emptyList<Any>()) to "索引状态响应异常",
+            mapOf("records" to listOf(record("Index", "index"))) to "索引状态响应异常",
+            mapOf("records" to listOf(record("Index", "index", mapOf("state" to 1)))) to "索引状态响应异常",
+            mapOf("records" to listOf(record("Index", "index", mapOf("state" to " ")))) to "索引状态响应异常",
+            mapOf("records" to listOf(mapOf("serverErrorCode" to "ZONE_NOT_FOUND", "reason" to "Missing zone"))) to "索引状态查询失败（错误码：ZONE_NOT_FOUND）",
+        )
+        for ((response, message) in cases) {
+            withServer({ path, body ->
+                if (path == "list") mapOf("zones" to listOf(mapOf("zoneID" to mapOf("zoneName" to "PrimarySync"))))
+                else {
+                    assertEquals("CheckIndexingState", body.at("/query/recordType").asText())
+                    response
+                }
+            }) { photos, client ->
+                val error = assertThrows(IllegalStateException::class.java) { photos.fetchAlbums(1, client) }
+                assertTrue(error.message!!.contains(message), error.message)
+            }
+        }
+    }
+
     @Test fun lookupDeduplicatesAndSplitsRequestsAtTheCloudKitLimit() {
         val batches = mutableListOf<List<String>>()
         withServer({ path, body ->
