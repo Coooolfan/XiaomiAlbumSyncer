@@ -6,7 +6,7 @@ import org.flywaydb.core.api.callback.Context
 import org.flywaydb.core.api.callback.Event
 import org.slf4j.LoggerFactory
 
-/** 在 0.20.0 建立相册唯一约束前合并重复相册，保留资产和任务关联。 */
+/** 在 0.20.0 迁移前清理未使用的占位账号，并合并重复相册，保留资产和任务关联。 */
 class AlbumDeduplicationCallback : Callback {
     private val log = LoggerFactory.getLogger(AlbumDeduplicationCallback::class.java)
 
@@ -20,6 +20,15 @@ class AlbumDeduplicationCallback : Callback {
 
     override fun handle(event: Event, context: Context) {
         context.connection.createStatement().use { statement ->
+            val placeholders = statement.executeUpdate("""
+                DELETE FROM xiaomi_account
+                WHERE nickname = '默认账号' AND pass_token = '-' AND user_id = '-'
+                  AND NOT EXISTS (SELECT 1 FROM album WHERE account_id = xiaomi_account.id)
+                  AND NOT EXISTS (SELECT 1 FROM crontab WHERE account_id = xiaomi_account.id)
+            """.trimIndent())
+            if (placeholders > 0) {
+                log.info("已清理 {} 条未使用的占位账号记录", placeholders)
+            }
             // 优先保留非影子相册，同等条件下保留最小 ID。
             statement.executeUpdate("""
                 CREATE TEMP TABLE album_deduplication AS

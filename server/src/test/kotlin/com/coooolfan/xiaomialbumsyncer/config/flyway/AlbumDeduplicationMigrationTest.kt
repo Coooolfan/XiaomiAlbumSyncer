@@ -23,6 +23,32 @@ class AlbumDeduplicationMigrationTest {
         assertEquals(0, migrated.migrate().migrationsExecuted)
         source.connection.use { connection ->
             assertEquals(0L, connection.number("SELECT COUNT(*) FROM album"))
+            assertEquals(0L, connection.number("SELECT COUNT(*) FROM provider_account"))
+            assertHealthy(connection)
+        }
+    }
+
+    @Test
+    fun removesOnlyUnusedPlaceholderAccounts(@TempDir directory: Path) = database(directory) { source ->
+        Flyway.configure().dataSource(source).locations("classpath:db/migration").target("0.19.0").load().migrate()
+        source.connection.use { connection ->
+            connection.execute("""
+                INSERT INTO xiaomi_account(id,nickname,pass_token,user_id) VALUES
+                    (100,'默认账号','token','-'),
+                    (101,'默认账号','-','user'),
+                    (102,'自定义账号','-','-'),
+                    (103,'默认账号','-','-'),
+                    (104,'默认账号','-','-')
+            """.trimIndent())
+            connection.execute("INSERT INTO album(id,remote_id,name,asset_count,last_update_time,account_id,shadow) VALUES(100,1,'photos',0,0,103,0)")
+            connection.execute("INSERT INTO crontab(id,name,config,description,enabled,account_id,sync_mode) VALUES(100,'sync','{}','',0,104,'FULL')")
+        }
+        DatabaseMigration().migrate(source)
+        source.connection.use { connection ->
+            assertEquals(listOf("100", "101", "102", "103", "104"),
+                connection.rows("SELECT id FROM provider_account ORDER BY id").map { it.single() })
+            assertEquals("103", connection.rows("SELECT account_id FROM album").single().single())
+            assertEquals("104", connection.rows("SELECT account_id FROM crontab").single().single())
             assertHealthy(connection)
         }
     }
