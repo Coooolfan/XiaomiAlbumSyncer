@@ -1,5 +1,7 @@
 # <img src="./static/xiaomi-album-syncer-logo.png" alt="logo" width="20rem"> Xiaomi Album Syncer
 
+全量 / 增量 / 定时，把小米云服务与 Apple iCloud 中的相册与资产同步回本地存储。
+
 [![GitHub Stars](https://img.shields.io/github/stars/Coooolfan/XiaomiAlbumSyncer?style=flat)](https://github.com/Coooolfan/XiaomiAlbumSyncer/stargazers) [![Docker Pulls](https://img.shields.io/docker/pulls/coolfan1024/xiaomi-album-syncer?style=flat)](https://hub.docker.com/r/coolfan1024/xiaomi-album-syncer)
 
 发了 **issues** 记得常回来看看有没有回复，或者 >>>>> **[QQ 群聊：1059332701](https://qm.qq.com/q/H2trW6JWM4)**
@@ -10,17 +12,18 @@
 
 ## Features/功能
 
+- [x] ☁️ 多云服务商支持：**小米云服务**（相册 + 录音）与 **Apple iCloud**（照片）
 - [x] 📸 下载指定相册中的所有资产
 - [x] ⏭️ 自动跳过已下载的资产
-- [x] 🎵 支持下载录音
-- [x] 🔄 自动刷新 Cookie
+- [x] 🎵 支持下载录音（小米云服务）
+- [x] 🔄 自动刷新凭据（小米 passToken / iCloud 会话）
 - [x] ⏰ 支持定时任务
 - [x] 📥 支持增量下载（超快）
 - [x] 🗂️ 支持按相册分类存储照片
 - [x] 🌍 友好的 Web UI
 - [x] 📅 填充照片和视频的 Exif 时间信息
 - [x] 📅 填充照片和视频的文件系统时间
-- [x] 👥 支持多小米账号
+- [x] 👥 支持多账号统一管理（多小米账号 + 多 Apple iCloud 账号）
 - [x] 📃 表达式插值文件下载路径 **>>> [点此查看详情](./docs/expression-target-path.md) <<<**
 - [x] 🔒 SSL 支持 **>>> [点此查看详情](./docs/ssl-suppot.md) <<<**
 - [x] 🛡️ Passkey 支持 **>>> [点此查看详情](./docs/passkey-login.md) <<<**
@@ -135,13 +138,17 @@
 访问 `http://localhost:8232`（下文假设您在本地访问默认 Docker Compose 部署的版本，否则请访问您配置的真实端点） ，输入一个强密码（此密码仅用于访问此项目，与任何外部服务或者小米无关），完成此项目的初始化。
 
 
-### 获取 PassToken 与 UserId
+### 添加账号
+
+系统支持添加并统一管理多个**小米账号**与 **Apple iCloud 账号**：
+
+#### 1. 小米账号
 
 **方式一：扫码登录（推荐）**
 
 访问 `http://localhost:8232/#/dashboard/setting` ，在「同步账号」卡片中点击 `添加账号` 并选择 `扫码登录`，使用小米手机或平板的「设置 > 小米账号」扫码确认即可，账号凭据会自动写入。对已存在的账号再次扫码可直接刷新其 passToken。
 
-**方式二：手动提取**
+**方式二：PassToken 登录（手动提取）**
 
 1. 登录[小米云服务](https://i.mi.com/)
 2. **[访问一次相册页面](https://i.mi.com/gallery/h5#/)**
@@ -151,10 +158,11 @@
 6. 选中 应用程序/Application 一栏。复制对应的两个 `passToken` 与 `userId` 字段值
 ![getpassanduserid](static/copybydevtool.avif)
 即图中的 4️⃣ 和 5️⃣ 对应的黄底内容。
+7. 在「同步账号」卡片中点击 `添加账号` 并选择 `PassToken 登录`，填写获取到的 userId 与 PassToken。
 
-### 设置 PassToken 与 UserId
+#### 2. Apple iCloud 账号
 
-访问 `http://localhost:8232/#/dashboard/setting` ，在「同步账号」卡片中点击 `添加账号` 并选择 `PassToken 登录`，填写上一步获取到的 userId 与 PassToken。
+访问 `http://localhost:8232/#/dashboard/setting` ，在「同步账号」卡片中点击 `添加账号` 并选择 `Apple iCloud`，输入 Apple ID 与密码，并根据屏幕指引在受信设备上确认并填入 6 位双重认证（2FA）验证码即可完成绑定。
 
 ### 获取所有相册
 
