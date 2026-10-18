@@ -7,6 +7,7 @@ import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
 import Checkbox from 'primevue/checkbox'
 import Select from 'primevue/select'
+import SelectButton from 'primevue/selectbutton'
 import MultiSelect from 'primevue/multiselect'
 import InputNumber from 'primevue/inputnumber'
 import Panel from 'primevue/panel'
@@ -18,6 +19,8 @@ import ProviderTag from '@/components/ProviderTag.vue'
 import ExpressionPathHelp from '@/components/ExpressionPathHelp.vue'
 import OptionCard from '@/components/OptionCard.vue'
 import CronHelp from '@/components/CronHelp.vue'
+import CronExpressionBuilder from '@/components/CronExpressionBuilder.vue'
+import { parseCron } from '@/utils/cronBuilder'
 import type { CloudProvider, CrontabSyncMode } from '@/__generated/model/enums'
 import type { LocalCronForm } from '@/utils/crontabForm'
 
@@ -144,6 +147,16 @@ const useExpressionPath = ref(false)
 const showExpressionHelp = ref(false)
 const showCronHelp = ref(false)
 
+const cronInputMode = ref<'visual' | 'raw'>('visual')
+const cronInputModeOptions = computed(() => [
+  { label: t('cronform.builder.modeVisual'), value: 'visual' },
+  { label: t('cronform.builder.modeRaw'), value: 'raw' },
+])
+function onCronInputModeChange(mode: 'visual' | 'raw') {
+  if (mode === 'raw') openCronHelp()
+  else showCronHelp.value = false
+}
+
 function toggleCronHelp() {
   showCronHelp.value = !showCronHelp.value
   if (showCronHelp.value) showExpressionHelp.value = false
@@ -175,6 +188,7 @@ watch(
       step.value = 'basic'
       slideDir.value = 'slide-left'
       useExpressionPath.value = form.value.config.targetPath.includes('${')
+      cronInputMode.value = parseCron(form.value.config.expression) ? 'visual' : 'raw'
       return
     }
     showExpressionHelp.value = false
@@ -369,42 +383,59 @@ watch(
               <span>{{ t('cronform.toggle.enabled') }}</span>
             </div>
 
-            <div v-if="form.enabled" class="grid grid-cols-2 gap-4">
+            <div v-if="form.enabled" class="space-y-4">
               <div class="space-y-2">
                 <div class="flex items-center justify-between">
                   <label class="block text-[13px] font-medium text-slate-500 dark:text-slate-400">{{
                     t('cronform.field.expression')
                   }}</label>
-                  <Button
-                    icon="pi pi-question-circle"
-                    variant="text"
-                    severity="secondary"
-                    size="small"
-                    class="w-6! h-6!"
-                    @click="toggleCronHelp"
-                  />
+                  <div class="flex items-center gap-2">
+                    <SelectButton
+                      v-model="cronInputMode"
+                      :options="cronInputModeOptions"
+                      optionLabel="label"
+                      optionValue="value"
+                      :allowEmpty="false"
+                      size="small"
+                      @update:model-value="onCronInputModeChange"
+                    />
+                    <Button
+                      v-if="cronInputMode === 'raw'"
+                      icon="pi pi-question-circle"
+                      variant="text"
+                      severity="secondary"
+                      size="small"
+                      class="w-6! h-6!"
+                      @click="toggleCronHelp"
+                    />
+                  </div>
                 </div>
-                <InputText
+                <CronExpressionBuilder
+                  v-if="cronInputMode === 'visual'"
                   v-model="form.config.expression"
-                  placeholder="0 0 23 * * ?"
-                  class="w-full"
-                  @focus="openCronHelp"
                 />
+                <template v-else>
+                  <InputText
+                    v-model="form.config.expression"
+                    placeholder="0 0 23 * * ?"
+                    class="w-full"
+                    @focus="openCronHelp"
+                  />
+                  <div class="text-[13px] text-slate-500 dark:text-slate-400">
+                    {{ t('cronform.field.expressionHint') }}<br />{{
+                      t('cronform.field.expressionExample')
+                    }}
+                  </div>
+                </template>
 
                 <div v-if="formErrors.expression" class="text-[13px] text-red-600">
                   {{ formErrors.expression }}
                 </div>
-                <div class="text-[13px] text-slate-500 dark:text-slate-400">
-                  {{ t('cronform.field.expressionHint') }}<br />{{
-                    t('cronform.field.expressionExample')
-                  }}
-                </div>
               </div>
               <div class="space-y-2">
-                <label
-                  class="block text-[13px] font-medium text-slate-500 dark:text-slate-400 mb-4"
-                  >{{ t('cronform.field.timeZone') }}</label
-                >
+                <label class="block text-[13px] font-medium text-slate-500 dark:text-slate-400">{{
+                  t('cronform.field.timeZone')
+                }}</label>
                 <Select
                   v-model="form.config.timeZone"
                   :options="timeZones"
@@ -418,7 +449,7 @@ watch(
               </div>
             </div>
 
-            <div class="space-y-2">
+            <div class="space-y-2 border-t border-slate-100 pt-4 dark:border-slate-800">
               <div class="flex items-center justify-between">
                 <label class="block text-[13px] font-medium text-slate-500 dark:text-slate-400">{{
                   t('cronform.field.targetPath')
@@ -437,7 +468,14 @@ watch(
                   <span class="text-[13px] text-slate-500 dark:text-slate-400">{{
                     t('cronform.field.useExpressionPath')
                   }}</span>
-                  <Checkbox v-model="useExpressionPath" binary />
+                  <Checkbox
+                    v-model="useExpressionPath"
+                    binary
+                    @update:model-value="
+                      (checked: boolean) =>
+                        checked ? openExpressionHelp() : (showExpressionHelp = false)
+                    "
+                  />
                 </div>
               </div>
               <InputText
