@@ -5,6 +5,7 @@ import Button from 'primevue/button'
 import ContributionHeatmap from '@/components/ContributionHeatmap.vue'
 import AlbumPanel from '@/components/AlbumPanel.vue'
 import CrontabList from '@/components/CrontabList.vue'
+import StarNoticeCard from '@/components/StarNoticeCard.vue'
 
 const CronFormDialog = defineAsyncComponent(() => import('@/components/CronFormDialog.vue'))
 const ExecutionDialogs = defineAsyncComponent(() => import('@/components/ExecutionDialogs.vue'))
@@ -17,6 +18,7 @@ import { useAccountsStore } from '@/stores/accounts'
 import { useAlbumsStore } from '@/stores/albums'
 import { useCrontabsStore } from '@/stores/crontabs'
 import { usePreferencesStore } from '@/stores/preferences'
+import { useSystemConfigStore } from '@/stores/systemConfig'
 import { useHeatmapTimeline } from '@/composables/useHeatmapTimeline'
 import { useCronForm } from '@/composables/useCronForm'
 import { useCronActions } from '@/composables/useCronActions'
@@ -28,6 +30,7 @@ const accountsStore = useAccountsStore()
 const albumsStore = useAlbumsStore()
 const crontabsStore = useCrontabsStore()
 const preferencesStore = usePreferencesStore()
+const systemConfigStore = useSystemConfigStore()
 
 type CrontabHistory = CrontabDto['CrontabController/DEFAULT_CRONTAB']['histories'][number]
 type CrontabHistoryDetail =
@@ -36,6 +39,7 @@ type CrontabHistoryDetail =
 const { accounts } = storeToRefs(accountsStore)
 const { albums, loaded: albumsLoaded } = storeToRefs(albumsStore)
 const { crontabs, loading: loadingCrons, loaded: cronsLoaded } = storeToRefs(crontabsStore)
+const { starNoticeDismissed } = storeToRefs(systemConfigStore)
 const { optimizeHeatmap } = storeToRefs(preferencesStore)
 
 const toast = useToast()
@@ -68,6 +72,20 @@ const allAlbumOptions = computed(() =>
     shadow: a.shadow,
   })),
 )
+
+const showStarNotice = computed(
+  () =>
+    starNoticeDismissed.value === false &&
+    crontabs.value.some((c) => c.histories.some((h) => h.isCompleted && h.detailsCount > 0)),
+)
+
+async function dismissStarNotice() {
+  try {
+    await systemConfigStore.dismissStarNotice()
+  } catch (err) {
+    console.error('关闭 Star 提示失败', err)
+  }
+}
 
 const {
   showCronDialog,
@@ -319,6 +337,9 @@ watch(showHistoryDetailsDialog, (visible) => {
         </div>
       </div>
     </div>
+
+    <!-- Star notice -->
+    <StarNoticeCard v-if="showStarNotice" class="mt-6" @close="dismissStarNotice" />
 
     <!-- Task list -->
     <div class="mt-6">

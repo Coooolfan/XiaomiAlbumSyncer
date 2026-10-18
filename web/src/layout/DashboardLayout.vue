@@ -3,6 +3,7 @@ import { ref, onMounted, computed, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '../ApiInstance'
+import { useSystemConfigStore } from '@/stores/systemConfig'
 import type { SystemInfoResponse } from '@/__generated/model/static'
 import {
   DEFAULT_SETTING_SECTION,
@@ -13,6 +14,7 @@ import {
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const systemConfigStore = useSystemConfigStore()
 const loggingOut = ref(false)
 const systemInfo = ref<SystemInfoResponse | null>(null)
 const footerViewport = ref<HTMLElement | null>(null)
@@ -59,6 +61,9 @@ function selectSettingSection(key: string) {
 }
 
 onMounted(async () => {
+  systemConfigStore.fetchSystemConfig().catch((error) => {
+    console.error('Failed to load system config:', error)
+  })
   try {
     systemInfo.value = await api.systemConfigController.getSystemInfo()
   } catch (error) {

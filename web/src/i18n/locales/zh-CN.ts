@@ -139,6 +139,11 @@ export default {
     albums: '相册',
     newTask: '新建任务',
     fetchListFailed: '无法获取计划任务列表',
+    starNotice: {
+      message: '看起来我们完成了第一次同步，如果项目对你有帮助，欢迎在 GitHub 上点一个 Star',
+      goToGithub: '前往 GitHub',
+      dismiss: '不再显示',
+    },
     list: {
       empty: '暂无计划任务',
     },

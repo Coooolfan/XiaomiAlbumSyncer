@@ -141,6 +141,12 @@ const messages: typeof zh = {
     albums: 'Albums',
     newTask: 'New Task',
     fetchListFailed: 'Failed to load scheduled tasks',
+    starNotice: {
+      message:
+        "Looks like we've completed our first sync. If this project has been helpful, consider giving it a Star on GitHub",
+      goToGithub: 'Go to GitHub',
+      dismiss: "Don't show again",
+    },
     list: {
       empty: 'No scheduled tasks yet',
     },

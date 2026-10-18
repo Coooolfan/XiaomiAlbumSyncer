@@ -43,6 +43,20 @@ export class SystemConfigController {
     }
     
     /**
+     * 关闭 Star 提示卡片
+     * 
+     * 此接口用于将 Star 提示卡片标记为已关闭，标记后不再展示
+     * 需要用户登录认证才能访问
+     * 
+     */
+    readonly dismissStarNotice: () => Promise<
+        void
+    > = async() => {
+        let _uri = '/api/system-config/star-notice/dismiss';
+        return (await this.executor({uri: _uri, method: 'POST'})) as Promise<void>;
+    }
+    
+    /**
      * 获取通知配置
      * 
      * 此接口用于获取系统当前的通知配置（URL、请求头、请求体模板）
@@ -245,5 +259,6 @@ export type SystemConfigControllerOptions = {
          * 
          */
         readonly body: SystemConfigNotifyConfigUpdate
-    }
+    }, 
+    'dismissStarNotice': {}
 }

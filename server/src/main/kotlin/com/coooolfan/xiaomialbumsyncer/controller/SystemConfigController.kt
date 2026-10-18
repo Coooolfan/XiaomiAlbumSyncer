@@ -264,9 +264,27 @@ class SystemConfigController(
         service.updateNotifyConfig(update)
     }
 
+    /**
+     * 关闭 Star 提示卡片
+     *
+     * 此接口用于将 Star 提示卡片标记为已关闭，标记后不再展示
+     * 需要用户登录认证才能访问
+     *
+     * @api POST /api/system-config/star-notice/dismiss
+     * @permission 需要登录认证
+     * @description 调用SystemConfigService.dismissStarNotice()方法更新标记
+     */
+    @Api
+    @Mapping("/star-notice/dismiss", method = [MethodType.POST])
+    @SaCheckLogin
+    fun dismissStarNotice() {
+        service.dismissStarNotice()
+    }
+
     companion object {
         val NORMAL_SYSTEM_CONFIG = newFetcher(SystemConfig::class).by {
             exifToolPath()
+            starNoticeDismissed()
         }
     }
 }

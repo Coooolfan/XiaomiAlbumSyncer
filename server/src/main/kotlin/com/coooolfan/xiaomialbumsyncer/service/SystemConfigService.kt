@@ -49,6 +49,7 @@ class SystemConfigService(
                 dailySummaryTimeZone = null,
                 passTokenExpiredBody = null
             )
+            starNoticeDismissed = false
         }, SaveMode.INSERT_ONLY).execute()
     }
 
@@ -124,6 +125,13 @@ class SystemConfigService(
             notifyConfig = update.notifyConfig
         }, SaveMode.UPDATE_ONLY).execute()
         taskScheduler.initJobs()
+    }
+
+    fun dismissStarNotice() {
+        sql.executeUpdate(SystemConfig::class) {
+            set(table.starNoticeDismissed, true)
+            where(table.id eq CONFIG_ID)
+        }
     }
 
     companion object {

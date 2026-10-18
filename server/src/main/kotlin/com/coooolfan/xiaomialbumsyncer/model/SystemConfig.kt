@@ -18,4 +18,6 @@ interface SystemConfig {
     val assetsDateMapTimeZone: String
 
     val notifyConfig: NotifyConfig
+
+    val starNoticeDismissed: Boolean
 }
