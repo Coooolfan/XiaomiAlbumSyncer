@@ -10,11 +10,9 @@ export default {
   hero: {
     badge: '开源 · 自部署 · GPL-3.0',
     subtitle: '全量 / 增量 / 定时，把小米云服务中的相册与录音同步回本地存储。',
-    download: '下载最新版本',
   },
   footer: {
     license: 'Xiaomi Album Syncer · GPL-3.0 License',
-    qq: 'QQ 群 1059332701',
   },
   docs: {
     title: '文档',

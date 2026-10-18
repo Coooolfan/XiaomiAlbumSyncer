@@ -12,11 +12,9 @@ export default {
     badge: 'Open Source · Self-hosted · GPL-3.0',
     subtitle:
       'Full / incremental / scheduled sync of your Xiaomi Cloud albums and recordings back to local storage.',
-    download: 'Download Latest',
   },
   footer: {
     license: 'Xiaomi Album Syncer · GPL-3.0 License',
-    qq: 'QQ Group 1059332701',
   },
   docs: {
     title: 'Docs',

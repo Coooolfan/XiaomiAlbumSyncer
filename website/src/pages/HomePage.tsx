@@ -5,9 +5,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { setLocale, type AppLocale } from '@/i18n'
 
 const GITHUB_URL = 'https://github.com/Coooolfan/XiaomiAlbumSyncer'
-const RELEASES_URL = `${GITHUB_URL}/releases`
 const DOCKER_URL = 'https://hub.docker.com/r/coolfan1024/xiaomi-album-syncer'
-const QQ_URL = 'https://qm.qq.com/q/H2trW6JWM4'
 
 function SunIcon() {
   return (
@@ -137,14 +135,12 @@ export default function HomePage() {
           {t('hero.subtitle')}
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <a
-            href={RELEASES_URL}
-            target="_blank"
-            rel="noreferrer"
+          <Link
+            to="/docs"
             className="rounded-md bg-slate-900 px-6 py-3 font-mono text-sm font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-white dark:text-black dark:hover:bg-slate-200"
           >
-            {t('hero.download')}
-          </a>
+            {t('nav.docs')} →
+          </Link>
           <a
             href={GITHUB_URL}
             target="_blank"
@@ -153,12 +149,6 @@ export default function HomePage() {
           >
             GitHub →
           </a>
-          <Link
-            to="/docs"
-            className="rounded-md border border-black/20 bg-white/80 px-6 py-3 font-mono text-sm text-slate-900 backdrop-blur-md transition-colors hover:bg-white hover:border-black/35 dark:border-white/20 dark:bg-black/60 dark:text-white dark:hover:bg-black/85 dark:hover:border-white/35"
-          >
-            {t('nav.docs')} →
-          </Link>
         </div>
       </main>
 
@@ -167,15 +157,6 @@ export default function HomePage() {
         <div className="mx-auto flex h-11 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6 text-xs text-slate-500 dark:text-slate-400">
           <p className="font-mono text-xs">{t('footer.license')}</p>
           <div className="flex items-center gap-4 sm:gap-5 text-xs">
-            <a
-              href={QQ_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-            >
-              {t('footer.qq')}
-            </a>
-            <span className="text-slate-300 dark:text-slate-700">·</span>
             <a
               href={DOCKER_URL}
               target="_blank"
