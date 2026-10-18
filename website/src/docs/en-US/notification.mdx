@@ -1,0 +1,90 @@
+export const meta = {
+  title: 'Notifications',
+  description: 'Configure custom Webhooks and message templates for task completion and expiration alerts.',
+  section: 'Features',
+  order: 65,
+  slug: 'notification',
+}
+
+# Webhook Notifications
+
+Xiaomi Album Syncer features an extensible Webhook notification engine. When sync tasks finish, encounter errors, or cloud credentials expire, automated alerts can be delivered directly to your messaging channels without opening the console.
+
+![Notification settings overview](/screenshots/en-US/settings-notification.avif)
+
+## Trigger Scenarios
+
+- **Task Finished**: Fires after a scheduled or manual sync run finishes, reporting transfer counts (success, failed, skipped, data size, and elapsed duration).
+- **Credential Expiration**: Alerts when a Xiaomi PassToken or Apple iCloud session expires, giving you timely warnings to refresh credentials.
+- **Daily Summary**: Optionally compiles a consolidated report of all tasks executed within a calendar day.
+
+## Webhook Setup
+
+Navigate to **Settings** > **General** > **Notifications**, then click the edit button to open the drawer:
+
+![Custom Webhook template editor](/screenshots/en-US/settings-notification-edit.avif)
+
+### Core Parameters
+
+| Setting | Description | Example |
+| ------- | ----------- | ------- |
+| **Request URL** | Webhook endpoint; leave empty to disable | `https://api.telegram.org/bot<TOKEN>/sendMessage` |
+| **Headers** | Custom HTTP headers for authorization or content type | `Content-Type: application/json` |
+| **Request Body** | JSON or plain text payload with dynamic `${...}` placeholders | See templates below |
+
+## Template Placeholders
+
+The following placeholders are evaluated at runtime:
+
+| Variable | Description |
+| -------- | ----------- |
+| `${crontab.name}` | Task name |
+| `${status}` | Task status (`SUCCESS` / `FAILED`) |
+| `${successCount}` | Assets successfully downloaded in this run |
+| `${failedCount}` | Assets that failed to download |
+| `${skippedCount}` | Already existing assets skipped |
+| `${totalSizeFormatted}` | Formatted total data transferred (e.g. `1.2 GB`) |
+| `${startTime}` | Task starting timestamp |
+| `${endTime}` | Task ending timestamp |
+| `${duration}` | Total elapsed duration formatted |
+
+## Platform Integration Examples
+
+### 1. Telegram Bot
+
+- **URL**: `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage`
+- **Body**:
+  ```json
+  {
+    "chat_id": "<YOUR_CHAT_ID>",
+    "text": "Sync task [${crontab.name}] finished with status: ${status}.\nDownloaded: ${successCount} items\nDuration: ${duration}"
+  }
+  ```
+
+### 2. Discord Webhook
+
+- **URL**: `https://discord.com/api/webhooks/<ID>/<TOKEN>`
+- **Body**:
+  ```json
+  {
+    "content": "📸 **XAS Backup Complete**: `${crontab.name}`\nStatus: **${status}** | New: **${successCount}** | Skipped: **${skippedCount}**"
+  }
+  ```
+
+### 3. Generic JSON Webhook (Slack / Mattermost / n8n)
+
+- **URL**: `https://your-webhook-endpoint.com/hook`
+- **Body**:
+  ```json
+  {
+    "event": "album_sync_completed",
+    "task": "${crontab.name}",
+    "status": "${status}",
+    "downloaded": "${successCount}",
+    "failed": "${failedCount}",
+    "duration": "${duration}"
+  }
+  ```
+
+> [!TIP]
+> Click the **Send Test** button in the top right of the drawer to verify network reachability and preview template rendering before saving.

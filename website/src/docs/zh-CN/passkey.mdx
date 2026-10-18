@@ -8,28 +8,33 @@ export const meta = {
 
 # Passkey 登录
 
-支持使用 Passkey（WebAuthn）无密码登录：Touch ID、Face ID、Windows Hello 等生物识别，YubiKey 等硬件安全密钥，以及通过 iCloud 钥匙串、Google 密码管理器同步的 Passkey。
+Xiaomi Album Syncer 原生支持基于 WebAuthn 标准的 Passkey 无密码登录：支持 Touch ID、Face ID、Windows Hello 等设备生物识别，YubiKey 等硬件安全密钥，以及 iCloud 钥匙串、Google 密码管理器同步的通行密钥。
+
+![Passkey 认证管理](/screenshots/zh-CN/settings-passkey.avif)
 
 ## 前置要求
 
-- **安全上下文**：必须在 HTTPS 下使用，`localhost` 仅用于本地测试。非安全上下文下浏览器会阻止 WebAuthn API 调用。HTTPS 配置见 [SSL / HTTPS](/zh-CN/docs/ssl)。
-- **浏览器**：需要支持 WebAuthn 的现代浏览器（Chrome / Edge 67+、Firefox 60+、Safari 13+）。
+- **安全上下文（HTTPS）**：浏览器仅在安全上下文（Secure Context）下暴露 WebAuthn API。除 `localhost` 用于本地调试外，生产环境必须在 HTTPS 下使用。启用方式请参阅 [SSL / HTTPS](/zh-CN/docs/ssl)。
+- **浏览器兼容性**：需要支持 WebAuthn 标准的现代浏览器（Chrome / Edge 67+、Firefox 60+、Safari 13+）。
 
-## 配置
+## 环境变量配置
 
-通过环境变量配置 Relying Party：
+由于 Passkey 强绑定域名，需要通过环境变量明确指定 Relying Party（信赖方）域名：
 
 | 环境变量 | 说明 | 默认值 |
 | --- | --- | --- |
-| `WEBAUTHN_RP_ID` | Relying Party ID，必须是当前域名或其父域名 | `localhost` |
-| `WEBAUTHN_RP_NAME` | 注册时向用户显示的名称 | `XiaomiAlbumSyncer` |
+| `WEBAUTHN_RP_ID` | Relying Party ID，必须为访问服务时的主机名或其上级父域名 | `localhost` |
+| `WEBAUTHN_RP_NAME` | 注册与授权时向用户显示的系统名称 | `XiaomiAlbumSyncer` |
 
-> `rpId` 必须与访问域名匹配。例如通过 `https://sync.example.com` 访问时，`rpId` 应设置为 `sync.example.com` 或 `example.com`。
+> [!WARNING]
+> `WEBAUTHN_RP_ID` 必须与浏览器地址栏访问的域名一致。例如若通过 `https://sync.nas.local` 访问，则需将 `WEBAUTHN_RP_ID` 设置为 `sync.nas.local`；若包含端口号，请注意 **RP ID 不应包含端口号**。
+
+### Docker 配置示例
 
 ```bash
 docker run -d \
   -p 8232:8080 \
-  -e WEBAUTHN_RP_ID=sync.example.com \
+  -e WEBAUTHN_RP_ID=sync.nas.local \
   -e WEBAUTHN_RP_NAME="我的相册同步" \
   -v ~/xiaomi-album-syncer/download:/app/download \
   -v ~/xiaomi-album-syncer/db:/app/db \
@@ -37,17 +42,10 @@ docker run -d \
   coolfan1024/xiaomi-album-syncer:latest
 ```
 
-JVM / 二进制部署通过同名环境变量传入即可。
+## 使用指南
 
-## 使用
-
-1. **初始化**：首次访问时设置管理员密码。
-2. **注册**：进入设置页的 Passkey 管理，点击注册新 Passkey，输入当前密码和名称后按浏览器提示完成验证。
-3. **登录**：登录页点击「使用 Passkey 登录」，完成生物识别或 PIN 验证。
-4. **管理**：设置页可查看、重命名、删除已注册的 Passkey。
-
-## 注意事项
-
-- Passkey 与域名绑定，在 `example.com` 注册的 Passkey 无法用于其他域名。
-- 跨设备同步取决于操作系统与浏览器（iCloud 钥匙串、Google 密码管理器等）。
-- 建议保留密码登录作为备用方式，以防 Passkey 设备丢失。
+1. **设置密码**：首次访问完成管理员主密码设置。
+2. **注册密钥**：进入控制台「设置」>「账号与安全」>「Passkey」，点击「注册 Passkey」，输入当前主密码验证身份，并自定义密钥备注名称（如“MacBook Pro 指纹”）。
+3. **完成绑定**：按浏览器与操作系统弹窗指引，完成指纹、面容或硬件密钥触摸授权。
+4. **免密登录**：退出登录后，在登录页面直接点击「使用 Passkey 登录」，一键完成生物识别验证。
+5. **多设备管理**：可以在管理界面随时为手机、办公电脑等多台设备分别注册独立密钥，或撤销已失效的密钥。

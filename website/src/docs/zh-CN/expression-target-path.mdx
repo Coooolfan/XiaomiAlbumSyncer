@@ -35,7 +35,8 @@ export const meta = {
 | `${assetType}` | 资源类型（小写，如 `image` / `video` / `audio`） |
 | `${recordingTypeId}` | 录音分类原始 ID（非录音为空，如 `0` / `1` / `2` / `3`） |
 | `${recordingType}` | 录音分类中文名（非录音为空，如 `录音机录音` / `通话录音` / `FM录音` / `应用录音`） |
-| `${sha1}` | 资源 SHA1 |
+| `${checksum}` | 资源来源校验码（统一推荐：小米云为 SHA-1，iCloud 为 Base64 校验值） |
+| `${sha1}` | `${checksum}` 的兼容别名 |
 | `${title}` | 资源标题（已做路径安全处理） |
 | `${size}` | 资源大小（字节） |
 | `${downloadEpochMillis}` | 下载开始时间毫秒时间戳 |
@@ -57,6 +58,7 @@ export const meta = {
 | `${download_YYYYMM}` | `202405` |
 | `${download_yyyy-MM-dd}` | `2024-05-06` |
 | `${taken_yyyy/MM}` | `2024/05` |
+| `${taken_yyyy年/MM月}` | `2024年/05月` |
 
 > 格式非法时会保留原始 `${...}` 内容不替换。
 
@@ -65,24 +67,30 @@ export const meta = {
 - 时间格式化只对 `${download_<pattern>}`、`${taken_<pattern>}` 生效。
 - `${download}` 不是有效插值：模板中仅包含这类非支持插值时会被视为无效模板并回退默认规则；若模板中同时存在有效插值，则 `${download}` 会原样保留在结果路径中。
 
-## 示例
+## 常用示例
 
-按相册与月份归档（绝对路径）：
-
-```
-/data/${album}/${download_YYYYMM}/${fileName}
-```
-
-解析结果（相册 `旅行`、文件 `photo.jpg`）：
+### 按拍摄年月与相册归档（推荐绝对路径）
 
 ```
-/data/旅行/202405/photo.jpg
+/data/Photos/${taken_yyyy}/${taken_yyyy-MM}/${album}/${fileName}
 ```
 
-音频文件保持原名（相对路径）：
+解析结果：
 
 ```
-${album}/${fileName}
+/data/Photos/2024/2024-05/旅行/IMG_20240506_120000.jpg
 ```
 
-录音 `rec.m4a` 会保存为 `Recordings/rec.m4a`。如需自行避免重名，可在模板中拼接 `${assetId}` 等字段。
+### 包含唯一资源 ID 防重名
+
+```
+/data/${album}/${taken_yyyy}/${fileStem}_${assetId}.${fileExt}
+```
+
+### 录音文件按分类独立归档
+
+```
+/data/Recordings/${recordingType}/${fileName}
+```
+
+录音 `rec.m4a` 会保存为 `/data/Recordings/通话录音/rec.m4a`。

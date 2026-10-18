@@ -149,12 +149,36 @@ export const mdxComponents = {
   td: ({ className, ...props }: ComponentPropsWithoutRef<'td'>) => (
     <td className={mergeClassName('border-b border-(--xas-table-border) px-4 py-3 align-top', className)} {...props} />
   ),
-  img: ({ className, alt = '', ...props }: ComponentPropsWithoutRef<'img'>) => (
-    <img
-      className={mergeClassName('mt-6', className)}
-      alt={alt}
-      loading="lazy"
-      {...props}
-    />
-  ),
+  img: ({ className, alt = '', src = '', ...props }: ComponentPropsWithoutRef<'img'>) => {
+    if (src && src.startsWith('/screenshots/') && !src.includes('-dark.')) {
+      const darkSrc = src.replace(/\.([^.]+)$/, '-dark.$1')
+      return (
+        <>
+          <img
+            className={mergeClassName('mt-6 block dark:hidden rounded-xl border border-neutral-200/80 shadow-sm', className)}
+            alt={alt}
+            src={src}
+            loading="lazy"
+            {...props}
+          />
+          <img
+            className={mergeClassName('mt-6 hidden dark:block rounded-xl border border-neutral-800/80 shadow-sm', className)}
+            alt={alt}
+            src={darkSrc}
+            loading="lazy"
+            {...props}
+          />
+        </>
+      )
+    }
+    return (
+      <img
+        className={mergeClassName('mt-6 rounded-xl', className)}
+        alt={alt}
+        src={src}
+        loading="lazy"
+        {...props}
+      />
+    )
+  },
 }

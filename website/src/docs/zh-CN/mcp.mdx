@@ -1,0 +1,88 @@
+export const meta = {
+  title: 'MCP 服务',
+  description: '通过 Model Context Protocol 让 AI 助手查询相册、调度任务与监控系统。',
+  section: '功能',
+  order: 68,
+  slug: 'mcp',
+}
+
+# MCP 服务集成
+
+Xiaomi Album Syncer 自 `0.18.0` 起内置了标准的 **Model Context Protocol（MCP）** 服务端，允许 Claude Desktop、Cursor、Cline 等 AI 助手直接连接 XAS，实现自然语言查询相册状态、检索备份历史与智能调度任务。
+
+![MCP 访问令牌管理](/screenshots/zh-CN/settings-mcp.avif)
+
+## 什么是 MCP？
+
+Model Context Protocol（模型上下文协议）是由 Anthropic 发起的开放标准，用于让大语言模型安全、受控地与本地工具或自建系统进行双向交互。
+
+XAS 的 MCP 服务运行在 `/mcp` 端点上，采用标准 **Streamable HTTP** 传输协议，原生支持反向代理与长连接流式响应。
+
+## 访问令牌管理
+
+为了保障云服务账号与本地数据安全，MCP 客户端必须使用 Bearer Token 进行鉴权。
+
+进入控制台「设置」>「集成」>「MCP Token」，点击「创建 MCP Token」：
+
+![创建具名分级 MCP 令牌](/screenshots/zh-CN/settings-mcp-create.avif)
+
+### 权限等级
+
+| 权限级别 | 说明 | 适用场景 |
+| -------- | ---- | -------- |
+| **只读 (READ_ONLY)** | 仅允许查询相册列表、任务配置、执行记录与系统版本信息 | 日常问答、备份状态巡检、日报生成 |
+| **允许触发 (ALLOW_TRIGGER)** | 拥有只读权限，并允许手动触发指定的备份任务执行 | 自动化运维、智能助手联动 |
+
+> [!NOTE]
+> 令牌在创建成功后仅会完整展示一次，以哈希形式安全存储于数据库中。请妥善保存生成的 Token。
+
+## 客户端配置
+
+### Claude Desktop
+
+在 Claude Desktop 的配置文件中添加 XAS MCP 服务端：
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "xiaomi-album-syncer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "http://localhost:8232/mcp",
+        "--header",
+        "Authorization: Bearer YOUR_MCP_TOKEN"
+      ]
+    }
+  }
+}
+```
+
+> 若 XAS 部署在远程服务器或通过域名访问，请将 `http://localhost:8232/mcp` 替换为实际服务地址（如 `https://sync.example.com/mcp`）。
+
+## 工具能力：xas_query
+
+XAS 暴露出统一的 `xas_query` 工具，支持通过 `domain`（领域）与 `action`（动作）灵活调度：
+
+- **相册领域 (album)**：
+  - 查询所有云服务账号下的相册列表与远端资产统计
+- **任务领域 (crontab)**：
+  - 列出当前配置的定时任务及其调度 Cron 与状态
+  - 触发指定 ID 的备份任务立即执行（需 `ALLOW_TRIGGER` 权限）
+- **历史领域 (history)**：
+  - 分页检索任务执行历史与耗时明细
+  - 查询指定历史记录的下载详情（成功、失败及跳过的资产文件路径）
+- **系统领域 (system)**：
+  - 读取当前运行环境信息、版本号与数据库概况
+
+## 使用示例
+
+在 Claude 或 Cursor 中连接成功后，您可以直接用自然语言进行交互：
+
+- *“帮我查一下 XAS 昨天晚上 3 点的备份任务跑成功了吗？下载了多少张新照片？”*
+- *“查看小米账号和 iCloud 账号下分别有哪些相册？”*
+- *“现在立刻帮我触发一次‘每日全量备份’任务。”*

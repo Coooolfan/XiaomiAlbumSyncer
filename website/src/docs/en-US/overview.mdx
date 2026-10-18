@@ -1,6 +1,6 @@
 export const meta = {
   title: 'Overview',
-  description: 'What Xiaomi Album Syncer does and its core capabilities.',
+  description: 'Product positioning and core capabilities of Xiaomi Album Syncer.',
   section: 'Introduction',
   order: 10,
   slug: '',
@@ -8,17 +8,27 @@ export const meta = {
 
 # Overview
 
-Xiaomi Album Syncer is a self-hosted tool that downloads albums and recordings from Xiaomi Cloud to local storage — **full / incremental / scheduled**.
+Xiaomi Album Syncer (XAS) is a self-hosted cloud album backup and synchronization tool designed to download albums, videos, and audio recordings from **Xiaomi Cloud** and **Apple iCloud** to local storage or NAS through **full / incremental / scheduled** pipelines.
 
-## Core capabilities
+![Task schedule and activity heatmap](/screenshots/en-US/schedule-overview.avif)
 
-- **Full & incremental download**: pulls the entire library on first run, then syncs incrementally, skipping assets already downloaded.
-- **Scheduled tasks**: schedule syncs with crontab expressions, with manual triggers and execution history replay.
-- **Albums & recordings**: in addition to album assets, recordings stored in Xiaomi Cloud are supported too.
-- **Multi-account**: bind multiple Xiaomi accounts with QR-code login and automatic cookie refresh.
+## Core Capabilities
 
-## Next steps
+- **Multi-Cloud Provider Support**: Bind multiple Xiaomi accounts (QR code login with automatic session refresh) and Apple accounts (mainland China and global endpoints, 2FA trusted device verification) in one unified dashboard.
+- **Full & Incremental Synchronization**: Perform initial full archive of cloud libraries, followed by lightning-fast **cursor incremental (CURSOR)** or **timeline incremental (TIMELINE)** synchronization, automatically skipping downloaded assets.
+- **Original Media Downloads**:
+  - Download full-resolution photos and videos, supporting secondary originals and RAW+JPEG pairs.
+  - Full support for Apple **Live Photo** assets (downloading high-res still image alongside companion `.mov` video).
+  - Download Xiaomi Cloud voice recordings categorized into call recordings, voice memos, etc.
+- **Flexible Scheduling & History**: High-precision Cron scheduler with second-level accuracy, detailed historical logs, and error retry replays.
+- **Custom Destination Path Expressions**: Organize files using expressive variables like `${album}`, `${taken_yyyy-MM-dd}`, `${checksum}`, and `${assetId}`.
+- **EXIF & File System Timestamps**: Automatically restore capture time into photo EXIF metadata and host file system creation/modification times.
+- **Modern & Secure Architecture**: Clean responsive Web UI, Passkey (WebAuthn) passwordless authentication, and native SSL/HTTPS.
+- **AI & Automation Ecosystem**: Built-in **MCP (Model Context Protocol)** server to query status or trigger backups from AI assistants like Claude Desktop and Cursor; configurable Webhook notifications.
+
+## Next Steps
 
 - Read [Quick Start](/en-US/docs/quick-start) to finish your first sync.
-- See [Install](/en-US/docs/install) for all deployment options.
-- Check the [FAQ](/en-US/docs/faq) when something goes wrong.
+- See [Install](/en-US/docs/install) for Docker, native binary, and JVM deployment options.
+- Explore [iCloud Photos](/en-US/docs/icloud) and [Expression Target Path](/en-US/docs/expression-target-path).
+- Check the [FAQ](/en-US/docs/faq) when troubleshooting.

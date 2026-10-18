@@ -1,6 +1,6 @@
 export const meta = {
   title: 'Quick Start',
-  description: 'Start Xiaomi Album Syncer with Docker and finish your first album sync.',
+  description: 'Launch Xiaomi Album Syncer with Docker and configure your first album sync.',
   section: 'Getting Started',
   order: 20,
   slug: 'quick-start',
@@ -8,9 +8,11 @@ export const meta = {
 
 # Quick Start
 
-This flow starts the service with Docker, binds a Xiaomi account via QR code, and triggers the first full download.
+This guide will walk you through starting the service with Docker, connecting your cloud account, and scheduling your first backup task.
 
-## 1. Start the service
+## 1. Start the Service
+
+Start the container with a single Docker command:
 
 ```bash
 docker run -d \
@@ -21,32 +23,53 @@ docker run -d \
   coolfan1024/xiaomi-album-syncer:latest
 ```
 
-Then open `http://localhost:8232`.
+Once started, open your browser and navigate to `http://localhost:8232`.
 
-> The service listens on port `8080` inside the container; map the left side of `-p` to any host port you like.
+> [!NOTE]
+> On your first visit, set an administrator password. This password is stored locally to protect your console.
 
-## 2. Bind your Xiaomi account
+## 2. Connect Your Cloud Account
 
-1. Open the Web UI and go to the accounts page.
-2. Scan the QR code with a Xiaomi phone to sign in.
-3. Cookies are refreshed automatically — no repeated scans needed.
+Navigate to **Settings** > **Sync Accounts** from the sidebar, then click **Add Account**:
 
-### Multiple accounts
+![Select sync provider](/screenshots/en-US/account-provider-select.avif)
 
-You can keep adding accounts on the accounts page; all accounts share the same download task configuration.
+- **Xiaomi Cloud**: Choose Xiaomi Cloud and click QR Code Login. Scan the code using your Xiaomi phone/tablet to authorize. Credentials refresh automatically.
+- **Apple iCloud**: Choose Apple iCloud, enter your Apple ID and password, and submit the 2FA code. See [iCloud Photos](/en-US/docs/icloud) for prerequisites.
 
-## 3. Trigger a sync
+Once authenticated, your remote album list will be fetched automatically.
 
-Create a sync task on the tasks page:
+## 3. Create a Scheduled Task
 
-| Option | Description |
-| ------ | ----------- |
-| Sync mode | `full` / `incremental` |
-| Schedule | Standard crontab, e.g. `0 3 * * *` |
-| Download path | Relative path under the mounted host directory |
+Navigate to **Schedule** in the sidebar and click **New Task**:
 
-Save it and click "Run now" — progress is shown live on the page.
+![Create scheduled sync task](/screenshots/en-US/schedule-new-task.avif)
 
-## Next steps
+### Core Settings
 
-See [Install](/en-US/docs/install) for more deployment options.
+| Option | Description | Example / Default |
+| ------ | ----------- | ----------------- |
+| **Name** | Friendly identifier for the task | `Daily Sync` |
+| **Account** | Cloud account bound to this task | Select your connected account |
+| **Albums** | Select target albums to sync | All albums or specific ones |
+| **Sync Mode** | Metadata discovery strategy | `CURSOR` (Recommended) / `FULL` / `TIMELINE` |
+| **Schedule** | 6- or 7-field Cron expression with seconds | `0 0 3 * * ?` (Every day at 3:00 AM) |
+| **Destination Path** | Target storage path with interpolation | `/data/${album}/${fileName}` |
+
+### Understanding Sync Modes
+
+- **Cursor Incremental (CURSOR - Recommended)**: Tracks checkpoint cursors per album to only fetch newly created or changed assets. Fast and supports resumption. Available for both Xiaomi and iCloud.
+- **Full Sync (FULL)**: Enumerates the entire remote library on every run. Best for periodic validation.
+- **Timeline Incremental (TIMELINE)**: Compares date timelines with the previous run (Xiaomi Cloud only).
+
+## 4. Run and Monitor
+
+After saving, you can click the **Execute** button on the task row to trigger an immediate sync.
+
+Download progress, asset transfer counts (photos, videos, audio), and detailed logs update in real time.
+
+## Next Steps
+
+- Explore more deployment options: [Install](/en-US/docs/install)
+- Read prerequisites for Apple libraries: [iCloud Photos](/en-US/docs/icloud)
+- Customize file naming and folder hierarchy: [Expression Target Path](/en-US/docs/expression-target-path)

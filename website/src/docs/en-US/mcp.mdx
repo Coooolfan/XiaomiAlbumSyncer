@@ -1,0 +1,88 @@
+export const meta = {
+  title: 'MCP Server',
+  description: 'Integrate AI assistants with Model Context Protocol to query albums and trigger tasks.',
+  section: 'Features',
+  order: 68,
+  slug: 'mcp',
+}
+
+# Model Context Protocol (MCP)
+
+Xiaomi Album Syncer includes a built-in **Model Context Protocol (MCP)** server starting from version `0.18.0`. This enables AI assistants such as Claude Desktop, Cursor, and Cline to interact with your album syncer using natural language to inspect status, query albums, and schedule runs.
+
+![MCP Token Management](/screenshots/en-US/settings-mcp.avif)
+
+## What is MCP?
+
+Model Context Protocol is an open standard originated by Anthropic for securely connecting Large Language Models to local tools, APIs, and data sources.
+
+XAS exposes its MCP endpoint at `/mcp` using modern **Streamable HTTP** transport, natively compatible with reverse proxies and streaming responses.
+
+## Access Token Management
+
+To safeguard your data, incoming MCP requests must authenticate using a Bearer token.
+
+Navigate to **Settings** > **Integration** > **MCP Token**, and click **Create MCP Token**:
+
+![Create granular scoped MCP token](/screenshots/en-US/settings-mcp-create.avif)
+
+### Permission Scopes
+
+| Scope | Description | Typical Use |
+| ----- | ----------- | ----------- |
+| **READ_ONLY** | Allows querying album lists, task configs, run history, and system info | Status monitoring, reporting |
+| **ALLOW_TRIGGER** | Includes read access and grants permission to trigger sync tasks | Automated workflows, agent execution |
+
+> [!NOTE]
+> The plain text token is only shown once upon creation and stored hashed in SQLite. Make sure to copy and save it securely.
+
+## Client Setup
+
+### Claude Desktop
+
+Add the XAS MCP server to your Claude configuration file:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "xiaomi-album-syncer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "http://localhost:8232/mcp",
+        "--header",
+        "Authorization: Bearer YOUR_MCP_TOKEN"
+      ]
+    }
+  }
+}
+```
+
+> If XAS is hosted remotely, replace `http://localhost:8232/mcp` with your actual URL (e.g. `https://sync.example.com/mcp`).
+
+## Tool Capabilities: xas_query
+
+XAS exports a unified `xas_query` tool structured across domains and actions:
+
+- **album**:
+  - Query all synced cloud accounts and view album asset counts.
+- **crontab**:
+  - List configured tasks, Cron schedules, and enabled states.
+  - Trigger immediate execution of a specific task (requires `ALLOW_TRIGGER`).
+- **history**:
+  - Retrieve paginated history runs and elapsed runtimes.
+  - Inspect detail records of a specific execution (successful, failed, and skipped items).
+- **system**:
+  - Read environment details, runtime version, and database statistics.
+
+## Example Prompts
+
+Once configured in Claude or Cursor, you can ask in plain text:
+
+- *"Did my album backup last night succeed? How many new photos were downloaded?"*
+- *"List all albums currently discovered in my iCloud and Xiaomi accounts."*
+- *"Trigger the 'Daily Sync' task now."*

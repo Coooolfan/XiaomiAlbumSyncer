@@ -1,88 +1,87 @@
 export const meta = {
-  title: 'Download Path Expression',
-  description: 'Customize where downloaded files are saved with ${...} interpolation.',
+  title: 'Destination Path Expression',
+  description: 'Customize download paths with ${...} variable interpolation.',
   section: 'Features',
   order: 40,
   slug: 'expression-target-path',
 }
 
-# Download Path Expression
+# Destination Path Expressions
 
-The task option `expressionTargetPath` customizes where downloaded files are saved, filling in dynamic values via `${...}` interpolation.
+The `expressionTargetPath` setting on a task allows you to construct dynamic directory hierarchies and custom filenames using `${...}` placeholders.
 
-- When the expression is empty, blank, or contains no supported placeholders, it falls back to the default rules:
+- If the expression is empty or contains no recognized placeholders, it falls back to default logic:
   - Non-audio: `targetPath/album/fileName`
-  - Audio: `targetPath/album/{assetId}_{fileName}` (avoids overwriting recordings with duplicate names)
-- When the expression is valid, `targetPath` is not part of the path; relative expressions stay relative, so write a full path yourself if needed.
-- Time formatting uses the timezone from the task's `timeZone` option, falling back to the system default if it cannot be parsed.
-- Time patterns follow the Java `DateTimeFormatter` syntax (e.g. `yyyy-MM-dd`, `yyyy/MM`).
-- `album` / `fileName` / `title` are automatically sanitized for use in paths.
+  - Audio: `targetPath/album/{assetId}_{fileName}` (avoids overwriting audio recordings)
+- When valid, `targetPath` is omitted; relative paths remain relative, so absolute paths are recommended.
+- Time formatting uses the task's configured `timeZone`.
+- Date pattern syntax adheres to Java's `DateTimeFormatter` standard (e.g. `yyyy-MM-dd`, `yyyy/MM`).
+- `album`, `fileName`, and `title` are automatically sanitized for file-system safety.
 
-> Path sanitization replaces `\ / : * ? " < > |`, newlines, tabs, and similar characters with `_`.
+> Characters `\ / : * ? " < > |` and control characters are safely replaced with `_`.
 
 ## Placeholders
 
 | Placeholder | Description |
-| --- | --- |
+| ----------- | ----------- |
 | `${crontabId}` | Task ID |
-| `${crontabName}` | Task name |
-| `${historyId}` | ID of this run's history record |
+| `${crontabName}` | Task Name |
+| `${historyId}` | Current run history ID |
 | `${album}` / `${albumName}` | Album name (sanitized) |
-| `${fileName}` | File name (sanitized) |
-| `${fileStem}` | File name without extension (based on `${fileName}`) |
-| `${fileExt}` | File extension (without the dot) |
-| `${assetId}` | Asset ID |
-| `${assetType}` | Asset type in lowercase (`image` / `video` / `audio`) |
-| `${recordingTypeId}` | Raw recording category ID (empty for non-recordings, e.g. `0` / `1` / `2` / `3`) |
-| `${recordingType}` | Recording category name in Chinese (empty for non-recordings) |
-| `${sha1}` | Asset SHA1 |
+| `${fileName}` | Full file name (sanitized) |
+| `${fileStem}` | Base name without extension |
+| `${fileExt}` | File extension (without dot) |
+| `${assetId}` | Unique asset ID |
+| `${assetType}` | Asset media type (`image` / `video` / `audio`) |
+| `${recordingTypeId}` | Recording type raw ID (`0`, `1`, `2`, `3`) |
+| `${recordingType}` | Recording type friendly name (e.g. Call Recording) |
+| `${checksum}` | Source checksum (SHA-1 for Xiaomi, Base64 checksum for iCloud) |
+| `${sha1}` | Alias for `${checksum}` |
 | `${title}` | Asset title (sanitized) |
 | `${size}` | Asset size in bytes |
-| `${downloadEpochMillis}` | Download start time in milliseconds |
-| `${takenEpochMillis}` | Capture time in milliseconds |
-| `${downloadEpochSeconds}` | Download start time in seconds |
-| `${takenEpochSeconds}` | Capture time in seconds |
+| `${downloadEpochMillis}` | Download start Unix timestamp (milliseconds) |
+| `${takenEpochMillis}` | Capture Unix timestamp (milliseconds) |
+| `${downloadEpochSeconds}` | Download start Unix timestamp (seconds) |
+| `${takenEpochSeconds}` | Capture Unix timestamp (seconds) |
 
-## Time formatting
+## Date Formatting
 
-Use these prefixes with a `DateTimeFormatter` pattern:
+Format dates using the following prefixes:
 
-- `${download_<pattern>}`: based on the download start time
-- `${taken_<pattern>}`: based on the capture time
+- `${download_<pattern>}`: Based on download start time
+- `${taken_<pattern>}`: Based on photo/video capture time
 
-For `2024-05-06T12:00:00Z`:
+Assuming a capture date of `2024-05-06T12:00:00Z`:
 
-| Placeholder | Result |
-| --- | --- |
+| Expression | Result |
+| ---------- | ------ |
 | `${download_YYYYMM}` | `202405` |
 | `${download_yyyy-MM-dd}` | `2024-05-06` |
 | `${taken_yyyy/MM}` | `2024/05` |
+| `${taken_yyyy/MM/dd}` | `2024/05/06` |
 
-> If the pattern is invalid, the original `${...}` is kept as-is.
+## Practical Examples
 
-## Rules
-
-- Time formatting only applies to `${download_<pattern>}` and `${taken_<pattern>}`.
-- `${download}` alone is not a valid placeholder: a template containing only unsupported placeholders is treated as invalid and falls back to the default rules; if the template also contains valid placeholders, `${download}` is left untouched in the result.
-
-## Examples
-
-Archive by album and month (absolute path):
+### Year/Month + Album Hierarchy (Recommended)
 
 ```
-/data/${album}/${download_YYYYMM}/${fileName}
+/data/Photos/${taken_yyyy}/${taken_yyyy-MM}/${album}/${fileName}
 ```
 
-Resolves to (album `旅行`, file `photo.jpg`):
+Resolves to:
 
 ```
-/data/旅行/202405/photo.jpg
+/data/Photos/2024/2024-05/Travel/IMG_20240506_120000.jpg
 ```
 
-Keep original names for audio files (relative path):
+### Preventing File Collision with Unique Asset ID
 
 ```
-${album}/${fileName}
+/data/${album}/${taken_yyyy}/${fileStem}_${assetId}.${fileExt}
 ```
 
-A recording `rec.m4a` is saved as `Recordings/rec.m4a`. To avoid name collisions yourself, include `${assetId}` or similar fields in the template.
+### Voice Recordings Sorted by Recording Type
+
+```
+/data/Recordings/${recordingType}/${fileName}
+```
