@@ -24,7 +24,8 @@ const accountsStore = useAccountsStore()
 const { albums } = storeToRefs(albumsStore)
 const { accounts } = storeToRefs(accountsStore)
 
-const groupMenus = ref<Array<InstanceType<typeof Menu> | null>>([])
+type MenuInstance = InstanceType<typeof Menu>
+const groupMenus = ref<Array<MenuInstance | null>>([])
 
 const groupedAlbums = computed(() => {
   const groups: Array<{ account: ProviderAccount; albums: Album[] }> = []
@@ -180,7 +181,7 @@ onMounted(() => {
                 @click="(e) => groupMenus[gi]?.toggle(e)"
               />
               <Menu
-                :ref="(el) => (groupMenus[gi] = el as InstanceType<typeof Menu> | null)"
+                :ref="(el) => (groupMenus[gi] = el as MenuInstance | null)"
                 :model="getGroupMenuItems(group.account.id)"
                 popup
               />
