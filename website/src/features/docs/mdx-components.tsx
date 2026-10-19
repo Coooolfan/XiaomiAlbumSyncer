@@ -1,6 +1,7 @@
-import { type ComponentPropsWithoutRef, type HTMLAttributes, type ReactNode, useRef, useState } from 'react'
+import { Children, cloneElement, isValidElement, type ComponentPropsWithoutRef, type HTMLAttributes, type ReactNode, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Check, Copy } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { AlertCircle, Check, Copy, Info, Lightbulb, OctagonAlert, TriangleAlert } from 'lucide-react'
 
 function mergeClassName(...values: Array<string | undefined>) {
   return values.filter(Boolean).join(' ')
@@ -22,6 +23,170 @@ function Heading({
     >
       {children}
     </h2>
+  )
+}
+
+type AlertType = 'NOTE' | 'TIP' | 'IMPORTANT' | 'WARNING' | 'CAUTION'
+
+const ALERT_RE = /^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\](?:\r?\n|[ \t]+)?/i
+
+interface AlertConfig {
+  icon: typeof Info
+  titleZh: string
+  titleEn: string
+  containerClass: string
+  headerClass: string
+  iconClass: string
+  bodyClass: string
+}
+
+const ALERT_CONFIG: Record<AlertType, AlertConfig> = {
+  NOTE: {
+    icon: Info,
+    titleZh: '说明',
+    titleEn: 'Note',
+    containerClass:
+      'border-l-4 border-l-blue-500 border-neutral-200/80 bg-blue-50/50 dark:border-neutral-800 dark:border-l-blue-400 dark:bg-blue-950/20',
+    headerClass: 'text-blue-700 dark:text-blue-300',
+    iconClass: 'text-blue-600 dark:text-blue-400',
+    bodyClass: 'text-neutral-700 dark:text-neutral-300',
+  },
+  TIP: {
+    icon: Lightbulb,
+    titleZh: '提示',
+    titleEn: 'Tip',
+    containerClass:
+      'border-l-4 border-l-emerald-500 border-neutral-200/80 bg-emerald-50/50 dark:border-neutral-800 dark:border-l-emerald-400 dark:bg-emerald-950/20',
+    headerClass: 'text-emerald-700 dark:text-emerald-300',
+    iconClass: 'text-emerald-600 dark:text-emerald-400',
+    bodyClass: 'text-neutral-700 dark:text-neutral-300',
+  },
+  IMPORTANT: {
+    icon: AlertCircle,
+    titleZh: '重要',
+    titleEn: 'Important',
+    containerClass:
+      'border-l-4 border-l-purple-500 border-neutral-200/80 bg-purple-50/50 dark:border-neutral-800 dark:border-l-purple-400 dark:bg-purple-950/20',
+    headerClass: 'text-purple-700 dark:text-purple-300',
+    iconClass: 'text-purple-600 dark:text-purple-400',
+    bodyClass: 'text-neutral-700 dark:text-neutral-300',
+  },
+  WARNING: {
+    icon: TriangleAlert,
+    titleZh: '警告',
+    titleEn: 'Warning',
+    containerClass:
+      'border-l-4 border-l-amber-500 border-neutral-200/80 bg-amber-50/50 dark:border-neutral-800 dark:border-l-amber-400 dark:bg-amber-950/20',
+    headerClass: 'text-amber-800 dark:text-amber-300',
+    iconClass: 'text-amber-600 dark:text-amber-400',
+    bodyClass: 'text-neutral-700 dark:text-neutral-300',
+  },
+  CAUTION: {
+    icon: OctagonAlert,
+    titleZh: '注意',
+    titleEn: 'Caution',
+    containerClass:
+      'border-l-4 border-l-rose-500 border-neutral-200/80 bg-rose-50/50 dark:border-neutral-800 dark:border-l-rose-400 dark:bg-rose-950/20',
+    headerClass: 'text-rose-700 dark:text-rose-300',
+    iconClass: 'text-rose-600 dark:text-rose-400',
+    bodyClass: 'text-neutral-700 dark:text-neutral-300',
+  },
+}
+
+function extractAlert(children: ReactNode): { type: AlertType; body: ReactNode[] } | null {
+  const childArray = Children.toArray(children).filter(
+    (c) => typeof c !== 'string' || c.trim() !== '',
+  )
+  if (!childArray.length) return null
+
+  const first = childArray[0]
+
+  if (typeof first === 'string') {
+    const m = first.match(ALERT_RE)
+    if (!m) return null
+    const type = m[1].toUpperCase() as AlertType
+    const rest = first.slice(m[0].length)
+    const body: ReactNode[] = [rest, ...childArray.slice(1)].filter(
+      (c) => typeof c !== 'string' || c.trim() !== '',
+    )
+    return { type, body }
+  }
+
+  if (isValidElement<{ children?: ReactNode }>(first)) {
+    const pChildren = Children.toArray(first.props.children)
+    const firstPChild = pChildren.find((c) => typeof c !== 'string' || c.trim() !== '')
+    if (typeof firstPChild !== 'string') return null
+
+    const m = firstPChild.match(ALERT_RE)
+    if (!m) return null
+    const type = m[1].toUpperCase() as AlertType
+    const rest = firstPChild.slice(m[0].length)
+
+    const firstPIndex = pChildren.indexOf(firstPChild)
+    const remainingPChildren = pChildren.slice(firstPIndex + 1)
+
+    let newFirst: ReactNode = null
+    if (rest.trim() !== '' || remainingPChildren.length > 0) {
+      newFirst = cloneElement(first, {
+        ...first.props,
+        children: rest.trim() !== '' ? [rest, ...remainingPChildren] : remainingPChildren,
+      })
+    }
+
+    const body: ReactNode[] = newFirst
+      ? [newFirst, ...childArray.slice(1)]
+      : childArray.slice(1)
+    return { type, body }
+  }
+
+  return null
+}
+
+function Blockquote({ className, children, ...props }: HTMLAttributes<HTMLQuoteElement>) {
+  const { i18n } = useTranslation()
+  const isZh = i18n.language?.startsWith('zh') ?? true
+  const alert = extractAlert(children)
+
+  if (alert) {
+    const cfg = ALERT_CONFIG[alert.type]
+    const Icon = cfg.icon
+    const title = isZh ? cfg.titleZh : cfg.titleEn
+
+    return (
+      <div
+        role="alert"
+        className={mergeClassName(
+          'my-6 rounded-r-lg border border-l-4 p-4 text-sm leading-7 shadow-xs transition-colors duration-200',
+          cfg.containerClass,
+          className,
+        )}
+      >
+        <div className={mergeClassName('flex items-center gap-2 font-semibold tracking-wide', cfg.headerClass)}>
+          <Icon className={mergeClassName('h-4 w-4 shrink-0', cfg.iconClass)} aria-hidden="true" />
+          <span>{title}</span>
+        </div>
+        <div
+          className={mergeClassName(
+            'mt-2.5 space-y-2.5 [&_p]:m-0 [&_p]:leading-7 [&_p]:text-inherit [&_p]:text-[length:inherit] [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:text-inherit [&_ul]:text-[length:inherit] [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:text-inherit [&_ol]:text-[length:inherit] [&_li]:pl-1 [&_li]:text-inherit [&_li]:text-[length:inherit]',
+            cfg.bodyClass,
+          )}
+        >
+          {alert.body}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <blockquote
+      className={mergeClassName(
+        'mt-6 space-y-3 rounded border border-(--xas-blockquote-border) bg-(--xas-blockquote-bg) px-5 py-4 text-sm leading-7 text-(--xas-blockquote-text) [&_p]:m-0 [&_p]:text-inherit [&_p]:text-[length:inherit] [&_p]:leading-[inherit]',
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </blockquote>
   )
 }
 
@@ -60,15 +225,7 @@ export const mdxComponents = {
   li: ({ className, ...props }: HTMLAttributes<HTMLLIElement>) => (
     <li className={mergeClassName('pl-1', className)} {...props} />
   ),
-  blockquote: ({ className, ...props }: HTMLAttributes<HTMLQuoteElement>) => (
-    <blockquote
-      className={mergeClassName(
-        'mt-6 space-y-3 rounded border border-(--xas-blockquote-border) bg-(--xas-blockquote-bg) px-5 py-4 text-sm leading-7 text-(--xas-blockquote-text) [&_p]:m-0 [&_p]:text-inherit [&_p]:text-[length:inherit] [&_p]:leading-[inherit]',
-        className,
-      )}
-      {...props}
-    />
-  ),
+  blockquote: Blockquote,
   hr: ({ className, ...props }: HTMLAttributes<HTMLHRElement>) => (
     <hr className={mergeClassName('my-10 border-(--xas-line)', className)} {...props} />
   ),
