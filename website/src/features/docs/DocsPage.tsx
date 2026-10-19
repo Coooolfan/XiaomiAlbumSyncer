@@ -165,7 +165,10 @@ function DocsNavigation({
                 <li key={doc.meta.slug || '__root__'}>
                   <Link
                     to={getDocHref(locale, doc.meta.slug)}
-                    onClick={onNavigate}
+                    onClick={() => {
+                      onNavigate?.()
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+                    }}
                     className={`block rounded-sm px-2.5 py-1.5 text-sm transition-colors duration-300 ${
                       active
                         ? 'bg-neutral-100 text-neutral-950 dark:bg-neutral-800 dark:text-white'
@@ -320,7 +323,10 @@ export function DocsPage({ locale }: { locale: DocsLocale }) {
   useEffect(() => {
     if (!entry) return
     const { hash } = window.location
-    if (!hash) return
+    if (!hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+      return
+    }
     const frame = requestAnimationFrame(() => {
       const el = document.getElementById(decodeURIComponent(hash.slice(1)))
       el?.scrollIntoView()
