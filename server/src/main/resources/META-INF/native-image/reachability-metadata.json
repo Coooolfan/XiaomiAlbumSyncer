@@ -5828,6 +5828,10 @@
           "parameterTypes": []
         },
         {
+          "name": "getStarNoticeDismissed",
+          "parameterTypes": []
+        },
+        {
           "name": "getUserId",
           "parameterTypes": []
         },
@@ -5962,6 +5966,9 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$PASS_TOKEN$1"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$STAR_NOTICE_DISMISSED$1"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.SystemConfigProps$USER_ID$1"
