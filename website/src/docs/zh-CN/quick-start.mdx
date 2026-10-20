@@ -1,0 +1,75 @@
+export const meta = {
+  title: '快速开始',
+  description: '用 Docker 启动 Xiaomi Album Syncer 并完成第一次相册同步。',
+  section: '快速开始',
+  order: 20,
+  slug: 'quick-start',
+}
+
+# 快速开始
+
+本教程将引导您使用 Docker 启动服务，绑定云服务账号，并创建第一个定时同步任务。
+
+## 1. 启动服务
+
+使用 Docker 一键运行服务容器：
+
+```bash
+docker run -d \
+  -p 8232:8080 \
+  --name xiaomi-album-syncer \
+  -v ~/xiaomi-album-syncer/download:/app/download \
+  -v ~/xiaomi-album-syncer/db:/app/db \
+  coolfan1024/xiaomi-album-syncer:latest
+```
+
+启动完成后，打开浏览器访问 `http://localhost:8232`。
+
+> [!NOTE]
+> 首次访问需要设置管理员登录密码。该密码仅保存在本地数据库中，用于保护控制台安全。
+
+## 2. 绑定云账号
+
+进入控制台后，点击左侧导航的「设置」>「同步账号」，点击「添加账号」：
+
+![添加云服务账号](/screenshots/zh-CN/account-provider-select.avif)
+
+- **小米云服务**：选择「小米云服务」，点击「扫码登录」，使用手机/平板登录的小米账号扫码确认即可完成绑定。系统将自动刷新与续期凭据。
+- **Apple iCloud**：选择「Apple iCloud」，输入 Apple ID 与密码并提交双重认证验证码。详细要求请参阅 [iCloud 照片同步](/zh-CN/docs/icloud)。
+
+账号绑定完成后，系统会自动拉取远端相册列表。
+
+## 3. 创建计划任务
+
+点击左侧导航的「计划任务」，点击「新建任务」开始配置：
+
+![新建同步计划任务](/screenshots/zh-CN/schedule-new-task.avif)
+
+### 核心配置项
+
+| 配置项 | 说明 | 示例 / 默认值 |
+| ------ | ---- | ------------- |
+| **任务名称** | 用于识别任务的友好名称 | `每日主力同步` |
+| **所属账号** | 任务执行所绑定的云服务账号 | 选择已绑定的账号 |
+| **同步相册** | 勾选需要备份的相册集合 | 全部相册或指定相册 |
+| **同步模式** | 远端资产元数据的拉取策略 | `CURSOR`（推荐） / `FULL` / `TIMELINE` |
+| **定时表达式** | 带秒级精度的 6/7 段 Cron 表达式 | `0 0 3 * * ?`（每天凌晨 3 点执行） |
+| **目标路径** | 文件保存根路径，支持表达式插值 | `/data/${album}/${fileName}` |
+
+### 同步模式区别
+
+- **位点增量（CURSOR - 推荐）**：记录相册增量水位位点，仅拉取新增或变更资产，执行速度快且支持断点续拉，小米云与 iCloud 均支持。
+- **全量同步（FULL）**：每次运行均完整枚举远端所有资产元数据，适合基准校验。
+- **时间线增量（TIMELINE）**：通过比较上一次同步的时间线仅拉取有变动的日期（仅小米云支持）。
+
+## 4. 触发执行与监控
+
+保存任务后，您可以在任务列表点击行内的「执行」按钮立即触发同步。
+
+任务执行状态、下载实时进度、处理详情（图片/视频/录音统计）均会在页面上实时更新。
+
+## 下一步
+
+- 了解更多部署选项与 Compose 配置：[安装](/zh-CN/docs/install)
+- 了解 Apple 图库同步要点：[iCloud 照片同步](/zh-CN/docs/icloud)
+- 自定义文件归档目录与命名结构：[下载路径表达式](/zh-CN/docs/expression-target-path)

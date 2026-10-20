@@ -1,0 +1,75 @@
+export const meta = {
+  title: 'Quick Start',
+  description: 'Launch Xiaomi Album Syncer with Docker and configure your first album sync.',
+  section: 'Getting Started',
+  order: 20,
+  slug: 'quick-start',
+}
+
+# Quick Start
+
+This guide will walk you through starting the service with Docker, connecting your cloud account, and scheduling your first backup task.
+
+## 1. Start the Service
+
+Start the container with a single Docker command:
+
+```bash
+docker run -d \
+  -p 8232:8080 \
+  --name xiaomi-album-syncer \
+  -v ~/xiaomi-album-syncer/download:/app/download \
+  -v ~/xiaomi-album-syncer/db:/app/db \
+  coolfan1024/xiaomi-album-syncer:latest
+```
+
+Once started, open your browser and navigate to `http://localhost:8232`.
+
+> [!NOTE]
+> On your first visit, set an administrator password. This password is stored locally to protect your console.
+
+## 2. Connect Your Cloud Account
+
+Navigate to **Settings** > **Sync Accounts** from the sidebar, then click **Add Account**:
+
+![Select sync provider](/screenshots/en-US/account-provider-select.avif)
+
+- **Xiaomi Cloud**: Choose Xiaomi Cloud and click QR Code Login. Scan the code using your Xiaomi phone/tablet to authorize. Credentials refresh automatically.
+- **Apple iCloud**: Choose Apple iCloud, enter your Apple ID and password, and submit the 2FA code. See [iCloud Photos](/en-US/docs/icloud) for prerequisites.
+
+Once authenticated, your remote album list will be fetched automatically.
+
+## 3. Create a Scheduled Task
+
+Navigate to **Schedule** in the sidebar and click **New Task**:
+
+![Create scheduled sync task](/screenshots/en-US/schedule-new-task.avif)
+
+### Core Settings
+
+| Option | Description | Example / Default |
+| ------ | ----------- | ----------------- |
+| **Name** | Friendly identifier for the task | `Daily Sync` |
+| **Account** | Cloud account bound to this task | Select your connected account |
+| **Albums** | Select target albums to sync | All albums or specific ones |
+| **Sync Mode** | Metadata discovery strategy | `CURSOR` (Recommended) / `FULL` / `TIMELINE` |
+| **Schedule** | 6- or 7-field Cron expression with seconds | `0 0 3 * * ?` (Every day at 3:00 AM) |
+| **Destination Path** | Target storage path with interpolation | `/data/${album}/${fileName}` |
+
+### Understanding Sync Modes
+
+- **Cursor Incremental (CURSOR - Recommended)**: Tracks checkpoint cursors per album to only fetch newly created or changed assets. Fast and supports resumption. Available for both Xiaomi and iCloud.
+- **Full Sync (FULL)**: Enumerates the entire remote library on every run. Best for periodic validation.
+- **Timeline Incremental (TIMELINE)**: Compares date timelines with the previous run (Xiaomi Cloud only).
+
+## 4. Run and Monitor
+
+After saving, you can click the **Execute** button on the task row to trigger an immediate sync.
+
+Download progress, asset transfer counts (photos, videos, audio), and detailed logs update in real time.
+
+## Next Steps
+
+- Explore more deployment options: [Install](/en-US/docs/install)
+- Read prerequisites for Apple libraries: [iCloud Photos](/en-US/docs/icloud)
+- Customize file naming and folder hierarchy: [Expression Target Path](/en-US/docs/expression-target-path)

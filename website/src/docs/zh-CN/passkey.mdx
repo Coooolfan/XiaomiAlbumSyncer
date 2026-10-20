@@ -1,0 +1,51 @@
+export const meta = {
+  title: 'Passkey 登录',
+  description: '使用 Passkey（WebAuthn）进行无密码登录。',
+  section: '功能',
+  order: 60,
+  slug: 'passkey',
+}
+
+# Passkey 登录
+
+Xiaomi Album Syncer 原生支持基于 WebAuthn 标准的 Passkey 无密码登录：支持 Touch ID、Face ID、Windows Hello 等设备生物识别，YubiKey 等硬件安全密钥，以及 iCloud 钥匙串、Google 密码管理器同步的通行密钥。
+
+![Passkey 认证管理](/screenshots/zh-CN/settings-passkey.avif)
+
+## 前置要求
+
+- **安全上下文（HTTPS）**：浏览器仅在安全上下文（Secure Context）下暴露 WebAuthn API。除 `localhost` 用于本地调试外，生产环境必须在 HTTPS 下使用。启用方式请参阅 [SSL / HTTPS](/zh-CN/docs/ssl)。
+- **浏览器兼容性**：需要支持 WebAuthn 标准的现代浏览器（Chrome / Edge 67+、Firefox 60+、Safari 13+）。
+
+## 环境变量配置
+
+由于 Passkey 强绑定域名，需要通过环境变量明确指定 Relying Party（信赖方）域名：
+
+| 环境变量 | 说明 | 默认值 |
+| --- | --- | --- |
+| `WEBAUTHN_RP_ID` | Relying Party ID，必须为访问服务时的主机名或其上级父域名 | `localhost` |
+| `WEBAUTHN_RP_NAME` | 注册与授权时向用户显示的系统名称 | `XiaomiAlbumSyncer` |
+
+> [!WARNING]
+> `WEBAUTHN_RP_ID` 必须与浏览器地址栏访问的域名一致。例如若通过 `https://sync.nas.local` 访问，则需将 `WEBAUTHN_RP_ID` 设置为 `sync.nas.local`；若包含端口号，请注意 **RP ID 不应包含端口号**。
+
+### Docker 配置示例
+
+```bash
+docker run -d \
+  -p 8232:8080 \
+  -e WEBAUTHN_RP_ID=sync.nas.local \
+  -e WEBAUTHN_RP_NAME="我的相册同步" \
+  -v ~/xiaomi-album-syncer/download:/app/download \
+  -v ~/xiaomi-album-syncer/db:/app/db \
+  --name xiaomi-album-syncer \
+  coolfan1024/xiaomi-album-syncer:latest
+```
+
+## 使用指南
+
+1. **设置密码**：首次访问完成管理员主密码设置。
+2. **注册密钥**：进入控制台「设置」>「账号与安全」>「Passkey」，点击「注册 Passkey」，输入当前主密码验证身份，并自定义密钥备注名称（如“MacBook Pro 指纹”）。
+3. **完成绑定**：按浏览器与操作系统弹窗指引，完成指纹、面容或硬件密钥触摸授权。
+4. **免密登录**：退出登录后，在登录页面直接点击「使用 Passkey 登录」，一键完成生物识别验证。
+5. **多设备管理**：可以在管理界面随时为手机、办公电脑等多台设备分别注册独立密钥，或撤销已失效的密钥。

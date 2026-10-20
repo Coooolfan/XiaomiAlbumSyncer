@@ -1,0 +1,39 @@
+{
+  "name": "xas-website",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^24.20.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build && vite build --ssr src/entry-server.tsx --outDir dist/server --emptyOutDir false && node ./scripts/prerender.mjs",
+    "preview": "vite preview",
+    "type-check": "tsc -b"
+  },
+  "dependencies": {
+    "@mdx-js/rollup": "^3.1.1",
+    "i18next": "26.4.2",
+    "lucide-react": "^1.51.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-i18next": "17.0.15",
+    "react-router-dom": "^7.18.4",
+    "rehype-slug": "^6.0.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@shikijs/rehype": "^4.5.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "24.13.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "rollup": "^4.64.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2"
+  },
+  "packageManager": "yarn@4.18.0+sha512.fcb8716fe7cd0eece141ffc18b92193a9df9204c1ba83189c288835223fc0bbe64af473bab0d5e9927a7daeb5caf2bb07eb2787cc9338ca040ea125f2a1f2f7e"
+}

@@ -1,0 +1,60 @@
+export const meta = {
+  title: 'iCloud Photos',
+  description: 'Configure and synchronize Apple iCloud Photos, originals, and Live Photos.',
+  section: 'Features',
+  order: 35,
+  slug: 'icloud',
+}
+
+# iCloud Photos Synchronization
+
+Starting in version `0.20.0`, Xiaomi Album Syncer natively supports **Apple iCloud Photos**, allowing you to archive photos, videos, and Live Photos from personal and shared iCloud libraries directly to local storage.
+
+![iCloud login configuration](/screenshots/en-US/account-icloud-login.avif)
+
+## Prerequisites
+
+Before connecting your Apple ID, make sure your account satisfies the following requirements:
+
+> [!IMPORTANT]
+> 1. **Enable Web Access**: Log in to [appleid.apple.com](https://appleid.apple.com) or go to Apple device settings and enable **Access iCloud Data on the Web**.
+> 2. **Disable Advanced Data Protection (ADP)**: The sync client communicates via official web endpoints and CloudKit. **Advanced Data Protection must be turned OFF**.
+> 3. **Library Scope**: Supports **Personal Library (PrimarySync)** and **Shared Library (SharedSync)**. The separate iOS "Shared Albums" subscription service is currently unsupported.
+
+## Account Connection & Authentication
+
+Navigate to **Settings** > **Sync Accounts** > **Add Account**, and choose **Apple iCloud**:
+
+1. **Apple ID & Password**: Enter your Apple credentials.
+2. **Region Endpoint**:
+   - **Mainland China (`icloud.com.cn`)**: Select this if your Apple ID is operated by GCBD.
+   - **Global (`icloud.com`)**: Select this for all other regions and international accounts.
+3. **Two-Factor Authentication (2FA)**: After submitting, enter the 6-digit verification code received on your trusted Apple devices.
+4. **Session Recovery**: Session tokens and device trust tokens are safely maintained. If authentication expires, an alert will be sent via Webhook or highlighted in the dashboard.
+
+## Supported Albums and Smart Collections
+
+You can configure tasks to backup specific collections:
+
+| Collection | Description | Query Type |
+| ---------- | ----------- | ---------- |
+| **All Photos** | All active assets in your photo library (excluding hidden/deleted) | Base primary library |
+| **Favorites** | Photos marked as Favorite / Hearted | `smartAlbum=FAVORITE` |
+| **Screenshots** | Device screenshot captures | `smartAlbum=SCREENSHOT` |
+| **Bursts** | Burst sequence stacks | `CPLBurstStack` |
+| **Hidden** | Protected assets in the Hidden album | Opt-in sync |
+| **Custom Albums** | User-created albums and folders | Isolated or aggregated archiving |
+
+## Media Assets & Live Photos
+
+- **Full Resolution Originals**: Always pulls uncompressed original master files.
+- **RAW + JPEG Pairs**: When multiple originals exist (such as companion RAW+JPEG captures), both files are downloaded with distinct file suffixes.
+- **Live Photos**: Automatically identifies and downloads both the still high-resolution image and the companion `.mov` video file.
+- **Integrity Verification**: iCloud assets include source checksums. Verification can be enabled per task. Use `${checksum}` in your destination path expression.
+
+## Recommended Sync Strategy
+
+When creating an iCloud sync task, select **Cursor Incremental (CURSOR)** mode:
+- Establishes a full metadata baseline on the first run.
+- Subsequent runs only fetch new or modified assets by cursor tokens, finishing in seconds.
+- Fully supports resumption and baseline reconstruction in case of network disruptions.

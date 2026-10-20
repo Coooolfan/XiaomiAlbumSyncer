@@ -1,0 +1,60 @@
+export const meta = {
+  title: 'iCloud 照片同步',
+  description: '配置与同步 Apple iCloud 图库、原件与 Live Photo。',
+  section: '功能',
+  order: 35,
+  slug: 'icloud',
+}
+
+# iCloud 照片同步
+
+Xiaomi Album Syncer 自 `0.20.0` 版本起正式支持同步 **Apple iCloud Photos**，可将 iCloud 个人及共享图库中的照片、视频、Live Photo 完整归档到本地。
+
+![iCloud 登录配置](/screenshots/zh-CN/account-icloud-login.avif)
+
+## 前置要求
+
+在连接 Apple 账号前，请确保在 Apple ID 管理中满足以下两项要求：
+
+> [!IMPORTANT]
+> 1. **开启网页数据访问**：登录 [appleid.apple.com](https://appleid.apple.com) 或在 Apple 设备设置中开启「在网页上访问 iCloud 数据（Access iCloud Data on the Web）」。
+> 2. **关闭高级数据保护（ADP）**：客户端通过官方网页协议与 CloudKit 通信，**不支持高级数据保护（Advanced Data Protection）**，请确保在 iCloud 设置中将其关闭。
+> 3. **支持图库范围**：支持**个人图库（PrimarySync）**与**共享图库（SharedSync）**；暂不支持 iOS/macOS 上的「共享相册（Shared Albums）」订阅功能。
+
+## 添加与认证账号
+
+进入控制台「设置」>「同步账号」，点击「添加账号」，选择 **Apple iCloud**：
+
+1. **Apple ID & 密码**：输入您的 Apple 账户名与密码。
+2. **区域选择**：
+   - **中国大陆 (icloud.com.cn)**：如果您的 Apple ID 注册于中国大陆（由云上贵州运营），请选择此项。
+   - **全球 / 国际 (icloud.com)**：国际及其他国家/地区账号请选择此项。
+3. **两步验证 (2FA)**：提交表单后，您的受信任 Apple 设备会收到 6 位验证码，输入验证码完成设备信赖授权。
+4. **会话恢复与通知**：系统会自动保存安全的 Session 与 Trust 凭据，并在会话失效时通过页面提示或 WebHook 发送失效提醒。
+
+## 支持的相册与系统集合
+
+同步任务可灵活选择所要备份的相册范围：
+
+| 相册类别 | 说明 | 对应查询 |
+| -------- | ---- | -------- |
+| **所有照片** | 图库中的全部有效资产（排除隐藏与已删除） | 默认基础图库 |
+| **个人收藏** | 在相册中标记为「喜欢 / 个人收藏」的照片 | `smartAlbum=FAVORITE` |
+| **截图相册** | 截屏图片集合 | `smartAlbum=SCREENSHOT` |
+| **连拍集合** | 连拍快照组 | `CPLBurstStack` |
+| **隐藏相册** | 已放入「隐藏」相册的私密资产 | 需单独勾选同步 |
+| **用户自定义相册** | 用户自己创建的所有相册或文件夹 | 支持多相册独立与聚合归档 |
+
+## 媒体资源与 Live Photo
+
+- **无损原件下载**：始终优先下载未经压缩的照片与视频原件。
+- **RAW + JPEG 配对**：若照片包含备用原件（如相机拍摄的 RAW+JPEG 配对），系统会同时下载两份原件，并在文件名中添加稳定标识区分。
+- **Live Photo 动态照片**：系统会自动识别并下载静态高分辨率图片以及配套的 `.mov` 视频文件，确保动态照片的完整留存。
+- **校验与完整性**：iCloud 资产自带 Base64 校验码，任务支持启用完整性校验（校验失败时会自动清理损坏文件并重新拉取）。在路径表达式中推荐使用 `${checksum}` 字段。
+
+## 推荐同步模式
+
+为 iCloud 任务配置同步时，建议选择 **位点增量（CURSOR）** 模式：
+- 首次执行会建立相册全量基线。
+- 后续同步仅按位点拉取新增与变更记录，极快完成日常备份。
+- 支持断点续拉，当发生异常或位点失效时系统会自动安全重构基线。

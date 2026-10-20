@@ -1,0 +1,99 @@
+export const meta = {
+  title: 'Installation',
+  description: 'Deploy Xiaomi Album Syncer with Docker, native binary, or JVM, and migrate legacy data.',
+  section: 'Getting Started',
+  order: 30,
+  slug: 'install',
+}
+
+# Installation & Deployment
+
+Xiaomi Album Syncer provides three deployment methods: Docker, native standalone binary, and JVM. All three produce identical database formats and can share storage seamlessly.
+
+## Comparison
+
+| Method | Best For | Runtime Requirements | Resource Overhead |
+| ------ | -------- | -------------------- | ----------------- |
+| **Docker (Recommended)** | NAS (Synology, QNAP, Unraid), servers | Docker / Docker Compose | Minimal (~50MB RAM for Native, ~200MB for JVM) |
+| **Native Binary** | Desktops or servers without Java runtime | None | Near-instant startup, tiny footprint |
+| **JVM Standalone** | Existing Java 25+ environments or custom JVM flags | JVM 25 or higher | Standard JVM environment |
+
+## 1. Docker Compose (Recommended)
+
+Create a `docker-compose.yml` file:
+
+```yaml
+services:
+  xiaomi-album-syncer:
+    image: coolfan1024/xiaomi-album-syncer:latest
+    container_name: xiaomi-album-syncer
+    ports:
+      - "8232:8080"
+    volumes:
+      - ./download:/app/download   # Saved photos, videos, and audio files
+      - ./db:/app/db               # SQLite database & application metadata
+    environment:
+      - TZ=Asia/Shanghai           # Timezone setting
+    restart: unless-stopped
+```
+
+Start the service:
+
+```bash
+docker compose up -d
+```
+
+> [!TIP]
+> For lowest possible memory consumption, switch to the Native image: `coolfan1024/xiaomi-album-syncer:latest-native`.
+
+## 2. Native Binary
+
+No Java installation needed. Download pre-built binaries directly from [GitHub Releases](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases):
+
+- **Linux**: `xiaomi-album-syncer-linux-x64-vX.X.X.zip` / `arm64`
+- **macOS**: `xiaomi-album-syncer-macos-x64-vX.X.X.zip` / `arm64`
+- **Windows**: `xiaomi-album-syncer-windows-x64-vX.X.X.exe.zip`
+
+### Linux / macOS
+
+```bash
+unzip xiaomi-album-syncer-linux-x64-v*.zip
+chmod +x xiaomi-album-syncer-*
+./xiaomi-album-syncer-*
+```
+
+### Windows
+
+Extract the zip and double-click the `.exe` file.
+
+> [!WARNING]
+> If your Windows username contains non-ASCII characters, SQLite extraction may fail with `UnsatisfiedLinkError`. Launch with a manual temp folder:
+> ```powershell
+> .\xiaomi-album-syncer-windows-x64.exe -Dorg.sqlite.tmpdir=C:\sqlite_tmp
+> ```
+
+## 3. JVM
+
+Ensure JVM 25 or newer is installed:
+
+```bash
+java -jar xiaomi-album-syncer.jar
+```
+
+## 4. Migrating from v2
+
+If you used the v2 CLI tool and want to import existing history from `old.db`:
+
+1. Mount the old database file into the container:
+   ```bash
+   docker run -d \
+     --name xiaomi-album-syncer \
+     -p 8232:8080 \
+     -v ~/xiaomi-album-syncer/download:/app/download \
+     -v ~/xiaomi-album-syncer/db:/app/db \
+     -v /path/to/old.db:/app/old.db \
+     coolfan1024/xiaomi-album-syncer:latest
+   ```
+2. Open the Web UI and finish password initialization.
+3. Go to **Settings** > **Data** > **Import from V2**, then click **Import**.
+4. The system will migrate legacy download records and albums to prevent redownloading. Remove the `-v ...:/app/old.db` mount afterward.

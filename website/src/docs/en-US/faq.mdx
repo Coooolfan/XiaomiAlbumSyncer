@@ -1,0 +1,55 @@
+export const meta = {
+  title: 'FAQ',
+  description: 'Troubleshooting login, synchronization, iCloud, and storage questions.',
+  section: 'Miscellaneous',
+  order: 70,
+  slug: 'faq',
+}
+
+# Frequently Asked Questions
+
+## 1. Authentication & Credentials
+
+### How long does the Xiaomi login session last?
+After scanning the QR code, the backend automatically refreshes session cookies using the PassToken. As long as your account isn't logged out elsewhere, sessions remain valid indefinitely. If expired, the console will prompt you to scan again and can trigger Webhook alerts.
+
+### iCloud login returns 409 or fails authentication?
+Verify the following Apple ID settings:
+1. **Advanced Data Protection (ADP)**: Must be turned OFF in your Apple device settings.
+2. **Access iCloud Data on the Web**: Must be enabled under your Apple account settings.
+3. Check the region endpoint (select `icloud.com.cn` for mainland China accounts, `icloud.com` for global accounts).
+
+### What if I forgot the admin password?
+The password is stored in the local SQLite database. Clear the `system_config` table to reset:
+```bash
+sqlite3 /path/to/db/xiaomialbumsyncer.db "DELETE FROM system_config;"
+```
+Reloading the page in your browser will display the initial setup screen.
+
+---
+
+## 2. Synchronization & Downloads
+
+### How does incremental sync determine already downloaded files?
+XAS records unique source identifiers for each asset in SQLite (remote asset ID and SHA-1 for Xiaomi; remoteKey and checksum for iCloud). With "Skip Existing Files" enabled, matching files on disk will be skipped automatically without re-downloading.
+
+### How are Apple Live Photos stored?
+XAS downloads both the high-resolution still image (e.g. `.HEIC` / `.JPG`) and the companion video file (`.MOV`) sharing the exact same file stem. Self-hosted photo managers like Immich, Synology Photos, and Apple Photos will automatically pair and render them as live motion photos.
+
+### Why is the photo capture time incorrect?
+If external software shows the photo date as the download date:
+- Ensure both **Rewrite EXIF Time** and **Rewrite File System Time** are toggled on.
+- Check that the task **Time Zone** matches your local timezone (e.g. `Asia/Shanghai`, `America/New_York`).
+
+### Why didn't my scheduled task trigger?
+XAS uses Solon Cron, which adheres to **6- or 7-field Cron syntax with seconds** (e.g. every day at 3:00 AM is `0 0 3 * * ?`, not the 5-field `0 3 * * *`). Also check your server system timezone.
+
+---
+
+## 3. Storage & Networking
+
+### Where are voice recordings saved and how to prevent collisions?
+Voice recordings share the task root target directory. By default, filenames are prefixed with `{assetId}_{fileName}`. You can also organize them using the `${recordingType}` placeholder in your path expression (e.g. `${recordingType}/${fileName}`).
+
+### Can I expose the dashboard through a reverse proxy like Nginx?
+Yes. Ensure your reverse proxy forwards `Host` headers and terminates TLS for HTTPS (required for Passkey WebAuthn). For the `/mcp` streaming endpoint, disable proxy buffering (e.g. `proxy_buffering off;`) to preserve streamable HTTP responses.

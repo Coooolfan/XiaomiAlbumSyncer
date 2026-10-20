@@ -1,0 +1,100 @@
+export const meta = {
+  title: '安装',
+  description: 'Docker、原生二进制与 JVM 三种部署方式及旧版本数据迁移。',
+  section: '快速开始',
+  order: 30,
+  slug: 'install',
+}
+
+# 安装与部署
+
+Xiaomi Album Syncer 提供 Docker、原生二进制以及 JVM 三种部署方式，三种方式产出的数据格式完全一致，数据库文件可以无缝互通。
+
+## 部署方式对比
+
+| 方式 | 适用场景 | 运行时依赖 | 资源开销 |
+| ---- | -------- | ---------- | -------- |
+| **Docker (推荐)** | NAS（群晖/威联通/极空间/绿联）、Linux 服务器长期运行 | Docker / Docker Compose | 极低（Native 约 50MB 内存，JVM 约 200MB） |
+| **原生二进制 (Native)** | 无 Java 环境的服务器或桌面系统直接执行 | 无任何系统依赖 | 极速启动，内存占用极小 |
+| **JVM 独立运行** | 已有 Java 25 运行时的环境或定制启动参数场景 | JVM 25 或更高版本 | 标准 Java 生态运行时 |
+
+## 1. Docker Compose（推荐）
+
+创建 `docker-compose.yml` 文件：
+
+```yaml
+services:
+  xiaomi-album-syncer:
+    image: coolfan1024/xiaomi-album-syncer:latest
+    container_name: xiaomi-album-syncer
+    ports:
+      - "8232:8080"
+    volumes:
+      - ./download:/app/download   # 照片、视频与录音保存目录
+      - ./db:/app/db               # 数据库与元数据保存目录
+    environment:
+      - TZ=Asia/Shanghai           # 设置时区
+    restart: unless-stopped
+```
+
+启动服务：
+
+```bash
+docker compose up -d
+```
+
+> [!TIP]
+> 如果您希望更低的内存占用，可使用 Native 镜像：将镜像名改为 `coolfan1024/xiaomi-album-syncer:latest-native`。
+
+## 2. 原生二进制部署 (Binary)
+
+无需安装 Java 环境，直接前往 [GitHub Releases](https://github.com/Coooolfan/XiaomiAlbumSyncer/releases) 下载对应系统的预编译包：
+
+- **Linux**: `xiaomi-album-syncer-linux-x64-vX.X.X.zip` / `arm64`
+- **macOS**: `xiaomi-album-syncer-macos-x64-vX.X.X.zip` / `arm64`
+- **Windows**: `xiaomi-album-syncer-windows-x64-vX.X.X.exe.zip`
+
+### Linux / macOS 运行
+
+```bash
+unzip xiaomi-album-syncer-linux-x64-v*.zip
+chmod +x xiaomi-album-syncer-*
+./xiaomi-album-syncer-*
+```
+
+### Windows 运行
+
+解压后双击运行 `.exe` 即可。
+
+> [!WARNING]
+> 若 Windows 登录用户名包含中文，SQLite 驱动解压原生库时可能抛出 `UnsatisfiedLinkError` 或 `Failed to load native library`。
+> 此时可通过命令行指定临时目录参数启动：
+> ```powershell
+> .\xiaomi-album-syncer-windows-x64.exe -Dorg.sqlite.tmpdir=C:\sqlite_tmp
+> ```
+
+## 3. JVM 部署
+
+确保本地已安装 JVM 25 或更高版本：
+
+```bash
+java -jar xiaomi-album-syncer.jar
+```
+
+## 4. 从 v2 旧版本迁移
+
+若您曾使用过 v2 版本的 CLI 工具，并保留了旧版 SQLite 数据库（`old.db`），可以平滑迁移至新版：
+
+1. 启动容器时挂载旧数据库文件：
+   ```bash
+   docker run -d \
+     --name xiaomi-album-syncer \
+     -p 8232:8080 \
+     -v ~/xiaomi-album-syncer/download:/app/download \
+     -v ~/xiaomi-album-syncer/db:/app/db \
+     -v /path/to/old.db:/app/old.db \
+     coolfan1024/xiaomi-album-syncer:latest
+   ```
+2. 访问控制台完成初始化登录。
+3. 打开「设置」>「数据」>「从 V2 导入」，点击「导入」按钮。
+4. 系统会自动迁移历史资产 ID、下载记录和相册映射，避免重复下载已有文件。迁移完成后即可移除 `-v /path/to/old.db:/app/old.db` 挂载。

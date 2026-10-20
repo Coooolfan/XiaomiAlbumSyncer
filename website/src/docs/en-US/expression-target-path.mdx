@@ -1,0 +1,87 @@
+export const meta = {
+  title: 'Destination Path Expression',
+  description: 'Customize download paths with ${...} variable interpolation.',
+  section: 'Features',
+  order: 40,
+  slug: 'expression-target-path',
+}
+
+# Destination Path Expressions
+
+The `expressionTargetPath` setting on a task allows you to construct dynamic directory hierarchies and custom filenames using `${...}` placeholders.
+
+- If the expression is empty or contains no recognized placeholders, it falls back to default logic:
+  - Non-audio: `targetPath/album/fileName`
+  - Audio: `targetPath/album/{assetId}_{fileName}` (avoids overwriting audio recordings)
+- When valid, `targetPath` is omitted; relative paths remain relative, so absolute paths are recommended.
+- Time formatting uses the task's configured `timeZone`.
+- Date pattern syntax adheres to Java's `DateTimeFormatter` standard (e.g. `yyyy-MM-dd`, `yyyy/MM`).
+- `album`, `fileName`, and `title` are automatically sanitized for file-system safety.
+
+> Characters `\ / : * ? " < > |` and control characters are safely replaced with `_`.
+
+## Placeholders
+
+| Placeholder | Description |
+| ----------- | ----------- |
+| `${crontabId}` | Task ID |
+| `${crontabName}` | Task Name |
+| `${historyId}` | Current run history ID |
+| `${album}` / `${albumName}` | Album name (sanitized) |
+| `${fileName}` | Full file name (sanitized) |
+| `${fileStem}` | Base name without extension |
+| `${fileExt}` | File extension (without dot) |
+| `${assetId}` | Unique asset ID |
+| `${assetType}` | Asset media type (`image` / `video` / `audio`) |
+| `${recordingTypeId}` | Recording type raw ID (`0`, `1`, `2`, `3`) |
+| `${recordingType}` | Recording type friendly name (e.g. Call Recording) |
+| `${checksum}` | Source checksum (SHA-1 for Xiaomi, Base64 checksum for iCloud) |
+| `${sha1}` | Alias for `${checksum}` |
+| `${title}` | Asset title (sanitized) |
+| `${size}` | Asset size in bytes |
+| `${downloadEpochMillis}` | Download start Unix timestamp (milliseconds) |
+| `${takenEpochMillis}` | Capture Unix timestamp (milliseconds) |
+| `${downloadEpochSeconds}` | Download start Unix timestamp (seconds) |
+| `${takenEpochSeconds}` | Capture Unix timestamp (seconds) |
+
+## Date Formatting
+
+Format dates using the following prefixes:
+
+- `${download_<pattern>}`: Based on download start time
+- `${taken_<pattern>}`: Based on photo/video capture time
+
+Assuming a capture date of `2024-05-06T12:00:00Z`:
+
+| Expression | Result |
+| ---------- | ------ |
+| `${download_YYYYMM}` | `202405` |
+| `${download_yyyy-MM-dd}` | `2024-05-06` |
+| `${taken_yyyy/MM}` | `2024/05` |
+| `${taken_yyyy/MM/dd}` | `2024/05/06` |
+
+## Practical Examples
+
+### Year/Month + Album Hierarchy (Recommended)
+
+```
+/data/Photos/${taken_yyyy}/${taken_yyyy-MM}/${album}/${fileName}
+```
+
+Resolves to:
+
+```
+/data/Photos/2024/2024-05/Travel/IMG_20240506_120000.jpg
+```
+
+### Preventing File Collision with Unique Asset ID
+
+```
+/data/${album}/${taken_yyyy}/${fileStem}_${assetId}.${fileExt}
+```
+
+### Voice Recordings Sorted by Recording Type
+
+```
+/data/Recordings/${recordingType}/${fileName}
+```

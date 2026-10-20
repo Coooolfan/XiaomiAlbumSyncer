@@ -1,0 +1,51 @@
+export const meta = {
+  title: 'Passkey Login',
+  description: 'Passwordless authentication using Passkey (WebAuthn).',
+  section: 'Features',
+  order: 60,
+  slug: 'passkey',
+}
+
+# Passkey Login
+
+Xiaomi Album Syncer natively supports WebAuthn-based Passkey passwordless authentication, including Touch ID, Face ID, Windows Hello, YubiKey hardware keys, and synced credentials via iCloud Keychain or Google Password Manager.
+
+![Passkey credential management](/screenshots/en-US/settings-passkey.avif)
+
+## Prerequisites
+
+- **Secure Context (HTTPS)**: Browsers only expose WebAuthn APIs in Secure Contexts. Except for `localhost` during development, production deployments require HTTPS. See [SSL / HTTPS](/en-US/docs/ssl).
+- **Browser Compatibility**: Any modern browser supporting WebAuthn (Chrome/Edge 67+, Firefox 60+, Safari 13+).
+
+## Environment Configuration
+
+Because Passkey credentials are cryptographic keys tied to the server domain, configure the Relying Party ID via environment variables:
+
+| Variable | Description | Default |
+| -------- | ----------- | ------- |
+| `WEBAUTHN_RP_ID` | Relying Party ID; must match the visiting hostname or a valid parent domain | `localhost` |
+| `WEBAUTHN_RP_NAME` | Friendly name displayed during authenticator prompts | `XiaomiAlbumSyncer` |
+
+> [!WARNING]
+> `WEBAUTHN_RP_ID` must match the hostname in your browser address bar (e.g. `sync.nas.local` when visiting `https://sync.nas.local`). Note that **RP ID must NOT include port numbers**.
+
+### Docker Example
+
+```bash
+docker run -d \
+  -p 8232:8080 \
+  -e WEBAUTHN_RP_ID=sync.nas.local \
+  -e WEBAUTHN_RP_NAME="Photo Syncer" \
+  -v ~/xiaomi-album-syncer/download:/app/download \
+  -v ~/xiaomi-album-syncer/db:/app/db \
+  --name xiaomi-album-syncer \
+  coolfan1024/xiaomi-album-syncer:latest
+```
+
+## User Guide
+
+1. **Initialization**: Configure your master administrator password upon first launch.
+2. **Registration**: Go to **Settings** > **Account & Security** > **Passkey**, click **Register Passkey**, verify your current master password, and name your device (e.g. "MacBook Touch ID").
+3. **Authenticator Prompt**: Follow your OS / browser prompt to complete biometrics or PIN verification.
+4. **Passwordless Login**: On the login page, simply click **Sign in with Passkey** for instant biometric access.
+5. **Key Management**: Register multiple authenticators across phones and laptops, or revoke old keys at any time.

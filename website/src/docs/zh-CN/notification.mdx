@@ -1,0 +1,93 @@
+export const meta = {
+  title: '消息通知',
+  description: '配置自定义 Webhook 与通知模板，实时掌握同步状态与账号失效提醒。',
+  section: '功能',
+  order: 65,
+  slug: 'notification',
+}
+
+# 消息通知
+
+Xiaomi Album Syncer 内置强大的 Webhook 通知引擎。当任务执行完成、遇到错误或云服务账号凭据过期时，系统会自动向您的即时通讯工具发送通知，无需频繁打开控制台查看。
+
+![通知配置总览](/screenshots/zh-CN/settings-notification.avif)
+
+## 通知触发场景
+
+- **任务执行完成**：当全量或增量备份任务执行完毕后触发，推送下载统计（成功、失败、跳过、新增资产量及耗时）。
+- **账号凭据失效提醒**：当小米 PassToken 过期或 iCloud Session 认证失效时自动触发，提醒您及时重新扫码或输入验证码，避免定时同步中断。
+- **每日同步汇总**：支持按指定 Crontab 周期定期汇总当天所有任务的运行状态。
+
+## 配置 Webhook
+
+进入控制台「设置」>「常规」>「通知」，点击编辑按钮打开配置抽屉：
+
+![自定义 Webhook 与插值编辑](/screenshots/zh-CN/settings-notification-edit.avif)
+
+### 核心参数
+
+| 配置项 | 说明 | 示例 |
+| ------ | ---- | ---- |
+| **请求 URL** | 接收通知的 Webhook 地址，留空表示关闭通知 | `https://oapi.dingtalk.com/robot/send?access_token=...` |
+| **请求头 (Headers)** | 自定义 HTTP Headers，可添加鉴权 Token 或 Content-Type | `Content-Type: application/json` |
+| **请求体模板 (Body)** | 支持 JSON / 纯文本模板，内置 `${...}` 动态数据插值 | 见下方模板示例 |
+
+## 模板插值变量
+
+在消息模板中可引用以下动态字段，系统发送时将自动替换为实际运行结果：
+
+| 变量 | 说明 |
+| ---- | ---- |
+| `${crontab.name}` | 计划任务名称 |
+| `${status}` | 执行结果状态（`SUCCESS` / `FAILED`） |
+| `${successCount}` | 本次任务下载成功资产数量 |
+| `${failedCount}` | 本次任务下载失败资产数量 |
+| `${skippedCount}` | 跳过的已存在资产数量 |
+| `${totalSizeFormatted}` | 本次传输的数据总量（如 `1.2 GB`） |
+| `${startTime}` | 任务启动时间 |
+| `${endTime}` | 任务结束时间 |
+| `${duration}` | 任务总耗时（格式化文本） |
+
+## 常见平台配置示例
+
+### 1. 钉钉自定义机器人 (DingTalk)
+
+- **URL**: `https://oapi.dingtalk.com/robot/send?access_token=YOUR_TOKEN`
+- **Body**:
+  ```json
+  {
+    "msgtype": "text",
+    "text": {
+      "content": "【XAS 同步通知】任务 ${crontab.name} 执行状态: ${status}，成功下载 ${successCount} 项，跳过 ${skippedCount} 项。"
+    }
+  }
+  ```
+
+### 2. 飞书自定义机器人 (Feishu / Lark)
+
+- **URL**: `https://open.feishu.cn/open-apis/bot/v2/hook/YOUR_TOKEN`
+- **Body**:
+  ```json
+  {
+    "msg_type": "text",
+    "content": {
+      "text": "相册备份完成：${crontab.name}\n状态：${status}\n成功：${successCount} | 失败：${failedCount}\n耗时：${duration}"
+    }
+  }
+  ```
+
+### 3. 企业微信机器人 (WeCom)
+
+- **URL**: `https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY`
+- **Body**:
+  ```json
+  {
+    "msgtype": "markdown",
+    "markdown": {
+      "content": "### 相册同步通知\n> 任务名称：<font color=\"comment\">${crontab.name}</font>\n> 执行结果：${status}\n> 新下载文件数：**${successCount}**\n> 耗时：${duration}"
+    }
+  }
+  ```
+
+> [!TIP]
+> 配置完成后，可直接点击抽屉右上角的「发送测试」按钮验证 Webhook 连通性与模板解析效果。

@@ -11,6 +11,12 @@
 /web/.idea
 /web/package-lock.json
 
+/website/node_modules
+/website/dist
+/website/.idea
+/website/package-lock.json
+website/.yarn/
+
 /server/.idea
 /server/.kotlin
 /server/build
