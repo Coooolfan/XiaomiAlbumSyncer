@@ -19,7 +19,8 @@ class AlbumDeduplicationMigrationTest {
     @Test
     fun migratesFreshDatabase(@TempDir directory: Path) = database(directory) { source ->
         val migrated = DatabaseMigration().migrate(source)
-        assertEquals("0.20.0", migrated.info().current().version.version)
+        assertEquals(migrated.info().all().last().version, migrated.info().current().version)
+        assertEquals(0, migrated.info().pending().size)
         assertEquals(0, migrated.migrate().migrationsExecuted)
         source.connection.use { connection ->
             assertEquals(0L, connection.number("SELECT COUNT(*) FROM album"))

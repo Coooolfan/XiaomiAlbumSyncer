@@ -50,9 +50,13 @@ jobs:
           go-version: '1.25.x'
           cache-dependency-path: xas-mock/go.mod
 
+      - name: 执行单元测试
+        working-directory: server
+        run: ./gradlew clean test --no-daemon
+
       - name: 执行 JVM API E2E
         working-directory: server
-        run: ./gradlew clean apiE2eJvm --no-daemon
+        run: ./gradlew apiE2eJvm --no-daemon
 
   native-api-e2e:
     name: Native API E2E
