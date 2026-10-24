@@ -241,6 +241,14 @@ docker run \
 
 容器本身不存储任何状态和数据，删除重启容器不影响任何数据。
 
+## 致谢
+
+- [LINUX DO](https://linux.do)
+- [icloudpd](https://github.com/icloud-photos-downloader/icloud_photos_downloader)
+- [kei](https://github.com/rhoopr/kei)
+
+还有来自社区中的各类开源项目、参与反馈的用户，一并表示感谢
+
 ## Star History
 
 <picture>
