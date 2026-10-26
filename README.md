@@ -2,13 +2,15 @@
 
 全量 / 增量 / 定时，把小米云服务与 Apple iCloud 中的相册与资产同步回本地存储。
 
-[![GitHub Stars](https://img.shields.io/github/stars/Coooolfan/XiaomiAlbumSyncer?style=flat)](https://github.com/Coooolfan/XiaomiAlbumSyncer/stargazers) [![Docker Pulls](https://img.shields.io/docker/pulls/coolfan1024/xiaomi-album-syncer?style=flat)](https://hub.docker.com/r/coolfan1024/xiaomi-album-syncer)
+[![GitHub Stars](https://img.shields.io/github/stars/Coooolfan/XiaomiAlbumSyncer?style=flat)](https://github.com/Coooolfan/XiaomiAlbumSyncer/stargazers) [![Docker Pulls](https://img.shields.io/docker/pulls/coolfan1024/xiaomi-album-syncer?style=flat)](https://hub.docker.com/r/coolfan1024/xiaomi-album-syncer) 
 
 发了 **issues** 记得常回来看看有没有回复，或者 >>>>> **[QQ 群聊：1059332701](https://qm.qq.com/q/H2trW6JWM4)**
 
 ![banner](./static/banner.avif)
 
 发了 **issues** 记得常回来看看有没有回复，或者 >>>>> **[QQ 群聊：1059332701](https://qm.qq.com/q/H2trW6JWM4)**
+
+<a href="https://trendshift.io/repositories/16552?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-16552" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/16552/daily?language=Kotlin" alt="Coooolfan%2FXiaomiAlbumSyncer | Trendshift" width="250" height="55"/></a>
 
 ## Features/功能
 
