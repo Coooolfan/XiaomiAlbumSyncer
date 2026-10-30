@@ -9,7 +9,8 @@ import {
     ProviderAccountController,
     QrLoginController,
     SystemConfigController,
-    TokenController
+    TokenController,
+    XiaomiE2eeController
 } from './services/';
 
 export class Api {
@@ -34,6 +35,8 @@ export class Api {
 
     readonly tokenController: TokenController
 
+    readonly xiaomiE2eeController: XiaomiE2eeController
+
     constructor(executor: Executor) {
         this.albumsController = new AlbumsController(executor);
         this.assetController = new AssetController(executor);
@@ -45,5 +48,6 @@ export class Api {
         this.qrLoginController = new QrLoginController(executor);
         this.systemConfigController = new SystemConfigController(executor);
         this.tokenController = new TokenController(executor);
+        this.xiaomiE2eeController = new XiaomiE2eeController(executor);
     }
 }

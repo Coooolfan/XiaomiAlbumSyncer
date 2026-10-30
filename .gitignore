@@ -46,3 +46,5 @@ logs/
 !.claude/skills
 
 /server/db/
+
+/docs/plan/e2ee/

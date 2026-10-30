@@ -10,6 +10,7 @@ import Dialog from 'primevue/dialog'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import ICloudLoginForm from '@/components/settings/ICloudLoginForm.vue'
+import XiaomiE2eeForm from '@/components/settings/XiaomiE2eeForm.vue'
 import SettingSection from '@/components/settings/SettingSection.vue'
 import OptionCard from '@/components/OptionCard.vue'
 import { useToast } from 'primevue/usetoast'
@@ -32,6 +33,8 @@ const crontabsStore = useCrontabsStore()
 
 const { accounts, loading } = storeToRefs(accountsStore)
 const icloudStates = ref<Record<number, string>>({})
+const e2eeAccount = ref<Account | null>(null)
+const e2eeStates = ref<Record<number, string>>({})
 watch(
   accounts,
   async (list) => {
@@ -351,11 +354,26 @@ function confirmDelete(account: Account) {
             :value="t(`tokens.icloud.states.${icloudStates[data.id]}`)"
             :severity="icloudStates[data.id] === 'READY' ? 'success' : 'warn'"
           />
+          <Tag
+            v-if="data.provider === 'XIAOMI' && e2eeStates[data.id]"
+            :value="t(`tokens.e2ee.states.${e2eeStates[data.id]}`)"
+            :severity="e2eeStates[data.id] === 'READY' ? 'success' : 'info'"
+          />
         </template>
       </Column>
       <Column :header="t('tokens.table.actions')" :style="{ width: '10rem' }">
         <template #body="slotProps">
           <div class="flex gap-2">
+            <Button
+              v-if="slotProps.data.provider === 'XIAOMI'"
+              icon="pi pi-shield"
+              text
+              rounded
+              severity="secondary"
+              :aria-label="t('tokens.e2ee.title')"
+              :title="t('tokens.e2ee.title')"
+              @click="e2eeAccount = slotProps.data"
+            />
             <Button
               icon="pi pi-pencil"
               text
@@ -375,6 +393,29 @@ function confirmDelete(account: Account) {
       </Column>
     </DataTable>
   </SettingSection>
+
+  <Dialog
+    :visible="!!e2eeAccount"
+    modal
+    :header="t('tokens.e2ee.title')"
+    class="w-full sm:w-[480px]"
+    @update:visible="
+      (visible) => {
+        if (!visible) e2eeAccount = null
+      }
+    "
+  >
+    <XiaomiE2eeForm
+      v-if="e2eeAccount"
+      :key="e2eeAccount.id"
+      :account-id="e2eeAccount.id"
+      @updated="
+        (status) => {
+          e2eeStates[status.accountId] = status.state
+        }
+      "
+    />
+  </Dialog>
 
   <!-- 添加/编辑 弹窗 -->
   <Dialog v-model:visible="showDialog" modal :header="dialogHeader" class="w-full sm:w-[480px]">

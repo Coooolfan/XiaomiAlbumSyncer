@@ -1207,7 +1207,7 @@
   "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"] }, {"name":"getApi","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setApi","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
 },
 {
-  "name":"com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager",
+  "name":"com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
@@ -1220,7 +1220,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager"] }, {"name":"getLog","parameterTypes":[] }, {"name":"getTokenManager","parameterTypes":[] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setTokenManager","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager"] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager"] }, {"name":"getLog","parameterTypes":[] }, {"name":"getTokenManager","parameterTypes":[] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setTokenManager","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager"] }]
 },
 {
   "name":"com.fasterxml.jackson.databind.ext.Java7SupportImpl",

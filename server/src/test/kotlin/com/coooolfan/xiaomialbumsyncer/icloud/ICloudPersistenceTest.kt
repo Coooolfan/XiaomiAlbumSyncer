@@ -3,7 +3,7 @@ package com.coooolfan.xiaomialbumsyncer.icloud
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.service.CloudMediaService
 import com.coooolfan.xiaomialbumsyncer.service.NotifyService
-import com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager
+import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -34,7 +34,7 @@ class ICloudPersistenceTest {
             }
             val notify = NotifyService(sql)
             val accounts = ICloudAccountService(sql, notify)
-            val media = CloudMediaService(sql, XiaoMiApi(TokenManager(sql, notify)), ICloudPhotos(accounts))
+            val media = CloudMediaService(sql, XiaoMiApi(XiaomiTokenManager(sql, notify)), ICloudPhotos(accounts))
             val account = sql.saveCommand(ProviderAccount {
                 nickname = "Apple"
                 provider = CloudProvider.ICLOUD

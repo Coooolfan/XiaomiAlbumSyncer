@@ -9,6 +9,8 @@ import com.coooolfan.xiaomialbumsyncer.utils.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.Cookie
+import okhttp3.HttpUrl
 import okhttp3.Request
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.noear.solon.Solon
@@ -21,12 +23,12 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 @Managed
-class TokenManager(private val sql: KSqlClient, private val notifyService: NotifyService) {
+class XiaomiTokenManager(private val sql: KSqlClient, private val notifyService: NotifyService) {
 
     @Inject
     private lateinit var apiProperties: XiaomiApiProperties
 
-    private val log = org.slf4j.LoggerFactory.getLogger(TokenManager::class.java)
+    private val log = org.slf4j.LoggerFactory.getLogger(XiaomiTokenManager::class.java)
 
     private val tokenCache = ConcurrentHashMap<Long, CachedToken>()
 
@@ -36,7 +38,8 @@ class TokenManager(private val sql: KSqlClient, private val notifyService: Notif
     data class CachedToken(
         val serviceToken: String,
         val userId: String,
-        val lastFreshenTime: Instant
+        val lastFreshenTime: Instant,
+        val cookies: List<Cookie> = emptyList()
     )
 
     fun getAuthPair(accountId: Long): Pair<String, String> {
@@ -57,9 +60,9 @@ class TokenManager(private val sql: KSqlClient, private val notifyService: Notif
             val account = sql.findById(ProviderAccount::class, accountId)
                 ?: throw IllegalStateException("Account not found: $accountId")
 
-            val serviceToken = genServiceToken(account)
+            val (serviceToken, cookies) = genServiceToken(account)
             passTokenAlerted.remove(accountId)
-            tokenCache[accountId] = CachedToken(serviceToken, account.userId, Instant.now())
+            tokenCache[accountId] = CachedToken(serviceToken, account.userId, Instant.now(), cookies)
 
             return account.userId to serviceToken
         }
@@ -76,7 +79,18 @@ class TokenManager(private val sql: KSqlClient, private val notifyService: Notif
         return Instant.now().isAfter(lastFreshenTime.plusSeconds(60 * 10))
     }
 
-    private fun genServiceToken(account: ProviderAccount): String {
+    fun cookieHeader(accountId: Long, url: HttpUrl): String {
+        val (userId, serviceToken) = getAuthPair(accountId)
+        val values = linkedMapOf<String, String>()
+        tokenCache[accountId]?.cookies?.filter { it.matches(url) && it.expiresAt > System.currentTimeMillis() }
+            ?.forEach { values[it.name] = it.value }
+        values["userId"] = userId
+        values["serviceToken"] = serviceToken
+        return withCookie(*values.toList().toTypedArray())
+    }
+
+    private fun genServiceToken(account: ProviderAccount): Pair<String, List<Cookie>> {
+        val sessionCookies = mutableListOf<Cookie>()
 
         val passToken = xiaomiCredentialsMapper.readTree(account.credentials).get("passToken")?.asText()
             ?: throw IllegalArgumentException("小米账号缺少 passToken")
@@ -92,6 +106,7 @@ class TokenManager(private val sql: KSqlClient, private val notifyService: Notif
             .build()
         val loginUrl = client().newCall(preLoginReq).execute().use { res ->
             throwIfNotSuccess(res.code)
+            sessionCookies += Cookie.parseAll(res.request.url, res.headers)
             Solon.context().objectMapper.readTree(res.body)
         }.at("/data/loginUrl").asText()
 
@@ -99,19 +114,11 @@ class TokenManager(private val sql: KSqlClient, private val notifyService: Notif
         val loginReq = Request.Builder().url(loginUrl).ua()
             .header("Cookie", withCookie("userId" to userId, "deviceId" to deviceId, "passToken" to passToken)).get()
             .build()
-        val (location, loginResMeta) = client().newCall(loginReq).execute().use { res ->
-            val code = res.code
-            val headers = res.headers.toString()
-            val body = res.body.string()
-            throwIfNotSuccess(code)
-            res.header("Location") to Triple(code, headers, body)
-        }
-        val (loginResCode, loginResHeaders, loginResDebugBody) = loginResMeta
-
-        if (location == null) {
-            log.error("loginResStatusCode: $loginResCode body: $loginResDebugBody headers: $loginResHeaders")
-            error("no Location header")
-        }
+        val location = client().newCall(loginReq).execute().use { res ->
+            throwIfNotSuccess(res.code)
+            sessionCookies += Cookie.parseAll(res.request.url, res.headers)
+            res.header("Location")
+        } ?: error("小米登录响应缺少跳转地址")
 
         // 步骤三：获取 serviceToken
         val tokenReq = Request.Builder().url(location).ua()
@@ -119,6 +126,7 @@ class TokenManager(private val sql: KSqlClient, private val notifyService: Notif
             .build()
         val setCookies = client().newCall(tokenReq).execute().use { res ->
             throwIfNotSuccess(res.code)
+            sessionCookies += Cookie.parseAll(res.request.url, res.headers)
             res.headers("Set-Cookie")
         }
 
@@ -135,7 +143,7 @@ class TokenManager(private val sql: KSqlClient, private val notifyService: Notif
 
         log.info("serviceToken 获取成功")
 
-        return serviceToken
+        return serviceToken to sessionCookies
 
     }
 

@@ -1,0 +1,28 @@
+{
+  "source": "Node WebCrypto; synthetic keys and plaintext",
+  "appKey": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+  "recordKey": "__79_Pv6-fj39vX08_Lx8O_u7ezr6uno5-bl5OPi4eA",
+  "plaintext": "AAMGCQwPEhUYGx4hJCcqLTAzNjk8P0JFSEtOUVRXWl1gY2ZpbG9ydXh7foGEh4qNkJOWmZyfoqWoq66xtLe6vcDDxsnMz9LV2Nve4eTn6u3w",
+  "sha1": "78aabfa09e8c098441073559d993084a303f7d79",
+  "encryptInfo": {
+    "appKeyVersion": 5645147155988960,
+    "recordIV": "AAECAwQFBgcICQoLDP_-_Q",
+    "encryptedRecordKey": "KT77smwOf-ofhF3NbWv8nZmenFLiMt57BMVSSrg3x9NzO5pRcLsB6Tb30HosEi_2d0CALA"
+  },
+  "blocks": [
+    {
+      "plain": "AAMGCQwPEhUYGx4hJCcqLTAzNjk8P0JFSEtOUVRXWl0",
+      "cipher": "gVB_c5IpXnzjA_tVW6VGwOmaAxaIEoMWPGNuafKov38",
+      "iv": "AAECAwQFBgcICQoLDP_-_Q",
+      "sha1": "87c1ad49e2ef5812a159e316f244ac5cf3464ebe",
+      "encryptedSha1": "e895220d4530a8c6fa9ab050d43dbc146063bcef"
+    },
+    {
+      "plain": "YGNmaWxvcnV4e36BhIeKjZCTlpmcn6KlqKuusbS3ur3Aw8bJzM_S1djb3uHk5-rt8A",
+      "cipher": "zOfGR4uB52TafdO5dWcpDS4e35hjRmBE4PMHv98OTBiiZRqBpnar6LMSatQwwswHUw",
+      "iv": "AAECAwQFBgcICQoLDQP-_Q",
+      "sha1": "030eb7e244669efadd1dbe8a942c18941757724e",
+      "encryptedSha1": "fb2d45612a237b7d5aaa0b8d41e20d0ed92c2d3b"
+    }
+  ]
+}

@@ -8,3 +8,4 @@ export {ProviderAccountController} from './ProviderAccountController';
 export {QrLoginController} from './QrLoginController';
 export {SystemConfigController} from './SystemConfigController';
 export {TokenController} from './TokenController';
+export {XiaomiE2eeController} from './XiaomiE2eeController';

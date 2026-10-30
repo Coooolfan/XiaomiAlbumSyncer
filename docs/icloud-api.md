@@ -255,7 +255,7 @@ iCloud 支持全量和位点增量模式，不支持时间线比较。全量模�
 
 ## 9. 本地存储
 
-`provider_account.provider` 标识来源，`credentials` 是明文 JSON 文本列：小米保存 `passToken`；iCloud 保存 Apple ID、密码、区域、clientId、认证 headers、cookies 和状态。小米短期 `serviceToken` 仅保存在内存；iCloud 服务地址、下载地址和校验结果不写入凭据。账号列表、认证响应与生成的前端 API 不返回凭据。数据库备份包含全部持久化凭据，无独立密钥文件，需限制数据库及备份的访问权限。
+`provider_account.provider` 标识来源，`credentials` 是明文 JSON 文本列：小米保存 `passToken`；iCloud 保存 Apple ID、密码、区域、clientId、认证 headers、cookies 和状态。小米短期 `serviceToken` 仅保存在内存；iCloud 服务地址、下载地址和校验结果不写入凭据。账号列表、认证响应与生成的前端 API 不返回凭据。小米高级数据保护的 appkey 和信任设备 cookie 同样保存在账号 credentials 中，见 [小米高级数据保护](xiaomi-e2ee.md)。数据库备份包含全部持久化凭据和解密密钥，无需独立密钥文件，需限制数据库及备份的访问权限。
 
 | 本地字段 | 来源/含义 |
 | --- | --- |

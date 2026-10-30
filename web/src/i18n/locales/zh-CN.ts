@@ -694,6 +694,27 @@ export default {
     },
   },
   tokens: {
+    e2ee: {
+      title: '小米高级数据保护',
+      description:
+        '在服务端解密并下载受高级数据保护的相册。验证成功后，定时任务可使用已保存的密钥。',
+      codeHint: '发送验证码后，请从小米信任设备获取 6 位数字码。',
+      send: '发送验证码',
+      resendIn: '{seconds} 秒后可重发',
+      code: '验证码',
+      invalidCode: '请输入 6 位数字验证码',
+      verify: '验证并保存密钥',
+      refresh: '刷新状态',
+      cachedKeys: '已保存 {count} 个版本的密钥',
+      readyHint: '密钥已就绪。未完成的下载将在下一次任务执行时重试，也可手动运行任务。',
+      states: {
+        DISABLED: '未开启高级数据保护',
+        VERIFICATION_REQUIRED: '需要验证',
+        READY: '密钥已就绪',
+        SESSION_EXPIRED: '登录已失效，请更新账号凭据',
+        RATE_LIMITED: '验证次数已达上限',
+      },
+    },
     icloud: {
       status: '认证状态',
       states: { READY: '已认证', MFA_REQUIRED: '需要验证码', SESSION_EXPIRED: '请重新登录' },
@@ -785,7 +806,7 @@ export default {
       methodQrDesc: '使用小米手机或平板扫码授权，自动获取账号凭证（推荐）',
       methodManualTitle: 'PassToken 登录',
       methodManualDesc: '手动填写 userId 与 PassToken，获取方式参考项目主页介绍',
-      adpHint: '同步前请先在小米账号中关闭「高级数据保护」',
+      adpHint: '开启「高级数据保护」的账号可在添加后通过盾牌按钮验证并获取下载密钥',
       qrTitle: '扫码登录小米账号',
       qrTip: '使用小米手机或平板的「设置 > 小米账号」扫码，或使用其他扫码工具打开后完成授权',
       qrGenerating: '正在获取二维码…',

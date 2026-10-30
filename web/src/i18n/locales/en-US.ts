@@ -714,6 +714,28 @@ const messages: typeof zh = {
     },
   },
   tokens: {
+    e2ee: {
+      title: 'Xiaomi Advanced Data Protection',
+      description:
+        'Decrypt and download protected albums on the server. Scheduled tasks can use saved keys after verification.',
+      codeHint: 'Send a code, then enter the six digits shown on your trusted Xiaomi device.',
+      send: 'Send verification code',
+      resendIn: 'Resend in {seconds}s',
+      code: 'Verification code',
+      invalidCode: 'Enter a six-digit verification code',
+      verify: 'Verify and save keys',
+      refresh: 'Refresh status',
+      cachedKeys: '{count} key versions saved',
+      readyHint:
+        'Keys are ready. Incomplete downloads will retry on the next task run. You can also run the task manually.',
+      states: {
+        DISABLED: 'Advanced Data Protection is off',
+        VERIFICATION_REQUIRED: 'Verification required',
+        READY: 'Keys ready',
+        SESSION_EXPIRED: 'Session expired; update account credentials',
+        RATE_LIMITED: 'Verification limit reached',
+      },
+    },
     icloud: {
       status: 'Authentication',
       states: {
@@ -816,7 +838,8 @@ const messages: typeof zh = {
       methodManualTitle: 'PassToken sign-in',
       methodManualDesc:
         'Enter userId and PassToken manually — see the project homepage for how to obtain them',
-      adpHint: 'Turn off "Advanced Data Protection" in your Xiaomi account first',
+      adpHint:
+        'For accounts with Advanced Data Protection, use the shield button after adding the account to verify and retrieve download keys',
       qrTitle: 'Scan to sign in with Xiaomi account',
       qrTip:
         'Scan with your Xiaomi phone or tablet via Settings > Xiaomi Account, or open the link with any QR scanner to authorize',

@@ -10,3 +10,5 @@ export type {QrLoginStatus} from './QrLoginStatus';
 export {QrLoginStatus_CONSTANTS} from './QrLoginStatus';
 export type {RecordingType} from './RecordingType';
 export {RecordingType_CONSTANTS} from './RecordingType';
+export type {XiaomiE2eeState} from './XiaomiE2eeState';
+export {XiaomiE2eeState_CONSTANTS} from './XiaomiE2eeState';

@@ -2282,6 +2282,36 @@
       ]
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.controller.XiaomiE2eeController",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee.XiaomiE2eeService"
+          ]
+        },
+        {
+          "name": "push",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "status",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "verify",
+          "parameterTypes": [
+            "long",
+            "java.util.Map"
+          ]
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.exception.AuthenticationException"
     },
     {
@@ -7698,14 +7728,23 @@
           "name": "<init>",
           "parameterTypes": [
             "org.babyfish.jimmer.sql.kt.KSqlClient",
-            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager"
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager"
           ]
         },
         {
           "name": "<init>",
           "parameterTypes": [
             "org.babyfish.jimmer.sql.kt.KSqlClient",
-            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager",
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager",
+            "com.coooolfan.xiaomialbumsyncer.icloud.ICloudAccountService"
+          ]
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.KSqlClient",
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager",
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee.XiaomiE2eeService",
             "com.coooolfan.xiaomialbumsyncer.icloud.ICloudAccountService"
           ]
         },
@@ -8100,7 +8139,7 @@
       "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.QrLoginStatusView"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager",
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager",
       "allDeclaredFields": true,
       "methods": [
         {
@@ -8181,10 +8220,10 @@
       ]
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager$CachedToken"
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager$CachedToken"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager$onPassTokenInvalid$1"
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager$onPassTokenInvalid$1"
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi",
@@ -8193,7 +8232,7 @@
         {
           "name": "<init>",
           "parameterTypes": [
-            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager"
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager"
           ]
         },
         {
@@ -8253,7 +8292,7 @@
         {
           "name": "setTokenManager",
           "parameterTypes": [
-            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.TokenManager"
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager"
           ]
         }
       ]
@@ -8263,6 +8302,58 @@
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiRecordingName"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee.E2eeCrypto"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee.E2eeCryptoKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee.GalleryBlockDownloader"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee.HsmPublicKeysKt"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee.XiaomiE2eeService",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.KSqlClient",
+            "com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager",
+            "com.coooolfan.xiaomialbumsyncer.config.XiaomiApiProperties",
+            "com.coooolfan.xiaomialbumsyncer.service.NotifyService"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee.XiaomiE2eeState"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee.XiaomiE2eeStatus",
+      "methods": [
+        {
+          "name": "getAccountId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getCachedKeyCount",
+          "parameterTypes": []
+        },
+        {
+          "name": "getState",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee.XiaomiKeybagClient"
+    },
+    {
+      "type": "com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee.XiaomiKeybagException"
     },
     {
       "type": "com.ethlo.time.ITU"

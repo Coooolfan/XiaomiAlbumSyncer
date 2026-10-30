@@ -41,7 +41,11 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /gallery/album/full", s.albumFull)
 	s.mux.HandleFunc("GET /gallery/allitems", s.allItems)
 	s.mux.HandleFunc("GET /sfs/ns/recorder/dir/0/list", s.recordingList)
+	s.mux.HandleFunc("GET /common/check", s.encInfo)
+	s.mux.HandleFunc("GET /mic/keybag/v1/getEncInfo", s.encInfo)
 	s.mux.HandleFunc("GET /gallery/storage", s.galleryStorage)
+	s.mux.HandleFunc("GET /gallery/image/storage", s.galleryStorage)
+	s.mux.HandleFunc("GET /gallery/video/storage", s.galleryStorage)
 	s.mux.HandleFunc("GET /sfs/ns/recorder/file/", s.recordingStorage)
 	s.mux.HandleFunc("GET /mock/oss/", s.oss)
 	s.mux.HandleFunc("POST /mock/download/", s.download)
@@ -289,6 +293,13 @@ func (s *Server) recordingList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": map[string]any{"list": rows}})
+}
+
+func (s *Server) encInfo(w http.ResponseWriter, r *http.Request) {
+	if _, ok := s.cloudAccount(w, r); !ok {
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"code": 0, "data": map[string]any{"e2eeStatus": "close"}})
 }
 
 func (s *Server) galleryStorage(w http.ResponseWriter, r *http.Request) {

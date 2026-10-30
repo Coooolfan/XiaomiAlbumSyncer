@@ -100,6 +100,15 @@ class ApiE2eSuite {
             )
         ).expect(200)
 
+        val e2eeStatus = api.json(api.get("/api/xiaomi/e2ee/$accountId/status").expect(200))
+        assertEquals("DISABLED", e2eeStatus.path("state").asText())
+        assertEquals(0, e2eeStatus.path("cachedKeyCount").asInt())
+        assertFalse(e2eeStatus.has("credentials"))
+        api.post("/api/xiaomi/e2ee/$accountId/verify", mapOf("code" to "12345")).expect(400)
+        val verifyDisabled = api.json(api.post("/api/xiaomi/e2ee/$accountId/verify", mapOf("code" to "123456")).expect(400))
+        assertTrue(verifyDisabled.path("description").asText().contains("未开启高级数据保护"))
+        api.post("/api/xiaomi/e2ee/$accountId/captcha").expect(400)
+
         val albums = api.json(api.get("/api/album/latest/$accountId").expect(200))
         assertEquals(3, albums.size())
         val cameraAlbumId = findAlbumId(albums, "1")
@@ -170,7 +179,7 @@ class ApiE2eSuite {
         assertEquals(1, mock.routeCount("/gallery/user/album/list"))
         assertTrue(mock.routeCount("/gallery/user/galleries") >= 2)
         assertEquals(0, mock.routeCount("/gallery/user/timeline"))
-        assertTrue(mock.routeCount("/gallery/storage") >= 1)
+        assertTrue(mock.routeCount("/gallery/image/storage") >= 1)
         assertTrue(mock.routeCount("/mock/oss/101") >= 1)
         assertTrue(mock.routeCount("/mock/download/101") >= 1)
 

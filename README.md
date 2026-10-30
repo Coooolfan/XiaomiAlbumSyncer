@@ -160,6 +160,8 @@
 即图中的 4️⃣ 和 5️⃣ 对应的黄底内容。
 7. 在「同步账号」卡片中点击 `添加账号` 并选择 `PassToken 登录`，填写获取到的 userId 与 PassToken。
 
+开启小米「高级数据保护」的账号，添加后点击账号行的盾牌按钮发送验证码并获取下载密钥。详见 [小米高级数据保护](./docs/xiaomi-e2ee.md)。
+
 #### 2. Apple iCloud 账号
 
 访问 `http://localhost:8232/#/dashboard/setting` ，在「同步账号」卡片中点击 `添加账号` 并选择 `Apple iCloud`，输入 Apple ID 与密码，并根据屏幕指引在受信设备上确认并填入 6 位双重认证（2FA）验证码即可完成绑定。

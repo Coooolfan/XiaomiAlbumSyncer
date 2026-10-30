@@ -3,6 +3,8 @@ package com.coooolfan.xiaomialbumsyncer.xiaomicloud
 import com.coooolfan.xiaomialbumsyncer.config.XiaomiApiProperties
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.utils.*
+import com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee.GalleryBlockDownloader
+import com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee.XiaomiE2eeService
 import com.fasterxml.jackson.databind.JsonNode
 import okhttp3.FormBody
 import okhttp3.Request
@@ -24,10 +26,13 @@ private val XIAOMI_ALBUM_NAME_BY_ID = mapOf(
 )
 
 @Managed
-class XiaoMiApi(private val tokenManager: TokenManager) {
+class XiaoMiApi(private val tokenManager: XiaomiTokenManager) {
 
     @Inject
     private lateinit var apiProperties: XiaomiApiProperties
+
+    @Inject
+    private lateinit var e2ee: XiaomiE2eeService
 
     private val log = LoggerFactory.getLogger(XiaoMiApi::class.java)
 
@@ -184,18 +189,20 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             if (asset.type == AssetType.AUDIO)
                 apiProperties.url("sfs/ns/recorder/file/${asset.remoteKey.toLong()}/cb/dl_sfs_cb_${System.currentTimeMillis()}_0/storage?ts=${System.currentTimeMillis()}")
             else
-                apiProperties.url("gallery/storage?ts=${System.currentTimeMillis()}&id=${asset.remoteKey.toLong()}")
+                apiProperties.url("gallery/${if (asset.type == AssetType.VIDEO) "video" else "image"}/storage?ts=${System.currentTimeMillis()}&id=${asset.remoteKey.toLong()}")
 
         // 1. 获取 OSS URL
         val fetchOssUrlJson = getJson(accountId, url)
 
         // 与官方前端约定一致：只有 code == 0 才是成功，其余一律视为失败
-        val code = fetchOssUrlJson.at("/code").asInt()
+        val codeNode = fetchOssUrlJson.at("/code")
+        check(codeNode.isIntegralNumber) { "storage 响应缺少业务状态码" }
+        val code = codeNode.asInt()
         if (code != 0) {
             val retriable = fetchOssUrlJson.at("/retriable").asBoolean()
             val reason = fetchOssUrlJson.at("/description").asText()
                 .ifBlank { fetchOssUrlJson.at("/reason").asText() }
-            if (retriable) {
+            if (retriable || code != (if (asset.type == AssetType.AUDIO) 50202 else 50050)) {
                 // 瞬时错误，抛异常交给流水线在下一个周期重试
                 throw IllegalStateException("小米返回错误码 $code ($reason), retriable=true")
             }
@@ -211,10 +218,16 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             return false
         }
 
+        val data = fetchOssUrlJson.path("data")
+        if (asset.type != AssetType.AUDIO && data.has("kss")) {
+            GalleryBlockDownloader().download(data, targetPath, asset.size, asset.checksum) { version -> e2ee.appKey(accountId, version) }
+            return true
+        }
+        check(!data.hasNonNull("encryptInfo")) { "加密相册响应缺少文件块，无法下载" }
         val ossUrl = fetchOssUrlJson.at("/data/url").asText()
         if (!ossUrl.startsWith("http")) {
             // code=0 却缺少合法下载地址属于反常响应，记录原始响应体后抛异常等待重试
-            log.warn("文件: {} id: {} 的 storage 响应缺少合法 data.url: {}", asset.fileName, asset.id, fetchOssUrlJson)
+            log.warn("文件: {} id: {} 的 storage 响应缺少下载地址", asset.fileName, asset.id)
             throw IllegalStateException("storage 响应缺少合法的 data.url")
         }
 
@@ -250,6 +263,7 @@ class XiaoMiApi(private val tokenManager: TokenManager) {
             .get()
             .build()
         return client().executeWithRetry(req).use { res ->
+            if (res.code == 401) tokenManager.invalidateToken(accountId)
             throwIfNotSuccess(res.code)
             Solon.context().objectMapper.readTree(res.body)
         }

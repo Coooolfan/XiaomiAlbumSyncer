@@ -35,3 +35,4 @@ export type {SystemConfigPasswordUpdate} from './SystemConfigPasswordUpdate';
 export type {SystemConfigUpdate} from './SystemConfigUpdate';
 export type {SystemInfoResponse} from './SystemInfoResponse';
 export type {XiaomiAccountInput} from './XiaomiAccountInput';
+export type {XiaomiE2eeStatus} from './XiaomiE2eeStatus';
