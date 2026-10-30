@@ -46,7 +46,7 @@ permissions:
 jobs:
   build-frontend:
     name: 构建前端资源
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: 检出代码
         uses: actions/checkout@v5
@@ -86,7 +86,7 @@ jobs:
     # 编译到 JAR 包不使用 GraalVM JDK，需要独立的 Job
     name: 构建 JAR 包
     needs: build-frontend
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: 检出代码
@@ -141,10 +141,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-26.04
             arch: x64
             os_name: linux
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-26.04-arm
             arch: arm64
             os_name: linux
           - os: macos-15-intel
@@ -230,7 +230,7 @@ jobs:
     name: 构建并推送 Docker 镜像(JVM)
     if: inputs.publish_docker == 'true'
     needs: build-jar
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: 检出代码
@@ -285,7 +285,7 @@ jobs:
     name: 构建并推送 Docker 镜像(Native)
     if: inputs.publish_docker == 'true'
     needs: build-native
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: 检出代码

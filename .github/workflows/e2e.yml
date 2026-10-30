@@ -13,7 +13,7 @@ permissions:
 jobs:
   mock-contract:
     name: XAS Mock Contract
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: 检出代码
         uses: actions/checkout@v5
@@ -32,7 +32,7 @@ jobs:
 
   jvm-api-e2e:
     name: JVM API E2E
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: 检出代码
         uses: actions/checkout@v5
@@ -60,7 +60,7 @@ jobs:
 
   native-api-e2e:
     name: Native API E2E
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: 检出代码
         uses: actions/checkout@v5
