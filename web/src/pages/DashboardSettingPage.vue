@@ -18,7 +18,7 @@ const sectionComponents: Record<string, Component> = {
   system: SystemConfigCard,
   appearance: defineAsyncComponent(() => import('@/components/settings/AppearanceCard.vue')),
   notify: defineAsyncComponent(() => import('@/components/settings/NotifyConfigCard.vue')),
-  accounts: defineAsyncComponent(() => import('@/components/settings/PassTokenCard.vue')),
+  accounts: defineAsyncComponent(() => import('@/components/settings/AccountSettingsCard.vue')),
   password: defineAsyncComponent(() => import('@/components/settings/PasswordCard.vue')),
   passkey: defineAsyncComponent(() => import('@/components/settings/PasskeyCard.vue')),
   mcp: defineAsyncComponent(() => import('@/components/settings/McpTokenCard.vue')),

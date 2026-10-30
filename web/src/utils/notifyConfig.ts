@@ -92,7 +92,7 @@ export function buildPresetDailySummaryBodyTemplate(): string {
   return '{"text":"Xiaomi Album Syncer 日报 ${date}","desp":"同步日报\\n${summary}"}'
 }
 
-export function buildPresetPassTokenExpiredBodyTemplate(): string {
+export function buildPresetAccountVerificationBodyTemplate(): string {
   return '{"text":"Xiaomi Album Syncer 告警","desp":"账号 ${account.nickname}(${account.userId}) 的认证已失效，请在账号设置中重新认证"}'
 }
 

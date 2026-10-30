@@ -128,7 +128,7 @@ erDiagram
 
 ### 5.2 小米云 API 交互
 
-位于 `server/.../xiaomicloud/XiaoMiApi.kt`。
+位于 `server/.../xiaomicloud/XiaomiCloudApi.kt`。
 
 *   **认证**: 依赖 `TokenManager` 管理 `passToken` 和 `userId`。Cookie 会自动刷新。
 *   **接口**:

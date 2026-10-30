@@ -5,6 +5,7 @@ import Button from 'primevue/button'
 import Menu from 'primevue/menu'
 import ProviderTag from '@/components/ProviderTag.vue'
 import AlbumCard from '@/components/AlbumCard.vue'
+import { isXiaomiRecordingAlbum } from '@/utils/xiaomiAlbum'
 import { useToast } from 'primevue/usetoast'
 import { ref } from 'vue'
 import type { AlbumDto } from '@/__generated/model/dto/AlbumDto'
@@ -203,7 +204,7 @@ onMounted(() => {
             v-for="a in group.albums"
             :key="a.id"
             :name="a.name"
-            :remote-key="a.remoteKey"
+            :recording="isXiaomiRecordingAlbum(group.account.provider, a.remoteKey)"
             :asset-count="a.assetCount"
             :last-update-time="a.lastUpdateTime"
             :shadow="a.shadow"

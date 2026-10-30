@@ -2,6 +2,7 @@ package com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee
 
 import com.coooolfan.xiaomialbumsyncer.config.XiaomiApiProperties
 import com.coooolfan.xiaomialbumsyncer.service.NotifyService
+import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiAccountService
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -28,7 +29,8 @@ internal class E2eeTestDatabase(path: Path, baseUrl: String = "http://127.0.0.1:
     val properties = XiaomiApiProperties().also {
         XiaomiApiProperties::class.java.getDeclaredField("configuredBaseUrl").apply { isAccessible = true }.set(it, baseUrl)
     }
-    fun service() = XiaomiE2eeService(sql, tokens, properties, notifications)
+    val accounts = XiaomiAccountService(sql, tokens)
+    fun service() = XiaomiE2eeService(sql, accounts, tokens, properties, notifications)
     fun cacheToken(accountId: Long, userId: String) {
         @Suppress("UNCHECKED_CAST")
         val cache = XiaomiTokenManager::class.java.getDeclaredField("tokenCache").apply { isAccessible = true }.get(tokens) as MutableMap<Long, XiaomiTokenManager.CachedToken>

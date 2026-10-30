@@ -125,7 +125,8 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
         }
     }
 
-    fun download(accountId: Long, zone: String, asset: Asset, path: Path): Boolean {
+    fun download(accountId: Long, album: Album, asset: Asset, path: Path): Boolean {
+        val zone = ICloudAlbumKey.decode(album.remoteKey).zone
         val key = ICloudResourceKey.decode(asset.remoteKey)
         repeat(2) { attempt ->
             val (client, url) = accounts.withClient(accountId) { client ->

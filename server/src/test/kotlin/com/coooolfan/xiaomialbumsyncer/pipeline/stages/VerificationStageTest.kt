@@ -6,7 +6,7 @@ import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.service.CloudMediaService
 import com.coooolfan.xiaomialbumsyncer.service.NotifyService
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager
-import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
+import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiCloudApi
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
@@ -131,7 +131,7 @@ class VerificationStageTest {
                 setDatabaseNamingStrategy(DefaultDatabaseNamingStrategy.LOWER_CASE)
             }
             val notify = NotifyService(sql)
-            val media = CloudMediaService(sql, XiaoMiApi(XiaomiTokenManager(sql, notify)), ICloudPhotos(ICloudAccountService(sql, notify)))
+            val media = CloudMediaService(sql, XiaomiCloudApi(XiaomiTokenManager(sql, notify)), ICloudPhotos(ICloudAccountService(sql, notify)))
             val account = sql.saveCommand(ProviderAccount {
                 this.provider = provider
                 nickname = "test"

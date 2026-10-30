@@ -151,7 +151,7 @@ class XiaomiTokenManager(private val sql: KSqlClient, private val notifyService:
         if (!passTokenAlerted.add(account.id)) return
         log.error("账号 {}({}) 的 passToken 已失效，请在设置中更新", account.id, account.userId)
         CoroutineScope(Dispatchers.IO).launch {
-            notifyService.sendPassTokenExpired(account)
+            notifyService.sendAccountVerificationRequired(account)
         }
     }
 

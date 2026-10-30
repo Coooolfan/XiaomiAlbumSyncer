@@ -79,7 +79,7 @@ class ICloudAccountService(private val sql: KSqlClient, private val notification
                 }
                 persist(account, client, state ?: mapper.readValue<ICloudCredentials>(account.credentials).state)
                 if (state != null && !verifying && alerted.add(accountId)) {
-                    runCatching { notifications.sendPassTokenExpired(account) }
+                    runCatching { notifications.sendAccountVerificationRequired(account) }
                 }
                 throw BadRequestException(e.message.orEmpty())
             }
@@ -89,6 +89,15 @@ class ICloudAccountService(private val sql: KSqlClient, private val notification
     @Synchronized fun forget(accountId: Long) {
         clients.remove(accountId)
         alerted.remove(accountId)
+    }
+
+    @Synchronized fun delete(accountId: Long) {
+        val client = clients[accountId]
+        fun deleteAccount() {
+            sql.deleteById(ProviderAccount::class, accountId)
+            forget(accountId)
+        }
+        if (client == null) deleteAccount() else synchronized(client) { deleteAccount() }
     }
 
     private fun persist(account: ProviderAccount, client: ICloudClient, state: String) {

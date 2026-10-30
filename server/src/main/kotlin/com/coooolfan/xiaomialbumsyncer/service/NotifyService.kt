@@ -96,7 +96,7 @@ class NotifyService(private val sql: KSqlClient) {
         sendRequest(url, renderedBody, notifyConfig.headers, "daily-summary")
     }
 
-    fun sendPassTokenExpired(account: ProviderAccount) {
+    fun sendAccountVerificationRequired(account: ProviderAccount) {
         val notifyConfig = sql.findOneById(SystemConfig::class, CONFIG_ID).notifyConfig
         val url = notifyConfig.url.trim()
         val template = notifyConfig.passTokenExpiredBody?.trim()
@@ -107,7 +107,7 @@ class NotifyService(private val sql: KSqlClient) {
         }
 
         if (template.isNullOrEmpty()) {
-            log.info("PassToken 失效通知未配置，跳过")
+            log.info("账号验证通知未配置，跳过")
             return
         }
 
@@ -119,7 +119,7 @@ class NotifyService(private val sql: KSqlClient) {
             )
         )
 
-        sendRequest(url, renderedBody, notifyConfig.headers, "passToken-expired accountId=${account.id}")
+        sendRequest(url, renderedBody, notifyConfig.headers, "account-verification-required accountId=${account.id}")
     }
 
     private fun buildSummaryText(

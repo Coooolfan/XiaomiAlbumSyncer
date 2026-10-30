@@ -1,18 +1,18 @@
 import type {Executor} from '../';
 import type {ICloudAccountStatus, ICloudLoginInput, ICloudVerifyInput} from '../model/static/';
 
-export class ICloudController {
+export class ICloudAccountController {
 
     constructor(private executor: Executor) {}
 
-    readonly login: (options: ICloudControllerOptions['login']) => Promise<
+    readonly login: (options: ICloudAccountControllerOptions['login']) => Promise<
         ICloudAccountStatus
     > = async(options) => {
         let _uri = '/api/icloud/login';
         return (await this.executor({uri: _uri, method: 'POST', body: options.body})) as Promise<ICloudAccountStatus>;
     }
 
-    readonly status: (options: ICloudControllerOptions['status']) => Promise<
+    readonly status: (options: ICloudAccountControllerOptions['status']) => Promise<
         ICloudAccountStatus
     > = async(options) => {
         let _uri = '/api/icloud/';
@@ -21,7 +21,7 @@ export class ICloudController {
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<ICloudAccountStatus>;
     }
 
-    readonly verify: (options: ICloudControllerOptions['verify']) => Promise<
+    readonly verify: (options: ICloudAccountControllerOptions['verify']) => Promise<
         ICloudAccountStatus
     > = async(options) => {
         let _uri = '/api/icloud/';
@@ -31,7 +31,7 @@ export class ICloudController {
     }
 }
 
-export type ICloudControllerOptions = {
+export type ICloudAccountControllerOptions = {
     'login': {
         readonly body: ICloudLoginInput
     },

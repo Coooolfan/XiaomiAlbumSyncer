@@ -19,7 +19,7 @@ import org.noear.solon.core.handle.MethodType
 @Api
 @Controller
 @Mapping("/api/token")
-class TokenController(private val service: SystemConfigService) {
+class AuthController(private val service: SystemConfigService) {
     /**
      * 用户登录接口
      *

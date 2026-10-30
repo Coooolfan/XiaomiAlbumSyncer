@@ -2,6 +2,7 @@ package com.coooolfan.xiaomialbumsyncer.pipeline.stages
 
 import com.coooolfan.xiaomialbumsyncer.icloud.verifyICloudChecksum
 import com.coooolfan.xiaomialbumsyncer.service.CloudMediaService
+import com.coooolfan.xiaomialbumsyncer.model.CloudProvider
 import com.coooolfan.xiaomialbumsyncer.model.CrontabHistoryDetail
 import com.coooolfan.xiaomialbumsyncer.model.downloadCompleted
 import com.coooolfan.xiaomialbumsyncer.model.id
@@ -30,31 +31,32 @@ class VerificationStage(
             return context
         }
 
-        if (media.isICloud(context.crontabHistory.crontab.accountId)) {
-            log.info("开始校验 iCloud 资产 {} 的文件", context.asset.id)
-            val path = Path(context.filePath)
-            if (!verifyICloudChecksum(path, context.asset.checksum)) {
-                val failure = IllegalStateException("资产 ${context.asset.id} 的 iCloud 文件校验失败，请重试下载")
-                // 两项清理分别尝试，避免重试时复用损坏文件。
-                try {
-                    sql.executeUpdate(CrontabHistoryDetail::class) {
-                        set(table.downloadCompleted, false)
-                        set(table.sha1Verified, false)
-                        where(table.id eq context.id)
+        when (media.provider(context.crontabHistory.crontab.accountId)) {
+            CloudProvider.ICLOUD -> {
+                log.info("开始校验 iCloud 资产 {} 的文件", context.asset.id)
+                val path = Path(context.filePath)
+                if (!verifyICloudChecksum(path, context.asset.checksum)) {
+                    val failure = IllegalStateException("资产 ${context.asset.id} 的 iCloud 文件校验失败，请重试下载")
+                    // 两项清理分别尝试，避免重试时复用损坏文件。
+                    try {
+                        sql.executeUpdate(CrontabHistoryDetail::class) {
+                            set(table.downloadCompleted, false)
+                            set(table.sha1Verified, false)
+                            where(table.id eq context.id)
+                        }
+                    } catch (cleanupError: Exception) {
+                        failure.addSuppressed(cleanupError)
                     }
-                } catch (cleanupError: Exception) {
-                    failure.addSuppressed(cleanupError)
+                    try {
+                        Files.deleteIfExists(path)
+                    } catch (cleanupError: Exception) {
+                        failure.addSuppressed(cleanupError)
+                    }
+                    throw failure
                 }
-                try {
-                    Files.deleteIfExists(path)
-                } catch (cleanupError: Exception) {
-                    failure.addSuppressed(cleanupError)
-                }
-                throw failure
+                log.info("iCloud 资产 {} 的文件校验成功", context.asset.id)
             }
-            log.info("iCloud 资产 {} 的文件校验成功", context.asset.id)
-        } else {
-            log.info("资产 {} 来自小米云，跳过 SHA-1 校验", context.asset.id)
+            CloudProvider.XIAOMI -> log.info("资产 {} 来自小米云，跳过 SHA-1 校验", context.asset.id)
         }
 
         sql.executeUpdate(CrontabHistoryDetail::class) {

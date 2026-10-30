@@ -1,6 +1,5 @@
 package com.coooolfan.xiaomialbumsyncer.utils
 
-import com.coooolfan.xiaomialbumsyncer.model.Album
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.noear.solon.core.AppContext
@@ -16,10 +15,6 @@ fun Int.percentOf(total: Int): String {
 
 fun String.toTimeZone(): TimeZone {
     return TimeZone.getTimeZone(ZoneId.of(this))
-}
-
-fun Album.isAudioAlbum(): Boolean {
-    return this.remoteKey == "-1"
 }
 
 val AppContext.objectMapper: ObjectMapper

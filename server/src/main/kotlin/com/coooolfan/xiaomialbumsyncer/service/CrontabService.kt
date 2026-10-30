@@ -39,9 +39,8 @@ class CrontabService(private val sql: KSqlClient) {
     }
 
     private fun validateSyncMode(accountId: Long, mode: CrontabSyncMode) {
-        require(mode != CrontabSyncMode.TIMELINE || sql.findById(ProviderAccount::class, accountId)?.provider != CloudProvider.ICLOUD) {
-            "iCloud 不支持时间线同步，请选择全量或位点增量"
-        }
+        val account = requireNotNull(sql.findById(ProviderAccount::class, accountId)) { "账号不存在: $accountId" }
+        account.provider.validateSyncMode(mode)
     }
 
     fun queryCrontab(fetcher: Fetcher<Crontab>): List<Crontab> {

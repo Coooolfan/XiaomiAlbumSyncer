@@ -4,6 +4,7 @@ import cn.dev33.satoken.annotation.SaCheckLogin
 import com.coooolfan.xiaomialbumsyncer.model.Asset
 import com.coooolfan.xiaomialbumsyncer.model.by
 import com.coooolfan.xiaomialbumsyncer.service.AssetService
+import com.coooolfan.xiaomialbumsyncer.service.AssetSyncService
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.client.meta.Api
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
@@ -26,7 +27,7 @@ import org.noear.solon.core.handle.MethodType
 @Mapping("/api/asset")
 @Controller
 @SaCheckLogin
-class AssetController(private val service: AssetService) {
+class AssetController(private val service: AssetService, private val sync: AssetSyncService) {
     /**
      * 刷新指定相册的媒体资源列表
      *
@@ -38,12 +39,12 @@ class AssetController(private val service: AssetService) {
      *
      * @api GET /api/asset/{albumId}/latest
      * @permission 需要登录认证
-     * @description 调用AssetService.refreshAssets()方法获取指定相册的最新媒体数据
+     * @description 调用AssetSyncService.refreshAssets()方法获取指定相册的最新媒体数据
      */
     @Api
     @Mapping("/{albumId}/latest", method = [MethodType.GET])
     fun refreshAssets(@Path albumId: Long): List<@FetchBy("DEFAULT_ASSET") Asset> {
-        return service.refreshAssets(albumId, DEFAULT_ASSET)
+        return sync.refreshAssets(albumId, DEFAULT_ASSET)
     }
 
     /**

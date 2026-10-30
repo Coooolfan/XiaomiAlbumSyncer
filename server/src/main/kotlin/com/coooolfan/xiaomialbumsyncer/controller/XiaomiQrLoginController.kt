@@ -1,7 +1,7 @@
 package com.coooolfan.xiaomialbumsyncer.controller
 
 import cn.dev33.satoken.annotation.SaCheckLogin
-import com.coooolfan.xiaomialbumsyncer.xiaomicloud.QrLoginManager
+import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiQrLoginManager
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.QrLoginSessionView
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.QrLoginStatusView
 import org.babyfish.jimmer.client.meta.Api
@@ -24,7 +24,7 @@ import org.noear.solon.core.handle.MethodType
 @Managed
 @Mapping("/api/account/qr-login")
 @Controller
-class QrLoginController(private val manager: QrLoginManager) {
+class XiaomiQrLoginController(private val manager: XiaomiQrLoginManager) {
 
     /**
      * 创建扫码登录会话
@@ -36,7 +36,7 @@ class QrLoginController(private val manager: QrLoginManager) {
      *
      * @api POST /api/account/qr-login
      * @permission 需要登录认证
-     * @description 调用 QrLoginManager.createSession() 创建扫码登录会话
+     * @description 调用 XiaomiQrLoginManager.createSession() 创建扫码登录会话
      */
     @Api
     @Mapping(method = [MethodType.POST])
@@ -56,7 +56,7 @@ class QrLoginController(private val manager: QrLoginManager) {
      *
      * @api GET /api/account/qr-login/{sessionId}
      * @permission 需要登录认证
-     * @description 调用 QrLoginManager.getStatus() 查询会话状态
+     * @description 调用 XiaomiQrLoginManager.getStatus() 查询会话状态
      */
     @Api
     @Mapping("/{sessionId}", method = [MethodType.GET])

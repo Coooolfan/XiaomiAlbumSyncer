@@ -1,7 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.service
 
 import com.coooolfan.xiaomialbumsyncer.model.*
-import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
@@ -22,17 +21,8 @@ class AlbumsService(
 ) {
     private val log = LoggerFactory.getLogger(AlbumsService::class.java)
 
-    /**
-     * 刷新所有账号的相册
-     */
+    /** 刷新指定账号的相册。 */
     fun refreshAlbums(accountId: Long, fetcher: Fetcher<Album>): List<Album> {
-        return refreshAlbumsByAccount(accountId, fetcher)
-    }
-
-    /**
-     * 刷新指定账号的相册
-     */
-    fun refreshAlbumsByAccount(accountId: Long, fetcher: Fetcher<Album>): List<Album> {
         log.info("刷新账号 {} 的相册列表", accountId)
         val remoteAlbums = api.fetchAlbums(accountId)
 

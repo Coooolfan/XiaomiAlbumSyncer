@@ -1,10 +1,13 @@
 package com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee
 
 import com.coooolfan.xiaomialbumsyncer.icloud.ICloudAccountService
+import com.coooolfan.xiaomialbumsyncer.icloud.ICloudPhotos
+import com.coooolfan.xiaomialbumsyncer.service.ProviderAccountService
+import com.coooolfan.xiaomialbumsyncer.service.CloudMediaService
+import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiCloudApi
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountInput
 import com.coooolfan.xiaomialbumsyncer.model.dto.xiaomiCredentialsMapper
-import com.coooolfan.xiaomialbumsyncer.service.ProviderAccountService
 import com.coooolfan.xiaomialbumsyncer.controller.ProviderAccountController.Companion.DEFAULT_PROVIDER_ACCOUNT
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.junit.jupiter.api.Assertions.*
@@ -20,7 +23,7 @@ class XiaomiE2eePersistenceTest {
             val credentials = xiaomiCredentialsMapper.writeValueAsString(mapOf("passToken" to "pass", "xiaomiE2ee" to mapOf("keys" to mapOf("10" to E2eeCrypto.encode(key)), "state" to "READY")))
             db.sql.saveCommand(ProviderAccount { id = account.id; this.credentials = credentials }, SaveMode.UPDATE_ONLY).execute()
             assertArrayEquals(key, db.service().appKey(account.id, 10))
-            val accounts = ProviderAccountService(db.sql, db.tokens, db.service(), ICloudAccountService(db.sql, db.notifications))
+            val accounts = db.accounts
             accounts.update(XiaomiAccountInput("renamed", "new-pass", "123456").toEntity(account.id), DEFAULT_PROVIDER_ACCOUNT)
             val stored = xiaomiCredentialsMapper.readTree(db.sql.findById(ProviderAccount::class, account.id)!!.credentials)
             assertEquals("new-pass", stored.path("passToken").asText())
@@ -32,6 +35,31 @@ class XiaomiE2eePersistenceTest {
             accounts.update(XiaomiAccountInput("other", "other-pass", "999").toEntity(account.id), DEFAULT_PROVIDER_ACCOUNT)
             assertFalse(xiaomiCredentialsMapper.readTree(db.sql.findById(ProviderAccount::class, account.id)!!.credentials).has("xiaomiE2ee"))
             assertThrows(IllegalStateException::class.java) { db.service().appKey(account.id, 10) }
+        }
+    }
+
+    @Test fun accountDeletionDispatchesBySourceAndRejectsMissingAccounts(@TempDir directory: Path) {
+        E2eeTestDatabase(directory.resolve("account-sources.db")).use { db ->
+            val xiaomi = db.accounts.create(XiaomiAccountInput("Xiaomi", "pass", "123456"), DEFAULT_PROVIDER_ACCOUNT)
+            val apple = db.sql.saveCommand(ProviderAccount {
+                provider = CloudProvider.ICLOUD
+                nickname = "Apple"
+                userId = "apple@example.com"
+                credentials = "{}"
+            }, SaveMode.INSERT_ONLY).execute().modifiedEntity
+            val icloud = ICloudAccountService(db.sql, db.notifications)
+            val accounts = ProviderAccountService(db.sql, db.accounts, icloud)
+            val media = CloudMediaService(db.sql,
+                XiaomiCloudApi(db.tokens),
+                ICloudPhotos(icloud))
+            assertEquals(CloudProvider.XIAOMI, media.provider(xiaomi.id))
+            assertEquals(CloudProvider.ICLOUD, media.provider(apple.id))
+            accounts.delete(apple.id)
+            assertNull(db.sql.findById(ProviderAccount::class, apple.id))
+            assertNotNull(db.sql.findById(ProviderAccount::class, xiaomi.id))
+            assertThrows(IllegalArgumentException::class.java) { media.provider(apple.id) }
+            accounts.delete(xiaomi.id)
+            assertNull(db.sql.findById(ProviderAccount::class, xiaomi.id))
         }
     }
 

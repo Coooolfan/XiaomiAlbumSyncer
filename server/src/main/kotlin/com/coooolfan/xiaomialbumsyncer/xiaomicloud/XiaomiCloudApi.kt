@@ -26,7 +26,7 @@ private val XIAOMI_ALBUM_NAME_BY_ID = mapOf(
 )
 
 @Managed
-class XiaoMiApi(private val tokenManager: XiaomiTokenManager) {
+class XiaomiCloudApi(private val tokenManager: XiaomiTokenManager) {
 
     @Inject
     private lateinit var apiProperties: XiaomiApiProperties
@@ -34,7 +34,7 @@ class XiaoMiApi(private val tokenManager: XiaomiTokenManager) {
     @Inject
     private lateinit var e2ee: XiaomiE2eeService
 
-    private val log = LoggerFactory.getLogger(XiaoMiApi::class.java)
+    private val log = LoggerFactory.getLogger(XiaomiCloudApi::class.java)
 
     fun fetchAllAlbums(accountId: Long): List<Album> {
         val allAlbums = mutableListOf<Album>()
@@ -86,14 +86,14 @@ class XiaoMiApi(private val tokenManager: XiaomiTokenManager) {
         var totalCount = 0L
         var pageNum = 0
         var hasMorePages = true
-        val pageSize = if (album.isAudioAlbum()) 500 else 200
+        val pageSize = if (album.isXiaomiRecordingAlbum()) 500 else 200
 
         val urlDayParams =
             if (day == null) "" else "&startDate=${day.format(BASIC_ISO_DATE)}&endDate=${day.format(BASIC_ISO_DATE)}"
 
         while (hasMorePages) {
             val url =
-                if (album.isAudioAlbum())
+                if (album.isXiaomiRecordingAlbum())
                     apiProperties.url("sfs/ns/recorder/dir/0/list?ts=${System.currentTimeMillis()}&limit=$pageSize&offset=${pageNum * pageSize}")
                 else
                     apiProperties.url("gallery/user/galleries?ts=${System.currentTimeMillis()}&pageNum=$pageNum&pageSize=$pageSize&albumId=${album.remoteKey}")
@@ -101,7 +101,7 @@ class XiaoMiApi(private val tokenManager: XiaomiTokenManager) {
 
             val responseTree = getJson(album.accountId, url + urlDayParams)
             val assetArrayJson =
-                if (album.isAudioAlbum())
+                if (album.isXiaomiRecordingAlbum())
                     responseTree.at("/data/list")
                 else
                     responseTree.at("/data/galleries")
@@ -117,7 +117,7 @@ class XiaoMiApi(private val tokenManager: XiaomiTokenManager) {
 
 
             hasMorePages = shouldFetchNextAssetPage(
-                audioAlbum = album.isAudioAlbum(),
+                audioAlbum = album.isXiaomiRecordingAlbum(),
                 assetCount = assetArrayJson.size(),
                 pageSize = pageSize,
                 isLastPage = responseTree.at("/data/isLastPage").asBoolean(),
@@ -270,7 +270,7 @@ class XiaoMiApi(private val tokenManager: XiaomiTokenManager) {
     }
 
     private fun parseJsonNode(jsonNode: JsonNode, album: Album): Asset {
-        return when (album.isAudioAlbum()) {
+        return when (album.isXiaomiRecordingAlbum()) {
             false -> {
                 val fullFileName = jsonNode.get("fileName").asText()
 

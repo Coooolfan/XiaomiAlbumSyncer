@@ -12,7 +12,7 @@ import { api } from '@/ApiInstance'
 import {
   buildPresetBodyTemplate,
   buildPresetDailySummaryBodyTemplate,
-  buildPresetPassTokenExpiredBodyTemplate,
+  buildPresetAccountVerificationBodyTemplate,
   buildServerChan3Url,
   buildServerChanTurboUrl,
   createHeaderRow,
@@ -269,7 +269,7 @@ function formatPassTokenExpiredBodyAsJson() {
 }
 
 function applyDefaultPassTokenExpiredBodyTemplate() {
-  passTokenExpiredBody.value = buildPresetPassTokenExpiredBodyTemplate()
+  passTokenExpiredBody.value = buildPresetAccountVerificationBodyTemplate()
 }
 
 function tryFormatJson(input: string): string | null {

@@ -5,6 +5,7 @@ import com.coooolfan.xiaomialbumsyncer.model.ProviderAccount
 import com.coooolfan.xiaomialbumsyncer.model.by
 import com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountInput
 import com.coooolfan.xiaomialbumsyncer.service.ProviderAccountService
+import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiAccountService
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.client.meta.Api
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
@@ -16,7 +17,7 @@ import org.noear.solon.core.handle.MethodType
 @Managed
 @Mapping("/api/account")
 @Controller
-class ProviderAccountController(private val service: ProviderAccountService) {
+class ProviderAccountController(private val service: ProviderAccountService, private val xiaomi: XiaomiAccountService) {
 
     /** 查询云服务账号的公开信息，不返回凭据。 */
     @Api
@@ -26,20 +27,20 @@ class ProviderAccountController(private val service: ProviderAccountService) {
         return service.listAll(DEFAULT_PROVIDER_ACCOUNT)
     }
 
-    /** 创建小米账号；iCloud 账号通过 ICloudController 登录接口创建。 */
+    /** 创建小米账号；iCloud 账号通过 ICloudAccountController 登录接口创建。 */
     @Api
     @Mapping(method = [MethodType.POST])
     @SaCheckLogin
-    fun create(@Body create: XiaomiAccountInput): @FetchBy("DEFAULT_PROVIDER_ACCOUNT") ProviderAccount {
-        return service.create(create)
+    fun createXiaomi(@Body create: XiaomiAccountInput): @FetchBy("DEFAULT_PROVIDER_ACCOUNT") ProviderAccount {
+        return xiaomi.create(create, DEFAULT_PROVIDER_ACCOUNT)
     }
 
     /** 更新小米账号信息及凭据。 */
     @Api
     @Mapping("/{id}", method = [MethodType.PUT])
     @SaCheckLogin
-    fun update(@Path id: Long, @Body update: XiaomiAccountInput): @FetchBy("DEFAULT_PROVIDER_ACCOUNT") ProviderAccount {
-        return service.update(update.toEntity(id), DEFAULT_PROVIDER_ACCOUNT)
+    fun updateXiaomi(@Path id: Long, @Body update: XiaomiAccountInput): @FetchBy("DEFAULT_PROVIDER_ACCOUNT") ProviderAccount {
+        return xiaomi.update(update.toEntity(id), DEFAULT_PROVIDER_ACCOUNT)
     }
 
     /** 删除云服务账号及关联相册、定时任务。 */

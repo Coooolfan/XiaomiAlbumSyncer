@@ -270,6 +270,6 @@ iCloud 支持全量和位点增量模式，不支持时间线比较。全量模�
 
 ## 10. 实现与验证
 
-认证入口为 `ICloudController` → `ICloudAccountService` → [ICloudClient](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudClient.kt)；相册和资产解析由 [ICloudPhotos](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudPhotos.kt)、[ICloudChanges](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudChanges.kt) 负责。`CloudMediaService` 分派来源，`AssetService` 持久化元数据与位点，`DownloadStage`、`VerificationStage` 执行下载和校验。协议来源与许可证见 [第三方声明](THIRD_PARTY_NOTICES.md)。
+认证入口为 `ICloudAccountController` → `ICloudAccountService` → [ICloudClient](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudClient.kt)；相册和资产解析由 [ICloudPhotos](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudPhotos.kt)、[ICloudChanges](../server/src/main/kotlin/com/coooolfan/xiaomialbumsyncer/icloud/ICloudChanges.kt) 负责。`CloudMediaService` 分派远端查询与下载，`AssetService` 保存本地资产，`AssetSyncService` 协调任务同步；小米与 iCloud 的同步协议分别位于 `XiaomiAssetSyncService`、`ICloudAssetSyncService`，`DownloadStage`、`VerificationStage` 执行下载和校验。协议来源与许可证见 [第三方声明](THIRD_PARTY_NOTICES.md)。
 
 自动化测试覆盖 SRP 与 pysrp 固定向量互操作、双重认证、会话恢复、区域端点、Live Photo / RAW+JPEG 资源映射、相册成员隔离、普通相册及系统集合的远端计数、截图与连拍分类、变更分页与失效位点恢复、落库失败不推进位点、文件校验及数据库升级。协议测试使用本地模拟服务，不覆盖真实 Apple 账号的权限和私有接口兼容性。

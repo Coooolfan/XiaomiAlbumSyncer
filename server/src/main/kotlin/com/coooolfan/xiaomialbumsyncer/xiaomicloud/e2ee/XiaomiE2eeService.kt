@@ -2,34 +2,28 @@ package com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee
 
 import com.coooolfan.xiaomialbumsyncer.config.XiaomiApiProperties
 import com.coooolfan.xiaomialbumsyncer.exception.BadRequestException
-import com.coooolfan.xiaomialbumsyncer.model.CloudProvider
 import com.coooolfan.xiaomialbumsyncer.model.ProviderAccount
 import com.coooolfan.xiaomialbumsyncer.model.dto.xiaomiCredentialsMapper
 import com.coooolfan.xiaomialbumsyncer.service.NotifyService
+import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiAccountService
 import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager
 import com.fasterxml.jackson.databind.node.ObjectNode
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.noear.solon.annotation.Managed
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentHashMap
 
 @Managed
 class XiaomiE2eeService(
     private val sql: KSqlClient,
+    private val accounts: XiaomiAccountService,
     private val tokens: XiaomiTokenManager,
     private val properties: XiaomiApiProperties,
     private val notifications: NotifyService,
 ) {
-    private val locks = Array(64) { Any() }
-    private val alerted = ConcurrentHashMap.newKeySet<Long>()
-    private val lastPush = ConcurrentHashMap<Long, Long>()
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun <T> withAccountLock(accountId: Long, action: () -> T): T = synchronized(locks[accountId.hashCode() and 63], action)
-
-    fun status(accountId: Long): XiaomiE2eeStatus = withAccountLock(accountId) {
-        val account = account(accountId)
+    fun status(accountId: Long): XiaomiE2eeStatus = accounts.withAccount(accountId) { account, _ ->
         val credentials = xiaomiCredentialsMapper.readTree(account.credentials) as ObjectNode
         val e2ee = credentials.withObject("/xiaomiE2ee")
         val keys = e2ee.path("keys")
@@ -51,15 +45,14 @@ class XiaomiE2eeService(
         }
     }
 
-    fun push(accountId: Long) = withAccountLock(accountId) {
-        val account = account(accountId)
+    fun push(accountId: Long) = accounts.withAccount(accountId) { account, session ->
         val e2ee = xiaomiCredentialsMapper.readTree(account.credentials).path("xiaomiE2ee")
-        check(System.currentTimeMillis() - (lastPush[accountId] ?: 0L) >= 60_000) { "验证码发送过于频繁，请在 60 秒后重试" }
+        check(System.currentTimeMillis() - session.lastE2eeCaptchaPush >= 60_000) { "验证码发送过于频繁，请在 60 秒后重试" }
         try {
             val client = XiaomiKeybagClient(account.id, account.userId, tokens, properties, e2ee.path("trustCookie").textValue())
             check(client.info().requiredText("e2eeStatus") == "open") { "该账号未开启高级数据保护" }
             client.push()
-            lastPush[accountId] = System.currentTimeMillis()
+            session.lastE2eeCaptchaPush = System.currentTimeMillis()
             persistState(account, XiaomiE2eeState.VERIFICATION_REQUIRED)
         } catch (e: XiaomiKeybagException) {
             e.state?.let { persistState(account, it) }
@@ -67,9 +60,8 @@ class XiaomiE2eeService(
         }
     }
 
-    fun verify(accountId: Long, code: String): XiaomiE2eeStatus = withAccountLock(accountId) {
+    fun verify(accountId: Long, code: String): XiaomiE2eeStatus = accounts.withAccount(accountId) { account, session ->
         require(Regex("[0-9]{6}").matches(code)) { "请输入 6 位数字验证码" }
-        val account = account(accountId)
         val credentials = xiaomiCredentialsMapper.readTree(account.credentials) as ObjectNode
         val e2ee = credentials.withObject("/xiaomiE2ee")
         try {
@@ -81,7 +73,7 @@ class XiaomiE2eeService(
             e2ee.put("state", XiaomiE2eeState.READY.name)
             e2ee.remove(listOf("requiredKeyVersion", "sealedKeys"))
             saveCredentials(account, credentials)
-            alerted.remove(accountId)
+            session.e2eeVerificationAlerted = false
             XiaomiE2eeStatus(accountId, XiaomiE2eeState.READY, keys.size())
         } catch (e: XiaomiKeybagException) {
             e.state?.let { persistState(account, it) }
@@ -90,8 +82,7 @@ class XiaomiE2eeService(
     }
 
     /** 由文件 encryptInfo 决定是否解密；session 失效不会废弃已取得的 appkey。 */
-    fun appKey(accountId: Long, version: Long): ByteArray = withAccountLock(accountId) {
-        val account = account(accountId)
+    fun appKey(accountId: Long, version: Long): ByteArray = accounts.withAccount(accountId) { account, session ->
         val credentials = xiaomiCredentialsMapper.readTree(account.credentials) as ObjectNode
         val e2ee = credentials.withObject("/xiaomiE2ee")
         val key = e2ee.path("keys").path(version.toString()).textValue()
@@ -101,21 +92,15 @@ class XiaomiE2eeService(
                 e2ee.put("state", XiaomiE2eeState.VERIFICATION_REQUIRED.name).put("requiredKeyVersion", version.toString())
                 saveCredentials(account, credentials)
             }
-            if (alerted.add(accountId)) {
+            if (!session.e2eeVerificationAlerted) {
+                session.e2eeVerificationAlerted = true
                 log.warn("小米账号 {} 缺少文件所需的 E2EE 密钥，请在账号设置中验证", accountId)
-                runCatching { notifications.sendPassTokenExpired(account) }
+                runCatching { notifications.sendAccountVerificationRequired(account) }
                     .onFailure { log.warn("E2EE 验证通知发送失败，账号 {}", accountId) }
             }
             throw IllegalStateException("小米高级数据保护需要验证，请在账号设置中输入信任设备收到的 6 位验证码后重试任务")
         }
         E2eeCrypto.decode(key)
-    }
-
-    fun forget(accountId: Long) { alerted.remove(accountId); lastPush.remove(accountId) }
-
-    private fun account(id: Long): ProviderAccount = (sql.findById(ProviderAccount::class, id)
-        ?: throw BadRequestException("账号不存在")).also {
-        require(it.provider == CloudProvider.XIAOMI) { "该账号不是小米账号" }
     }
 
     private fun persistState(account: ProviderAccount, state: XiaomiE2eeState) {

@@ -10,9 +10,9 @@ export class ProviderAccountController {
     constructor(private executor: Executor) {}
 
     /**
-     * 创建小米账号；iCloud 账号通过 ICloudController 登录接口创建。
+     * 创建小米账号；iCloud 账号通过 ICloudAccountController 登录接口创建。
      */
-    readonly create: (options: ProviderAccountControllerOptions['create']) => Promise<
+    readonly createXiaomi: (options: ProviderAccountControllerOptions['createXiaomi']) => Promise<
         ProviderAccountDto['ProviderAccountController/DEFAULT_PROVIDER_ACCOUNT']
     > = async(options) => {
         let _uri = '/api/account';
@@ -43,7 +43,7 @@ export class ProviderAccountController {
     /**
      * 更新小米账号信息及凭据。
      */
-    readonly update: (options: ProviderAccountControllerOptions['update']) => Promise<
+    readonly updateXiaomi: (options: ProviderAccountControllerOptions['updateXiaomi']) => Promise<
         ProviderAccountDto['ProviderAccountController/DEFAULT_PROVIDER_ACCOUNT']
     > = async(options) => {
         let _uri = '/api/account/';
@@ -54,10 +54,10 @@ export class ProviderAccountController {
 
 export type ProviderAccountControllerOptions = {
     'listAll': {},
-    'create': {
+    'createXiaomi': {
         readonly body: XiaomiAccountInput
     },
-    'update': {
+    'updateXiaomi': {
         readonly id: number,
         readonly body: XiaomiAccountInput
     },

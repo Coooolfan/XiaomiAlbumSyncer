@@ -334,14 +334,6 @@
   "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.AlbumsService"] }, {"name":"fetchDateMap","parameterTypes":["java.util.List","java.time.Instant","java.time.Instant"] }, {"name":"getService","parameterTypes":[] }, {"name":"listAlbums","parameterTypes":[] }, {"name":"refreshAlbums","parameterTypes":[] }, {"name":"setService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.AlbumsService"] }]
 },
 {
-  "name":"com.coooolfan.xiaomialbumsyncer.controller.AssetController",
-  "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllPublicMethods":true,
-  "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.AssetService"] }, {"name":"getService","parameterTypes":[] }, {"name":"listAssets","parameterTypes":["long"] }, {"name":"refreshAssets","parameterTypes":["long"] }, {"name":"setService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.AssetService"] }]
-},
-{
   "name":"com.coooolfan.xiaomialbumsyncer.controller.AssetController$Companion"
 },
 {
@@ -388,14 +380,6 @@
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
   "methods":[{"name":"<init>","parameterTypes":["boolean","boolean","java.lang.String","java.lang.String"] }, {"name":"getAotRuntime","parameterTypes":[] }, {"name":"getAppVersion","parameterTypes":[] }, {"name":"getJvmVersion","parameterTypes":[] }, {"name":"getNativeImage","parameterTypes":[] }]
-},
-{
-  "name":"com.coooolfan.xiaomialbumsyncer.controller.TokenController",
-  "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllPublicMethods":true,
-  "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.SystemConfigService"] }, {"name":"getService","parameterTypes":[] }, {"name":"login","parameterTypes":["java.lang.String"] }, {"name":"logout","parameterTypes":[] }, {"name":"setService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.SystemConfigService"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.exception.GlobalHandler",
@@ -1008,14 +992,6 @@
   "name":"com.coooolfan.xiaomialbumsyncer.model.dto.SystemConfigUpdateKt"
 },
 {
-  "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline",
-  "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllPublicMethods":true,
-  "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage","com.coooolfan.xiaomialbumsyncer.pipeline.stages.VerificationStage","com.coooolfan.xiaomialbumsyncer.pipeline.stages.ExifProcessingStage","com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage","com.coooolfan.xiaomialbumsyncer.service.SystemConfigService","com.coooolfan.xiaomialbumsyncer.service.AssetService","com.coooolfan.xiaomialbumsyncer.service.CrontabService"] }, {"name":"getAssetService","parameterTypes":[] }, {"name":"getCrontabService","parameterTypes":[] }, {"name":"getDownloadStage","parameterTypes":[] }, {"name":"getExifProcessingStage","parameterTypes":[] }, {"name":"getFileTimeStage","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSystemConfigService","parameterTypes":[] }, {"name":"getVerificationStage","parameterTypes":[] }, {"name":"setAssetService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.AssetService"] }, {"name":"setCrontabService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.CrontabService"] }, {"name":"setDownloadStage","parameterTypes":["com.coooolfan.xiaomialbumsyncer.pipeline.stages.DownloadStage"] }, {"name":"setExifProcessingStage","parameterTypes":["com.coooolfan.xiaomialbumsyncer.pipeline.stages.ExifProcessingStage"] }, {"name":"setFileTimeStage","parameterTypes":["com.coooolfan.xiaomialbumsyncer.pipeline.stages.FileTimeStage"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSystemConfigService","parameterTypes":["com.coooolfan.xiaomialbumsyncer.service.SystemConfigService"] }, {"name":"setVerificationStage","parameterTypes":["com.coooolfan.xiaomialbumsyncer.pipeline.stages.VerificationStage"] }]
-},
-{
   "name":"com.coooolfan.xiaomialbumsyncer.pipeline.CrontabPipeline$execute$$inlined$transform$1"
 },
 {
@@ -1075,7 +1051,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi","org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"getApi","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setApi","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiCloudApi","org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"getApi","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setApi","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiCloudApi"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.pipeline.stages.ExifProcessingStage",
@@ -1107,15 +1083,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"] }, {"name":"getApi","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setApi","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
-},
-{
-  "name":"com.coooolfan.xiaomialbumsyncer.service.AssetService",
-  "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllPublicMethods":true,
-  "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi","com.coooolfan.xiaomialbumsyncer.service.CloudMediaService","com.coooolfan.xiaomialbumsyncer.icloud.ICloudPhotos"] }, {"name":"getApi","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setApi","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
+  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiCloudApi"] }, {"name":"getApi","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setApi","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiCloudApi"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.service.AssetService$refreshAssetsByDiffTimeline$4"
@@ -1204,7 +1172,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"] }, {"name":"getApi","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setApi","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
+  "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient","com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiCloudApi"] }, {"name":"getApi","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"setApi","parameterTypes":["com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiCloudApi"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }]
 },
 {
   "name":"com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager",
@@ -1215,7 +1183,7 @@
   "methods":[{"name":"<init>","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"getLastFreshenTime","parameterTypes":[] }, {"name":"getLog","parameterTypes":[] }, {"name":"getServiceToken","parameterTypes":[] }, {"name":"getSql","parameterTypes":[] }, {"name":"getUserId","parameterTypes":[] }, {"name":"setLastFreshenTime","parameterTypes":["java.time.Instant"] }, {"name":"setLog","parameterTypes":["org.slf4j.Logger"] }, {"name":"setServiceToken","parameterTypes":["java.lang.String"] }, {"name":"setSql","parameterTypes":["org.babyfish.jimmer.sql.kt.KSqlClient"] }, {"name":"setUserId","parameterTypes":["java.lang.Long"] }]
 },
 {
-  "name":"com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi",
+  "name":"com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiCloudApi",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,

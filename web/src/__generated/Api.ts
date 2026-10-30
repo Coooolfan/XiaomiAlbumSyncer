@@ -2,15 +2,15 @@ import type {Executor} from './';
 import {
     AlbumsController,
     AssetController,
+    AuthController,
     CrontabController,
-    ICloudController,
+    ICloudAccountController,
     McpTokenController,
     PasskeyController,
     ProviderAccountController,
-    QrLoginController,
     SystemConfigController,
-    TokenController,
-    XiaomiE2eeController
+    XiaomiE2eeController,
+    XiaomiQrLoginController
 } from './services/';
 
 export class Api {
@@ -19,9 +19,11 @@ export class Api {
 
     readonly assetController: AssetController
 
+    readonly authController: AuthController
+
     readonly crontabController: CrontabController
 
-    readonly icloudController: ICloudController
+    readonly icloudAccountController: ICloudAccountController
 
     readonly mcpTokenController: McpTokenController
 
@@ -29,25 +31,23 @@ export class Api {
 
     readonly providerAccountController: ProviderAccountController
 
-    readonly qrLoginController: QrLoginController
-
     readonly systemConfigController: SystemConfigController
 
-    readonly tokenController: TokenController
-
     readonly xiaomiE2eeController: XiaomiE2eeController
+
+    readonly xiaomiQrLoginController: XiaomiQrLoginController
 
     constructor(executor: Executor) {
         this.albumsController = new AlbumsController(executor);
         this.assetController = new AssetController(executor);
+        this.authController = new AuthController(executor);
         this.crontabController = new CrontabController(executor);
-        this.icloudController = new ICloudController(executor);
+        this.icloudAccountController = new ICloudAccountController(executor);
         this.mcpTokenController = new McpTokenController(executor);
         this.passkeyController = new PasskeyController(executor);
         this.providerAccountController = new ProviderAccountController(executor);
-        this.qrLoginController = new QrLoginController(executor);
         this.systemConfigController = new SystemConfigController(executor);
-        this.tokenController = new TokenController(executor);
         this.xiaomiE2eeController = new XiaomiE2eeController(executor);
+        this.xiaomiQrLoginController = new XiaomiQrLoginController(executor);
     }
 }

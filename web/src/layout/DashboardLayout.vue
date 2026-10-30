@@ -88,7 +88,7 @@ function navItemClasses(to: string) {
 async function logout() {
   loggingOut.value = true
   try {
-    await api.tokenController.logout()
+    await api.authController.logout()
   } catch (error) {
     console.error('Failed to log out:', error)
   } finally {

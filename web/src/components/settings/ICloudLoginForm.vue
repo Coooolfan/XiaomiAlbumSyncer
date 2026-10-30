@@ -29,7 +29,7 @@ const regions = [
 onMounted(async () => {
   if (!props.accountId) return
   try {
-    const result = await api.icloudController.status({ id: props.accountId })
+    const result = await api.icloudAccountController.status({ id: props.accountId })
     domain.value = result.domain
     state.value = result.state === 'MFA_REQUIRED' ? 'MFA_REQUIRED' : 'LOGIN'
   } catch (e) {
@@ -43,8 +43,11 @@ async function submit() {
   try {
     const result =
       state.value === 'MFA_REQUIRED' && accountId.value
-        ? await api.icloudController.verify({ id: accountId.value, body: { code: code.value } })
-        : await api.icloudController.login({
+        ? await api.icloudAccountController.verify({
+            id: accountId.value,
+            body: { code: code.value },
+          })
+        : await api.icloudAccountController.login({
             body: {
               appleId: appleId.value,
               password: password.value,

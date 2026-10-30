@@ -1,10 +1,8 @@
 package com.coooolfan.xiaomialbumsyncer.icloud
 
 import com.coooolfan.xiaomialbumsyncer.model.*
-import com.coooolfan.xiaomialbumsyncer.service.CloudMediaService
+import com.coooolfan.xiaomialbumsyncer.service.AssetService
 import com.coooolfan.xiaomialbumsyncer.service.NotifyService
-import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaomiTokenManager
-import com.coooolfan.xiaomialbumsyncer.xiaomicloud.XiaoMiApi
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.babyfish.jimmer.sql.dialect.SQLiteDialect
@@ -34,7 +32,7 @@ class ICloudPersistenceTest {
             }
             val notify = NotifyService(sql)
             val accounts = ICloudAccountService(sql, notify)
-            val media = CloudMediaService(sql, XiaoMiApi(XiaomiTokenManager(sql, notify)), ICloudPhotos(accounts))
+            val assets = AssetService(sql)
             val account = sql.saveCommand(ProviderAccount {
                 nickname = "Apple"
                 provider = CloudProvider.ICLOUD
@@ -109,12 +107,12 @@ class ICloudPersistenceTest {
                 title = "photo"
                 size = 10
             }
-            val first = media.saveAssets(listOf(resource("first"))).single()
-            val repeated = media.saveAssets(listOf(resource("first"))).single()
-            val replaced = media.saveAssets(listOf(resource("changed"))).single()
+            val first = assets.saveAssets(listOf(resource("first"))).single()
+            val repeated = assets.saveAssets(listOf(resource("first"))).single()
+            val replaced = assets.saveAssets(listOf(resource("changed"))).single()
             assertEquals(first.id, repeated.id)
             assertNotEquals(first.id, replaced.id)
-            val mixed = media.saveAssets(listOf(Asset(resource("first")) { title = "updated" }, resource("second")))
+            val mixed = assets.saveAssets(listOf(Asset(resource("first")) { title = "updated" }, resource("second")))
             assertEquals(first.id, mixed.first { it.checksum == first.checksum }.id)
             assertEquals("updated", sql.findById(Asset::class, first.id)!!.title)
             assertNotEquals(first.id, mixed.first { it.checksum == "second" }.id)
@@ -122,10 +120,10 @@ class ICloudPersistenceTest {
             val xiaomi = Asset(resource("xiaomi")) {
                 remoteKey = first.id.toString()
             }
-            val isolated = media.saveAssets(listOf(xiaomi)).single()
+            val isolated = assets.saveAssets(listOf(xiaomi)).single()
             assertNotEquals(first.id, isolated.id)
             assertEquals(first.id.toString(), isolated.remoteKey)
-            assertEquals(isolated.id, media.saveAssets(listOf(xiaomi)).single().id)
+            assertEquals(isolated.id, assets.saveAssets(listOf(xiaomi)).single().id)
             assertEquals(first.remoteKey, sql.findById(Asset::class, first.id)!!.remoteKey)
 
             val otherAlbum = sql.saveCommand(Album(album) {
@@ -133,11 +131,11 @@ class ICloudPersistenceTest {
                 remoteKey = ICloudAlbumKey("PrimarySync", "other-album").encode()
                 name = "Other"
             }, org.babyfish.jimmer.sql.ast.mutation.SaveMode.INSERT_ONLY).execute().modifiedEntity
-            val otherMembership = media.saveAssets(listOf(Asset(resource("first")) { albumId = otherAlbum.id })).single()
+            val otherMembership = assets.saveAssets(listOf(Asset(resource("first")) { albumId = otherAlbum.id })).single()
             assertNotEquals(first.id, otherMembership.id)
             assertEquals(first.remoteKey, otherMembership.remoteKey)
-            assertEquals(otherMembership.id, media.saveAssets(listOf(Asset(resource("first")) { albumId = otherAlbum.id })).single().id)
-            assertEquals(1, media.saveAssets(listOf(resource("first"), resource("first"))).size)
+            assertEquals(otherMembership.id, assets.saveAssets(listOf(Asset(resource("first")) { albumId = otherAlbum.id })).single().id)
+            assertEquals(1, assets.saveAssets(listOf(resource("first"), resource("first"))).size)
 
             val mapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
             val ranks = mutableListOf<Long>()

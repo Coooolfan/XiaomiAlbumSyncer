@@ -35,14 +35,14 @@ export const useAccountsStore = defineStore('accounts', () => {
     return fetchAccounts({ force: true })
   }
 
-  async function createAccount(body: XiaomiAccountInput) {
-    const created = await api.providerAccountController.create({ body })
+  async function createXiaomiAccount(body: XiaomiAccountInput) {
+    const created = await api.providerAccountController.createXiaomi({ body })
     await refreshAccounts()
     return created
   }
 
-  async function updateAccount(id: number, body: XiaomiAccountInput) {
-    const updated = await api.providerAccountController.update({ id, body })
+  async function updateXiaomiAccount(id: number, body: XiaomiAccountInput) {
+    const updated = await api.providerAccountController.updateXiaomi({ id, body })
     await refreshAccounts()
     return updated
   }
@@ -65,8 +65,8 @@ export const useAccountsStore = defineStore('accounts', () => {
     error,
     fetchAccounts,
     refreshAccounts,
-    createAccount,
-    updateAccount,
+    createXiaomiAccount,
+    updateXiaomiAccount,
     deleteAccount,
     reset,
   }

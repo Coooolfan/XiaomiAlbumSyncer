@@ -22,7 +22,7 @@ import { useSystemConfigStore } from '@/stores/systemConfig'
 import { useHeatmapTimeline } from '@/composables/useHeatmapTimeline'
 import { useCronForm } from '@/composables/useCronForm'
 import { useCronActions } from '@/composables/useCronActions'
-import { RECORDING_ALBUM_REMOTE_KEY } from '@/utils/album'
+import { isXiaomiRecordingAlbum } from '@/utils/xiaomiAlbum'
 import { api } from '@/ApiInstance'
 import type { CrontabDto, CrontabHistoryDetailDto } from '@/__generated/model/dto'
 
@@ -108,7 +108,10 @@ const formAlbumOptions = computed(() => {
     .map((a) => ({
       label: a.name ?? `ID ${a.id}`,
       value: a.id,
-      recording: a.remoteKey === RECORDING_ALBUM_REMOTE_KEY,
+      recording: isXiaomiRecordingAlbum(
+        accounts.value.find((account) => account.id === a.account.id)?.provider,
+        a.remoteKey,
+      ),
     }))
 })
 

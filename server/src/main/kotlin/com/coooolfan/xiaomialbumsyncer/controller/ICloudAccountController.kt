@@ -10,7 +10,7 @@ import org.noear.solon.core.handle.MethodType
 @Managed
 @Controller
 @Mapping("/api/icloud")
-class ICloudController(private val accounts: ICloudAccountService) {
+class ICloudAccountController(private val accounts: ICloudAccountService) {
     @Api
     @SaCheckLogin
     @Mapping("/login", method = [MethodType.POST])

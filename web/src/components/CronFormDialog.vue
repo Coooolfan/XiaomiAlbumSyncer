@@ -21,6 +21,7 @@ import OptionCard from '@/components/OptionCard.vue'
 import CronHelp from '@/components/CronHelp.vue'
 import CronExpressionBuilder from '@/components/CronExpressionBuilder.vue'
 import { parseCron } from '@/utils/cronBuilder'
+import { cloudProviderRules } from '@/utils/cloudProviders'
 import type { CloudProvider, CrontabSyncMode } from '@/__generated/model/enums'
 import type { LocalCronForm } from '@/utils/crontabForm'
 
@@ -76,20 +77,25 @@ const hasRecordingAlbum = computed(() =>
   form.value.albumIds.some((id) => formAlbumOptions.value.find((o) => o.value === id)?.recording),
 )
 
-const isICloud = computed(() => selectedAccount.value?.provider === 'ICLOUD')
+const sourceRules = computed(() =>
+  selectedAccount.value?.provider ? cloudProviderRules[selectedAccount.value.provider] : undefined,
+)
 watch(
-  [isICloud, () => form.value.config.checkSha1],
+  [sourceRules, () => form.value.config.checkSha1],
   ([value]) => {
-    if (value && form.value.syncMode === 'TIMELINE') form.value.syncMode = 'CURSOR'
-    if (!value && form.value.config.checkSha1) {
+    if (!value) return
+    if (!value.syncModes.includes(form.value.syncMode)) form.value.syncMode = value.recommendedMode
+    if (!value.checksumOption && form.value.config.checkSha1) {
       form.value.config = { ...form.value.config, checkSha1: false }
     }
   },
   { immediate: true },
 )
 
-const recommendedMode = computed<CrontabSyncMode>(() =>
-  isICloud.value ? 'CURSOR' : hasRecordingAlbum.value ? 'FULL' : 'TIMELINE',
+const recommendedMode = computed(() =>
+  hasRecordingAlbum.value && sourceRules.value?.recordingMode
+    ? sourceRules.value.recordingMode
+    : sourceRules.value?.recommendedMode,
 )
 
 const syncModeCards = computed(() =>
@@ -100,7 +106,7 @@ const syncModeCards = computed(() =>
       ['CURSOR', 'Cursor', 'pi-bolt'],
     ] as const
   )
-    .filter(([value]) => !isICloud.value || value !== 'TIMELINE')
+    .filter(([value]) => sourceRules.value?.syncModes.includes(value))
     .map(([value, key, icon]) => ({
       value,
       icon,
@@ -550,7 +556,7 @@ watch(
                     {{ t('cronform.advanced.rewriteFileSystemTimeHint') }}
                   </div>
                 </div>
-                <div v-if="isICloud" class="space-y-1">
+                <div v-if="sourceRules?.checksumOption" class="space-y-1">
                   <div
                     class="flex items-center gap-2 text-[13px] text-slate-600 dark:text-slate-300"
                   >
