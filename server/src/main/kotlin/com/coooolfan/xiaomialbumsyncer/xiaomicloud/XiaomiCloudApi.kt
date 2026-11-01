@@ -177,6 +177,8 @@ class XiaomiCloudApi(private val tokenManager: XiaomiTokenManager) {
             .filter { it.get("status")?.asText().let { s -> s == null || s == "custom" } }
             .map { parseJsonNode(it, album) }
 
+        log.info("小米位点分页 accountId={} albumId={} records={} assets={} lastPage={} cursorAdvanced={}",
+            accountId, album.id, content.size(), assets.size, data.path("lastPage").asBoolean(true), tag != data.path("syncTag").asText())
         return AllItemsPage(
             syncTag = data.requiredText("syncTag"),
             lastPage = data.path("lastPage").asBoolean(true),
@@ -219,8 +221,10 @@ class XiaomiCloudApi(private val tokenManager: XiaomiTokenManager) {
         }
 
         val data = fetchOssUrlJson.path("data")
+        log.info("小米存储路由 accountId={} assetId={} type={} expectedBytes={} blockStorage={} encrypted={} blocks={}",
+            accountId, asset.id, asset.type, asset.size, data.has("kss"), data.hasNonNull("encryptInfo"), data.at("/kss/blocks").size())
         if (asset.type != AssetType.AUDIO && data.has("kss")) {
-            GalleryBlockDownloader().download(data, targetPath, asset.size, asset.checksum) { version -> e2ee.appKey(accountId, version) }
+            GalleryBlockDownloader().download(data, targetPath, asset.size, asset.checksum, downloadId = "$accountId:${asset.id}") { version -> e2ee.appKey(accountId, version) }
             return true
         }
         check(!data.hasNonNull("encryptInfo")) { "加密相册响应缺少文件块，无法下载" }
@@ -256,16 +260,23 @@ class XiaomiCloudApi(private val tokenManager: XiaomiTokenManager) {
 
     // 读完即关闭响应，避免后续 saveToFile 等长耗时操作期间占用连接（okhttp3 会报 warning）
     private fun getJson(accountId: Long, url: String): JsonNode {
+        val started = System.nanoTime()
         val req = Request.Builder()
             .url(url)
             .ua()
             .authHeader(tokenManager.getAuthPair(accountId))
             .get()
             .build()
+        log.info("小米 API 开始 accountId={} endpoint={}", accountId, req.url.encodedPath)
         return client().executeWithRetry(req).use { res ->
+            log.info("小米 API 响应 accountId={} endpoint={} status={} elapsedMs={}",
+                accountId, req.url.encodedPath, res.code, (System.nanoTime() - started) / 1_000_000)
             if (res.code == 401) tokenManager.invalidateToken(accountId)
             throwIfNotSuccess(res.code)
-            Solon.context().objectMapper.readTree(res.body)
+            Solon.context().objectMapper.readTree(res.body).also {
+                log.info("小米 API 业务结果 accountId={} endpoint={} code={} dataType={}",
+                    accountId, req.url.encodedPath, it.path("code").asText(), it.path("data").nodeType)
+            }
         }
     }
 

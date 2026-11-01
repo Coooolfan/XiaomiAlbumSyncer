@@ -87,6 +87,7 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
 
     internal fun fetchAssets(album: Album, client: ICloudClient, handler: (List<Asset>) -> Unit): Long {
         val ref = ICloudAlbumKey.decode(album.remoteKey)
+        log.info("iCloud 资产枚举开始 accountId={} albumId={} zone={} queryType={}", album.accountId, album.id, ref.zone, ref.queryType())
         checkIndex(client, ref.zone)
         var rank = 0L
         var total = 0L
@@ -100,6 +101,7 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
                 "resultsLimit" to 200, "zoneID" to zoneId(ref.zone)))
             val records = page.path("records").toList()
             val assets = records.filter { it.path("recordType").asText() == "CPLAsset" }
+            log.info("iCloud 资产分页 accountId={} albumId={} rank={} records={} assets={}", album.accountId, album.id, rank, records.size, assets.size)
             if (assets.isEmpty()) break
             val masters = records.filter { it.path("recordType").asText() == "CPLMaster" }.associateBy { it.path("recordName").asText() }
             val missing = assets.map { field(it, "masterRef").path("recordName").asText() }.filterNot(masters::containsKey).distinct()
@@ -112,9 +114,11 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
                 parseResources(album, asset, master)
             }
             handler(rows)
+            log.info("iCloud 资产分页已保存 accountId={} albumId={} rank={} resources={} missingMasters={}", album.accountId, album.id, rank, rows.size, missing.size)
             total += rows.size
             rank += assets.size
         }
+        log.info("iCloud 资产枚举完成 accountId={} albumId={} resources={}", album.accountId, album.id, total)
         return total
     }
 
@@ -142,6 +146,7 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
                 return true
             } catch (e: ICloudApiException) {
                 if (attempt != 0 || e.status !in setOf(401, 403, 410)) throw e
+                log.warn("iCloud 下载地址失效，重新解析 accountId={} assetId={} status={}", accountId, asset.id, e.status)
             }
         }
         error("iCloud 下载失败")

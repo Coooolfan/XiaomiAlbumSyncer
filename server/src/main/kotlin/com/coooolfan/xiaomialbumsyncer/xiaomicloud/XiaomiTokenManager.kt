@@ -130,7 +130,7 @@ class XiaomiTokenManager(private val sql: KSqlClient, private val notifyService:
             res.headers("Set-Cookie")
         }
 
-        log.info("cookiesSize: ${setCookies.size}")
+        log.info("小米认证回调 accountId={} cookieCount={}", account.id, setCookies.size)
 
         val serviceToken = setCookies.firstOrNull { it.startsWith("serviceToken=") }?.substringAfter("serviceToken=")
             ?.substringBefore(";")
@@ -141,7 +141,7 @@ class XiaomiTokenManager(private val sql: KSqlClient, private val notifyService:
             error("no serviceToken from remote")
         }
 
-        log.info("serviceToken 获取成功")
+        log.info("小米认证完成 accountId={} cookieCount={}", account.id, sessionCookies.size)
 
         return serviceToken to sessionCookies
 

@@ -4,15 +4,18 @@ import com.coooolfan.xiaomialbumsyncer.exception.BadRequestException
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.util.concurrent.ConcurrentHashMap
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.noear.solon.annotation.Managed
-import java.util.concurrent.ConcurrentHashMap
+import org.slf4j.LoggerFactory
 
 @Managed
 class ICloudAccountService(private val sql: KSqlClient, private val notifications: com.coooolfan.xiaomialbumsyncer.service.NotifyService) {
     private val mapper = jacksonObjectMapper()
+    private val log = LoggerFactory.getLogger(javaClass)
+
     private val alerted = ConcurrentHashMap.newKeySet<Long>()
     private val clients = ConcurrentHashMap<Long, ICloudClient>()
 
@@ -33,6 +36,7 @@ class ICloudAccountService(private val sql: KSqlClient, private val notification
         val credentials = if (previous?.domain == input.domain) previous.copy(password = input.password)
             else ICloudCredentials(appleId, input.password, input.domain)
         val client = ICloudClient(credentials)
+        log.info("iCloud 登录开始 accountId={} domain={} clientId={}", existing?.id, input.domain, credentials.clientId)
         val ready = try { client.login() } catch (e: ICloudApiException) { throw BadRequestException(e.message.orEmpty()) }
         val account = sql.saveCommand(ProviderAccount {
             if (existing != null) id = existing.id
@@ -42,6 +46,7 @@ class ICloudAccountService(private val sql: KSqlClient, private val notification
             this.credentials = mapper.writeValueAsString(client.credentials.copy(state = if (ready) "READY" else "MFA_REQUIRED"))
         }, if (existing == null) SaveMode.INSERT_ONLY else SaveMode.UPDATE_ONLY).execute().modifiedEntity
         clients[account.id] = client
+        log.info("iCloud 登录完成 accountId={} clientId={} state={}", account.id, credentials.clientId, if (ready) "READY" else "MFA_REQUIRED")
         if (ready) alerted.remove(account.id)
         return ICloudAccountStatus(account.id, if (ready) "READY" else "MFA_REQUIRED", credentials.domain)
     }
@@ -54,7 +59,9 @@ class ICloudAccountService(private val sql: KSqlClient, private val notification
     }
 
     fun verify(accountId: Long, code: String): ICloudAccountStatus = withClient(accountId, verifying = true) { client ->
+        log.info("iCloud 验证开始 accountId={}", accountId)
         client.verify(code)
+        log.info("iCloud 验证完成 accountId={}", accountId)
         ICloudAccountStatus(accountId, "READY", client.credentials.domain)
     }
 
@@ -66,12 +73,15 @@ class ICloudAccountService(private val sql: KSqlClient, private val notification
             ICloudClient(mapper.readValue<ICloudCredentials>(account.credentials))
         }
         synchronized(client) {
+            log.debug("iCloud 账号操作 accountId={} clientId={} verifying={}", accountId, client.credentials.clientId, verifying)
             try {
                 val result = action(client)
                 if (!client.mfaRequired) alerted.remove(accountId)
                 persist(account, client, if (client.mfaRequired) "MFA_REQUIRED" else "READY")
                 return result
             } catch (e: ICloudApiException) {
+                log.warn("iCloud 账号操作失败 accountId={} clientId={} verifying={} status={} serverCode={}",
+                    accountId, client.credentials.clientId, verifying, e.status, e.serverCode)
                 val state = when {
                     verifying || e.status == 409 -> "MFA_REQUIRED"
                     e.status == 401 -> "SESSION_EXPIRED"
@@ -101,6 +111,8 @@ class ICloudAccountService(private val sql: KSqlClient, private val notification
     }
 
     private fun persist(account: ProviderAccount, client: ICloudClient, state: String) {
+        val previousState = mapper.readValue<ICloudCredentials>(account.credentials).state
+        if (previousState != state) log.info("iCloud 状态变更 accountId={} from={} to={}", account.id, previousState, state)
         val credentials = mapper.writeValueAsString(client.credentials.copy(state = state))
         if (mapper.readTree(account.credentials) == mapper.readTree(credentials)) return
         sql.saveCommand(ProviderAccount {

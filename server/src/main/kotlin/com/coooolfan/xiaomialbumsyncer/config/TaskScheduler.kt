@@ -44,6 +44,9 @@ class TaskScheduler(
     @Init
     @Synchronized
     fun initJobs() {
+        log.info("运行环境 javaVersion={} vmName={} vmVersion={} os={} osVersion={} arch={} processors={}",
+            System.getProperty("java.version"), System.getProperty("java.vm.name"), System.getProperty("java.vm.version"),
+            System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"), Runtime.getRuntime().availableProcessors())
         val crontabs = sql.executeQuery(Crontab::class) {
             where(table.enabled eq true)
             select(table.fetch(CRONTAB_WITH_ALBUMS_FETCHER))
@@ -121,11 +124,18 @@ class TaskScheduler(
             log.warn("定时任务[${crontab.id}:${crontab.name}]正在运行中，跳过本次执行")
             return
         }
+        val started = System.nanoTime()
+        log.info("任务执行开始 taskId={} accountId={}", crontab.id, crontab.accountId)
         try {
             runBlocking(Dispatchers.IO) {
                 pipeline.execute(crontab)
             }
+        } catch (e: Exception) {
+            log.error("任务执行失败 taskId={} accountId={} errorType={} elapsedMs={}",
+                crontab.id, crontab.accountId, e.javaClass.simpleName, (System.nanoTime() - started) / 1_000_000)
+            throw e
         } finally {
+            log.info("任务执行结束 taskId={} elapsedMs={}", crontab.id, (System.nanoTime() - started) / 1_000_000)
             runningCrontabs.remove(crontab.id)
         }
     }

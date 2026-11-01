@@ -26,10 +26,10 @@ solon:
     appender:
       console:
         level: INFO
-        pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) %-19(%cyan(%-19.19logger{0})) : %msg%n"
+        pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) %-19(%cyan(%-19.19logger{0})) [%thread] : %msg%n"
       file:
         level: INFO
-        pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-25level %-19(%-19.19logger{0}): %msg%n"
+        pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-25level %-19(%-19.19logger{0}) [%thread]: %msg%n"
 
 sa-token:
   is-print: off

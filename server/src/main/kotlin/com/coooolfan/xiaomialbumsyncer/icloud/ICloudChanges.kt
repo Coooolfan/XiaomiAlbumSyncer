@@ -10,6 +10,8 @@ internal fun ICloudPhotos.fetchIncremental(
     albums: List<Album>, client: ICloudClient, cursor: String?,
     handler: (List<Asset>) -> Unit, commitCursor: (String) -> Unit,
 ) {
+    val log = LoggerFactory.getLogger(ICloudPhotos::class.java)
+    log.info("iCloud 增量开始 accountId={} albums={} hasCursor={}", albums.first().accountId, albums.size, !cursor.isNullOrBlank())
     val albumKeys = albums.associate { it.id to ICloudAlbumKey.decode(it.remoteKey) }
     val zone = albumKeys.getValue(albums.first().id).zone
     require(albums.all { it.accountId == albums.first().accountId && albumKeys.getValue(it.id).zone == zone })
@@ -45,6 +47,8 @@ private fun ICloudPhotos.readChanges(
     val zone = albumKeys.getValue(albums.first().id).zone
     val userAlbums = albums.filter { !albumKeys.getValue(it.id).albumId.startsWith("__") }
     val selectedContainers = userAlbums.map { albumKeys.getValue(it.id).albumId }.toSet()
+    val log = LoggerFactory.getLogger(ICloudPhotos::class.java)
+    var pageNumber = 0
     var token = initial
     val seen = mutableSetOf(initial)
     while (true) {
@@ -70,6 +74,8 @@ private fun ICloudPhotos.readChanges(
         require(more.isBoolean && page.path("records").isArray) { "iCloud 图库变更响应不完整" }
         if (more.asBoolean()) require(seen.add(next)) { "iCloud 变更分页位点没有推进" }
         val records = page.path("records").toList()
+        pageNumber++
+        log.info("iCloud 变更分页 accountId={} zone={} page={} records={} moreComing={}", albums.first().accountId, zone, pageNumber, records.size, more.asBoolean())
         val assets = records.filter { it.path("recordType").asText() == "CPLAsset" }.associateBy { it.path("recordName").asText() }.toMutableMap()
         val addedMembers = records.filter { it.path("recordType").asText() == "CPLContainerRelation" && live(it) }
             .filter { field(it, "containerId").asText() in selectedContainers }
@@ -112,6 +118,7 @@ private fun ICloudPhotos.readChanges(
         handler(rows)
         // 只有该页所有资产已持久化后才能提交；空页仍依据 moreComing 继续。
         commitCursor(next)
+        log.info("iCloud 变更位点已提交 accountId={} zone={} page={} resources={}", albums.first().accountId, zone, pageNumber, rows.size)
         token = next
         if (!more.asBoolean()) break
     }

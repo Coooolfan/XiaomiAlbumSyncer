@@ -1,17 +1,19 @@
 package com.coooolfan.xiaomialbumsyncer.icloud
 
+import com.coooolfan.xiaomialbumsyncer.utils.HttpDiagnosticsInterceptor
 import com.coooolfan.xiaomialbumsyncer.utils.UA
 import com.coooolfan.xiaomialbumsyncer.utils.saveToFile
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.nio.file.Path
 import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import okhttp3.*
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.slf4j.LoggerFactory
 
 internal data class ICloudCredentials(
     val appleId: String,
@@ -45,6 +47,8 @@ internal class ICloudClient(val credentials: ICloudCredentials, endpoints: Endpo
         }
     }
     private val mapper = jacksonObjectMapper()
+    private val log = LoggerFactory.getLogger(javaClass)
+
     private val auth = endpoints.auth
     private val setup = endpoints.setup
     private val home = endpoints.home
@@ -62,10 +66,10 @@ internal class ICloudClient(val credentials: ICloudCredentials, endpoints: Endpo
         }
         @Synchronized override fun loadForRequest(url: HttpUrl): List<Cookie> = cookies.filter { it.expiresAt > System.currentTimeMillis() && it.matches(url) }
     }
-    private val http = OkHttpClient.Builder().cookieJar(jar).connectTimeout(30, TimeUnit.SECONDS)
+    private val http = OkHttpClient.Builder().addInterceptor(HttpDiagnosticsInterceptor()).cookieJar(jar).connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS).followRedirects(false).build()
     // CDN 请求不携带 Apple 认证头或 cookie，允许下载重定向。
-    private val downloads = OkHttpClient.Builder().connectTimeout(30, TimeUnit.SECONDS)
+    private val downloads = OkHttpClient.Builder().addInterceptor(HttpDiagnosticsInterceptor()).connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(120, TimeUnit.SECONDS).build()
     private var accountData: JsonNode? = null
     private var validatedAt = 0L
@@ -117,6 +121,7 @@ internal class ICloudClient(val credentials: ICloudCredentials, endpoints: Endpo
                 return
             } catch (e: ICloudApiException) {
                 if (e.status !in setOf(401, 421, 450)) throw e
+                log.warn("iCloud 会话验证失败，重新登录 clientId={} status={}", credentials.clientId, e.status)
             }
         }
         if (!login()) throw ICloudApiException(409)
@@ -141,6 +146,7 @@ internal class ICloudClient(val credentials: ICloudCredentials, endpoints: Endpo
         }
         return try { call() } catch (e: ICloudApiException) {
             if (e.status !in setOf(421, 450)) throw e
+            log.warn("iCloud 云端调用会话失效，认证后重试 clientId={} operation={} status={}", credentials.clientId, path, e.status)
             ensureAuthenticated(force = true)
             call()
         }
@@ -160,6 +166,9 @@ internal class ICloudClient(val credentials: ICloudCredentials, endpoints: Endpo
 
     private fun request(url: String, body: Any? = null, method: String = "POST", authHeaders: Boolean = false,
                         contentType: String = "application/json", accepted: Set<Int> = emptySet()): JsonNode {
+        val endpoint = url.toHttpUrl().encodedPath
+        val started = System.nanoTime()
+        log.info("iCloud API 开始 clientId={} method={} endpoint={}", credentials.clientId, method, endpoint)
         val builder = Request.Builder().url(url).header("User-Agent", UA).header("Accept", "application/json")
             .header("Origin", if (authHeaders) auth.substringBefore("/appleauth") else home)
             .header("Referer", if (authHeaders) auth.substringBefore("/appleauth") + "/" else "$home/")
@@ -181,6 +190,8 @@ internal class ICloudClient(val credentials: ICloudCredentials, endpoints: Endpo
                 throw ICloudApiException(response.code)
             }
             val error = json.path("serverErrorCode").asText()
+            log.info("iCloud API 响应 clientId={} endpoint={} status={} serverCode={} records={} elapsedMs={}",
+                credentials.clientId, endpoint, response.code, error, json.path("records").size(), (System.nanoTime() - started) / 1_000_000)
             if ((!response.isSuccessful && response.code !in accepted) || error.isNotBlank()) throw ICloudApiException(response.code, error)
             if (response.code in accepted && json is com.fasterxml.jackson.databind.node.ObjectNode) json.put("_httpStatus", response.code)
             json

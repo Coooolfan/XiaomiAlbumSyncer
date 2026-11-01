@@ -3,16 +3,20 @@ package com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee
 import com.coooolfan.xiaomialbumsyncer.utils.client
 import com.coooolfan.xiaomialbumsyncer.utils.ua
 import com.fasterxml.jackson.databind.JsonNode
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import java.io.RandomAccessFile
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.slf4j.LoggerFactory
 
 /** 临时目标通过明文大小及 hash 校验后才交还下载流水线。 */
 internal class GalleryBlockDownloader(private val http: OkHttpClient = client()) {
-    fun download(data: JsonNode, target: Path, expectedSize: Long, expectedSha1: String, appKey: (Long) -> ByteArray) {
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    fun download(data: JsonNode, target: Path, expectedSize: Long, expectedSha1: String, downloadId: String = java.util.UUID.randomUUID().toString(), appKey: (Long) -> ByteArray) {
+        val started = System.nanoTime()
         val kss = data.path("kss")
         check(kss.path("stat").asText() == "OK") { "相册分块存储状态异常" }
         check(kss.path("secure_key").takeUnless { it.isMissingNode || it.isNull }?.asText().isNullOrBlank()) { "相册下载不支持 secure_key 封装" }
@@ -22,6 +26,8 @@ internal class GalleryBlockDownloader(private val http: OkHttpClient = client())
         check(expectedSize >= 0 && blocks.all { it.path("size").isIntegralNumber && it.path("size").asLong() in 0..4194304 }) { "相册文件块大小无效" }
         check(blocks.sumOf { it.path("size").asLong() } == expectedSize) { "相册分块总大小与资产大小不一致" }
         val info = data.path("encryptInfo").takeUnless { it.isMissingNode || it.isNull }
+        log.info("相册分块开始 downloadId={} blocks={} expectedBytes={} encrypted={} keyVersion={}",
+            downloadId, blocks.size(), expectedSize, info != null, info?.path("appKeyVersion")?.asText())
         val key = info?.let {
             check(it.isObject) { "encryptInfo 格式错误" }
             val version = it.path("appKeyVersion")
@@ -34,6 +40,7 @@ internal class GalleryBlockDownloader(private val http: OkHttpClient = client())
             RandomAccessFile(target.toFile(), "rw").use { output ->
                 output.setLength(0)
                 blocks.forEachIndexed { index, block ->
+                    log.debug("相册块开始 downloadId={} block={} bytes={}", downloadId, index, block.path("size").asLong())
                     val start = output.filePointer
                     val urls = block.path("urls").map { it.asText() }.filter { it.isNotBlank() }
                     check(urls.isNotEmpty()) { "文件块缺少下载地址" }
@@ -46,10 +53,13 @@ internal class GalleryBlockDownloader(private val http: OkHttpClient = client())
                             output.seek(start)
                             output.setLength(start)
                             readBlock(urls[attempt % urls.size], block.path("size").asLong(), sha1, encryptedSha1, key, iv, output)
+                            log.debug("相册块完成 downloadId={} block={} attempt={}", downloadId, index, attempt + 1)
                             lastError = null
                             break
                         } catch (e: Exception) {
                             if (Thread.currentThread().isInterrupted) throw e
+                            log.warn("相册块失败 downloadId={} block={} attempt={} urls={} errorType={}",
+                                downloadId, index, attempt + 1, urls.size, e.javaClass.simpleName)
                             lastError = e
                         }
                     }
@@ -63,7 +73,9 @@ internal class GalleryBlockDownloader(private val http: OkHttpClient = client())
                 while (true) { val count = input.read(buffer); if (count < 0) break; sha1.update(buffer, 0, count) }
             }
             check(hex(sha1.digest()).equals(expectedSha1, ignoreCase = true)) { "相册文件明文 SHA-1 校验失败" }
+            log.info("相册分块校验完成 downloadId={} bytes={} elapsedMs={}", downloadId, expectedSize, (System.nanoTime() - started) / 1_000_000)
         } catch (e: Exception) {
+            log.warn("相册分块失败 downloadId={} errorType={} elapsedMs={}", downloadId, e.javaClass.simpleName, (System.nanoTime() - started) / 1_000_000)
             try { Files.deleteIfExists(target) } catch (cleanup: Exception) { e.addSuppressed(cleanup) }
             throw e
         } finally { key?.fill(0) }

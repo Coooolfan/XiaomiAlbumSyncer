@@ -41,7 +41,13 @@ class CrontabPipeline(
         crontab: Crontab,
     ) {
         // 对资产的刷新操作作为独立步骤执行，不混入后续的并发流，避免状态管理复杂化
+        val started = System.nanoTime()
         val crontabHistory = crontabService.createCrontabHistory(crontab)
+        log.info("流水线开始 taskId={} historyId={} accountId={} mode={} albums={} downloaders={} verifiers={} exifWorkers={} fileTimeWorkers={} checkSha1={} rewriteExif={} rewriteFileTime={} skipExisting={} pageSize={}",
+            crontab.id, crontabHistory.id, crontab.accountId, crontab.syncMode, crontab.albumIds.size,
+            crontab.config.downloaders, crontab.config.verifiers, crontab.config.exifProcessors, crontab.config.fileTimeWorkers,
+            crontab.config.checkSha1, crontab.config.rewriteExifTime, crontab.config.rewriteFileSystemTime,
+            crontab.config.skipExistingFile, crontab.config.fetchFromDbSize)
 
         sync.refresh(crontab, crontabHistory)
 
@@ -65,6 +71,8 @@ class CrontabPipeline(
                     lastId
                 )
 
+                log.info("流水线待处理分页 taskId={} historyId={} afterAssetId={} pageSize={} assets={}",
+                    crontab.id, crontabHistory.id, lastId, pageSize, assets.size)
                 val details = mutableListOf<CrontabHistoryDetail>()
 
                 assets.forEach { asset ->
@@ -108,7 +116,8 @@ class CrontabPipeline(
         if (crontab.config.notify)
             CoroutineScope(Dispatchers.IO).launch { notifyService.send(crontab, success, total) }
 
-        log.info("Crontab {} 的流水线执行完毕, 成功 {}/{}", crontab.id, success, total)
+        log.info("流水线完成 taskId={} historyId={} success={} total={} failed={} elapsedMs={}",
+            crontab.id, crontabHistory.id, success, total, total - success, (System.nanoTime() - started) / 1_000_000)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -135,7 +144,12 @@ class CrontabPipeline(
         context: CrontabHistoryDetail,
         process: (CrontabHistoryDetail) -> CrontabHistoryDetail,
     ): CrontabHistoryDetail? = try {
-        process(context)
+        val started = System.nanoTime()
+        log.info("流水线阶段开始 historyId={} detailId={} assetId={} stage={}", context.crontabHistory.id, context.id, context.asset.id, stage)
+        process(context).also {
+            log.info("流水线阶段完成 historyId={} detailId={} assetId={} stage={} elapsedMs={}",
+                context.crontabHistory.id, context.id, context.asset.id, stage, (System.nanoTime() - started) / 1_000_000)
+        }
     } catch (err: Throwable) {
         // Flow.catch 不处理协程取消；串行快路径也保持相同语义。
         currentCoroutineContext().ensureActive()
@@ -144,7 +158,7 @@ class CrontabPipeline(
     }
 
     private fun saveAndLogErr(stageStr: String, context: CrontabHistoryDetail, err: Throwable) {
-        val errMsg = "资产 ${context.asset.id} 的${stageStr}阶段处理失败, 将跳过后续处理."
+        val errMsg = "流水线阶段失败 historyId=${context.crontabHistory.id} detailId=${context.id} assetId=${context.asset.id} stage=$stageStr，将跳过后续处理"
         log.error(errMsg, err)
         try {
             crontabService.updateDetailMessage(context.id, err.message ?: errMsg)

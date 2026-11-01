@@ -24,6 +24,7 @@ fun withCookie(vararg pairs: Pair<String, String?>): String {
 
 private val httpClient: OkHttpClient by lazy {
     OkHttpClient.Builder()
+        .addInterceptor(HttpDiagnosticsInterceptor())
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
@@ -53,6 +54,7 @@ fun OkHttpClient.executeWithRetry(request: Request): Response {
     return try {
         newCall(request).execute()
     } catch (_: SocketTimeoutException) {
+        org.slf4j.LoggerFactory.getLogger("CloudHttpRetry").warn("HTTP 超时，重试一次 method={} host={}", request.method, request.url.host)
         // 超时后无条件重试一次
         newCall(request).execute()
     }

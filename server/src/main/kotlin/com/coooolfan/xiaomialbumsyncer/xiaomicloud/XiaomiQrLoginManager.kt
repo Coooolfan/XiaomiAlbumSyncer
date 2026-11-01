@@ -166,7 +166,7 @@ class XiaomiQrLoginManager(private val accountService: XiaomiAccountService) {
         val body = res.body.string()
         val json = runCatching { mapper.readTree(body.removePrefix(JSON_PREFIX)) }.getOrNull()
             ?: run {
-                log.warn("会话 {} 长轮询响应非 JSON: {}", session.id, body.take(200))
+                log.warn("会话 {} 长轮询响应非 JSON，响应字符数 {}", session.id, body.length)
                 fail(session, "扫码响应解析失败")
                 return true
             }
@@ -176,7 +176,7 @@ class XiaomiQrLoginManager(private val accountService: XiaomiAccountService) {
 
         if (userId.isNullOrBlank() || passToken.isNullOrBlank()) {
             // 可能是中间状态（如已扫码未确认），继续等待
-            log.debug("会话 {} 长轮询响应缺少凭证字段: {}", session.id, body.take(200))
+            log.debug("会话 {} 长轮询响应缺少凭证字段，响应字符数 {}", session.id, body.length)
             return false
         }
 

@@ -36,6 +36,7 @@ class XiaomiE2eeService(
                     e2ee.path("requiredKeyVersion").asText().let { it.isBlank() || keys.hasNonNull(it) } -> XiaomiE2eeState.READY
                 else -> XiaomiE2eeState.VERIFICATION_REQUIRED
             }
+            log.info("E2EE 状态 accountId={} state={} cachedKeys={}", accountId, state, keys.size())
             persistState(account, state)
             XiaomiE2eeStatus(accountId, state, keys.size())
         } catch (e: XiaomiKeybagException) {
@@ -51,7 +52,9 @@ class XiaomiE2eeService(
         try {
             val client = XiaomiKeybagClient(account.id, account.userId, tokens, properties, e2ee.path("trustCookie").textValue())
             check(client.info().requiredText("e2eeStatus") == "open") { "该账号未开启高级数据保护" }
+            log.info("E2EE 验证码推送开始 accountId={}", accountId)
             client.push()
+            log.info("E2EE 验证码推送完成 accountId={}", accountId)
             session.lastE2eeCaptchaPush = System.currentTimeMillis()
             persistState(account, XiaomiE2eeState.VERIFICATION_REQUIRED)
         } catch (e: XiaomiKeybagException) {
@@ -62,6 +65,7 @@ class XiaomiE2eeService(
 
     fun verify(accountId: Long, code: String): XiaomiE2eeStatus = accounts.withAccount(accountId) { account, session ->
         require(Regex("[0-9]{6}").matches(code)) { "请输入 6 位数字验证码" }
+        log.info("E2EE 验证开始 accountId={}", accountId)
         val credentials = xiaomiCredentialsMapper.readTree(account.credentials) as ObjectNode
         val e2ee = credentials.withObject("/xiaomiE2ee")
         try {
@@ -74,6 +78,7 @@ class XiaomiE2eeService(
             e2ee.remove(listOf("requiredKeyVersion", "sealedKeys"))
             saveCredentials(account, credentials)
             session.e2eeVerificationAlerted = false
+            log.info("E2EE 验证完成 accountId={} fetchedKeys={} cachedKeys={}", accountId, fetched.size, keys.size())
             XiaomiE2eeStatus(accountId, XiaomiE2eeState.READY, keys.size())
         } catch (e: XiaomiKeybagException) {
             e.state?.let { persistState(account, it) }
@@ -87,6 +92,7 @@ class XiaomiE2eeService(
         val e2ee = credentials.withObject("/xiaomiE2ee")
         val key = e2ee.path("keys").path(version.toString()).textValue()
         if (key.isNullOrBlank()) {
+            log.warn("E2EE 密钥缓存未命中 accountId={} keyVersion={} cachedKeys={}", accountId, version, e2ee.path("keys").size())
             if (e2ee.path("requiredKeyVersion").asText() != version.toString() ||
                 e2ee.path("state").asText() != XiaomiE2eeState.VERIFICATION_REQUIRED.name) {
                 e2ee.put("state", XiaomiE2eeState.VERIFICATION_REQUIRED.name).put("requiredKeyVersion", version.toString())
@@ -100,12 +106,14 @@ class XiaomiE2eeService(
             }
             throw IllegalStateException("小米高级数据保护需要验证，请在账号设置中输入信任设备收到的 6 位验证码后重试任务")
         }
+        log.debug("E2EE 密钥缓存命中 accountId={} keyVersion={}", accountId, version)
         E2eeCrypto.decode(key)
     }
 
     private fun persistState(account: ProviderAccount, state: XiaomiE2eeState) {
         val credentials = xiaomiCredentialsMapper.readTree(account.credentials) as ObjectNode
         if (credentials.at("/xiaomiE2ee/state").asText() == state.name) return
+        log.info("E2EE 状态变更 accountId={} from={} to={}", account.id, credentials.at("/xiaomiE2ee/state").asText(), state)
         credentials.withObject("/xiaomiE2ee").put("state", state.name)
         saveCredentials(account, credentials)
     }

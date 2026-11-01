@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.xiaomicloud.e2ee
 
+import org.slf4j.LoggerFactory
 import com.coooolfan.xiaomialbumsyncer.config.XiaomiApiProperties
 import com.coooolfan.xiaomialbumsyncer.model.dto.xiaomiCredentialsMapper
 import com.coooolfan.xiaomialbumsyncer.utils.client
@@ -21,6 +22,8 @@ internal class XiaomiKeybagClient(
     private val hsmKeys: Map<Int, String> = hsmPublicKeys,
 ) {
     private val cookies = mutableMapOf<String, Cookie>()
+    private val log = LoggerFactory.getLogger(javaClass)
+
     private var sessionChecked = false
     init {
         trustCookie?.let { Cookie.parse(properties.baseUrl, it) }?.let { cookies[it.name] = it }
@@ -42,6 +45,7 @@ internal class XiaomiKeybagClient(
         val total = first.second.path("totalAppKeyCnt").takeIf { it.isIntegralNumber }?.asInt()
             ?: throw IllegalStateException("keybag 响应缺少 totalAppKeyCnt")
         check(total > 0 && keys.isNotEmpty() && keys.size <= total) { "keybag 返回的密钥数量无效" }
+        log.info("E2EE 密钥首屏 accountId={} fetched={} total={}", accountId, keys.size, total)
         var lastVersion = keys.keys.min()
         while (keys.size < total) {
             val previousCount = keys.size
@@ -49,6 +53,7 @@ internal class XiaomiKeybagClient(
             addKeys(page, keys)
             val nextVersion = keys.keys.min()
             check(keys.size > previousCount && nextVersion < lastVersion && keys.size <= total) { "keybag 密钥分页未推进" }
+            log.info("E2EE 密钥分页 accountId={} fetched={} total={} lastVersion={}", accountId, keys.size, total, nextVersion)
             lastVersion = nextVersion
         }
         return keys
@@ -111,8 +116,12 @@ internal class XiaomiKeybagClient(
                 .add("data", xiaomiCredentialsMapper.writeValueAsString(data))
                 .add("serviceToken", tokens.getAuthPair(accountId).second).build())
         }.build()
+        val started = System.nanoTime()
+        log.info("E2EE 请求开始 accountId={} endpoint={} method={} trustedDevice={}", accountId, url.encodedPath, request.method, trustCookie != null)
         val call = if (data == null) client().executeWithRetry(request) else client().newCall(request).execute()
         return call.use { response ->
+            log.info("E2EE HTTP 响应 accountId={} endpoint={} status={} elapsedMs={}",
+                accountId, url.encodedPath, response.code, (System.nanoTime() - started) / 1_000_000)
             if (response.code == 401) {
                 tokens.invalidateToken(accountId)
                 throw XiaomiKeybagException("小米登录已失效，请更新账号凭据后重试", XiaomiE2eeState.SESSION_EXPIRED)
@@ -121,6 +130,7 @@ internal class XiaomiKeybagClient(
             if (!response.isSuccessful) throw XiaomiKeybagException("小米密钥服务请求失败（HTTP ${response.code}）")
             val body = xiaomiCredentialsMapper.readTree(response.body.byteStream())
             val code = body.path("code")
+            log.info("E2EE 业务响应 accountId={} endpoint={} code={}", accountId, url.encodedPath, code.asText())
             check(code.isIntegralNumber) { "keybag 响应缺少业务状态码" }
             if (code.asInt() != 0) throw when (code.asInt()) {
                 14000000 -> XiaomiKeybagException("验证码错误，请重新输入", XiaomiE2eeState.VERIFICATION_REQUIRED)

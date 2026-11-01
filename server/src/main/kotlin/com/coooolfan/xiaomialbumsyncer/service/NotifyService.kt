@@ -161,7 +161,7 @@ class NotifyService(private val sql: KSqlClient) {
             }
             log.info("通知已发送, {}", logContext)
         } catch (e: Exception) {
-            log.error("发送通知失败, {}, url={}", logContext, url, e)
+            log.error("发送通知失败, {}, errorType={}", logContext, e.javaClass.simpleName)
         }
     }
 
