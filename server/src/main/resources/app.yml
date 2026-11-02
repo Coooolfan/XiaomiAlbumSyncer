@@ -37,3 +37,7 @@ sa-token:
 xiaomi:
   api:
     base-url: ${XIAOMI_API_BASE_URL:https://i.mi.com}
+
+icloud:
+  api:
+    base-url: ${ICLOUD_API_BASE_URL:}

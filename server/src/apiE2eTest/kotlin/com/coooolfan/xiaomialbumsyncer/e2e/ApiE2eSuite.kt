@@ -21,11 +21,18 @@ class ApiE2eSuite {
         val workDir = Files.createTempDirectory("xiaomi-api-e2e-")
         try {
             MockXiaomiApiServer.start().use { mock ->
-                ApplicationProcess.start(mock.baseUrl, workDir).use { application ->
+                val icloudAccountId = ApplicationProcess.start(mock.baseUrl, workDir).use { application ->
                     try {
                         executeWorkflow(application.api, mock, workDir)
                     } catch (e: Throwable) {
                         throw AssertionError("API E2E 执行失败: ${e.message}\n\n应用日志:\n${application.logs()}", e)
+                    }
+                }
+                ApplicationProcess.start(mock.baseUrl, workDir).use { restored ->
+                    try {
+                        restoreICloudSession(restored.api, mock, icloudAccountId)
+                    } catch (e: Throwable) {
+                        throw AssertionError("iCloud 会话恢复失败: ${e.message}\n\n应用日志:\n${restored.logs()}", e)
                     }
                 }
                 mock.assertNoUnexpectedRequests()
@@ -35,7 +42,7 @@ class ApiE2eSuite {
         }
     }
 
-    private fun executeWorkflow(api: ApiClient, mock: MockXiaomiApiServer, workDir: Path) {
+    private fun executeWorkflow(api: ApiClient, mock: MockXiaomiApiServer, workDir: Path): Long {
         assertFalse(api.json(api.get("/api/system-config").expect(200)).path("init").asBoolean())
         api.post("/api/system-config", mapOf("password" to "e2e-password")).expect(200)
         api.get("/api/token?password=${api.encode("wrong-password")}").expect(401)
@@ -225,6 +232,7 @@ class ApiE2eSuite {
             baseConfig = config,
         )
 
+        val icloudAccountId = executeICloudWorkflow(api, mock, workDir, config)
         api.delete("/api/account/$accountId").expect(200)
         api.post(
             "/api/system-config/password",
@@ -232,6 +240,153 @@ class ApiE2eSuite {
         ).expect(200)
         api.delete("/api/token").expect(200)
         api.get("/api/account").expect(401)
+        return icloudAccountId
+    }
+
+    /**
+     * 在应用进程内覆盖 iCloud 登录、双重认证、全量下载、位点增量和失效位点重建。
+     * 会话恢复由下一个应用进程执行，以便 tracing agent 采集 validate。
+     */
+    private fun executeICloudWorkflow(
+        api: ApiClient,
+        mock: MockXiaomiApiServer,
+        workDir: Path,
+        baseConfig: Map<String, Any?>,
+    ): Long {
+        val login = api.json(
+            api.post(
+                "/api/icloud/login",
+                mapOf(
+                    "appleId" to "mock-apple@example.com",
+                    "password" to "e2e-password",
+                    "domain" to "com",
+                    "nickname" to "Mock iCloud",
+                ),
+            ).expect(200)
+        )
+        assertEquals("MFA_REQUIRED", login.path("state").asText())
+        val accountId = login.path("accountId").asLong()
+        api.post("/api/icloud/$accountId/verify", mapOf("code" to "000000")).expect(400)
+        val verified = api.json(
+            api.post("/api/icloud/$accountId/verify", mapOf("code" to "123456")).expect(200)
+        )
+        assertEquals("READY", verified.path("state").asText())
+        assertEquals("com", api.json(api.get("/api/icloud/$accountId/status").expect(200)).path("domain").asText())
+
+        val albums = api.json(api.get("/api/album/latest/$accountId").expect(200))
+        val allPhotosId = findAlbumByName(albums, "所有照片")
+        val tripId = findAlbumByName(albums, "旅行")
+        assertEquals(6, albums.size())
+
+        val fullConfig = LinkedHashMap(baseConfig).apply {
+            this["targetPath"] = workDir.resolve("icloud-full").toString()
+            this["downloadImages"] = true
+            this["downloadVideos"] = true
+            this["downloadAudios"] = false
+            this["checkSha1"] = true
+            this["notify"] = false
+            this["rewriteExifTime"] = false
+            this["rewriteFileSystemTime"] = false
+        }
+        val fullCrontabId = api.json(
+            api.post(
+                "/api/crontab",
+                linkedMapOf(
+                    "name" to "iCloud Full E2E",
+                    "description" to "iCloud full sync",
+                    "enabled" to false,
+                    "syncMode" to "FULL",
+                    "config" to fullConfig,
+                    "accountId" to accountId,
+                    "albumIds" to listOf(allPhotosId, tripId),
+                ),
+            ).expect(200)
+        ).path("id").asLong()
+        api.post("/api/crontab/$fullCrontabId/executions").expect(200)
+        assertICloudDownloads(
+            api,
+            awaitCompletedHistory(api, fullCrontabId),
+            6,
+            mapOf("icloud-e2e-photo\n" to 2, "icloud-e2e-alt\n" to 2, "icloud-e2e-video\n" to 2),
+        )
+
+        val changesPath = "/database/1/com.apple.photos.cloud/production/private/changes/zone"
+        val changesBefore = mock.routeCount(changesPath)
+        val cursorCrontabId = api.json(
+            api.post(
+                "/api/crontab",
+                linkedMapOf(
+                    "name" to "iCloud Cursor E2E",
+                    "description" to "iCloud cursor sync",
+                    "enabled" to false,
+                    "syncMode" to "CURSOR",
+                    "config" to LinkedHashMap(fullConfig).apply {
+                        this["targetPath"] = workDir.resolve("icloud-cursor").toString()
+                    },
+                    "accountId" to accountId,
+                    "albumIds" to listOf(allPhotosId, tripId),
+                ),
+            ).expect(200)
+        ).path("id").asLong()
+        api.post("/api/crontab/$cursorCrontabId/executions").expect(200)
+        val cursorHistoryId = awaitCompletedHistory(api, cursorCrontabId)
+        assertICloudDownloads(
+            api,
+            cursorHistoryId,
+            8,
+            mapOf(
+                "icloud-e2e-photo\n" to 2,
+                "icloud-e2e-alt\n" to 2,
+                "icloud-e2e-video\n" to 2,
+                "icloud-e2e-delta\n" to 2,
+            ),
+        )
+        api.post("/api/crontab/$cursorCrontabId/executions").expect(200)
+        assertCompletedDetailCount(api, awaitCompletedHistory(api, cursorCrontabId, afterHistoryId = cursorHistoryId), 0)
+        assertTrue(mock.routeCount(changesPath) >= changesBefore + 5)
+        assertTrue(mock.routeCount("/database/1/com.apple.photos.cloud/production/private/records/lookup") >= 1)
+        assertTrue(mock.routeCount("/appleauth/auth/signin/init") >= 1)
+        assertTrue(mock.routeCount("/appleauth/auth/2sv/trust") >= 1)
+        assertTrue(mock.routeCount("/setup/ws/1/accountLogin") >= 1)
+        assertEquals(0, mock.routeCount("/setup/ws/1/validate"))
+        api.delete("/api/crontab/$fullCrontabId").expect(200)
+        api.delete("/api/crontab/$cursorCrontabId").expect(200)
+        return accountId
+    }
+
+    private fun restoreICloudSession(api: ApiClient, mock: MockXiaomiApiServer, accountId: Long) {
+        val signinInitBefore = mock.routeCount("/appleauth/auth/signin/init")
+        val signinCompleteBefore = mock.routeCount("/appleauth/auth/signin/complete")
+        val accountLoginBefore = mock.routeCount("/setup/ws/1/accountLogin")
+        val validateBefore = mock.routeCount("/setup/ws/1/validate")
+        api.get("/api/token?password=${api.encode("e2e-password-updated")}").expect(200)
+        val albums = api.json(api.get("/api/album/latest/$accountId").expect(200))
+        assertTrue(albums.any { it.path("name").asText() == "所有照片" })
+        assertEquals(validateBefore + 1, mock.routeCount("/setup/ws/1/validate"), "会话恢复应通过 validate 复用既有会话")
+        assertEquals(signinInitBefore, mock.routeCount("/appleauth/auth/signin/init"), "会话恢复不应重新发起 signin/init")
+        assertEquals(signinCompleteBefore, mock.routeCount("/appleauth/auth/signin/complete"), "会话恢复不应重新发起 signin/complete")
+        assertEquals(accountLoginBefore, mock.routeCount("/setup/ws/1/accountLogin"), "会话恢复不应重新发起 accountLogin")
+        api.delete("/api/account/$accountId").expect(200)
+        api.delete("/api/token").expect(200)
+    }
+
+    private fun assertICloudDownloads(api: ApiClient, historyId: Long, expected: Int, contents: Map<String, Int>) {
+        val detailPage = api.json(
+            api.get("/api/crontab/history/$historyId/details?pageIndex=0&pageSize=20").expect(200)
+        )
+        assertEquals(expected, detailPage.path("totalRowCount").asInt())
+        val files = detailPage.path("rows").map { row ->
+            assertTrue(row.path("downloadCompleted").asBoolean(), row.toString())
+            assertTrue(row.path("sha1Verified").asBoolean(), row.toString())
+            assertTrue(row.path("message").isMissingNode || row.path("message").isNull, row.toString())
+            Files.readAllBytes(Path.of(row.path("filePath").asText())).toString(Charsets.UTF_8)
+        }
+        contents.forEach { (content, count) -> assertEquals(count, files.count { it == content }) }
+    }
+
+    private fun findAlbumByName(albums: JsonNode, name: String): Long {
+        return albums.firstOrNull { it.path("name").asText() == name }?.path("id")?.asLong()
+            ?: error("未找到相册 $name，响应: $albums")
     }
 
     /**

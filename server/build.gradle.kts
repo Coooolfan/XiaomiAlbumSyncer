@@ -138,9 +138,9 @@ tasks.named("processResources") {
 
 val nativeMetadataSource = layout.projectDirectory.dir("src/main/resources/META-INF/native-image")
 val nativeAgentMerged = layout.buildDirectory.dir("native-agent-merged")
-val xasMockDir = layout.projectDirectory.dir("../xas-mock")
+val xasMockDir = layout.projectDirectory.dir("../mocks")
 val xasMockExecutable = layout.buildDirectory.file(
-    "xas-mock/${if (System.getProperty("os.name").startsWith("Windows")) "xas-mock.exe" else "xas-mock"}"
+    "mocks/${if (System.getProperty("os.name").startsWith("Windows")) "mocks.exe" else "mocks"}"
 )
 val xasMockScenario = xasMockDir.file("scenarios/default.json")
 val xasMockMemoryScenario = xasMockDir.file("scenarios/memory-profile.json")
@@ -164,7 +164,7 @@ val buildXasMock by tasks.registering(Exec::class) {
         commandLine(
             "go", "build", "-trimpath", "-o",
             xasMockExecutable.get().asFile.absolutePath,
-            "./cmd/xas-mock"
+            "./cmd/mocks"
         )
     }
 }

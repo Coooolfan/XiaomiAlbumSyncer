@@ -1,12 +1,12 @@
-# XAS Mock
+# Mocks
 
-`xas-mock` 是 XiaomiAlbumSyncer 的有状态远端媒体模拟服务。它只实现当前后端实际消费的接口，
-把云相册与云录音作为两套独立资源，并提供无需鉴权的控制 API，供下载链路、增量同步和内存测试矩阵使用。
+`mocks` 是 XiaomiAlbumSyncer 的有状态远端模拟服务。它实现当前后端实际消费的小米云相册、云录音和 iCloud 照片接口，
+并提供无需鉴权的控制 API，供下载链路、增量同步和内存测试矩阵使用。
 
 ## 启动
 
 ```bash
-go run ./cmd/xas-mock \
+go run ./cmd/mocks \
   --listen 127.0.0.1:18080 \
   --scenario ./scenarios/default.json
 ```
@@ -23,7 +23,12 @@ docker compose up --build
 XIAOMI_API_BASE_URL=http://127.0.0.1:18080
 ```
 
-默认账号为 `mock-user` / `mock-pass-token`。生产环境仍使用项目原有的 `https://i.mi.com` 默认值。
+默认小米账号为 `mock-user` / `mock-pass-token`。生产环境仍使用项目原有的 `https://i.mi.com` 默认值。
+
+iCloud 使用同一监听地址。Apple 登录在账号完成双重认证前返回 409，验证码是 `123456`。
+认证通过后，`/setup/ws/1/accountLogin` 和 `/setup/ws/1/validate` 会把 CloudKit 根地址指回本服务。
+图库包含「所有照片」和相册「旅行」；位点 `caught-up` 第一次访问返回 `CHANGE_TOKEN_EXPIRED`，之后恢复。
+服务端测试通过 `ICLOUD_API_BASE_URL` 把 iCloud 请求切到这里。未配置时仍访问 Apple。
 
 ## 场景模型
 

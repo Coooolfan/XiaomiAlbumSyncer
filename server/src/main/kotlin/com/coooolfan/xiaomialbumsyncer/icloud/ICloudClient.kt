@@ -3,7 +3,7 @@ package com.coooolfan.xiaomialbumsyncer.icloud
 import com.coooolfan.xiaomialbumsyncer.utils.UA
 import com.coooolfan.xiaomialbumsyncer.utils.saveToFile
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -44,7 +44,9 @@ internal class ICloudClient(val credentials: ICloudCredentials, endpoints: Endpo
             }
         }
     }
-    private val mapper = jacksonObjectMapper()
+    // 协议体只有 Map、List 和标量。Kotlin 模块会去找 EmptyList、EmptyMap 的主构造，
+    // 原生镜像里的 kotlin-reflect 解析不到这两个类。
+    private val mapper = ObjectMapper()
     private val auth = endpoints.auth
     private val setup = endpoints.setup
     private val home = endpoints.home
@@ -148,11 +150,17 @@ internal class ICloudClient(val credentials: ICloudCredentials, endpoints: Endpo
 
     fun download(url: String, target: Path) {
         val parsed = url.toHttpUrl()
-        require(parsed.isHttps) { "iCloud 下载地址必须使用 HTTPS" }
+        require(permittedDownload(parsed)) { "iCloud 下载地址必须使用 HTTPS" }
         downloads.newCall(Request.Builder().url(parsed).header("User-Agent", UA).build()).execute().use { response ->
             if (!response.isSuccessful) throw ICloudApiException(response.code)
             response.body.saveToFile(target)
         }
+    }
+
+    private fun permittedDownload(url: HttpUrl): Boolean {
+        if (url.isHttps) return true
+        val allowed = runCatching { home.toHttpUrl() }.getOrNull() ?: return false
+        return allowed.scheme == "http" && url.host == allowed.host && url.port == allowed.port
     }
 
     private fun requiresMfa(data: JsonNode): Boolean = data.at("/dsInfo/hsaVersion").asInt() >= 1 &&

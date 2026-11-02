@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.pipeline.stages
 
+import com.coooolfan.xiaomialbumsyncer.config.ICloudApiProperties
 import com.coooolfan.xiaomialbumsyncer.icloud.ICloudAccountService
 import com.coooolfan.xiaomialbumsyncer.icloud.ICloudPhotos
 import com.coooolfan.xiaomialbumsyncer.model.*
@@ -131,7 +132,7 @@ class VerificationStageTest {
                 setDatabaseNamingStrategy(DefaultDatabaseNamingStrategy.LOWER_CASE)
             }
             val notify = NotifyService(sql)
-            val media = CloudMediaService(sql, XiaoMiApi(TokenManager(sql, notify)), ICloudPhotos(ICloudAccountService(sql, notify)))
+            val media = CloudMediaService(sql, XiaoMiApi(TokenManager(sql, notify)), ICloudPhotos(ICloudAccountService(sql, notify, ICloudApiProperties())))
             val account = sql.saveCommand(ProviderAccount {
                 this.provider = provider
                 nickname = "test"

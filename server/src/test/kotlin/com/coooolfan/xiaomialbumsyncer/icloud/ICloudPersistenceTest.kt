@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.icloud
 
+import com.coooolfan.xiaomialbumsyncer.config.ICloudApiProperties
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.service.CloudMediaService
 import com.coooolfan.xiaomialbumsyncer.service.NotifyService
@@ -33,7 +34,7 @@ class ICloudPersistenceTest {
                 setDatabaseNamingStrategy(DefaultDatabaseNamingStrategy.LOWER_CASE)
             }
             val notify = NotifyService(sql)
-            val accounts = ICloudAccountService(sql, notify)
+            val accounts = ICloudAccountService(sql, notify, ICloudApiProperties())
             val media = CloudMediaService(sql, XiaoMiApi(TokenManager(sql, notify)), ICloudPhotos(accounts))
             val account = sql.saveCommand(ProviderAccount {
                 nickname = "Apple"
@@ -61,7 +62,7 @@ class ICloudPersistenceTest {
                 client.credentials.headers["X-Apple-Session-Token"] = "renewed-session"
             }
             assertEquals(1, credentialWrites())
-            val restored = ICloudAccountService(sql, notify)
+            val restored = ICloudAccountService(sql, notify, ICloudApiProperties())
             restored.withClient(account.id) { client ->
                 assertEquals("trust", client.credentials.headers["X-Apple-TwoSV-Trust-Token"])
                 assertEquals("renewed-session", client.credentials.headers["X-Apple-Session-Token"])

@@ -20,10 +20,12 @@ type Server struct {
 	state     *State
 	publicURL string
 	mux       *http.ServeMux
+	icloud    *icloudLibrary
 }
 
 func NewServer(state *State, publicURL string) http.Handler {
 	server := &Server{state: state, publicURL: strings.TrimRight(publicURL, "/"), mux: http.NewServeMux()}
+	server.icloud = newIcloudLibrary(server.baseURL)
 	server.routes()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		state.stats.RecordRoute(r.URL.Path)
@@ -52,6 +54,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("PUT /_control/v1/network", s.network)
 	s.mux.HandleFunc("GET /_control/v1/stats", s.controlStats)
 	s.mux.HandleFunc("POST /_control/v1/notify", s.notify)
+	s.icloud.register(s.mux)
 	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		s.state.stats.Unexpected()
 		writeError(w, http.StatusNotFound, 40400, "route not found")
@@ -483,6 +486,7 @@ func (s *Server) reset(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, 40011, err.Error())
 		return
 	}
+	s.icloud.reset()
 	seed, revision := s.state.Health()
 	writeJSON(w, http.StatusOK, map[string]any{"seed": seed, "revision": revision})
 }

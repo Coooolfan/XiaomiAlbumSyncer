@@ -1,7 +1,7 @@
-name: xas-mock
+name: mocks
 
 services:
-  mock:
+  mocks:
     build: .
     ports:
       - "18080:18080"

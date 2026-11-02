@@ -49,7 +49,7 @@ java -agentlib:native-image-agent=config-merge-dir=./src/main/resources/META-INF
 
 ## API E2E 与 Native Image 元数据
 
-API E2E 会在独立进程中启动真实 Solon 应用，并构建、启动 `../xas-mock` 有状态模拟服务。测试使用
+API E2E 会在独立进程中启动真实 Solon 应用，并构建、启动 `../mocks` 有状态模拟服务。测试使用
 临时 SQLite 数据库和下载目录，不会访问生产远端服务，也不会污染开发数据库。模拟服务把云相册与云录音作为
 独立远端资源，`-1` 只保留为应用内部的录音相册归一化标识。
 
@@ -78,10 +78,11 @@ API E2E 会在独立进程中启动真实 Solon 应用，并构建、启动 `../
 
 ```shell
 XIAOMI_API_BASE_URL=http://127.0.0.1:18080
+ICLOUD_API_BASE_URL=http://127.0.0.1:18080
 APP_DB_PATH=/tmp/xiaomi-album-syncer.db
 ```
 
-需要手工执行真实新增资产、下载限速或内存测试矩阵时，参见 `../xas-mock/README.md`。模拟服务支持
+需要手工执行真实新增资产、下载限速或内存测试矩阵时，参见 `../mocks/README.md`。模拟服务支持
 固定 seed 场景、原子 mutation、reset、下载网络参数和调用统计。
 
 仓库还提供可重复的 JVM 下载内存基准。默认场景会先下载 1000 个 16 MiB 文件，执行一次无变化空任务，
@@ -111,7 +112,7 @@ JVM 与 ExifTool 等子进程的进程树 RSS 峰值、NMT 摘要、Mock 实际�
 
 # 复现默认并发下开启“填充 EXIF 时间”的真实图片处理链路
 ./gradlew apiMemoryBenchmarkJvm \
-  -Pxiaomi.benchmark.scenario=../xas-mock/scenarios/memory-profile-exif.json \
+  -Pxiaomi.benchmark.scenario=../mocks/scenarios/memory-profile-exif.json \
   -Pxiaomi.benchmark.rewriteExifTime=true \
   -Pxiaomi.benchmark.contentMode=jpeg \
   -Pxiaomi.benchmark.keepWorkDir=true

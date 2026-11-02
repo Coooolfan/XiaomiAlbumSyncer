@@ -109,6 +109,7 @@ class ApplicationProcess private constructor(
                     }
                 }
                 put("XIAOMI_API_BASE_URL", mockBaseUrl)
+                put("ICLOUD_API_BASE_URL", mockBaseUrl)
                 put("WEBAUTHN_RP_ID", "localhost")
                 putAll(extraEnvironment)
             }

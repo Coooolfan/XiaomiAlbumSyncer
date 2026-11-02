@@ -110,7 +110,7 @@ Full Changelog: https://github.com/Coooolfan/XiaomiAlbumSyncer/compare/<prev>...
 | 重复前缀 | 不写 `feat:` 或 `chore(web):` 等前缀 | ✅ “更新依赖版本” ❌ “feat: 更新依赖版本”   |
 | 子工程   | 涉及特定子工程时在描述中自然带出     | “服务端优化下载队列”、“Web 端修复设置页”  |
 
-> 面向读者的称谓：`server` → 服务端；`web` → Web 端；`xas-mock` → Mock 服务。
+> 面向读者的称谓：`server` → 服务端；`web` → Web 端；`mocks` → Mocks 服务。
 > 不使用 commit scope（`server` / `web`）作为条目前缀。
 
 ---

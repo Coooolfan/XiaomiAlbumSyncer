@@ -125,7 +125,7 @@ class MockXiaomiApiServer private constructor(
                 "--listen", "127.0.0.1:$port",
                 "--scenario", scenario,
             ).redirectErrorStream(true).start()
-            thread(name = "xas-mock-output", isDaemon = true) {
+            thread(name = "mocks-output", isDaemon = true) {
                 process.inputStream.bufferedReader(StandardCharsets.UTF_8).useLines { lines ->
                     lines.forEach { output += it }
                 }

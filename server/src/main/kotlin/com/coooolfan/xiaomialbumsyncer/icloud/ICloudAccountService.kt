@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.icloud
 
+import com.coooolfan.xiaomialbumsyncer.config.ICloudApiProperties
 import com.coooolfan.xiaomialbumsyncer.exception.BadRequestException
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -11,7 +12,11 @@ import org.noear.solon.annotation.Managed
 import java.util.concurrent.ConcurrentHashMap
 
 @Managed
-class ICloudAccountService(private val sql: KSqlClient, private val notifications: com.coooolfan.xiaomialbumsyncer.service.NotifyService) {
+class ICloudAccountService(
+    private val sql: KSqlClient,
+    private val notifications: com.coooolfan.xiaomialbumsyncer.service.NotifyService,
+    private val icloudApi: ICloudApiProperties,
+) {
     private val mapper = jacksonObjectMapper()
     private val alerted = ConcurrentHashMap.newKeySet<Long>()
     private val clients = ConcurrentHashMap<Long, ICloudClient>()
@@ -32,7 +37,7 @@ class ICloudAccountService(private val sql: KSqlClient, private val notification
         }
         val credentials = if (previous?.domain == input.domain) previous.copy(password = input.password)
             else ICloudCredentials(appleId, input.password, input.domain)
-        val client = ICloudClient(credentials)
+        val client = open(credentials)
         val ready = try { client.login() } catch (e: ICloudApiException) { throw BadRequestException(e.message.orEmpty()) }
         val account = sql.saveCommand(ProviderAccount {
             if (existing != null) id = existing.id
@@ -63,7 +68,7 @@ class ICloudAccountService(private val sql: KSqlClient, private val notification
         val account = sql.findById(ProviderAccount::class, accountId) ?: throw BadRequestException("账号不存在")
         require(account.provider == CloudProvider.ICLOUD) { "该账号不是 iCloud 账号" }
         val client = clients.computeIfAbsent(accountId) {
-            ICloudClient(mapper.readValue<ICloudCredentials>(account.credentials))
+            open(mapper.readValue<ICloudCredentials>(account.credentials))
         }
         synchronized(client) {
             try {
@@ -89,6 +94,13 @@ class ICloudAccountService(private val sql: KSqlClient, private val notification
     @Synchronized fun forget(accountId: Long) {
         clients.remove(accountId)
         alerted.remove(accountId)
+    }
+
+    private fun open(credentials: ICloudCredentials): ICloudClient {
+        val base = icloudApi.baseUrl()
+        val endpoints = if (base.isEmpty()) ICloudClient.Endpoints.forDomain(credentials.domain)
+        else ICloudClient.Endpoints("$base/appleauth/auth", "$base/setup/ws/1", base)
+        return ICloudClient(credentials, endpoints)
     }
 
     private fun persist(account: ProviderAccount, client: ICloudClient, state: String) {

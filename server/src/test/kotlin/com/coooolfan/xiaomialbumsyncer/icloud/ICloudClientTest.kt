@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpServer
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.net.InetSocketAddress
+import java.nio.file.Path
 import java.util.Base64
 
 class ICloudClientTest {
@@ -29,6 +30,8 @@ class ICloudClientTest {
                     assertEquals("challenge-scnt", exchange.requestHeaders.getFirst("scnt"))
                     val json = mapper.readTree(body)
                     assertFalse(json.has("password"))
+                    assertTrue(json.path("trustTokens").isArray)
+                    if (!trusted) assertEquals(0, json.path("trustTokens").size())
                     assertEquals(32, Base64.getDecoder().decode(json.path("m1").asText()).size)
                     exchange.responseHeaders.add("X-Apple-Session-Token", "web-token")
                     exchange.responseHeaders.add("Set-Cookie", "auth=secret-cookie; Path=/; HttpOnly")
@@ -77,6 +80,22 @@ class ICloudClientTest {
         } finally {
             server.stop(0)
         }
+    }
+
+    @Test fun downloadRequiresHttpsUnlessTheEndpointOverrideIsHttp() {
+        val production = ICloudClient(ICloudCredentials("apple@example.com", "password", "com"))
+        val rejected = assertThrows(IllegalArgumentException::class.java) {
+            production.download("http://127.0.0.1/file", Path.of("unused"))
+        }
+        assertTrue(rejected.message!!.contains("HTTPS"))
+        val local = ICloudClient(
+            ICloudCredentials("apple@example.com", "password", "com"),
+            ICloudClient.Endpoints("http://127.0.0.1:9/appleauth/auth", "http://127.0.0.1:9/setup/ws/1", "http://127.0.0.1:9"),
+        )
+        val wrongPort = assertThrows(IllegalArgumentException::class.java) {
+            local.download("http://127.0.0.1:10/file", Path.of("unused"))
+        }
+        assertTrue(wrongPort.message!!.contains("HTTPS"))
     }
 
     @Test fun supportsBothRegionsAndRejectsUnknownDomains() {

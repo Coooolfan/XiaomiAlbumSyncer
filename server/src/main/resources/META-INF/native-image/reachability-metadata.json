@@ -924,6 +924,20 @@
       "type": "com.coooolfan.xiaomialbumsyncer.config.DataSourceKt"
     },
     {
+      "type": "com.coooolfan.xiaomialbumsyncer.config.ICloudApiProperties",
+      "fields": [
+        {
+          "name": "configuredBaseUrl"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "com.coooolfan.xiaomialbumsyncer.config.IndexMapping",
       "allDeclaredFields": true,
       "methods": [
@@ -1886,6 +1900,25 @@
           "parameterTypes": [
             "com.coooolfan.xiaomialbumsyncer.icloud.ICloudAccountService"
           ]
+        },
+        {
+          "name": "login",
+          "parameterTypes": [
+            "com.coooolfan.xiaomialbumsyncer.icloud.ICloudLoginInput"
+          ]
+        },
+        {
+          "name": "status",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "verify",
+          "parameterTypes": [
+            "long",
+            "com.coooolfan.xiaomialbumsyncer.icloud.ICloudVerifyInput"
+          ]
         }
       ]
     },
@@ -2329,6 +2362,14 @@
             "org.babyfish.jimmer.sql.kt.KSqlClient",
             "com.coooolfan.xiaomialbumsyncer.service.NotifyService"
           ]
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "org.babyfish.jimmer.sql.kt.KSqlClient",
+            "com.coooolfan.xiaomialbumsyncer.service.NotifyService",
+            "com.coooolfan.xiaomialbumsyncer.config.ICloudApiProperties"
+          ]
         }
       ]
     },
@@ -2345,10 +2386,41 @@
       "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudAccountService$withClient$lambda$3$$inlined$readValue$1"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudAccountStatus"
+      "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudAccountStatus",
+      "methods": [
+        {
+          "name": "getAccountId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDomain",
+          "parameterTypes": []
+        },
+        {
+          "name": "getState",
+          "parameterTypes": []
+        }
+      ]
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudAlbumKey"
+      "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudAlbumKey",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getAlbumId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getZone",
+          "parameterTypes": []
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudAlbumKey$Companion"
@@ -2375,10 +2447,66 @@
       "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudClient$jar$1"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudCredentials"
+      "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudCredentials",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "java.util.Map",
+            "java.util.List",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getAppleId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getClientId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getCookies",
+          "parameterTypes": []
+        },
+        {
+          "name": "getDomain",
+          "parameterTypes": []
+        },
+        {
+          "name": "getHeaders",
+          "parameterTypes": []
+        },
+        {
+          "name": "getPassword",
+          "parameterTypes": []
+        },
+        {
+          "name": "getState",
+          "parameterTypes": []
+        }
+      ]
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudLoginInput"
+      "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudLoginInput",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.String",
+            "java.lang.Long",
+            "int",
+            "kotlin.jvm.internal.DefaultConstructorMarker"
+          ]
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudPhotos",
@@ -2395,7 +2523,24 @@
       "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudPhotosKt"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudResourceKey"
+      "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudResourceKey",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String",
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "getAssetId",
+          "parameterTypes": []
+        },
+        {
+          "name": "getResource",
+          "parameterTypes": []
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudResourceKey$Companion"
@@ -2404,7 +2549,15 @@
       "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudResourceKey$Companion$decode$$inlined$readValue$1"
     },
     {
-      "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudVerifyInput"
+      "type": "com.coooolfan.xiaomialbumsyncer.icloud.ICloudVerifyInput",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.icloud.InvalidICloudCursor"
@@ -11684,6 +11837,9 @@
       "allDeclaredFields": true
     },
     {
+      "type": "java.util.Comparator"
+    },
+    {
       "type": "java.util.Date"
     },
     {
@@ -11691,6 +11847,9 @@
     },
     {
       "type": "java.util.Hashtable"
+    },
+    {
+      "type": "java.util.Iterator"
     },
     {
       "type": "java.util.List"
@@ -11969,7 +12128,13 @@
       "type": "java.util.RandomAccess"
     },
     {
+      "type": "java.util.SequencedCollection"
+    },
+    {
       "type": "java.util.Set"
+    },
+    {
+      "type": "java.util.Spliterator"
     },
     {
       "type": "java.util.concurrent.AbstractExecutorService",
@@ -12340,7 +12505,22 @@
       "type": "java.util.function.BiFunction"
     },
     {
+      "type": "java.util.function.Consumer"
+    },
+    {
       "type": "java.util.function.Function"
+    },
+    {
+      "type": "java.util.function.IntFunction"
+    },
+    {
+      "type": "java.util.function.Predicate"
+    },
+    {
+      "type": "java.util.function.UnaryOperator"
+    },
+    {
+      "type": "java.util.stream.Stream"
     },
     {
       "type": "javax.security.auth.x500.X500Principal",
@@ -12420,6 +12600,9 @@
     },
     {
       "type": "kotlin.Function1"
+    },
+    {
+      "type": "kotlin.IgnorableReturnValue"
     },
     {
       "type": "kotlin.Int"
@@ -12506,6 +12689,9 @@
       "type": "kotlin.collections.Collection"
     },
     {
+      "type": "kotlin.collections.EmptyList"
+    },
+    {
       "type": "kotlin.collections.EmptyMap",
       "allDeclaredFields": true,
       "methods": [
@@ -12532,7 +12718,16 @@
       ]
     },
     {
+      "type": "kotlin.collections.Iterable"
+    },
+    {
+      "type": "kotlin.collections.Iterator"
+    },
+    {
       "type": "kotlin.collections.List"
+    },
+    {
+      "type": "kotlin.collections.ListIterator"
     },
     {
       "type": "kotlin.collections.Map"
@@ -12544,7 +12739,16 @@
       "type": "kotlin.collections.MutableCollection"
     },
     {
+      "type": "kotlin.collections.MutableIterable"
+    },
+    {
+      "type": "kotlin.collections.MutableIterator"
+    },
+    {
       "type": "kotlin.collections.MutableList"
+    },
+    {
+      "type": "kotlin.collections.MutableListIterator"
     },
     {
       "type": "kotlin.collections.MutableMap"
@@ -12554,6 +12758,9 @@
     },
     {
       "type": "kotlin.collections.MutableSet"
+    },
+    {
+      "type": "kotlin.collections.RandomAccess"
     },
     {
       "type": "kotlin.collections.Set"

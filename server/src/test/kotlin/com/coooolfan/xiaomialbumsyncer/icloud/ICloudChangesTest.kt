@@ -1,5 +1,6 @@
 package com.coooolfan.xiaomialbumsyncer.icloud
 
+import com.coooolfan.xiaomialbumsyncer.config.ICloudApiProperties
 import com.coooolfan.xiaomialbumsyncer.model.*
 import com.coooolfan.xiaomialbumsyncer.service.NotifyService
 import com.fasterxml.jackson.databind.JsonNode
@@ -50,7 +51,7 @@ class ICloudChangesTest {
             val root = "http://127.0.0.1:${server.address.port}"
             val client = ICloudClient(ICloudCredentials("apple", "password", "com", headers = mutableMapOf("X-Apple-Session-Token" to "session")),
                 ICloudClient.Endpoints("$root/auth", "$root/setup", root))
-            test(ICloudPhotos(ICloudAccountService(sql, NotifyService(sql))), client)
+            test(ICloudPhotos(ICloudAccountService(sql, NotifyService(sql), ICloudApiProperties())), client)
         } finally { server.stop(0) }
     }
 
