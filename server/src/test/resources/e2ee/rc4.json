@@ -1,0 +1,14 @@
+{
+  "source": "Node OpenSSL RC4; synthetic key and plaintext",
+  "secureKey": "00112233445566778899aabbccddeeff",
+  "blocks": [
+    {
+      "plain": "hViqXp4oc5DgQqcasWJXuTn2pWmdKMlrKOpFLwWqvUA=",
+      "e2ee": "BAvTJAAOP/kbWkJuzuA7VOBfkEYpBQg4XMJlF6NVWGI="
+    },
+    {
+      "plain": "5TjKPv5IE/CAIse6EcL3GZlWBck9iCmLyAqlz+VKXaCDWHNgyu9A/2msRqPJgJYTpA==",
+      "e2ee": "SbxqEBmmhuEiJGqC4CJUmSfbTMjCUetqgFIMwY7zqwXh/q8ooFY5wgJl8pYdpbD5Bw=="
+    }
+  ]
+}
