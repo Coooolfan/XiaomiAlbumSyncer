@@ -23,7 +23,6 @@ version = (findProperty("appVersion") as String?)?.takeIf { it.isNotBlank() } ?:
 description = "A tool to download albums from Xiaomi Cloud."
 
 val apiE2eTest = sourceSets.create("apiE2eTest") {
-    resources.srcDir("src/apiE2eTest/resources")
     compileClasspath += sourceSets.main.get().output + configurations.testRuntimeClasspath.get()
     runtimeClasspath += output + compileClasspath
 }
