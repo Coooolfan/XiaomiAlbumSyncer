@@ -24,6 +24,7 @@ class NativeImageRegister : RuntimeNativeRegistrar {
             com.coooolfan.xiaomialbumsyncer.model.dto.XiaomiAccountInput::class.java,
             com.coooolfan.xiaomialbumsyncer.icloud.ICloudAlbumKey::class.java,
             com.coooolfan.xiaomialbumsyncer.icloud.ICloudResourceKey::class.java,
+            com.coooolfan.xiaomialbumsyncer.model.CrontabConfig::class.java,
         ).forEach { type ->
             metadata.registerReflection(type,
                 org.noear.solon.aot.hint.MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
