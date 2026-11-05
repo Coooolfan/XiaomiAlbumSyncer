@@ -6,11 +6,21 @@ import Card from 'primevue/card'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Divider from 'primevue/divider'
+import SelectButton from 'primevue/selectbutton'
+import { storeToRefs } from 'pinia'
 import { api } from '../ApiInstance'
 import { isWebAuthnSupported, hasAvailablePasskeys, authenticateWithPasskey } from '@/utils/passkey'
+import { usePreferencesStore } from '@/stores/preferences'
+import type { AppLocale } from '@/i18n'
 
 const router = useRouter()
 const { t } = useI18n()
+const { locale } = storeToRefs(usePreferencesStore())
+
+const languageOptions: Array<{ label: string; value: AppLocale }> = [
+  { label: '中文', value: 'zh-CN' },
+  { label: 'English', value: 'en-US' },
+]
 
 const checkingInit = ref(true)
 const isInit = ref(true) // 服务端是否已初始化
@@ -135,8 +145,20 @@ onMounted(() => {
         class="w-full max-w-md shadow-xl ring-1 ring-black/5 dark:ring-white/10 rounded-2xl overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur"
       >
         <template #title>
-          <div class="text-xl font-semibold tracking-tight">
-            {{ modeTitle }}
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0 text-xl font-semibold tracking-tight">
+              {{ modeTitle }}
+            </div>
+            <SelectButton
+              v-model="locale"
+              :options="languageOptions"
+              optionLabel="label"
+              optionValue="value"
+              size="small"
+              :allowEmpty="false"
+              :aria-label="t('appearance.language')"
+              class="shrink-0"
+            />
           </div>
         </template>
 
