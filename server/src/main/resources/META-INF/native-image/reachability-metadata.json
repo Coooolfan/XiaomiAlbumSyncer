@@ -4082,8 +4082,8 @@
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabConfig",
       "allDeclaredFields": true,
-      "allDeclaredConstructors": true,
-      "allPublicMethods": true
+      "allPublicMethods": true,
+      "allDeclaredConstructors": true
     },
     {
       "type": "com.coooolfan.xiaomialbumsyncer.model.CrontabDraft"
