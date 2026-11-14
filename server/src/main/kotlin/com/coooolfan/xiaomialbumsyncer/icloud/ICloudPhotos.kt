@@ -104,13 +104,20 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
             val masters = records.filter { it.path("recordType").asText() == "CPLMaster" }.associateBy { it.path("recordName").asText() }
             val missing = assets.map { field(it, "masterRef").path("recordName").asText() }.filterNot(masters::containsKey).distinct()
             val allMasters = masters + if (missing.isEmpty()) emptyMap() else lookupRecords(client, ref.zone, missing).associateBy { it.path("recordName").asText() }
+            var repeated = 0
             val rows = assets.flatMap { asset ->
                 val recordName = asset.path("recordName").asText()
-                require(seen.add(recordName)) { "iCloud 资产分页重复，请重试同步" }
+                // 索引的 rank 空间可能出现空位（智能相册尾部实测），按资产数推进会落后于真实 rank，
+                // 跨过空位后下一页会重复返回已见资产。跳过重复继续推进，中止会让基线永远无法建立。
+                if (!seen.add(recordName)) {
+                    repeated++
+                    return@flatMap emptyList()
+                }
                 val masterName = field(asset, "masterRef").path("recordName").asText()
                 val master = allMasters[masterName] ?: error("iCloud 资产缺少原件记录")
                 parseResources(album, asset, master)
             }
+            if (repeated > 0) log.warn("iCloud 相册 {} 在 startRank={} 处的分页重复出现 {} 个资产，已跳过", album.name, rank, repeated)
             handler(rows)
             total += rows.size
             rank += assets.size

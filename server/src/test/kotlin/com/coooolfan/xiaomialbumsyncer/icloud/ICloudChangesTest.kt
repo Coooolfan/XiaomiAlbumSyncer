@@ -343,4 +343,30 @@ class ICloudChangesTest {
             }
         }
     }
+
+    @Test fun skipsAssetsRepeatedAcrossRankGapsInsteadOfAborting() {
+        // 真实图库实测：智能相册索引的 rank 空间存在空位，按资产数推进 startRank 会落后于真实 rank，
+        // 跨过空位后下一页会重复返回已见资产（本例 rank 1 为空位，asset b 实际位于 rank 2）。
+        val ranks = mutableListOf<Long>()
+        withServer({ path, body ->
+            if (path == "query" && body.at("/query/recordType").asText() == "CheckIndexingState")
+                mapOf("records" to listOf(record("Index", "index", mapOf("state" to "FINISHED"))))
+            else {
+                assertEquals("query", path)
+                ranks += body.at("/query/filterBy/0/fieldValue/value").asLong()
+                assertEquals(200, body.at("/resultsLimit").asInt())
+                when (ranks.last()) {
+                    0L -> mapOf("records" to listOf(asset("a"), master("a")))
+                    1L, 2L -> mapOf("records" to listOf(asset("b"), master("b")))
+                    else -> mapOf("records" to emptyList<Any>())
+                }
+            }
+        }) { photos, client ->
+            val files = mutableListOf<Asset>()
+            val count = photos.fetchAssets(album(1, "__all__"), client) { files += it }
+            assertEquals(2L, count)
+            assertEquals(listOf("a", "b"), files.map { ICloudResourceKey.decode(it.remoteKey).assetId })
+            assertEquals(listOf(0L, 1L, 2L, 3L), ranks)
+        }
+    }
 }
