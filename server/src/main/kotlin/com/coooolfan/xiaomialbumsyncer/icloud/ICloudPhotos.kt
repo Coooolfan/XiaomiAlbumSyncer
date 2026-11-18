@@ -13,6 +13,8 @@ import java.time.Instant
 import java.util.Base64
 import java.util.HexFormat
 
+private const val MAX_CONSECUTIVE_REPEATED_ASSET_PAGES = 5
+
 @Managed
 class ICloudPhotos(private val accounts: ICloudAccountService) {
     private val log = LoggerFactory.getLogger(ICloudPhotos::class.java)
@@ -90,6 +92,7 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
         checkIndex(client, ref.zone)
         var rank = 0L
         var total = 0L
+        var consecutiveRepeatedPages = 0
         val seen = mutableSetOf<String>()
         while (true) {
             val filters = mutableListOf(filter("startRank", "INT64", rank), filter("direction", "STRING", "ASCENDING"))
@@ -101,23 +104,29 @@ class ICloudPhotos(private val accounts: ICloudAccountService) {
             val records = page.path("records").toList()
             val assets = records.filter { it.path("recordType").asText() == "CPLAsset" }
             if (assets.isEmpty()) break
-            val masters = records.filter { it.path("recordType").asText() == "CPLMaster" }.associateBy { it.path("recordName").asText() }
-            val missing = assets.map { field(it, "masterRef").path("recordName").asText() }.filterNot(masters::containsKey).distinct()
-            val allMasters = masters + if (missing.isEmpty()) emptyMap() else lookupRecords(client, ref.zone, missing).associateBy { it.path("recordName").asText() }
-            var repeated = 0
-            val rows = assets.flatMap { asset ->
-                val recordName = asset.path("recordName").asText()
-                // 索引的 rank 空间可能出现空位（智能相册尾部实测），按资产数推进会落后于真实 rank，
-                // 跨过空位后下一页会重复返回已见资产。跳过重复继续推进，中止会让基线永远无法建立。
-                if (!seen.add(recordName)) {
-                    repeated++
-                    return@flatMap emptyList()
+
+            // 智能相册的 rank 可能有空位，继续按该页返回的资产数移动，允许短暂的分页重叠。
+            val newAssets = assets.filter { seen.add(it.path("recordName").asText()) }
+            val repeated = assets.size - newAssets.size
+            if (repeated > 0) log.warn("iCloud 相册 {} 在 startRank={} 处的分页重复出现 {} 个资产，已跳过", album.name, rank, repeated)
+            if (newAssets.isEmpty()) {
+                consecutiveRepeatedPages++
+                check(consecutiveRepeatedPages < MAX_CONSECUTIVE_REPEATED_ASSET_PAGES) {
+                    "iCloud 相册 ${album.name} 在 startRank=$rank 处已连续 $consecutiveRepeatedPages 页没有新资产，终止枚举"
                 }
+                rank += assets.size
+                continue
+            }
+            consecutiveRepeatedPages = 0
+
+            val masters = records.filter { it.path("recordType").asText() == "CPLMaster" }.associateBy { it.path("recordName").asText() }
+            val missing = newAssets.map { field(it, "masterRef").path("recordName").asText() }.filterNot(masters::containsKey).distinct()
+            val allMasters = masters + if (missing.isEmpty()) emptyMap() else lookupRecords(client, ref.zone, missing).associateBy { it.path("recordName").asText() }
+            val rows = newAssets.flatMap { asset ->
                 val masterName = field(asset, "masterRef").path("recordName").asText()
                 val master = allMasters[masterName] ?: error("iCloud 资产缺少原件记录")
                 parseResources(album, asset, master)
             }
-            if (repeated > 0) log.warn("iCloud 相册 {} 在 startRank={} 处的分页重复出现 {} 个资产，已跳过", album.name, rank, repeated)
             handler(rows)
             total += rows.size
             rank += assets.size
