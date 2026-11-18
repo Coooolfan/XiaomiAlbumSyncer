@@ -343,4 +343,84 @@ class ICloudChangesTest {
             }
         }
     }
+
+    @Test fun establishesScreenshotBaselineAcrossRepeatedPages() {
+        val ranks = mutableListOf<Long>()
+        withServer({ path, body ->
+            when (path) {
+                "query" -> when {
+                    body.path("resultsLimit").asInt() == 2 -> mapOf("syncToken" to "before-scan")
+                    body.at("/query/recordType").asText() == "CheckIndexingState" ->
+                        mapOf("records" to listOf(record("Index", "index", mapOf("state" to "FINISHED"))))
+                    else -> {
+                        assertEquals("CPLAssetAndMasterInSmartAlbumByAssetDate", body.at("/query/recordType").asText())
+                        val filters = body.at("/query/filterBy").associate { it.path("fieldName").asText() to it.at("/fieldValue/value") }
+                        assertEquals("SCREENSHOT", filters.getValue("smartAlbum").asText())
+                        val rank = filters.getValue("startRank").asLong()
+                        ranks += rank
+                        // 新资产会重置连续重复计数，所以两段各四次的重叠都可以继续。
+                        val records = when (rank) {
+                            0L -> listOf(asset("a"), master("a"))
+                            in 1L..4L -> listOf(asset("a"))
+                            5L -> listOf(asset("b"), master("b"))
+                            in 6L..9L -> listOf(asset("b"))
+                            else -> emptyList()
+                        }
+                        mapOf("records" to records)
+                    }
+                }
+                "zone" -> {
+                    assertEquals("before-scan", body.at("/zones/0/syncToken").asText())
+                    page("caught-up", false, emptyList())
+                }
+                else -> error("Unexpected request: $path")
+            }
+        }) { photos, client ->
+            val files = mutableListOf<Asset>()
+            val tokens = mutableListOf<String>()
+            photos.fetchIncremental(listOf(album(1, "__screenshots__")), client, null, { files += it }, { tokens += it })
+            assertEquals(listOf("a", "b"), files.map { ICloudResourceKey.decode(it.remoteKey).assetId })
+            assertEquals((0L..10L).toList(), ranks)
+            assertEquals(listOf("caught-up"), tokens)
+        }
+    }
+
+    @Test fun repeatedScreenshotPagesAbortBaselineWithoutReplacingExpiredCursor() {
+        val ranks = mutableListOf<Long>()
+        val requestedTokens = mutableListOf<String>()
+        withServer({ path, body ->
+            when (path) {
+                "zone" -> {
+                    val token = body.at("/zones/0/syncToken").asText()
+                    requestedTokens += token
+                    if (token == "expired") mapOf("serverErrorCode" to "CHANGE_TOKEN_EXPIRED")
+                    else page("unexpected-cursor", false, emptyList())
+                }
+                "query" -> when {
+                    body.path("resultsLimit").asInt() == 2 -> mapOf("syncToken" to "before-scan")
+                    body.at("/query/recordType").asText() == "CheckIndexingState" ->
+                        mapOf("records" to listOf(record("Index", "index", mapOf("state" to "FINISHED"))))
+                    else -> {
+                        val rank = body.at("/query/filterBy/0/fieldValue/value").asLong()
+                        ranks += rank
+                        // 超过预期请求数时让测试及时失败。
+                        check(ranks.size <= 6)
+                        mapOf("records" to listOf(asset("a"), master("a")))
+                    }
+                }
+                else -> error("Unexpected request: $path")
+            }
+        }) { photos, client ->
+            var cursor = "expired"
+            val files = mutableListOf<Asset>()
+            val failure = assertThrows(IllegalStateException::class.java) {
+                photos.fetchIncremental(listOf(album(1, "__screenshots__")), client, cursor, { files += it }, { cursor = it })
+            }
+            assertTrue(failure.message.orEmpty().contains("__screenshots__ 在 startRank=5 处已连续 5 页没有新资产"))
+            assertEquals((0L..5L).toList(), ranks)
+            assertEquals("a", ICloudResourceKey.decode(files.single().remoteKey).assetId)
+            assertEquals(listOf("expired"), requestedTokens)
+            assertEquals("expired", cursor)
+        }
+    }
 }
